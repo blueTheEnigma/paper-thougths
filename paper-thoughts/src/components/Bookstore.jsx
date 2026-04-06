@@ -50,7 +50,7 @@ export default function Bookstore({ initialBooks }) {
   const featured = useMemo(() => initialBooks.filter(b => b.featured), [initialBooks]);
 
   const handleWhatsapp = (book) => {
-    const msg = `Hi, I'd like to order: *${book.title}* by ${book.author}`;
+    const msg = `Hi, I'd like to order: *${book.title}* by ${book.author} (ID: ${book.id})`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -140,7 +140,9 @@ export default function Bookstore({ initialBooks }) {
                   <div className="flex justify-between items-start mb-1 gap-2">
                     <h4 className="font-bold text-ink leading-tight group-hover:text-accent transition-colors line-clamp-2">{book.title}</h4>
                   </div>
-                  <p className="text-sm text-ink/60 mb-2">{book.author}</p>
+                  <p className="text-sm text-ink/60 mb-2">
+                    {book.author} <span className="opacity-50 mx-1">•</span> <span className="font-mono text-xs opacity-70">#{book.id}</span>
+                  </p>
                   <div className="mt-auto flex justify-between items-baseline">
                     <span className="font-display font-bold text-lg text-burgundy">₦{parseInt(book.price).toLocaleString()}</span>
                     <RatingDots rating={book.rating} />
@@ -175,7 +177,9 @@ export default function Bookstore({ initialBooks }) {
                 </div>
                 
                 <div className="p-6 md:p-8 md:w-3/5 overflow-y-auto">
-                  <div className="text-xs font-bold text-accent uppercase tracking-widest mb-2">{selectedBook.genre}</div>
+                  <div className="text-xs font-bold text-accent uppercase tracking-widest mb-2">
+                    {selectedBook.genre} <span className="text-ink/30 mx-2">|</span> <span className="font-mono text-ink/50">ID: {selectedBook.id}</span>
+                  </div>
                   <h2 className="text-2xl md:text-3xl font-display text-burgundy mb-2 leading-tight">{selectedBook.title}</h2>
                   <p className="text-md md:text-lg text-ink/60 mb-4">{selectedBook.author}</p>
                   <div className="flex items-center gap-3 mb-6">
