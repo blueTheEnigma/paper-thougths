@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #F2A98A;
+  --color-accent: #C96A42;
+  --color-cream: #FAF7F2;
+  --color-ink: #2C1A0E;
+  --color-sage: #7A9E7E;
+  --color-card: #FFF5EC;
+  --color-burgundy: #5C1A2E;
+
+  --font-display: var(--font-playfair), serif;
+  --font-sans: var(--font-dm-sans), sans-serif;
+  --font-quote: var(--font-lora), serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    color: var(--color-burgundy);
+  }
+
+  /* Ink Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-cream);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-burgundy);
+    border-radius: 6px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink);
+  }
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-burgundy) var(--color-cream);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-ink px-6 py-3 rounded-full font-bold transition-transform hover:-translate-y-1;
+  }
+  .btn-ghost {
+    @apply border border-ink text-ink px-6 py-3 rounded-full font-bold transition-transform hover:-translate-y-1;
+  }
+}
