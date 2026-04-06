@@ -1,5 +1,6 @@
 "use client";
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, X, MessageCircle, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -10,6 +11,20 @@ export default function Bookstore({ initialBooks }) {
   const [activeGenre, setActiveGenre] = useState('All');
   const [search, setSearch] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (selectedBook) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [selectedBook]);
 
   // Derive genres and counts
   const genres = useMemo(() => {
@@ -138,66 +153,69 @@ export default function Bookstore({ initialBooks }) {
       </div>
 
       {/* Modal */}
-      <AnimatePresence>
-        {selectedBook && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}
-              className="absolute inset-0 bg-ink/60 backdrop-blur-sm"
-              onClick={() => setSelectedBook(null)}
-            />
-            <motion.div 
-              initial={{opacity: 0, y: 50, scale: 0.95}} animate={{opacity: 1, y: 0, scale: 1}} exit={{opacity: 0, y: 20, scale: 0.95}}
-              className="relative w-full max-w-3xl bg-cream rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row z-10 max-h-[90vh]"
-            >
-              <button onClick={() => setSelectedBook(null)} className="absolute top-4 right-4 bg-white/50 backdrop-blur rounded-full p-2 hover:bg-white transition-colors z-20">
-                <X size={20} className="text-ink" />
-              </button>
-              
-              <div className="w-full h-56 md:h-auto md:w-2/5 object-cover bg-sage/10 border-b md:border-b-0 md:border-r border-sage/20 relative flex-shrink-0 flex items-center justify-center p-4">
-                 <img src={selectedBook.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} alt={selectedBook.title} className="w-full h-full object-contain" />
-              </div>
-              
-              <div className="p-6 md:p-8 md:w-3/5 overflow-y-auto">
-                <div className="text-xs font-bold text-accent uppercase tracking-widest mb-2">{selectedBook.genre}</div>
-                <h2 className="text-2xl md:text-3xl font-display text-burgundy mb-2 leading-tight">{selectedBook.title}</h2>
-                <p className="text-md md:text-lg text-ink/60 mb-4">{selectedBook.author}</p>
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="text-xl md:text-2xl font-display font-bold text-ink">₦{parseInt(selectedBook.price).toLocaleString()}</span>
-                  <div className="h-4 w-[1px] bg-sage/30"></div>
-                  <RatingDots rating={selectedBook.rating} />
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {selectedBook && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}
+                className="absolute inset-0 bg-ink/60 backdrop-blur-sm"
+                onClick={() => setSelectedBook(null)}
+              />
+              <motion.div 
+                initial={{opacity: 0, y: 50, scale: 0.95}} animate={{opacity: 1, y: 0, scale: 1}} exit={{opacity: 0, y: 20, scale: 0.95}}
+                className="relative w-full max-w-3xl bg-cream rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row z-10 max-h-[90vh]"
+              >
+                <button onClick={() => setSelectedBook(null)} className="absolute top-4 right-4 bg-white/50 backdrop-blur rounded-full p-2 hover:bg-white transition-colors z-20">
+                  <X size={20} className="text-ink" />
+                </button>
+                
+                <div className="w-full h-56 md:h-auto md:w-2/5 object-cover bg-sage/10 border-b md:border-b-0 md:border-r border-sage/20 relative flex-shrink-0 flex items-center justify-center p-4">
+                   <img src={selectedBook.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} alt={selectedBook.title} className="w-full h-full object-contain" />
                 </div>
                 
-                <p className="text-ink mb-6 leading-relaxed bg-white p-4 rounded-xl shadow-sm border border-sage/10">
-                  {selectedBook.description || "A captivating read ready to be pulled off our shelves."}
-                </p>
-
-                <div className="mb-6">
-                  <h4 className="font-quote italic text-sm text-accent mb-2">"Why we love this one"</h4>
-                  <p className="text-xs text-ink/80 italic border-l-2 border-accent pl-3">
-                    Honestly, {selectedBook.title} is exactly the kind of book that starts debates at our townhalls. Dive in.
+                <div className="p-6 md:p-8 md:w-3/5 overflow-y-auto">
+                  <div className="text-xs font-bold text-accent uppercase tracking-widest mb-2">{selectedBook.genre}</div>
+                  <h2 className="text-2xl md:text-3xl font-display text-burgundy mb-2 leading-tight">{selectedBook.title}</h2>
+                  <p className="text-md md:text-lg text-ink/60 mb-4">{selectedBook.author}</p>
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="text-xl md:text-2xl font-display font-bold text-ink">₦{parseInt(selectedBook.price).toLocaleString()}</span>
+                    <div className="h-4 w-[1px] bg-sage/30"></div>
+                    <RatingDots rating={selectedBook.rating} />
+                  </div>
+                  
+                  <p className="text-ink mb-6 leading-relaxed bg-white p-4 rounded-xl shadow-sm border border-sage/10">
+                    {selectedBook.description || "A captivating read ready to be pulled off our shelves."}
                   </p>
-                </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <a 
-                    href={selectedBook.orderUrl || CHECKOUT_URL} target="_blank" rel="noreferrer"
-                    className="flex-1 flex justify-center items-center gap-2 bg-ink text-cream py-3 rounded-xl font-bold hover:bg-ink/90 transition-colors"
-                  >
-                    <ExternalLink size={18} /> Order via Form
-                  </a>
-                  <button 
-                    onClick={() => handleWhatsapp(selectedBook)}
-                    className="flex-1 flex justify-center items-center gap-2 bg-[#25D366] text-white py-3 rounded-xl font-bold hover:bg-[#1eb757] transition-colors"
-                  >
-                    <MessageCircle size={18} /> Message on WhatsApp
-                  </button>
+                  <div className="mb-6">
+                    <h4 className="font-quote italic text-sm text-accent mb-2">"Why we love this one"</h4>
+                    <p className="text-xs text-ink/80 italic border-l-2 border-accent pl-3">
+                      Honestly, {selectedBook.title} is exactly the kind of book that starts debates at our townhalls. Dive in.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <a 
+                      href={selectedBook.orderUrl || CHECKOUT_URL} target="_blank" rel="noreferrer"
+                      className="flex-1 flex justify-center items-center gap-2 bg-ink text-cream py-3 rounded-xl font-bold hover:bg-ink/90 transition-colors"
+                    >
+                      <ExternalLink size={18} /> Order via Form
+                    </a>
+                    <button 
+                      onClick={() => handleWhatsapp(selectedBook)}
+                      className="flex-1 flex justify-center items-center gap-2 bg-[#25D366] text-white py-3 rounded-xl font-bold hover:bg-[#1eb757] transition-colors"
+                    >
+                      <MessageCircle size={18} /> Message on WhatsApp
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </section>
   );
 }

@@ -29,6 +29,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
+        suppressHydrationWarning
         className={`${playfair.variable} ${dmSans.variable} ${lora.variable} font-sans antialiased bg-cream text-ink min-h-screen flex flex-col`}
       >
         <Navigation />
