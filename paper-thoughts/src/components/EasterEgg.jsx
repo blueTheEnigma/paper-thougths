@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function EasterEgg() {
   const [open, setOpen] = useState(false);
-
   return (
     <>
       <button
