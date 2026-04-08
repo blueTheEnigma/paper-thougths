@@ -28,6 +28,23 @@ export default function Events() {
           Secure your spot below. We have a habit of running out of seats.
         </p>
         
+        {/* Luma Embed Area */}
+        <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden border border-sage/30 mb-20 relative">
+          <div className="absolute top-0 left-0 w-full h-2 bg-accent z-10"></div>
+          <iframe
+            src="https://lu.ma/embed-checkout/evt-rBDsDVUfKi8CYft"
+            width="100%"
+            height="550"
+            frameBorder="0"
+            border="0"
+            allowFullScreen
+            className="w-full relative z-0"
+            aria-label="Luma Event"
+          ></iframe>
+        </div>
+
+        <h3 className="text-3xl md:text-4xl font-display text-ink mb-12 text-center">More Upcoming Dates</h3>
+
         {/* Static Events Listing */}
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
           {defaultEvents.map((event, index) => (

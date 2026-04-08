@@ -95,43 +95,33 @@ export default function Bookstore({ initialBooks }) {
           </div>
         )}
 
-        <div className="flex flex-col">
-          {/* Top Control Bar (Sticky) */}
-          <div className="flex flex-col items-start gap-4 bg-cream/95 backdrop-blur-xl p-4 sm:p-5 rounded-2xl shadow-lg border border-sage/40 mb-8 sticky top-[72px] sm:top-20 z-40 w-full">
-            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between w-full">
-              <div className="relative w-full lg:w-1/3">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="Search titles or authors..." 
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="w-full bg-cream lg:bg-transparent lg:border-none border border-sage/30 rounded-full sm:rounded-none py-3 pl-12 pr-4 text-ink focus:outline-none focus:ring-0"
-                />
-              </div>
-              
-              {/* Sold Out Toggle */}
-              <div className="flex items-center justify-between w-full lg:w-auto gap-3">
-                <span className="text-sm font-bold text-ink/70">Show Sold Out</span>
-                <button 
-                  onClick={() => setShowSoldOut(!showSoldOut)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${showSoldOut ? 'bg-burgundy' : 'bg-sage/80'}`}
-                  aria-label="Toggle sold out books"
-                >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${showSoldOut ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
+        <div className="flex flex-col lg:flex-row gap-8 items-start relative">
+          
+          {/* Left Sidebar (Desktop Filters) & Top Control Bar (Mobile) */}
+          <div className="w-full lg:w-[250px] flex-shrink-0 flex flex-col gap-4 lg:gap-6 sticky top-[72px] sm:top-20 z-40 bg-cream/95 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none p-4 lg:p-0 rounded-2xl lg:rounded-none shadow-lg lg:shadow-none border border-sage/40 lg:border-none">
+            
+            {/* Search */}
+            <div className="relative w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40" size={18} />
+              <input 
+                type="text" 
+                placeholder="Search titles or authors..." 
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full bg-cream lg:bg-transparent lg:border-none border border-sage/30 lg:border-b lg:border-ink/20 rounded-full lg:rounded-none py-3 pl-12 pr-4 text-ink focus:outline-none focus:border-ink transition-colors"
+              />
             </div>
-
-            {/* Desktop Pill Row */}
-            <div className="hidden lg:flex flex-wrap gap-2 w-full pt-4 border-t border-sage/20">
+            
+            {/* Desktop Category List */}
+            <div className="hidden lg:flex flex-col gap-1 w-full">
+              <h3 className="text-xs font-bold text-ink/40 uppercase tracking-widest mb-3 border-b border-sage/30 pb-2">Categories</h3>
               {genres.map(g => (
                 <button
                   key={g.name}
                   onClick={() => setActiveGenre(g.name)}
-                  className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 ${activeGenre === g.name ? 'bg-burgundy text-cream shadow-md' : 'bg-transparent text-ink/60 hover:bg-sage/20 hover:text-ink border border-sage/30'}`}
+                  className={`text-left px-3 py-2 rounded-lg text-sm font-bold transition-all duration-200 w-full flex justify-between items-center ${activeGenre === g.name ? 'bg-burgundy text-cream shadow-md' : 'bg-transparent text-ink/70 hover:bg-sage/20 hover:text-ink'}`}
                 >
-                  {g.name} <span className="opacity-60 text-xs ml-1">({g.count})</span>
+                  <span>{g.name}</span> <span className="opacity-50 text-xs">{g.count}</span>
                 </button>
               ))}
             </div>
@@ -153,10 +143,23 @@ export default function Bookstore({ initialBooks }) {
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-ink/50 text-xs">▼</div>
               </div>
             </div>
+            
+            {/* Sold Out Toggle */}
+            <div className="flex items-center justify-between w-full pt-2 lg:mt-4 lg:pt-6 lg:border-t border-sage/20">
+              <span className="text-sm font-bold text-ink/70">Show Sold Out</span>
+              <button 
+                onClick={() => setShowSoldOut(!showSoldOut)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${showSoldOut ? 'bg-burgundy' : 'bg-sage/80'}`}
+                aria-label="Toggle sold out books"
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${showSoldOut ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+
           </div>
 
-          {/* Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
+          {/* Right Content: Grid */}
+          <div className="flex-1 w-full grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
             {filteredBooks.map(book => (
               <div key={book.id} onClick={() => setSelectedBook(book)} className="group cursor-pointer flex flex-col">
                 <div className="aspect-[2/3] w-full rounded-xl overflow-hidden shadow-sm border border-sage/20 mb-3 bg-cream relative">
