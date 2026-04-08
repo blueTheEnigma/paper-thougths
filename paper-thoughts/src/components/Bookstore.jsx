@@ -12,6 +12,7 @@ export default function Bookstore({ initialBooks }) {
   const [search, setSearch] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
   const [mounted, setMounted] = useState(false);
+  const [showSoldOut, setShowSoldOut] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -43,9 +44,11 @@ export default function Bookstore({ initialBooks }) {
     return initialBooks.filter(b => {
       const matchesGenre = activeGenre === 'All' || b.genre === activeGenre;
       const matchesSearch = b.title?.toLowerCase().includes(search.toLowerCase()) || b.author?.toLowerCase().includes(search.toLowerCase());
-      return matchesGenre && matchesSearch;
+      const isSoldOut = b.status?.toUpperCase() === 'SOLD OUT';
+      const matchesSoldOut = showSoldOut ? true : !isSoldOut;
+      return matchesGenre && matchesSearch && matchesSoldOut;
     });
-  }, [activeGenre, search, initialBooks]);
+  }, [activeGenre, search, initialBooks, showSoldOut]);
 
   const featured = useMemo(() => initialBooks.filter(b => b.featured), [initialBooks]);
 
@@ -94,25 +97,52 @@ export default function Bookstore({ initialBooks }) {
 
         <div className="flex flex-col">
           {/* Top Control Bar (Sticky) */}
-          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-cream/95 backdrop-blur-xl p-3 sm:p-4 rounded-xl shadow-lg border border-sage/40 mb-8 sticky top-[72px] sm:top-20 z-40 w-full">
-            <div className="relative w-full sm:w-1/3">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40" size={18} />
-              <input 
-                type="text" 
-                placeholder="Search titles or authors..." 
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full bg-cream lg:bg-transparent lg:border-none border border-sage/30 rounded-full sm:rounded-none py-3 pl-12 pr-4 text-ink focus:outline-none focus:ring-0"
-              />
+          <div className="flex flex-col items-start gap-4 bg-cream/95 backdrop-blur-xl p-4 sm:p-5 rounded-2xl shadow-lg border border-sage/40 mb-8 sticky top-[72px] sm:top-20 z-40 w-full">
+            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between w-full">
+              <div className="relative w-full lg:w-1/3">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Search titles or authors..." 
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full bg-cream lg:bg-transparent lg:border-none border border-sage/30 rounded-full sm:rounded-none py-3 pl-12 pr-4 text-ink focus:outline-none focus:ring-0"
+                />
+              </div>
+              
+              {/* Sold Out Toggle */}
+              <div className="flex items-center justify-between w-full lg:w-auto gap-3">
+                <span className="text-sm font-bold text-ink/70">Show Sold Out</span>
+                <button 
+                  onClick={() => setShowSoldOut(!showSoldOut)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${showSoldOut ? 'bg-burgundy' : 'bg-sage/80'}`}
+                  aria-label="Toggle sold out books"
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${showSoldOut ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
             </div>
-            
-            <div className="w-full sm:w-2/3 md:w-1/2 lg:w-1/3 flex items-center gap-3">
-              <span className="font-bold text-ink uppercase tracking-wider text-xs hidden sm:block whitespace-nowrap">Filter by:</span>
+
+            {/* Desktop Pill Row */}
+            <div className="hidden lg:flex flex-wrap gap-2 w-full pt-4 border-t border-sage/20">
+              {genres.map(g => (
+                <button
+                  key={g.name}
+                  onClick={() => setActiveGenre(g.name)}
+                  className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 ${activeGenre === g.name ? 'bg-burgundy text-cream shadow-md' : 'bg-transparent text-ink/60 hover:bg-sage/20 hover:text-ink border border-sage/30'}`}
+                >
+                  {g.name} <span className="opacity-60 text-xs ml-1">({g.count})</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Mobile Dropdown */}
+            <div className="w-full lg:hidden block">
               <div className="relative w-full">
                 <select 
                   value={activeGenre}
                   onChange={e => setActiveGenre(e.target.value)}
-                  className="w-full bg-cream border border-sage/30 hover:border-primary transition-colors rounded-lg py-3 px-4 text-ink font-bold focus:outline-none focus:border-primary appearance-none cursor-pointer"
+                  className="w-full bg-cream border border-sage/30 focus:border-accent transition-colors rounded-xl py-3 px-4 text-ink font-bold appearance-none cursor-pointer"
                 >
                   {genres.map(g => (
                     <option key={g.name} value={g.name}>
@@ -130,7 +160,7 @@ export default function Bookstore({ initialBooks }) {
             {filteredBooks.map(book => (
               <div key={book.id} onClick={() => setSelectedBook(book)} className="group cursor-pointer flex flex-col">
                 <div className="aspect-[2/3] w-full rounded-xl overflow-hidden shadow-sm border border-sage/20 mb-3 bg-cream relative">
-                  <img src={book.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} alt={book.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                  <img src={book.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} alt={book.title} className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${book.status?.toUpperCase() === 'SOLD OUT' ? 'grayscale opacity-50' : ''}`} loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out pointer-events-none z-10"></div>
                   {book.status?.toUpperCase() === 'SOLD OUT' && (
                     <div className="absolute top-2 right-2 bg-burgundy text-cream text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider z-20">Sold Out</div>
