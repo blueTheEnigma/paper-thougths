@@ -2,9 +2,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { BookOpen, Menu, X } from 'lucide-react';
+import { useAuth, UserButton } from '@clerk/nextjs';
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const { isSignedIn, isLoaded } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 bg-cream/90 backdrop-blur-md border-b border-sage/20 py-4 px-6 md:px-8">
@@ -26,9 +28,26 @@ export default function Navigation() {
           <Link href="/clubs" className="hover:text-accent transition-colors">Clubs</Link>
         </div>
         
-        <Link href="/#contact" className="hidden md:inline-block btn-primary text-sm shadow-sm">
-          Join Us
-        </Link>
+        <div className="hidden md:flex items-center gap-4">
+          {isLoaded && !isSignedIn && (
+            <>
+              <Link href="/join" className="btn-primary text-sm shadow-sm">
+                Join Us
+              </Link>
+              <Link href="/sign-in?redirect_url=/dashboard" className="text-ink hover:text-accent font-bold text-sm transition-colors">
+                Sign In
+              </Link>
+            </>
+          )}
+          {isLoaded && isSignedIn && (
+            <>
+              <Link href="/dashboard" className="text-burgundy font-bold text-sm hover:text-ink transition-colors">
+                Dashboard
+              </Link>
+              <UserButton afterSignOutUrl="/" />
+            </>
+          )}
+        </div>
 
         {/* Mobile Toggle */}
         <button className="md:hidden text-ink" onClick={() => setIsOpen(!isOpen)}>
@@ -44,7 +63,23 @@ export default function Navigation() {
           <Link href="/events" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Events</Link>
           <Link href="/collections" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Collections</Link>
           <Link href="/clubs" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Clubs</Link>
-          <Link href="/#contact" onClick={() => setIsOpen(false)} className="mx-auto btn-primary w-full mt-2">Join Us</Link>
+          
+          <div className="w-full h-[1px] bg-sage/20 my-2"></div>
+          
+          {isLoaded && !isSignedIn && (
+            <>
+              <Link href="/join" onClick={() => setIsOpen(false)} className="mx-auto btn-primary w-full">Join Us</Link>
+              <Link href="/sign-in?redirect_url=/dashboard" onClick={() => setIsOpen(false)} className="text-ink font-bold text-lg hover:text-accent">Sign In</Link>
+            </>
+          )}
+          {isLoaded && isSignedIn && (
+            <>
+              <Link href="/dashboard" onClick={() => setIsOpen(false)} className="mx-auto bg-burgundy text-white py-3 px-6 rounded-xl font-bold w-full">Dashboard</Link>
+              <div className="flex justify-center mt-2">
+                <UserButton afterSignOutUrl="/" />
+              </div>
+            </>
+          )}
         </div>
       )}
     </nav>

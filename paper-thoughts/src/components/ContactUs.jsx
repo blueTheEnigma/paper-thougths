@@ -1,8 +1,57 @@
 "use client";
-import { Mail, Send } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Mail, Send, Loader2, CheckCircle2, BookOpen, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 import { FaInstagram, FaWhatsapp, FaXTwitter, FaTiktok, FaYoutube, FaLinkedin } from "react-icons/fa6";
 
 export default function ContactUs() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState("");
+  const [referredBy, setReferredBy] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+      if (ref) setReferredBy(ref);
+    }
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+
+    const formData = new FormData(e.target);
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      chapter: formData.get('chapter'),
+      last_book: formData.get('last_book'),
+      referredBy: referredBy,
+    };
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        setIsSuccess(true);
+      } else {
+        setError(result.error || "Submission failed. Please try again.");
+      }
+    } catch (err) {
+      setError("Connection error. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section id="contact" className="py-24 px-6 bg-cream border-t border-sage/20">
       <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-16">
@@ -42,40 +91,26 @@ export default function ContactUs() {
           </div>
         </div>
 
-        {/* Right side: Form */}
-        <div className="flex-1 bg-white p-10 rounded-3xl border border-sage/20 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full translate-x-1/2 -translate-y-1/2 blur-2xl"></div>
+        {/* Right side: Archive CTA */}
+        <div className="flex-1 bg-burgundy p-12 rounded-[40px] shadow-2xl relative overflow-hidden flex flex-col justify-center items-center text-center">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/10 rounded-full -translate-x-1/3 translate-y-1/3 blur-3xl"></div>
           
-          <h3 className="text-4xl font-display text-burgundy mb-2 relative z-10">Become a Lore Keeper</h3>
-          <p className="text-ink/60 mb-8 relative z-10 font-bold uppercase tracking-widest text-xs">Join our mailing list</p>
+          <div className="relative z-10">
+            <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-white/20">
+              <BookOpen size={40} className="text-cream" />
+            </div>
+            
+            <h3 className="text-4xl font-display text-cream mb-4">The Archive Awaits</h3>
+            <p className="text-cream/80 mb-10 text-lg font-quote italic max-w-sm mx-auto">
+              Ready to claim your LK-ID and start your journey from Reader to Keeper?
+            </p>
 
-          <form action="https://formspree.io/f/mdapybqp" method="POST" className="flex flex-col gap-6 relative z-10">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-ink mb-2">Full Name</label>
-              <input type="text" name="name" required className="w-full bg-cream/50 border-b-2 border-sage/30 px-0 py-3 focus:outline-none focus:border-primary transition-colors text-lg" placeholder="Type here..." />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-ink mb-2">Email Address</label>
-              <input type="email" name="email" required className="w-full bg-cream/50 border-b-2 border-sage/30 px-0 py-3 focus:outline-none focus:border-primary transition-colors text-lg" placeholder="your@email.com" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-ink mb-2">Chapter Interest</label>
-              <select name="chapter" className="w-full bg-cream/50 border-b-2 border-sage/30 px-0 py-3 focus:outline-none focus:border-primary transition-colors text-lg font-bold">
-                <option>Zaria (ABU)</option>
-                <option>Kaduna City</option>
-                <option>Abuja FCT</option>
-                <option>Online / Elsewhere</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-ink mb-2">The last book you actually finished?</label>
-              <input type="text" name="last_book" className="w-full bg-cream/50 border-b-2 border-sage/30 px-0 py-3 focus:outline-none focus:border-primary transition-colors text-lg italic" placeholder="No judgment here..." />
-            </div>
-
-            <button type="submit" className="mt-8 bg-ink text-cream font-bold py-5 px-8 rounded-none border border-ink hover:bg-cream hover:text-ink transition-colors uppercase tracking-widest text-sm w-full flex justify-center items-center gap-2">
-              Submit Application
-            </button>
-          </form>
+            <Link href="/join" className="group relative inline-flex items-center gap-3 bg-cream text-burgundy font-bold py-5 px-10 rounded-full hover:bg-white transition-all shadow-xl hover:shadow-2xl">
+              <Sparkles size={20} className="text-accent" />
+              <span className="uppercase tracking-[0.2em] text-sm">Join the Collective</span>
+            </Link>
+          </div>
         </div>
 
       </div>
