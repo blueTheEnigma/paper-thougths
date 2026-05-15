@@ -12,7 +12,6 @@ async function getArchiveData(email) {
   if (!gasUrl) return { profile: null, orders: [] };
 
   try {
-    // Parallel fetch from GAS for profile and orders
     const [profileRes, ordersRes] = await Promise.all([
       fetch(gasUrl, {
         method: 'POST',
@@ -28,13 +27,25 @@ async function getArchiveData(email) {
       })
     ]);
 
-    const profileData = await profileRes.json();
-    const ordersData = await ordersRes.json();
+    // Robust JSON parsing
+    let profile = null;
+    let orders = [];
 
-    return {
-      profile: profileData.success ? profileData.profile : null,
-      orders: ordersData.success ? ordersData.orders : []
-    };
+    if (profileRes.ok) {
+      try {
+        const data = await profileRes.json();
+        if (data.success) profile = data.profile;
+      } catch (e) { console.error("Profile JSON parse error"); }
+    }
+
+    if (ordersRes.ok) {
+      try {
+        const data = await ordersRes.json();
+        if (data.success) orders = data.orders;
+      } catch (e) { console.error("Orders JSON parse error"); }
+    }
+
+    return { profile, orders };
   } catch (e) {
     console.error("Dashboard data fetch failed", e);
     return { profile: null, orders: [] };
@@ -46,14 +57,14 @@ export default async function DashboardPage() {
   const email = user?.primaryEmailAddress?.emailAddress;
 
   if (!user || !email) {
-    // Should ideally be handled by middleware, but as a backup:
-    return null; 
+    // If no user, redirect to sign-in (server-side)
+    const { redirect } = await import('next/navigation');
+    redirect('/sign-in?redirect_url=/dashboard');
   }
 
-  // Parallel fetch: Archive Data (from GAS) and Books (from Google Sheet CSV)
   const [archive, allBooks] = await Promise.all([
     getArchiveData(email),
-    getBooks()
+    getBooks().catch(() => []) // Ensure allBooks is always an array
   ]);
 
   const { profile, orders } = archive;

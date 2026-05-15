@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { UserButton, SignOutButton } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
-import { Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, ExternalLink, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, ExternalLink, ShoppingBag, ArrowRight, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardClient({ profile, initialOrders, recommendations, userEmail }) {
