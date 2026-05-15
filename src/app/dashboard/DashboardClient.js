@@ -137,49 +137,88 @@ export default function DashboardClient({ profile, initialOrders, recommendation
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
                   <ShoppingBag size={120} />
                 </div>
-                <div className="relative z-10">
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-cream/40 mb-2">The Archive Blackbox</h3>
-                  <div className="flex items-baseline gap-2 mb-6">
-                    <span className="text-5xl font-display">{orders.filter(o => o.status === 'Paid').length}</span>
-                    <span className="text-xl text-cream/40 font-display">/ 10</span>
-                  </div>
-                  <div className="w-full bg-white/10 rounded-full h-2 mb-4 overflow-hidden">
-                    <div 
-                      className="bg-accent h-full rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(255,215,0,0.5)]" 
-                      style={{ width: `${Math.min(100, (orders.filter(o => o.status === 'Paid').length / 10) * 100)}%` }}
-                    ></div>
+                <div className="relative z-10 h-full flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-cream/40 mb-2">The Archive Blackbox</h3>
+                    <div className="flex items-baseline gap-2 mb-6">
+                      <span className="text-5xl font-display">{orders.filter(o => o.status === 'Paid').length}</span>
+                      <span className="text-xl text-cream/40 font-display">/ 10</span>
+                    </div>
+                    <div className="w-full bg-white/10 rounded-full h-2 mb-4 overflow-hidden">
+                      <div 
+                        className="bg-accent h-full rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(255,215,0,0.5)]" 
+                        style={{ width: `${Math.min(100, (orders.filter(o => o.status === 'Paid').length / 10) * 100)}%` }}
+                      ></div>
+                    </div>
                   </div>
                   <p className="text-[10px] font-medium text-cream/60 leading-relaxed uppercase tracking-wider">
                     {orders.filter(o => o.status === 'Paid').length >= 10 
                       ? "Blackbox Unlocked. Consult the Lore Keeper." 
-                      : `${10 - orders.filter(o => o.status === 'Paid').length} more paid orders to unlock your Blackbox.`}
+                      : `${10 - orders.filter(o => o.status === 'Paid').length} more paid orders until Blackbox.`}
                   </p>
                 </div>
               </div>
 
-              {/* Lore Cycle Timer */}
-              <div className="bg-white p-8 rounded-[32px] border border-sage/20 shadow-xl flex flex-col justify-between">
-                <div>
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 mb-2">Current Lore Cycle</h3>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="bg-burgundy/5 text-burgundy p-2 rounded-xl">
-                      <Clock size={20} />
+              {/* Lore Cycle Timer / Upgrade Info */}
+              <div className="bg-white p-8 rounded-[32px] border border-sage/20 shadow-xl flex flex-col justify-between relative overflow-hidden">
+                {!isKeeper ? (
+                  <>
+                    <div className="relative z-10">
+                      <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 mb-2">Status Potential</h3>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="bg-sage/5 text-sage p-2 rounded-xl">
+                          <ShieldCheck size={20} />
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-ink">Reader Status</p>
+                          <p className="text-[10px] font-bold text-sage uppercase tracking-widest">Awaiting Upgrade</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-ink/60 leading-relaxed mb-6">
+                        Reach 6 events or 5 referrals to become a **Keeper**. Your 90-day Lore Cycle begins at upgrade.
+                      </p>
                     </div>
-                    <div>
-                      <p className="text-lg font-bold text-ink">90-Day Season</p>
-                      <p className="text-[10px] font-bold text-accent uppercase tracking-widest">Resets Status & Points</p>
+                    {(profile.events >= eventsNeeded || profile.referrals >= referralsNeeded) && (
+                      <div className="bg-burgundy text-cream p-4 rounded-2xl text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-widest mb-1">Threshold Met!</p>
+                        <p className="text-xs font-medium">Your status will update in the next Ledger sync.</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="relative z-10">
+                      <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 mb-2">Current Lore Cycle</h3>
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="bg-burgundy/5 text-burgundy p-2 rounded-xl">
+                          <Clock size={20} />
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-ink">90-Day Season</p>
+                          <p className="text-[10px] font-bold text-accent uppercase tracking-widest">Resets Status & Points</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-3xl font-display text-burgundy">
+                          {profile.cycleExpiry ? Math.max(0, Math.ceil((new Date(profile.cycleExpiry) - new Date()) / (1000 * 60 * 60 * 24))) : '90'} Days
+                        </span>
+                        <span className="text-[10px] font-bold text-ink/40 uppercase mb-1">Remaining</span>
+                      </div>
+                      <div className="w-full bg-sage/10 rounded-full h-1.5 mb-6 overflow-hidden">
+                        <div 
+                          className="bg-burgundy h-full rounded-full transition-all duration-1000" 
+                          style={{ width: `${Math.min(100, ( (profile.cycleExpiry ? Math.ceil((new Date(profile.cycleExpiry) - new Date()) / (1000 * 60 * 60 * 24)) : 90) / 90 ) * 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-3xl font-display text-burgundy">72 Days</span>
-                    <span className="text-[10px] font-bold text-ink/40 uppercase mb-1">Remaining</span>
-                  </div>
-                  <p className="text-[10px] text-ink/50 italic leading-relaxed">
-                    Growth keeps the community alive. Renew your status by referring a friend or attending an event before the cycle ends.
-                  </p>
-                </div>
+                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl">
+                      <p className="text-[10px] font-bold text-burgundy uppercase tracking-widest mb-1">Refuel Bonus</p>
+                      <p className="text-[10px] text-ink/60 leading-relaxed italic">
+                        Earn status points again before the cycle ends to add **+60 Days** to your season!
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
 

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, X, MessageCircle, ExternalLink, ShoppingBag, Award, Trash2, Flame } from 'lucide-react';
+import { Search, X, MessageCircle, ExternalLink, ShoppingBag, Award, Trash2, Flame, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const WHATSAPP_NUMBER = "2348109546849";

@@ -24,6 +24,7 @@ Ensure your main registration sheet has the following columns in this **EXACT** 
 | **N** | **Date Registered** | Auto-stamped |
 | **O** | **Consent Given** | TRUE/FALSE |
 | **P** | **Notes** | Internal manual use |
+| **Q** | **Cycle Expiry** | Auto-calculated (90-day seasons) |
 
 ---
 
@@ -335,15 +336,6 @@ function handleCheckin(data, ss) {
       sheet.getRange(i + 2, 10).setValue(newPoints); // Update points
       logSheet.appendRow([new Date(), lkid, eventName, isPhysical ? "Physical" : "Virtual"]); // Log it
       
-      // Upgrade logic (6 points = 3 physical OR 6 virtual)
-      var currentTier = fullData[i][10];
-      if (currentTier === "Reader" && newPoints >= 6) {
-        sheet.getRange(i + 2, 11).setValue("Keeper");
-        sheet.getRange(i + 2, 12).setValue(new Date());
-        var email = fullData[i][4];
-        if (email) sendKeeperCongrats(email, fullData[i][1], lkid);
-      }
-      
       return ContentService.createTextOutput(JSON.stringify({ success: true, name: fullData[i][1], points: newPoints })).setMimeType(ContentService.MimeType.JSON);
     }
   }
@@ -405,35 +397,92 @@ function handleGetProfile(data, ss) {
   var sheet = ss.getSheetByName("Archive");
   var email = data.email ? data.email.trim().toLowerCase() : "";
   
-  if (!email) {
-    return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Email not provided." })).setMimeType(ContentService.MimeType.JSON);
-  }
-  if (!sheet) {
-    return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Archive tab not found" })).setMimeType(ContentService.MimeType.JSON);
-  }
+  if (!email) return jsonResponse({ success: false, error: "Email missing" });
+  if (!sheet) return jsonResponse({ success: false, error: "Archive tab missing" });
   
   var lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Profile not found." })).setMimeType(ContentService.MimeType.JSON);
+  if (lastRow <= 1) return jsonResponse({ success: false, error: "Profile not found" });
   
-  var fullData = sheet.getRange("A2:L" + lastRow).getValues();
+  var fullData = sheet.getRange("A2:Q" + lastRow).getValues();
+  var headers = sheet.getRange(1, 1, 1, 17).getValues()[0];
   
   for (var i = 0; i < fullData.length; i++) {
-    var memberEmail = String(fullData[i][4]).toLowerCase().trim(); // Col E
+    var memberEmail = String(fullData[i][4]).toLowerCase().trim();
     
     if (memberEmail === email && memberEmail !== "") {
-      var profile = {
-        lkid: fullData[i][0],
-        name: fullData[i][1],
-        chapter: fullData[i][5],
-        purchases: fullData[i][7] || 0,
-        referrals: fullData[i][8] || 0,
-        events: fullData[i][9] || 0,
-        tier: fullData[i][10]
-      };
-      return ContentService.createTextOutput(JSON.stringify({ success: true, profile: profile })).setMimeType(ContentService.MimeType.JSON);
+      var memberRow = i + 2;
+      var member = {};
+      // Map columns to keys (lkid=0, name=1, ig=2, whatsapp=3, email=4, chapter=5, refby=6, purchases=7, referrals=8, events=9, tier=10, dateTier=11, patron=12, dateReg=13, consent=14, notes=15, expiry=16)
+      var events = fullData[i][9] || 0;
+      var referrals = fullData[i][8] || 0;
+      var tier = fullData[i][10] || "Reader";
+      var expiryStr = fullData[i][16];
+      var expiryDate = expiryStr ? new Date(expiryStr) : null;
+      var today = new Date();
+      var updated = false;
+
+      // --- LORE SEASON AUDIT ---
+
+      // 1. Check for EXPIRED Season
+      if (expiryDate && today > expiryDate && tier !== "Reader") {
+        tier = "Reader";
+        expiryDate = null;
+        updated = true;
+      }
+
+      // 2. Check for UPGRADE (Reader -> Keeper)
+      if (tier === "Reader" && (events >= 6 || referrals >= 5)) {
+        tier = "Keeper";
+        events = 0;
+        referrals = 0;
+        expiryDate = addDays(today, 90);
+        updated = true;
+      }
+
+      // 3. Check for REFUEL (+60 Day Bonus)
+      if (tier !== "Reader" && (events >= 6 || referrals >= 5)) {
+        events = 0;
+        referrals = 0;
+        var currentExpiry = expiryDate || today;
+        expiryDate = addDays(currentExpiry, 60);
+        updated = true;
+      }
+
+      // Save changes if audit triggered
+      if (updated) {
+        sheet.getRange(memberRow, 9).setValue(referrals); // Col I
+        sheet.getRange(memberRow, 10).setValue(events);   // Col J
+        sheet.getRange(memberRow, 11).setValue(tier);     // Col K
+        sheet.getRange(memberRow, 12).setValue(today);    // Col L (Date Tier Earned)
+        sheet.getRange(memberRow, 17).setValue(expiryDate ? expiryDate : ""); // Col Q
+      }
+
+      return jsonResponse({
+        success: true,
+        profile: {
+          lkid: fullData[i][0],
+          name: fullData[i][1],
+          chapter: fullData[i][5],
+          purchases: fullData[i][7] || 0,
+          referrals: referrals,
+          events: events,
+          tier: tier,
+          cycleExpiry: expiryDate ? expiryDate.toISOString() : null
+        }
+      });
     }
   }
-  return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Profile not found for this email address. Please make sure you registered with this exact email." })).setMimeType(ContentService.MimeType.JSON);
+  return jsonResponse({ success: false, error: "Profile not found" });
+}
+
+function jsonResponse(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function addDays(date, days) {
+  var result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
 }
 
 function sendWelcomeMessage(email, name, lkid) {
@@ -453,13 +502,6 @@ function updateReferrerCount(ss, referrerId) {
       var newCount = (fullData[i][8] || 0) + 1; // Col I (Referrals)
       sheet.getRange(i + 2, 9).setValue(newCount);
       
-      var currentTier = fullData[i][10]; // Col K
-      if (currentTier === "Reader" && newCount >= 5) {
-        sheet.getRange(i + 2, 11).setValue("Keeper");
-        sheet.getRange(i + 2, 12).setValue(new Date());
-        var email = fullData[i][4];
-        if (email) sendKeeperCongrats(email, fullData[i][1], referrerId);
-      }
       break;
     }
   }
