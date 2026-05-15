@@ -22,8 +22,39 @@ const lora = Lora({
 });
 
 export const metadata = {
-  title: "Paper Thoughts - Literary Clubhouse",
-  description: "A living literary clubhouse in Zaria, Kaduna, Abuja, and anywhere with good taste.",
+  title: {
+    default: "Paper Thoughts - The Literary Clubhouse",
+    template: "%s | Paper Thoughts"
+  },
+  description: "An opinionated reading community spanning Zaria, Kaduna, and Abuja. We read heavily, debate fiercely, and never use PDFs.",
+  keywords: ["Literary Clubhouse", "Book Club Nigeria", "Zaria", "Kaduna", "Abuja", "Reading Community", "Paper Thoughts"],
+  openGraph: {
+    title: "Paper Thoughts - The Literary Clubhouse",
+    description: "We came for the books. We stayed for the chaos. Join the Archive.",
+    url: "https://www.paperthoughts.org",
+    siteName: "Paper Thoughts",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Paper Thoughts Literary Clubhouse"
+      }
+    ],
+    locale: "en_NG",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Paper Thoughts - The Literary Clubhouse",
+    description: "An opinionated reading community spanning Zaria, Kaduna, and Abuja.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  themeColor: "#4A0E0E",
 };
 
 export default function RootLayout({ children }) {

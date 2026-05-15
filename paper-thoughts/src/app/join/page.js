@@ -51,15 +51,23 @@ function JoinFormContent() {
     setError("");
 
     const formData = new FormData(e.target);
+    const email = formData.get('email');
+    const instagram = formData.get('instagram');
+
+    if (!instagram && !email) {
+      setError("Please provide either an Instagram handle or an Email address so we can reach you.");
+      setIsSubmitting(false);
+      return;
+    }
     
     // Priority: URL referredBy > Manual input
     const finalReferral = referredBy || formData.get('manualReferral');
 
     const data = {
       fullName: formData.get('fullName'),
-      instagram: formData.get('instagram').replace('@', ''),
+      instagram: instagram ? instagram.replace('@', '') : "",
       whatsapp: formData.get('whatsapp'),
-      email: formData.get('email'),
+      email: email || "",
       chapter: formData.get('chapter'),
       referral: finalReferral,
       consent: formData.get('consent') === 'on'
@@ -254,7 +262,6 @@ function JoinFormContent() {
               <input 
                 type="text" 
                 name="instagram" 
-                required 
                 placeholder="@username"
                 className="w-full bg-transparent border-b-2 border-sage/20 px-0 py-4 focus:outline-none focus:border-primary transition-colors text-lg"
               />

@@ -52,6 +52,16 @@ function doPost(e) {
       return handleGetEvents(ss);
     } else if (action === "getProfile") {
       return handleGetProfile(data, ss);
+    } else if (action === "createOrder") {
+      return handleCreateOrder(data, ss);
+    } else if (action === "getOrders") {
+      return handleGetOrders(ss);
+    } else if (action === "getMemberOrders") {
+      return handleGetMemberOrders(data, ss);
+    } else if (action === "finalizeOrder") {
+      return handleFinalizeOrder(data, ss);
+    } else if (action === "deleteOrder") {
+      return handleDeleteOrder(data, ss);
     } else {
       return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Unknown action" })).setMimeType(ContentService.MimeType.JSON);
     }
@@ -60,6 +70,183 @@ function doPost(e) {
   }
 }
 
+function handleGetMemberOrders(data, ss) {
+  var sheet = ss.getSheetByName("Orders");
+  if (!sheet) return ContentService.createTextOutput(JSON.stringify({ success: true, orders: [] })).setMimeType(ContentService.MimeType.JSON);
+  
+  var email = data.email.toLowerCase();
+  var sheetData = sheet.getDataRange().getValues();
+  var memberOrders = [];
+  
+  for (var i = 1; i < sheetData.length; i++) {
+    if (sheetData[i][2].toString().toLowerCase() === email) { // Column C is Email
+      memberOrders.push({
+        date: sheetData[i][0],
+        items: sheetData[i][3],
+        total: sheetData[i][6],
+        status: sheetData[i][7],
+        orderId: sheetData[i][8]
+      });
+    }
+  }
+  
+  memberOrders.reverse();
+  return ContentService.createTextOutput(JSON.stringify({ success: true, orders: memberOrders })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleDeleteOrder(data, ss) {
+  var sheet = ss.getSheetByName("Orders");
+  if (!sheet) return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Sheet missing" })).setMimeType(ContentService.MimeType.JSON);
+  
+  var orderId = data.orderId;
+  var orderData = sheet.getDataRange().getValues();
+  
+  for (var i = 1; i < orderData.length; i++) {
+    if (orderData[i][8] == orderId) {
+      sheet.deleteRow(i + 1);
+      return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Order not found" })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleGetOrders(ss) {
+  var sheet = ss.getSheetByName("Orders");
+  if (!sheet) return ContentService.createTextOutput(JSON.stringify({ success: true, orders: [] })).setMimeType(ContentService.MimeType.JSON);
+  
+  var data = sheet.getDataRange().getValues();
+  var orders = [];
+  
+  // Skip header
+  for (var i = 1; i < data.length; i++) {
+    orders.push({
+      date: data[i][0],
+      lkid: data[i][1],
+      name: data[i][2],
+      items: data[i][3],
+      subtotal: data[i][4],
+      discount: data[i][5],
+      total: data[i][6],
+      status: data[i][7],
+      orderId: data[i][8],
+      salesRep: data[i][9]
+    });
+  }
+  
+  // Sort by date descending
+  orders.reverse();
+  
+  return ContentService.createTextOutput(JSON.stringify({ success: true, orders: orders })).setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * NEW: Finalize Order (Mark as Paid & Set Books to Sold Out)
+ */
+function handleFinalizeOrder(data, ss) {
+  var orderSheet = ss.getSheetByName("Orders");
+  var bookSheet = ss.getSheetByName("Archive");
+  if (!orderSheet || !bookSheet) return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Sheets missing" })).setMimeType(ContentService.MimeType.JSON);
+  
+  var orderId = data.orderId;
+  var orderData = orderSheet.getDataRange().getValues();
+  var rowIndex = -1;
+  
+  // Find the order row by ID (Column I)
+  for (var i = 1; i < orderData.length; i++) {
+    if (orderData[i][8] == orderId) { // Column I is index 8
+      rowIndex = i + 1;
+      break;
+    }
+  }
+  
+  if (rowIndex === -1) return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Order not found" })).setMimeType(ContentService.MimeType.JSON);
+  
+  // 1. Update Order Status to "Paid"
+  orderSheet.getRange(rowIndex, 8).setValue("Paid"); // Column H
+  
+  // 2. Extract books from the order row (Column D)
+  var itemsText = orderData[rowIndex-1][3]; // "Book A (Price), Book B (Price)"
+  var bookTitles = itemsText.split(", ").map(function(s) { 
+    return s.split(" (")[0].toLowerCase().trim(); 
+  });
+  
+  // 3. Mark books as "Sold Out" in Archive tab
+  var archiveData = bookSheet.getDataRange().getValues();
+  for (var j = 3; j < archiveData.length; j++) {
+    var title = archiveData[j][1].toString().toLowerCase().trim();
+    if (bookTitles.indexOf(title) !== -1) {
+      bookSheet.getRange(j + 1, 6).setValue("Sold Out"); // Column F
+    }
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleCreateOrder(data, ss) {
+  var orderSheet = ss.getSheetByName("Orders");
+  if (!orderSheet) {
+    orderSheet = ss.insertSheet("Orders");
+    orderSheet.appendRow(["Date", "LK-ID", "Name", "Items", "Subtotal", "Discount", "Total", "Status", "Order ID", "Sales Rep"]);
+  }
+  
+  var orderId = "ORD-" + Math.floor(Math.random() * 1000000);
+  var rowData = [
+    new Date(),
+    data.lkid || "Guest",
+    data.name || "Anonymous",
+    data.items.map(function(i) { return i.title + " (₦" + i.price + ")"; }).join(", "),
+    data.subtotal,
+    data.discount,
+    data.total,
+    "Pending",
+    orderId,
+    data.salesRep || "System"
+  ];
+  
+  orderSheet.appendRow(rowData);
+  
+  // SEND ADMIN EMAIL ALERT
+  try {
+    var adminEmail = "umorgan2001@gmail.com";
+    var subject = "🚨 New Archive Order Logged: " + orderId;
+    var body = "Lore Keeper,\n\nA new book order has been logged from the Archive.\n\n" +
+               "Customer: " + (data.name || "Anonymous") + "\n" +
+               "LK-ID: " + (data.lkid || "Guest") + "\n" +
+               "Total: ₦" + data.total + "\n" +
+               "Order ID: " + orderId + "\n\n" +
+               "Manage this order at: https://www.paperthoughts.org/admin/orders\n\n" +
+               "We live in the lines.";
+    
+    MailApp.sendEmail(adminEmail, subject, body);
+  } catch (e) {
+    Logger.log("Email failed: " + e.toString());
+  }
+  
+  // Also update 'Last Interest' in the Archive (books) tab
+  var bookSheet = ss.getSheetByName("Archive");
+  if (bookSheet) {
+    var bookData = bookSheet.getDataRange().getValues();
+    var itemTitles = data.items.map(function(i) { return i.title.toLowerCase(); });
+    
+    for (var i = 3; i < bookData.length; i++) {
+      var bookTitle = bookData[i][1].toString().toLowerCase();
+      if (itemTitles.indexOf(bookTitle) !== -1) {
+        bookSheet.getRange(i + 1, 10).setValue(new Date()); // Column J
+      }
+    }
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({ success: true, orderId: orderId })).setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Tab 1: Archive (Books)
+ * Column A: SN/ID
+ * ...
+ * Column I: Image URL
+ * Column J: Last Interest (Timestamp) [NEW]
+ */
 function handleRegistration(data, ss) {
   var sheet = ss.getSheetByName("Archive");
   
@@ -192,7 +379,8 @@ function handleGetEvents(ss) {
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) return ContentService.createTextOutput(JSON.stringify({ success: true, events: [] })).setMimeType(ContentService.MimeType.JSON);
   
-  var data = sheet.getRange("A2:D" + lastRow).getValues();
+  // Fetch columns A through I
+  var data = sheet.getRange("A2:I" + lastRow).getValues();
   var events = [];
   
   for (var i = 0; i < data.length; i++) {
@@ -200,7 +388,12 @@ function handleGetEvents(ss) {
     if (status === "active") {
       events.push({
         name: data[i][0],
-        type: String(data[i][1]).toLowerCase().trim()
+        type: String(data[i][1]).toLowerCase().trim(),
+        date: data[i][4],
+        time: data[i][5],
+        location: data[i][6],
+        description: data[i][7],
+        rsvpLink: data[i][8]
       });
     }
   }

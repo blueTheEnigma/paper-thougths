@@ -1,77 +1,70 @@
 "use client";
 import { motion } from 'framer-motion';
+import { ExternalLink, Calendar, Clock, MapPin } from 'lucide-react';
 
-const defaultEvents = [
-  {
-    id: 1,
-    title: "Paper Thoughts ABU Weekly Saturday Meetings",
-    date: "Every Saturday",
-    time: "4:30 PM",
-    location: "Sculpture Garden",
-    description: "Join us for our weekly gathering where we debate literature, sip tea, and dive deep into our current reads. Newcomers always welcome.",
-  },
-  {
-    id: 2,
-    title: "Poetry & Wine Night",
-    date: "Coming Soon",
-    time: "TBD",
-    location: "Main Clubhouse",
-    description: "An evening of spoken word, vintage selections, and acoustic ambiance. Bring your favorite verses to share with the room.",
-  }
-];
-export default function Events() {
+export default function Events({ initialEvents = [] }) {
+  // Use initialEvents if available, otherwise show nothing or a message
+  const displayEvents = initialEvents.length > 0 ? initialEvents : [];
+
   return (
     <section id="events" className="py-24 px-6 bg-cream border-t border-sage/20 min-h-[80vh]">
       <div className="max-w-4xl mx-auto flex flex-col items-center">
-        <h2 className="text-5xl font-display text-burgundy mb-2 text-center">RSVP for our next reading</h2>
-        <p className="text-xl text-ink/80 mb-12 font-quote italic text-center">
-          Secure your spot below. We have a habit of running out of seats.
+        <h2 className="text-5xl font-display text-burgundy mb-2 text-center">Upcoming Gatherings</h2>
+        <p className="text-xl text-ink/80 mb-16 font-quote italic text-center">
+          Secure your spot at the table. We have a habit of running out of seats.
         </p>
-        
-        {/* Luma Embed Area */}
-        <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden border border-sage/30 mb-20 relative">
-          <div className="absolute top-0 left-0 w-full h-2 bg-accent z-10"></div>
-          <iframe
-            src="https://lu.ma/embed-checkout/evt-rBDsDVUfKi8CYft"
-            width="100%"
-            height="550"
-            frameBorder="0"
-            border="0"
-            allowFullScreen
-            className="w-full relative z-0"
-            aria-label="Luma Event"
-          ></iframe>
-        </div>
 
-        <h3 className="text-3xl md:text-4xl font-display text-ink mb-12 text-center">More Upcoming Dates</h3>
 
-        {/* Static Events Listing */}
+        {/* Dynamic Events Listing */}
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
-          {defaultEvents.map((event, index) => (
-            <motion.div 
-              key={event.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="bg-white rounded-2xl shadow-xl border border-sage/30 p-6 md:p-8 flex flex-col group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
-            >
-              <div className="text-xs font-bold text-accent uppercase tracking-widest mb-1">{event.date} <span className="opacity-50 mx-1">•</span> {event.time}</div>
-              <h3 className="text-2xl font-display text-burgundy mb-1">{event.title}</h3>
-              <div className="text-sm font-bold text-ink/50 mb-4">{event.location}</div>
-              
-              <p className="text-ink/80 mb-8 flex-1 leading-relaxed">
-                {event.description}
-              </p>
-              
-              <button 
-                disabled
-                className="w-full bg-sage/20 text-ink/40 py-3 rounded-xl font-bold cursor-not-allowed border border-sage/30"
+          {displayEvents.length > 0 ? (
+            displayEvents.map((event, index) => (
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                className="bg-white rounded-2xl shadow-xl border border-sage/30 p-6 md:p-8 flex flex-col group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
               >
-                RSVPs Not Yet Open
-              </button>
-            </motion.div>
-          ))}
+                <div className="text-xs font-bold text-accent uppercase tracking-widest mb-1 flex items-center gap-2">
+                  <Calendar size={12} /> {event.date || "TBD"} 
+                  <span className="opacity-50 mx-1">•</span> 
+                  <Clock size={12} /> {event.time || "TBD"}
+                </div>
+                <h3 className="text-2xl font-display text-burgundy mb-1 leading-tight">{event.name}</h3>
+                <div className="text-sm font-bold text-ink/50 mb-4 flex items-center gap-2">
+                  <MapPin size={14} /> {event.location || "TBD"}
+                </div>
+                
+                <p className="text-ink/80 mb-8 flex-1 leading-relaxed text-sm">
+                  {event.description || "Join us for another captivating gathering of the Archive."}
+                </p>
+                
+                {event.rsvpLink ? (
+                  <a 
+                    href={event.rsvpLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full bg-burgundy text-white py-3 rounded-xl font-bold border border-burgundy hover:bg-ink transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink size={18} /> Register Now
+                  </a>
+                ) : (
+                  <button 
+                    disabled
+                    className="w-full bg-sage/20 text-ink/40 py-3 rounded-xl font-bold cursor-not-allowed border border-sage/30"
+                  >
+                    RSVPs Not Yet Open
+                  </button>
+                )}
+              </motion.div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-20 bg-white/50 rounded-3xl border border-dashed border-sage/40">
+              <p className="text-ink/40 font-quote italic">The grand ledger is currently quiet. Check back soon for new tales.</p>
+            </div>
+          )}
         </div>
       </div>
     </section>

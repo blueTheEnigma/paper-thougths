@@ -1,10 +1,10 @@
 "use client";
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, X, MessageCircle, ExternalLink } from 'lucide-react';
+import { Search, X, MessageCircle, ExternalLink, ShoppingBag, Award, Trash2, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const WHATSAPP_NUMBER = "2349055433811";
+const WHATSAPP_NUMBER = "2348109546849";
 const CHECKOUT_URL = "https://docs.google.com/forms/d/e/1FAIpQLSchF6OdKRpWyjDZ7NxFLzyuAbaTLmd_11Dnn4eCiKz_HbyKkw/viewform?usp=header";
 
 export default function Bookstore({ initialBooks }) {
@@ -13,10 +13,38 @@ export default function Bookstore({ initialBooks }) {
   const [selectedBook, setSelectedBook] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [showSoldOut, setShowSoldOut] = useState(false);
+  const [bag, setBag] = useState([]);
+  const [isBagOpen, setIsBagOpen] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    fetchProfile();
+    // Load bag from localStorage
+    const savedBag = localStorage.getItem('archive_bag');
+    if (savedBag) {
+      try {
+        setBag(JSON.parse(savedBag));
+      } catch (e) {
+        console.error("Failed to parse bag", e);
+      }
+    }
   }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch('/api/me');
+      const data = await res.json();
+      if (data.success) setProfile(data.profile);
+    } catch (e) {
+      console.error("Auth check failed", e);
+    }
+  };
+
+  useEffect(() => {
+    localStorage.setItem('archive_bag', JSON.stringify(bag));
+  }, [bag]);
 
   useEffect(() => {
     if (selectedBook) {
@@ -52,9 +80,75 @@ export default function Bookstore({ initialBooks }) {
 
   const featured = useMemo(() => initialBooks.filter(b => b.featured), [initialBooks]);
 
-  const handleWhatsapp = (book) => {
-    const msg = `Hi, I'd like to order: *${book.title}* by ${book.author} (ID: ${book.id})`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+  const toggleBag = () => setIsBagOpen(!isBagOpen);
+
+  const addToBag = (book) => {
+    if (book.status?.toUpperCase() === 'SOLD OUT') return;
+    setBag(prev => {
+      const exists = prev.find(item => item.id === book.id);
+      if (exists) return prev;
+      return [...prev, book];
+    });
+    setSelectedBook(null);
+    setIsBagOpen(true);
+  };
+
+  const removeFromBag = (id) => {
+    setBag(prev => prev.filter(item => item.id !== id));
+  };
+
+  const clearBag = () => setBag([]);
+
+  const subtotal = bag.reduce((acc, item) => acc + parseInt(item.price), 0);
+  const isMember = !!profile;
+  const discount = isMember ? Math.round(subtotal * 0.1) : 0;
+  const total = subtotal - discount;
+
+  const handleBagCheckout = async () => {
+    if (bag.length === 0 || isCheckingOut) return;
+    
+    setIsCheckingOut(true);
+    
+    // Log the order to the backend first
+    try {
+      await fetch('/api/orders', {
+        method: 'POST',
+        body: JSON.stringify({
+          lkid: profile?.lkid || "Guest",
+          name: profile?.name || "Guest Reader",
+          items: bag.map(i => ({ title: i.title, price: i.price })),
+          subtotal,
+          discount,
+          total
+        }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (e) {
+      console.error("Failed to log order but proceeding to WhatsApp", e);
+    }
+    
+    let message = `*Order Request - Paper Thoughts Archive*\n\n`;
+    if (profile) {
+      message += `*Member:* ${profile.name}\n*LK-ID:* ${profile.lkid}\n\n`;
+    }
+    
+    message += `*Items:*\n`;
+    bag.forEach((item, index) => {
+      message += `${index + 1}. ${item.title} (₦${parseInt(item.price).toLocaleString()})\n`;
+    });
+    
+    message += `\n*Subtotal:* ₦${subtotal.toLocaleString()}`;
+    if (isMember) {
+      message += `\n*Member Discount (10%):* -₦${discount.toLocaleString()}`;
+      message += `\n*Final Total:* ₦${total.toLocaleString()}`;
+    } else {
+      message += `\n*Total:* ₦${total.toLocaleString()}`;
+    }
+    
+    message += `\n\n_Please confirm availability and delivery details._`;
+    
+    setIsCheckingOut(false);
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const RatingDots = ({ rating }) => {
@@ -165,8 +259,24 @@ export default function Bookstore({ initialBooks }) {
                 <div className="aspect-[2/3] w-full rounded-xl overflow-hidden shadow-sm border border-sage/20 mb-3 bg-cream relative">
                   <img src={book.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} alt={book.title} className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${book.status?.toUpperCase() === 'SOLD OUT' ? 'grayscale opacity-50' : ''}`} loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out pointer-events-none z-10"></div>
+                  
                   {book.status?.toUpperCase() === 'SOLD OUT' && (
-                    <div className="absolute top-2 right-2 bg-burgundy text-cream text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider z-20">Sold Out</div>
+                    <div className="absolute top-2 right-2 bg-burgundy text-cream text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider z-20 shadow-lg">Sold Out</div>
+                  )}
+
+                  {book.status?.toUpperCase() !== 'SOLD OUT' && book.lastInterest && (
+                    (() => {
+                      const interestDate = new Date(book.lastInterest);
+                      const hoursSince = (new Date() - interestDate) / (1000 * 60 * 60);
+                      if (hoursSince < 24) {
+                        return (
+                          <div className="absolute top-2 left-2 bg-accent text-burgundy text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-widest z-20 shadow-lg flex items-center gap-1 animate-pulse">
+                            <Flame size={10} fill="currentColor" /> High Interest
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()
                   )}
                 </div>
                 <div className="flex flex-col flex-1">
@@ -186,6 +296,144 @@ export default function Bookstore({ initialBooks }) {
           </div>
         </div>
       </div>
+
+      {/* Floating Bag Trigger */}
+      <AnimatePresence>
+        {bag.length > 0 && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            onClick={toggleBag}
+            className="fixed bottom-8 right-8 z-[60] bg-burgundy text-cream p-5 rounded-full shadow-2xl hover:bg-ink transition-colors flex items-center gap-3 group"
+          >
+            <div className="relative">
+              <ShoppingBag size={24} />
+              <span className="absolute -top-2 -right-2 bg-accent text-burgundy text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-burgundy">
+                {bag.length}
+              </span>
+            </div>
+            <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 font-bold text-sm whitespace-nowrap">Review Bag</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Bag Drawer */}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isBagOpen && (
+            <div className="fixed inset-0 z-[110] flex justify-end">
+              <motion.div 
+                initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}
+                className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
+                onClick={toggleBag}
+              />
+              <motion.div 
+                initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="relative w-full max-w-md bg-cream h-full shadow-2xl flex flex-col border-l border-sage/20"
+              >
+                <div className="p-6 border-b border-sage/20 flex items-center justify-between bg-white/50">
+                  <div className="flex items-center gap-3">
+                    <ShoppingBag className="text-burgundy" size={24} />
+                    <h2 className="text-2xl font-display text-burgundy">Your Archive Bag</h2>
+                  </div>
+                  <button onClick={toggleBag} className="p-2 hover:bg-sage/10 rounded-full transition-colors">
+                    <X size={24} className="text-ink" />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  {bag.length > 0 ? (
+                    bag.map(item => (
+                      <div key={`bag-${item.id}`} className="flex gap-4 bg-white p-4 rounded-2xl border border-sage/10 shadow-sm group">
+                        <div className="w-16 h-20 bg-sage/5 rounded-lg overflow-hidden flex-shrink-0">
+                          <img src={item.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} alt={item.title} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-ink text-sm truncate">{item.title}</h4>
+                          <p className="text-xs text-ink/50 mb-2 truncate">{item.author}</p>
+                          <div className="font-display font-bold text-burgundy">₦{parseInt(item.price).toLocaleString()}</div>
+                        </div>
+                        <button 
+                          onClick={() => removeFromBag(item.id)}
+                          className="self-center p-2 text-ink/20 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-center opacity-40 py-20">
+                       <MessageCircle size={64} className="mb-4" />
+                       <p className="font-quote italic">Your bag is as empty as a forgotten shelf.</p>
+                    </div>
+                  )}
+                </div>
+
+                {bag.length > 0 && (
+                  <div className="p-8 bg-white border-t border-sage/20 space-y-4">
+                    {isMember && (
+                      <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl flex items-center gap-3 mb-2">
+                        <div className="bg-burgundy text-cream p-2 rounded-lg">
+                          <Award size={16} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-burgundy">Member Benefit</p>
+                          <p className="text-xs text-ink/70">10% discount automatically applied.</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-ink/60">Subtotal</span>
+                        <span className="font-bold text-ink font-mono">₦{subtotal.toLocaleString()}</span>
+                      </div>
+                      {isMember && (
+                        <div className="flex justify-between text-sm text-sage font-bold">
+                          <span>Archive Discount</span>
+                          <span className="font-mono">-₦{discount.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="pt-2 border-t border-sage/20 flex justify-between items-baseline">
+                        <span className="text-lg font-display text-ink">Total</span>
+                        <span className="text-2xl font-display text-burgundy">₦{total.toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 space-y-3">
+                      <button 
+                        onClick={handleBagCheckout}
+                        disabled={isCheckingOut}
+                        className="w-full bg-burgundy text-cream py-4 rounded-xl font-bold hover:bg-ink transition-colors shadow-lg shadow-burgundy/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isCheckingOut ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Logging Order...
+                          </>
+                        ) : (
+                          <>
+                            <MessageCircle size={20} /> Checkout via WhatsApp
+                          </>
+                        )}
+                      </button>
+                      <button 
+                        onClick={clearBag}
+                        className="w-full text-ink/40 text-xs font-bold uppercase tracking-widest hover:text-ink transition-colors py-2"
+                      >
+                        Empty Bag
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Modal */}
       {mounted && typeof document !== 'undefined' && createPortal(
@@ -233,18 +481,19 @@ export default function Bookstore({ initialBooks }) {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3">
+                    <button 
+                      onClick={() => addToBag(selectedBook)}
+                      className={`flex-1 flex justify-center items-center gap-2 py-4 rounded-xl font-bold transition-all ${selectedBook.status?.toUpperCase() === 'SOLD OUT' ? 'bg-sage/20 text-ink/40 cursor-not-allowed' : 'bg-burgundy text-cream hover:bg-ink shadow-lg shadow-burgundy/20'}`}
+                      disabled={selectedBook.status?.toUpperCase() === 'SOLD OUT'}
+                    >
+                      <MessageCircle size={18} /> {selectedBook.status?.toUpperCase() === 'SOLD OUT' ? 'Sold Out' : 'Add to Bag'}
+                    </button>
                     <a 
                       href={selectedBook.orderUrl || CHECKOUT_URL} target="_blank" rel="noreferrer"
-                      className="flex-1 flex justify-center items-center gap-2 bg-ink text-cream py-3 rounded-xl font-bold hover:bg-ink/90 transition-colors"
+                      className="flex-1 flex justify-center items-center gap-2 bg-white text-ink border border-sage/30 py-4 rounded-xl font-bold hover:bg-sage/10 transition-colors"
                     >
-                      <ExternalLink size={18} /> Order via Form
+                      <ExternalLink size={18} /> View Form
                     </a>
-                    <button 
-                      onClick={() => handleWhatsapp(selectedBook)}
-                      className="flex-1 flex justify-center items-center gap-2 bg-[#25D366] text-white py-3 rounded-xl font-bold hover:bg-[#1eb757] transition-colors"
-                    >
-                      <MessageCircle size={18} /> Message on WhatsApp
-                    </button>
                   </div>
                 </div>
               </motion.div>

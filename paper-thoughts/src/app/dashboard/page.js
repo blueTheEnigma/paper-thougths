@@ -8,7 +8,9 @@ import Link from 'next/link';
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
   const [profile, setProfile] = useState(null);
+  const [orders, setOrders] = useState([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -16,6 +18,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isLoaded && user) {
       fetchProfile();
+      fetchOrders();
     } else if (isLoaded && !user) {
       window.location.href = '/sign-in?redirect_url=/dashboard';
     }
@@ -35,6 +38,20 @@ export default function DashboardPage() {
       setError("Failed to load profile data.");
     } finally {
       setLoadingProfile(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch('/api/me/orders');
+      const data = await res.json();
+      if (data.success) {
+        setOrders(data.orders);
+      }
+    } catch (err) {
+      console.error("Failed to load orders");
+    } finally {
+      setLoadingOrders(false);
     }
   };
 
@@ -100,60 +117,69 @@ export default function DashboardPage() {
   const discountPercent = profile.tier === "Lore Keeper" ? "15%" : "10%";
 
   return (
-    <main className="min-h-screen bg-cream selection:bg-primary/30 pt-24 pb-20 px-6">
-      <div className="max-w-5xl mx-auto">
+    <main className="min-h-screen bg-cream selection:bg-primary/30 pt-20 md:pt-32 pb-20 px-4 md:px-8">
+      <div className="max-w-6xl mx-auto">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-display text-burgundy mb-2">Welcome back, {profile.name.split(' ')[0]}</h1>
-            <p className="text-ink/60 font-mono text-sm flex items-center gap-2">
-              <span className="bg-white px-2 py-1 border border-sage/20 rounded">{profile.lkid}</span>
-              <span className="hidden sm:inline">•</span>
-              <span className="flex items-center gap-1"><MapPin size={14}/> {profile.chapter}</span>
-            </p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+          <div className="w-full md:w-auto">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display text-burgundy mb-3 leading-tight">
+              Welcome back, <br className="sm:hidden" />
+              <span className="text-burgundy/90">{profile.name.split(' ')[0]}</span>
+            </h1>
+            <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] sm:text-xs">
+              <span className="bg-white px-2 py-1 border border-sage/20 rounded shadow-sm text-burgundy font-bold">{profile.lkid}</span>
+              <span className="text-ink/30">•</span>
+              <span className="flex items-center gap-1.5 text-ink/60"><MapPin size={12} className="text-sage"/> {profile.chapter}</span>
+            </div>
           </div>
-          <div className="bg-white border border-sage/20 py-2 px-4 rounded-full flex items-center gap-3 shadow-sm">
-             <span className="text-sm font-bold text-ink/70">{user?.primaryEmailAddress?.emailAddress}</span>
+          <div className="w-full md:w-auto bg-white/60 backdrop-blur-sm border border-sage/20 py-2.5 px-5 rounded-2xl flex items-center justify-between md:justify-start gap-4 shadow-sm">
+             <span className="text-xs sm:text-sm font-bold text-ink/70 truncate max-w-[180px] sm:max-w-none">{user?.primaryEmailAddress?.emailAddress}</span>
              <UserButton afterSignOutUrl="/" />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           {/* Main Content Column */}
           <div className="lg:col-span-2 space-y-8">
             
             {/* Status Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-8 rounded-3xl border border-sage/20 shadow-xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-6 opacity-5">
-                <Award size={160} />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-6 sm:p-10 rounded-[32px] border border-sage/20 shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 sm:p-8 opacity-5">
+                <Award size={180} />
               </div>
               <div className="relative z-10">
-                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-ink/40 mb-2">Current Tier</h3>
-                <div className="flex items-end gap-4 mb-8">
-                  <h2 className="text-5xl font-display text-burgundy leading-none">{profile.tier}</h2>
-                  {isKeeper && <span className="bg-accent/10 text-accent font-bold text-xs px-2 py-1 rounded mb-1 uppercase tracking-wider">Unlocked</span>}
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40 mb-3">Membership Status</h3>
+                <div className="flex flex-wrap items-end gap-4 mb-8">
+                  <h2 className="text-4xl sm:text-6xl font-display text-burgundy leading-none tracking-tight">{profile.tier}</h2>
+                  {isKeeper && (
+                    <span className="bg-sage/10 text-sage font-bold text-[10px] px-3 py-1.5 rounded-full uppercase tracking-widest border border-sage/20 mb-1">
+                      Unlocked
+                    </span>
+                  )}
                 </div>
 
                 {isKeeper ? (
-                  <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
-                     <h4 className="font-bold text-burgundy flex items-center gap-2 mb-2"><Ticket size={18}/> Your Cipher Discount</h4>
-                     <p className="text-sm text-ink/70 mb-4">You have a permanent <strong>{discountPercent} discount</strong> on all purchases.</p>
+                  <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 sm:p-8">
+                     <h4 className="font-bold text-burgundy flex items-center gap-2 mb-3"><Ticket size={18}/> Your Cipher Discount</h4>
+                     <p className="text-sm text-ink/70 mb-6 leading-relaxed">
+                        As a trusted member of the Archive, you have a permanent <strong>{discountPercent} discount</strong> on all purchases.
+                     </p>
                      
-                     <div className="flex items-center gap-3 bg-white p-2 pl-4 rounded-xl border border-sage/20">
-                        <span className="font-mono text-lg font-bold text-ink tracking-widest flex-1">{profile.lkid}</span>
-                        <button onClick={copyDiscountCode} className="bg-sage/10 hover:bg-sage/20 text-ink px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
+                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white p-2 pl-4 rounded-xl border border-sage/20">
+                        <span className="font-mono text-xl font-bold text-ink tracking-[0.2em] flex-1 py-2 sm:py-0">{profile.lkid}</span>
+                        <button onClick={copyDiscountCode} className="bg-sage/10 hover:bg-sage/20 text-ink px-6 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2">
                           {copiedCode ? <CheckCircle2 size={16} className="text-sage"/> : <Copy size={16}/>}
                           {copiedCode ? "Copied" : "Copy Code"}
                         </button>
                      </div>
-                     <p className="text-xs text-ink/40 mt-3 italic">* Apply this code at checkout.</p>
+                     <p className="text-[10px] text-ink/40 mt-4 italic text-center sm:text-left">* Apply this code at checkout to claim your lore.</p>
                   </div>
                 ) : (
-                  <div className="bg-ink/5 rounded-2xl p-6">
-                    <p className="text-sm text-ink/70">
-                      You are a Reader. Upgrade to <strong>Keeper</strong> by attending events or referring friends to unlock a lifetime 10% discount.
+                  <div className="bg-ink/5 rounded-2xl p-6 border border-sage/10">
+                    <p className="text-sm text-ink/70 leading-relaxed">
+                      You are currently a <strong>Reader</strong>. Upgrade to <strong>Keeper</strong> by attending events or referring friends to unlock your lifetime 10% discount and exclusive Archive access.
                     </p>
                   </div>
                 )}
@@ -161,38 +187,78 @@ export default function DashboardPage() {
             </motion.div>
 
             {/* Progress Trackers */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               
-              <div className="bg-white p-6 rounded-3xl border border-sage/20 shadow-md">
-                <div className="flex justify-between items-start mb-4">
+              <div className="bg-white p-6 sm:p-8 rounded-[32px] border border-sage/20 shadow-lg">
+                <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h3 className="font-bold text-ink flex items-center gap-2"><Ticket size={18} className="text-sage"/> Event Points</h3>
-                    <p className="text-xs text-ink/50 mt-1">Earn 2 for physical, 1 for virtual.</p>
+                    <h3 className="font-bold text-ink flex items-center gap-2 text-sm"><Ticket size={16} className="text-sage"/> Event Points</h3>
+                    <p className="text-[10px] text-ink/50 mt-1 uppercase tracking-wider font-medium">Physical: 2 • Virtual: 1</p>
                   </div>
-                  <span className="font-display text-2xl text-burgundy">{profile.events}</span>
+                  <span className="font-display text-3xl text-burgundy">{profile.events}</span>
                 </div>
                 
-                <div className="w-full bg-sage/20 rounded-full h-3 mb-2 overflow-hidden">
-                  <div className="bg-sage h-3 rounded-full transition-all duration-1000" style={{ width: `${eventsProgress}%` }}></div>
+                <div className="w-full bg-sage/10 rounded-full h-3 mb-3 overflow-hidden border border-sage/5">
+                  <div className="bg-sage h-3 rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${eventsProgress}%` }}></div>
                 </div>
-                <p className="text-xs text-ink/50 text-right">{profile.events} / {eventsNeeded} to Keeper</p>
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-ink/40">
+                  <span>{eventsProgress.toFixed(0)}% Complete</span>
+                  <span>{profile.events}/{eventsNeeded}</span>
+                </div>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl border border-sage/20 shadow-md">
-                <div className="flex justify-between items-start mb-4">
+              <div className="bg-white p-6 sm:p-8 rounded-[32px] border border-sage/20 shadow-lg">
+                <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h3 className="font-bold text-ink flex items-center gap-2"><Users size={18} className="text-accent"/> Referrals</h3>
-                    <p className="text-xs text-ink/50 mt-1">Invite friends to the Archive.</p>
+                    <h3 className="font-bold text-ink flex items-center gap-2 text-sm"><Users size={16} className="text-accent"/> Referrals</h3>
+                    <p className="text-[10px] text-ink/50 mt-1 uppercase tracking-wider font-medium">Invite the collective</p>
                   </div>
-                  <span className="font-display text-2xl text-burgundy">{profile.referrals}</span>
+                  <span className="font-display text-3xl text-burgundy">{profile.referrals}</span>
                 </div>
                 
-                <div className="w-full bg-primary/20 rounded-full h-3 mb-2 overflow-hidden">
-                  <div className="bg-accent h-3 rounded-full transition-all duration-1000" style={{ width: `${referralsProgress}%` }}></div>
+                <div className="w-full bg-primary/10 rounded-full h-3 mb-3 overflow-hidden border border-primary/5">
+                  <div className="bg-accent h-3 rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${referralsProgress}%` }}></div>
                 </div>
-                <p className="text-xs text-ink/50 text-right">{profile.referrals} / {referralsNeeded} to Keeper</p>
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-ink/40">
+                  <span>{referralsProgress.toFixed(0)}% Complete</span>
+                  <span>{profile.referrals}/{referralsNeeded}</span>
+                </div>
               </div>
 
+            </motion.div>
+
+            {/* My Archive Orders Section - NEW */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white p-6 sm:p-10 rounded-[32px] border border-sage/20 shadow-xl">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-display text-burgundy">My Archive Orders</h3>
+                {loadingOrders && <Loader2 size={18} className="animate-spin text-burgundy/40" />}
+              </div>
+
+              {orders.length > 0 ? (
+                <div className="space-y-4">
+                  {orders.map((order, idx) => (
+                    <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 bg-sage/5 rounded-2xl border border-sage/10 group hover:border-burgundy/20 transition-all">
+                      <div>
+                        <div className="text-[10px] font-bold text-ink/40 uppercase tracking-widest mb-1">{order.orderId} · {new Date(order.date).toLocaleDateString()}</div>
+                        <h4 className="font-bold text-ink text-sm mb-1">{order.items}</h4>
+                        <p className="text-xs text-burgundy font-bold">₦{order.total}</p>
+                      </div>
+                      <div className="mt-4 sm:mt-0">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                          order.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-burgundy/10 text-burgundy'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : !loadingOrders && (
+                <div className="py-12 text-center bg-cream/50 rounded-2xl border border-dashed border-sage/30">
+                  <p className="text-ink/40 font-quote italic">Your personal archive history is currently empty.</p>
+                  <Link href="/bookstore" className="inline-block mt-4 text-xs font-bold text-burgundy underline uppercase tracking-widest">Browse Bookstore</Link>
+                </div>
+              )}
             </motion.div>
 
           </div>
@@ -201,14 +267,15 @@ export default function DashboardPage() {
           <div className="space-y-6">
             
             {/* Referral Widget */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-burgundy text-cream p-8 rounded-3xl shadow-xl">
-              <h3 className="font-display text-2xl mb-4">Invite the Collective</h3>
-              <p className="text-sm text-cream/70 mb-6">
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-burgundy text-cream p-8 rounded-[32px] shadow-2xl relative overflow-hidden group">
+              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl group-hover:scale-110 transition-transform"></div>
+              <h3 className="font-display text-2xl mb-4 relative z-10">Invite the Collective</h3>
+              <p className="text-sm text-cream/70 mb-8 leading-relaxed relative z-10">
                 Share your personal link. Earn 1 referral point for every person who joins the Archive using it.
               </p>
               <button 
                 onClick={copyRefLink}
-                className="w-full bg-cream text-burgundy py-4 rounded-xl font-bold hover:bg-white transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-cream text-burgundy py-4 rounded-2xl font-bold hover:bg-white transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 relative z-10"
               >
                 {copied ? <CheckCircle2 size={18} className="text-sage"/> : <Copy size={18}/>}
                 {copied ? "Link Copied!" : "Copy Referral Link"}
@@ -216,17 +283,23 @@ export default function DashboardPage() {
             </motion.div>
 
             {/* Quick Links */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="bg-white p-6 rounded-3xl border border-sage/20 shadow-md">
-              <h3 className="font-bold text-ink mb-4 uppercase tracking-widest text-xs border-b border-sage/20 pb-2">Quick Links</h3>
-              <ul className="space-y-3">
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="bg-white p-8 rounded-[32px] border border-sage/20 shadow-lg">
+              <h3 className="font-bold text-ink mb-6 uppercase tracking-[0.2em] text-[10px] border-b border-sage/10 pb-3">Quick Navigation</h3>
+              <ul className="space-y-4">
                 <li>
-                  <Link href="/bookstore" className="text-ink/70 hover:text-accent font-bold text-sm flex items-center gap-2 transition-colors">
-                    <ExternalLink size={14}/> Browse Bookstore
+                  <Link href="/bookstore" className="group text-ink/70 hover:text-accent font-bold text-sm flex items-center gap-3 transition-colors">
+                    <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
+                      <ExternalLink size={16}/>
+                    </div>
+                    Browse Bookstore
                   </Link>
                 </li>
                 <li>
-                  <Link href="/events" className="text-ink/70 hover:text-accent font-bold text-sm flex items-center gap-2 transition-colors">
-                    <ExternalLink size={14}/> Upcoming Events
+                  <Link href="/events" className="group text-ink/70 hover:text-accent font-bold text-sm flex items-center gap-3 transition-colors">
+                    <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
+                      <ExternalLink size={16}/>
+                    </div>
+                    Upcoming Events
                   </Link>
                 </li>
               </ul>

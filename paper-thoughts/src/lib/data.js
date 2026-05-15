@@ -35,6 +35,7 @@ export async function getBooks() {
             description: row[6]?.trim(),
             rating: ratingNum,
             imageUrl: convertDriveLink(row[8]?.trim()) || null,
+            lastInterest: row[9]?.trim() || null,
             featured: ratingNum > 4.2
           };
         }).filter(b => b.id && b.title);
