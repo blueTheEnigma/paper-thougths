@@ -146,6 +146,9 @@ export default function Bookstore({ initialBooks }) {
       message += `\n*Total:* ₦${total.toLocaleString()}`;
     }
     
+    message += `\n\n*Delivery:* Saturday @ Zaria Meeting`;
+    message += `\n*Note:* I'll be picking these up at the next Paper Thoughts gathering.`;
+    
     message += `\n\n_Please confirm availability and delivery details._`;
     
     setIsCheckingOut(false);
@@ -351,6 +354,19 @@ export default function Bookstore({ initialBooks }) {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  {bag.length > 0 && (
+                    <div className="mb-6 p-4 bg-accent/5 border border-accent/20 rounded-2xl flex items-start gap-3">
+                      <div className="bg-accent text-burgundy p-2 rounded-lg shrink-0">
+                        <MapPin size={16} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-burgundy">Logistics Update</p>
+                        <p className="text-xs text-ink/70 leading-relaxed mt-1">
+                          Deliveries are currently restricted to <strong>Saturdays</strong> at the <strong>Zaria Meeting</strong>.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   {bag.length > 0 ? (
                     bag.map(item => (
                       <div key={`bag-${item.id}`} className="flex gap-4 bg-white p-4 rounded-2xl border border-sage/10 shadow-sm group">
@@ -496,7 +512,7 @@ export default function Bookstore({ initialBooks }) {
                       <ShoppingBag size={18} /> {selectedBook.status?.toUpperCase() === 'SOLD OUT' ? 'Sold Out' : 'Add to Bag'}
                     </button>
                     <a 
-                      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi Paper Thoughts! I'd like to buy *${selectedBook.title}* (#${selectedBook.id}). Is it available?`)}`}
+                      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi Paper Thoughts! I'd like to buy *${selectedBook.title}* (#${selectedBook.id}). I'll pick it up at the Saturday Zaria Meeting.`)}`}
                       target="_blank" rel="noreferrer"
                       className="flex-1 flex justify-center items-center gap-2 bg-white text-ink border border-sage/30 py-4 rounded-xl font-bold hover:bg-sage/10 transition-colors"
                     >
