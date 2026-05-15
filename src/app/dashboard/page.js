@@ -114,7 +114,7 @@ export default function DashboardPage() {
   const referralsProgress = Math.min(100, (profile.referrals / referralsNeeded) * 100);
 
   const isKeeper = profile.tier === "Keeper" || profile.tier === "Lore Keeper";
-  const discountPercent = profile.tier === "Lore Keeper" ? "15%" : "10%";
+  const discountPercent = profile.tier === "Lore Keeper" ? "10%" : "5%";
 
   return (
     <main className="min-h-screen bg-cream selection:bg-primary/30 pt-20 md:pt-32 pb-20 px-4 md:px-8">
@@ -179,7 +179,7 @@ export default function DashboardPage() {
                 ) : (
                   <div className="bg-ink/5 rounded-2xl p-6 border border-sage/10">
                     <p className="text-sm text-ink/70 leading-relaxed">
-                      You are currently a <strong>Reader</strong>. Upgrade to <strong>Keeper</strong> by attending events or referring friends to unlock your lifetime 10% discount and exclusive Archive access.
+                      You are currently a <strong>Reader</strong>. Upgrade to <strong>Keeper</strong> by attending events or referring friends to unlock your lifetime 5% discount and exclusive Archive access.
                     </p>
                   </div>
                 )}

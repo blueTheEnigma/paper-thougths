@@ -101,7 +101,8 @@ export default function Bookstore({ initialBooks }) {
 
   const subtotal = bag.reduce((acc, item) => acc + parseInt(item.price), 0);
   const isMember = !!profile;
-  const discount = isMember ? Math.round(subtotal * 0.1) : 0;
+  const discountPercent = profile?.tier === "Lore Keeper" ? 0.1 : (profile?.tier === "Keeper" ? 0.05 : 0);
+  const discount = Math.round(subtotal * discountPercent);
   const total = subtotal - discount;
 
   const handleBagCheckout = async () => {
@@ -138,8 +139,8 @@ export default function Bookstore({ initialBooks }) {
     });
     
     message += `\n*Subtotal:* ₦${subtotal.toLocaleString()}`;
-    if (isMember) {
-      message += `\n*Member Discount (10%):* -₦${discount.toLocaleString()}`;
+    if (discount > 0) {
+      message += `\n*Member Discount (${discountPercent * 100}%):* -₦${discount.toLocaleString()}`;
       message += `\n*Final Total:* ₦${total.toLocaleString()}`;
     } else {
       message += `\n*Total:* ₦${total.toLocaleString()}`;
@@ -167,7 +168,13 @@ export default function Bookstore({ initialBooks }) {
       <div className="max-w-7xl mx-auto">
         <div className="mb-12 text-center">
           <h2 className="text-5xl font-display text-burgundy mb-4">Bookstore</h2>
-          <p className="text-ink/70 max-w-xl mx-auto">Browse our full catalogue. Everything you see here is physically available, carefully curated, and not a PDF.</p>
+          <p className="text-ink/70 max-w-xl mx-auto mb-6">Browse our full catalogue. Everything you see here is physically available, carefully curated, and not a PDF.</p>
+          <button 
+            onClick={toggleBag}
+            className="inline-flex items-center gap-2 bg-white border border-sage/30 px-6 py-2.5 rounded-full text-sm font-bold text-burgundy hover:bg-sage/10 transition-all shadow-sm"
+          >
+            <ShoppingBag size={18} /> Review Your Bag ({bag.length})
+          </button>
         </div>
 
         {/* Panguin Picks */}
@@ -373,14 +380,14 @@ export default function Bookstore({ initialBooks }) {
 
                 {bag.length > 0 && (
                   <div className="p-8 bg-white border-t border-sage/20 space-y-4">
-                    {isMember && (
+                    {discount > 0 && (
                       <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl flex items-center gap-3 mb-2">
                         <div className="bg-burgundy text-cream p-2 rounded-lg">
                           <Award size={16} />
                         </div>
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-widest text-burgundy">Member Benefit</p>
-                          <p className="text-xs text-ink/70">10% discount automatically applied.</p>
+                          <p className="text-xs text-ink/70">{discountPercent * 100}% discount automatically applied.</p>
                         </div>
                       </div>
                     )}
@@ -486,13 +493,14 @@ export default function Bookstore({ initialBooks }) {
                       className={`flex-1 flex justify-center items-center gap-2 py-4 rounded-xl font-bold transition-all ${selectedBook.status?.toUpperCase() === 'SOLD OUT' ? 'bg-sage/20 text-ink/40 cursor-not-allowed' : 'bg-burgundy text-cream hover:bg-ink shadow-lg shadow-burgundy/20'}`}
                       disabled={selectedBook.status?.toUpperCase() === 'SOLD OUT'}
                     >
-                      <MessageCircle size={18} /> {selectedBook.status?.toUpperCase() === 'SOLD OUT' ? 'Sold Out' : 'Add to Bag'}
+                      <ShoppingBag size={18} /> {selectedBook.status?.toUpperCase() === 'SOLD OUT' ? 'Sold Out' : 'Add to Bag'}
                     </button>
                     <a 
-                      href={selectedBook.orderUrl || CHECKOUT_URL} target="_blank" rel="noreferrer"
+                      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi Paper Thoughts! I'd like to buy *${selectedBook.title}* (#${selectedBook.id}). Is it available?`)}`}
+                      target="_blank" rel="noreferrer"
                       className="flex-1 flex justify-center items-center gap-2 bg-white text-ink border border-sage/30 py-4 rounded-xl font-bold hover:bg-sage/10 transition-colors"
                     >
-                      <ExternalLink size={18} /> View Form
+                      <MessageCircle size={18} /> Buy Now
                     </a>
                   </div>
                 </div>
