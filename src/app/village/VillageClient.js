@@ -7,10 +7,11 @@ import {
   Sparkles, Clock, Compass, DoorOpen
 } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 // ─── Cinematic Entrance Portal ──────────────────────────────────────────────
 
-function EntrancePortal({ onEnter, userName }) {
+function EntrancePortal({ onEnter, userName, isSignedIn, isRegistered }) {
   const [stage, setStage] = useState(0);
 
   // Sequence: 0 = fade-in logo  →  1 = quote line  →  2 = CTA revealed
@@ -119,9 +120,19 @@ function EntrancePortal({ onEnter, userName }) {
             color: '#FAF7F2',
           }}
         >
-          To travel beyond,
-          <br />
-          <span style={{ color: '#F2A98A' }}>one must belong.</span>
+          {(!isSignedIn || !isRegistered) ? (
+            <>
+              To travel beyond,
+              <br />
+              <span style={{ color: '#F2A98A' }}>one must belong.</span>
+            </>
+          ) : (
+            <>
+              Are you ready to step
+              <br />
+              <span style={{ color: '#F2A98A' }}>into the world of lore?</span>
+            </>
+          )}
         </motion.h1>
 
         {/* Lore quote — fades in at stage 1 */}
@@ -131,11 +142,14 @@ function EntrancePortal({ onEnter, userName }) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.75, ease: 'easeOut' }}
-              className="font-quote italic leading-relaxed mb-8 text-sm sm:text-base"
+              className="font-quote italic leading-relaxed mb-8 text-sm sm:text-base px-2"
               style={{ color: 'rgba(250,247,242,0.55)' }}
             >
-              &ldquo;A village of ink and parchment, where Zaria, Kaduna,
-              and Abuja voices converge — and only the bold dare to write.&rdquo;
+              {(!isSignedIn || !isRegistered) ? (
+                `“A village of ink and parchment, where Zaria, Kaduna, and Abuja voices converge — and only the bold dare to write.”`
+              ) : (
+                `“Welcome back to the creative heart of the clubhouse, ${userName?.split(' ')[0] || 'Writer'}. Your manuscripts, critiques, and leaves are waiting.”`
+              )}
             </motion.p>
           )}
         </AnimatePresence>
@@ -167,40 +181,99 @@ function EntrancePortal({ onEnter, userName }) {
                 className="text-xs sm:text-sm font-sans font-semibold"
                 style={{ color: 'rgba(250,247,242,0.5)' }}
               >
-                {userName ? `Ready, ${userName.split(' ')[0]}?` : 'Are you ready?'}{' '}
-                <span style={{ color: 'rgba(250,247,242,0.35)' }}>
-                  Step into the world of lore.
-                </span>
+                {!isSignedIn ? (
+                  <>
+                    Join the gang.{' '}
+                    <span style={{ color: 'rgba(250,247,242,0.35)' }}>
+                      Claim your LK-ID first.
+                    </span>
+                  </>
+                ) : !isRegistered ? (
+                  <>
+                    Complete registration.{' '}
+                    <span style={{ color: 'rgba(250,247,242,0.35)' }}>
+                      Claim your LK-ID to enter.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Ready, {userName?.split(' ')[0] || 'Writer'}?{' '}
+                    <span style={{ color: 'rgba(250,247,242,0.35)' }}>
+                      Step into the world of lore.
+                    </span>
+                  </>
+                )}
               </p>
 
               {/* Primary CTA */}
-              <motion.button
-                onClick={onEnter}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-sans font-bold uppercase tracking-widest text-xs sm:text-sm cursor-pointer transition-all px-10 py-4 rounded-2xl"
-                style={{
-                  background: 'linear-gradient(135deg, #5C1A2E 0%, #7A2040 100%)',
-                  color: '#FAF7F2',
-                  boxShadow: '0 0 30px rgba(92,26,46,0.5), 0 4px 20px rgba(0,0,0,0.4)',
-                  border: '1px solid rgba(242,169,138,0.2)',
-                }}
-              >
-                <DoorOpen size={16} style={{ color: '#F2A98A' }} />
-                Pass Through the Portal
-                <ArrowRight size={14} />
-              </motion.button>
+              {!isSignedIn ? (
+                <Link
+                  href="/join"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-sans font-bold uppercase tracking-widest text-xs sm:text-sm cursor-pointer transition-all px-10 py-4 rounded-2xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #5C1A2E 0%, #7A2040 100%)',
+                    color: '#FAF7F2',
+                    boxShadow: '0 0 30px rgba(92,26,46,0.5), 0 4px 20px rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(242,169,138,0.2)',
+                  }}
+                >
+                  <Sparkles size={16} style={{ color: '#F2A98A' }} />
+                  Join the Collective
+                  <ArrowRight size={14} />
+                </Link>
+              ) : !isRegistered ? (
+                <Link
+                  href="/join?message=please_register"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-sans font-bold uppercase tracking-widest text-xs sm:text-sm cursor-pointer transition-all px-10 py-4 rounded-2xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #5C1A2E 0%, #7A2040 100%)',
+                    color: '#FAF7F2',
+                    boxShadow: '0 0 30px rgba(92,26,46,0.5), 0 4px 20px rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(242,169,138,0.2)',
+                  }}
+                >
+                  <Sparkles size={16} style={{ color: '#F2A98A' }} />
+                  Complete Registration
+                  <ArrowRight size={14} />
+                </Link>
+              ) : (
+                <motion.button
+                  onClick={onEnter}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-sans font-bold uppercase tracking-widest text-xs sm:text-sm cursor-pointer transition-all px-10 py-4 rounded-2xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #5C1A2E 0%, #7A2040 100%)',
+                    color: '#FAF7F2',
+                    boxShadow: '0 0 30px rgba(92,26,46,0.5), 0 4px 20px rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(242,169,138,0.2)',
+                  }}
+                >
+                  <DoorOpen size={16} style={{ color: '#F2A98A' }} />
+                  Pass Through the Portal
+                  <ArrowRight size={14} />
+                </motion.button>
+              )}
 
               {/* Ghost secondary */}
               <div>
-                <Link
-                  href="/dashboard"
-                  className="text-[11px] font-sans font-medium transition-colors"
-                  style={{ color: 'rgba(250,247,242,0.25)' }}
-                  onClick={onEnter}
-                >
-                  Return to dashboard
-                </Link>
+                {!isSignedIn ? (
+                  <Link
+                    href="/sign-in?redirect_url=/village"
+                    className="text-[11px] font-sans font-medium transition-colors hover:text-white"
+                    style={{ color: 'rgba(250,247,242,0.35)' }}
+                  >
+                    Already a member? Sign in
+                  </Link>
+                ) : (
+                  <Link
+                    href="/dashboard"
+                    className="text-[11px] font-sans font-medium transition-colors hover:text-white"
+                    style={{ color: 'rgba(250,247,242,0.35)' }}
+                  >
+                    Return to dashboard
+                  </Link>
+                )}
               </div>
             </motion.div>
           )}
@@ -239,9 +312,12 @@ const itemVariants = {
 
 // ─── Main VillageClient ───────────────────────────────────────────────────────
 
-export default function VillageClient({ storyPrompt, poemPrompt, userStats }) {
+export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSignedIn, isRegistered }) {
   const [showEntrance, setShowEntrance] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const redirectUrl = searchParams ? searchParams.get('redirect') : null;
 
   useEffect(() => {
     setMounted(true);
@@ -249,6 +325,9 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats }) {
 
   const handleEnter = () => {
     setShowEntrance(false);
+    if (redirectUrl) {
+      router.push(redirectUrl);
+    }
   };
 
   return (
@@ -260,6 +339,8 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats }) {
             <EntrancePortal
               onEnter={handleEnter}
               userName={userStats?.name}
+              isSignedIn={isSignedIn}
+              isRegistered={isRegistered}
             />
           )}
         </AnimatePresence>,

@@ -24,14 +24,7 @@ function getLastSaturdayStart() {
 
 export default async function VillagePage() {
   const user = await currentUser();
-  if (!user) {
-    redirect('/sign-in?redirect_url=/village');
-  }
-
-  const dbUser = await syncOrCreateUser(user);
-  if (!dbUser || !dbUser.whatsapp) {
-    redirect('/join?message=please_register');
-  }
+  const dbUser = user ? await syncOrCreateUser(user) : null;
 
   // Get active prompts
   const storyPrompt = await Database.queryOne(`
@@ -50,27 +43,39 @@ export default async function VillagePage() {
     LIMIT 1
   `);
 
-  // Count reviews done this week
-  const lastSaturday = getLastSaturdayStart();
-  const reviewsCount = await Database.queryOne(`
-    SELECT COUNT(*) as count 
-    FROM peer_reviews 
-    WHERE reviewer_id = $1 AND created_at >= $2
-  `, [dbUser.id, lastSaturday]);
-
-  const userStats = {
-    spendableLeaves: dbUser.spendable_leaves || 0,
-    milestoneTokens: parseFloat(dbUser.milestone_tokens || 0.0),
-    weeklyReviews: parseInt(reviewsCount?.count || 0),
-    lkId: dbUser.lk_id || 'Guest',
-    name: dbUser.full_name || 'Writer'
+  let userStats = {
+    spendableLeaves: 0,
+    milestoneTokens: 0.0,
+    weeklyReviews: 0,
+    lkId: 'Guest',
+    name: 'Writer'
   };
+
+  if (dbUser) {
+    // Count reviews done this week
+    const lastSaturday = getLastSaturdayStart();
+    const reviewsCount = await Database.queryOne(`
+      SELECT COUNT(*) as count 
+      FROM peer_reviews 
+      WHERE reviewer_id = $1 AND created_at >= $2
+    `, [dbUser.id, lastSaturday]);
+
+    userStats = {
+      spendableLeaves: dbUser.spendable_leaves || 0,
+      milestoneTokens: parseFloat(dbUser.milestone_tokens || 0.0),
+      weeklyReviews: parseInt(reviewsCount?.count || 0),
+      lkId: dbUser.lk_id || 'Guest',
+      name: dbUser.full_name || 'Writer'
+    };
+  }
 
   return (
     <VillageClient
       storyPrompt={storyPrompt ? storyPrompt.promptText : "No active story prompt."}
       poemPrompt={poemPrompt ? poemPrompt.promptText : "No active poem prompt."}
       userStats={userStats}
+      isSignedIn={!!user}
+      isRegistered={!!(dbUser && dbUser.whatsapp)}
     />
   );
 }
