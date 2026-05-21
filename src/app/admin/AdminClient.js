@@ -52,8 +52,6 @@ export default function AdminClient({
   const [botmAuthor, setBotmAuthor] = useState(initialBotm?.author || '');
   const [botmImageUrl, setBotmImageUrl] = useState(initialBotm?.imageUrl || '');
   const [botmTeaser, setBotmTeaser] = useState(initialBotm?.teaser || '');
-  const [botmPrice, setBotmPrice] = useState(initialBotm?.price || '');
-  const [botmPurchaseLink, setBotmPurchaseLink] = useState(initialBotm?.purchaseLink || '');
   const [isSubmittingBotm, setIsSubmittingBotm] = useState(false);
 
   const handleUpdateBotm = async (e) => {
@@ -74,8 +72,8 @@ export default function AdminClient({
           author: botmAuthor,
           imageUrl: botmImageUrl,
           teaser: botmTeaser,
-          price: botmPrice,
-          purchaseLink: botmPurchaseLink
+          price: '',
+          purchaseLink: ''
         })
       });
       const data = await res.json();
@@ -841,29 +839,7 @@ export default function AdminClient({
                         />
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Price (₦, optional)</label>
-                          <input
-                            type="text"
-                            value={botmPrice}
-                            onChange={(e) => setBotmPrice(e.target.value)}
-                            placeholder="e.g. 7,500"
-                            className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 font-medium"
-                          />
-                        </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Purchase Link (optional)</label>
-                          <input
-                            type="text"
-                            value={botmPurchaseLink}
-                            onChange={(e) => setBotmPurchaseLink(e.target.value)}
-                            placeholder="e.g. /bookstore"
-                            className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 font-mono"
-                          />
-                        </div>
-                      </div>
 
                       <button
                         type="submit"
@@ -917,11 +893,15 @@ export default function AdminClient({
                           {botmTeaser || 'Editorial description teaser text will appear here...'}
                         </p>
 
-                        <div className="pt-2 flex flex-col items-center gap-2">
-                          <span className="text-sm font-display text-ink font-bold">₦{botmPrice || '7,500'}</span>
-                          <span className="bg-burgundy text-cream px-4 py-2 uppercase tracking-widest text-[8px] font-bold rounded-lg inline-block">
-                            Purchase Hardcopy
-                          </span>
+                        <div className="pt-4 border-t border-sage/10 flex flex-col items-center gap-2 text-xs font-sans font-bold text-ink/65">
+                          <div className="flex items-center gap-1 text-accent justify-center">
+                            <Star size={14} className="fill-accent stroke-accent" />
+                            <Star size={14} className="fill-accent stroke-accent" />
+                            <Star size={14} className="fill-accent stroke-accent" />
+                            <Star size={14} className="fill-accent stroke-accent" />
+                            <Star size={14} className="stroke-accent" />
+                          </div>
+                          <span>Community pick & discussion active</span>
                         </div>
                       </div>
                     </div>

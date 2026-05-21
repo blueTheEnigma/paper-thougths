@@ -3,7 +3,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { ClerkProvider } from '@clerk/nextjs'
 import "./globals.css";
 import Navigation from "../components/Navigation";
-import EasterEgg from "../components/EasterEgg";
+import Footer from "../components/Footer";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 
 const playfair = Playfair_Display({
@@ -65,21 +65,18 @@ export default function RootLayout({ children }) {
       <html lang="en">
         <body
           suppressHydrationWarning
-          className={`${playfair.variable} ${dmSans.variable} ${lora.variable} font-sans antialiased bg-cream text-ink min-h-screen flex flex-col`}
+          className={`${playfair.variable} ${dmSans.variable} ${lora.variable} font-sans antialiased bg-cream text-ink min-h-screen flex flex-col pb-20 lg:pb-0`}
         >
           <ServiceWorkerRegister />
           <Navigation />
-          <div className="flex-1 w-full">
+          <div className="flex-1 w-full pt-24 pb-8 md:pt-32">
             {children}
           </div>
-          <footer className="bg-ink text-cream py-8 text-center border-t border-white/10 relative">
-            <p className="font-display relative z-10">© {new Date().getFullYear()} Paper Thoughts. All rights reserved.</p>
-            <p className="text-sm opacity-50 mt-2 font-sans relative z-10">We didn't read the terms and conditions either, but please play nice.</p>
-            <EasterEgg />
-          </footer>
+          <Footer />
           <Analytics />
         </body>
       </html>
     </ClerkProvider>
   );
 }
+
