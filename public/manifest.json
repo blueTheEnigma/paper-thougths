@@ -1,0 +1,19 @@
+{
+  "name": "Paper Thoughts Clubhouse",
+  "short_name": "Paper Thoughts",
+  "description": "An opinionated reading and writing community.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#FCF9F2",
+  "theme_color": "#4A0E0E",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

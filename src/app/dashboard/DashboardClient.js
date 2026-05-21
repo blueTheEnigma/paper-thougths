@@ -1,14 +1,109 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { UserButton, SignOutButton } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
-import { Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, ExternalLink, ShoppingBag, ArrowRight, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
+  ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
+  BookOpen, MessageSquare, Gift, Coins, Settings 
+} from 'lucide-react';
 import Link from 'next/link';
+import confetti from 'canvas-confetti';
 
 export default function DashboardClient({ profile, initialOrders, recommendations, userEmail }) {
   const [orders] = useState(initialOrders || []);
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  
+  // Local States for Bi-token economy
+  const [spendableLeaves, setSpendableLeaves] = useState(profile?.spendableLeaves || 0);
+  const [milestoneTokens, setMilestoneTokens] = useState(profile?.milestoneTokens || 0);
+  const [lifetimeLeaves, setLifetimeLeaves] = useState(profile?.lifetimeLeaves || 0);
+  const [bookVouchersGifted, setBookVouchersGifted] = useState(profile?.bookVouchersGifted || 0);
+  
+  // Chapter Pool States
+  const [chapterPool, setChapterPool] = useState(null);
+  const [donationAmount, setDonationAmount] = useState('');
+  const [donateLoading, setDonateLoading] = useState(false);
+  const [donateMessage, setDonateMessage] = useState(null);
+  const [poolLoading, setPoolLoading] = useState(true);
+
+  // Milestone Celebration Overlay
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+
+  // Check if today is birthday
+  const isBirthdayToday = () => {
+    if (!profile?.birthday) return false;
+    const parts = profile.birthday.split('-'); // YYYY-MM-DD
+    if (parts.length < 3) return false;
+    const bdayMonth = parseInt(parts[1], 10) - 1;
+    const bdayDay = parseInt(parts[2], 10);
+    const today = new Date();
+    return today.getMonth() === bdayMonth && today.getDate() === bdayDay;
+  };
+
+  const isBday = isBirthdayToday();
+
+  // Load Chapter Pool & Trigger celebrations
+  useEffect(() => {
+    if (!profile) return;
+
+    // 1. Fetch Chapter Pool
+    async function fetchChapterPool() {
+      try {
+        const res = await fetch('/api/chapter-pools');
+        const data = await res.json();
+        if (data.success && data.pool) {
+          setChapterPool(data.pool);
+        }
+      } catch (err) {
+        console.error("Failed to load chapter pool:", err);
+      } finally {
+        setPoolLoading(false);
+      }
+    }
+    fetchChapterPool();
+
+    // 2. Birthday Confetti
+    if (isBday) {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      // Second burst
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 }
+        });
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 }
+        });
+      }, 500);
+    }
+
+    // 3. Hidden 500 Lifetime Leaves milestone gift modal check
+    if (bookVouchersGifted > 0) {
+      const key = `seen_voucher_${profile.id}_${bookVouchersGifted}`;
+      if (!localStorage.getItem(key)) {
+        setTimeout(() => {
+          setShowMilestoneModal(true);
+          confetti({
+            particleCount: 200,
+            spread: 90,
+            origin: { y: 0.5 }
+          });
+        }, 1500);
+        localStorage.setItem(key, 'true');
+      }
+    }
+  }, [profile, bookVouchersGifted, isBday]);
 
   const copyRefLink = () => {
     if (!profile) return;
@@ -23,6 +118,62 @@ export default function DashboardClient({ profile, initialOrders, recommendation
     navigator.clipboard.writeText(profile.lkid);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  const handleDonate = async (e) => {
+    e.preventDefault();
+    const amount = parseInt(donationAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+      setDonateMessage({ type: 'error', text: 'Please enter a valid positive donation amount.' });
+      return;
+    }
+    if (spendableLeaves < amount) {
+      setDonateMessage({ type: 'error', text: `Insufficient leaves: You only have ${spendableLeaves} Paper Leaves.` });
+      return;
+    }
+
+    setDonateLoading(true);
+    setDonateMessage(null);
+
+    try {
+      const res = await fetch('/api/chapter-pools', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ donationAmount: amount })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSpendableLeaves(prev => prev - amount);
+        setChapterPool(prev => ({
+          ...prev,
+          current_leaves_balance: data.data.remainingBalance
+        }));
+        setDonateAmount('');
+        
+        if (data.data.vouchersGenerated > 0) {
+          setDonateMessage({ 
+            type: 'success', 
+            text: `Donated ${amount} Leaves! You crossed 500 leaves and generated ${data.data.vouchersGenerated} book voucher(s) for the chapter!` 
+          });
+          confetti({
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.6 }
+          });
+        } else {
+          setDonateMessage({ 
+            type: 'success', 
+            text: `Donated ${amount} Leaves to your chapter pool. Thank you for paying it forward!` 
+          });
+        }
+      } else {
+        setDonateMessage({ type: 'error', text: data.error || 'Failed to process donation.' });
+      }
+    } catch (err) {
+      setDonateMessage({ type: 'error', text: 'An unexpected connection error occurred.' });
+    } finally {
+      setDonateLoading(false);
+    }
   };
 
   if (!profile) {
@@ -60,9 +211,87 @@ export default function DashboardClient({ profile, initialOrders, recommendation
 
   const isKeeper = profile.tier === "Keeper" || profile.tier === "Lore Keeper";
   const discountPercent = profile.tier === "Lore Keeper" ? "10%" : "5%";
+  
+  // Radial SVG calculation for Milestone Tokens
+  const radius = 35;
+  const circumference = 2 * Math.PI * radius;
+  const tokenGoal = 10.0;
+  const tokenPercent = Math.min(100, (milestoneTokens / tokenGoal) * 100);
+  const strokeDashoffset = circumference - (tokenPercent / 100) * circumference;
+
+  // Chapter Pool Gifting Progress
+  const poolLimit = chapterPool?.target_leaves_limit || 500;
+  const poolBalance = chapterPool?.current_leaves_balance || 0;
+  const poolPercent = Math.min(100, (poolBalance / poolLimit) * 100);
+
+  // Check if admin
+  const isAdmin = profile.permissions && profile.permissions.length > 0;
 
   return (
-    <main className="min-h-screen bg-cream selection:bg-primary/30 pt-20 md:pt-32 pb-20 px-4 md:px-8">
+    <main className="min-h-screen bg-cream selection:bg-primary/30 pt-20 md:pt-32 pb-20 px-4 md:px-8 relative">
+      
+      {/* Birthday Celebration Greeting Banner */}
+      {isBday && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="max-w-6xl mx-auto mb-6 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-cream p-4 rounded-2xl flex items-center justify-between shadow-lg relative overflow-hidden"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🎉</span>
+            <div>
+              <h4 className="font-bold text-sm sm:text-base">Happy Birthday from the Paper Thoughts Archive!</h4>
+              <p className="text-xs text-white/95">Wishing you a year filled with grand stories, rich critiques, and endless leaves.</p>
+            </div>
+          </div>
+          <Sparkles className="animate-pulse hidden sm:block text-yellow-300" size={24} />
+        </motion.div>
+      )}
+
+      {/* Hidden 500 Lifetime Leaves Milestone Voucher Modal Celebration */}
+      <AnimatePresence>
+        {showMilestoneModal && (
+          <div className="fixed inset-0 bg-ink/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.9, opacity: 0 }} 
+              className="bg-white max-w-lg w-full p-8 rounded-[36px] border border-sage/20 shadow-2xl text-center relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-accent via-burgundy to-accent"></div>
+              
+              <div className="w-20 h-20 bg-accent/15 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Gift className="text-burgundy" size={40} />
+              </div>
+              
+              <h2 className="text-3xl font-display text-burgundy mb-2">Milestone Unlocked!</h2>
+              <h3 className="text-lg font-bold text-accent mb-4">500 Lifetime Paper Leaves</h3>
+              
+              <p className="text-sm text-ink/70 leading-relaxed mb-6">
+                Exceptional work! You have generated <strong>{lifetimeLeaves}</strong> lifetime leaves through active critique and writing.
+                <br/><br/>
+                As a token of our appreciation, the Archive has gifted you <strong>{bookVouchersGifted} Free Book Voucher(s)</strong>! Contact an administrator or visit the bookstore desk at your chapter event to redeem your reward.
+              </p>
+
+              <div className="bg-sage/5 border border-sage/20 rounded-2xl p-4 mb-8">
+                <div className="text-xs uppercase tracking-widest text-ink/50 font-bold mb-1">Vouchers Earned</div>
+                <div className="text-3xl font-display text-burgundy">{bookVouchersGifted} 📚</div>
+              </div>
+
+              <button 
+                onClick={() => {
+                  setShowMilestoneModal(false);
+                  // Dismiss confetti
+                }}
+                className="w-full bg-burgundy hover:bg-ink text-cream py-4 rounded-2xl font-bold transition-all shadow-lg active:scale-95"
+              >
+                Hooray, thanks!
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-6xl mx-auto">
         
         {/* Header */}
@@ -76,12 +305,163 @@ export default function DashboardClient({ profile, initialOrders, recommendation
               <span className="bg-white px-2 py-1 border border-sage/20 rounded shadow-sm text-burgundy font-bold">{profile.lkid}</span>
               <span className="text-ink/30">•</span>
               <span className="flex items-center gap-1.5 text-ink/60"><MapPin size={12} className="text-sage"/> {profile.chapter}</span>
+              {isAdmin && (
+                <>
+                  <span className="text-ink/30">•</span>
+                  <span className="bg-burgundy/5 text-burgundy font-bold text-[9px] px-2 py-0.5 rounded border border-burgundy/15 uppercase tracking-wide flex items-center gap-1">
+                    <ShieldCheck size={10}/> Admin
+                  </span>
+                </>
+              )}
             </div>
           </div>
-          <div className="w-full md:w-auto bg-white/60 backdrop-blur-sm border border-sage/20 py-2.5 px-5 rounded-2xl flex items-center justify-between md:justify-start gap-4 shadow-sm">
-             <span className="text-xs sm:text-sm font-bold text-ink/70 truncate max-w-[180px] sm:max-w-none">{userEmail}</span>
-             <UserButton afterSignOutUrl="/" />
+          
+          <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-3">
+            {isAdmin && (
+              <Link href="/admin" className="bg-burgundy/10 hover:bg-burgundy/15 text-burgundy p-3 rounded-2xl border border-burgundy/20 transition-all flex items-center gap-2 text-sm font-bold shadow-sm">
+                <Settings size={16}/>
+                <span className="hidden sm:inline">Admin Panel</span>
+              </Link>
+            )}
+            <div className="bg-white/60 backdrop-blur-sm border border-sage/20 py-2.5 px-5 rounded-2xl flex items-center justify-between md:justify-start gap-4 shadow-sm">
+               <span className="text-xs sm:text-sm font-bold text-ink/70 truncate max-w-[180px] sm:max-w-none">{userEmail}</span>
+               <UserButton afterSignOutUrl="/" />
+            </div>
           </div>
+        </div>
+
+        {/* Bi-Token Economy Radial & Progress Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          
+          {/* Milestone Tokens Circle Progress Card */}
+          <div className="bg-white p-6 rounded-[32px] border border-sage/20 shadow-md flex items-center justify-between relative overflow-hidden group">
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">Milestone Tokens</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-display text-burgundy">{milestoneTokens.toFixed(1)}</span>
+                <span className="text-sm font-bold text-ink/40">/ {tokenGoal}</span>
+              </div>
+              <p className="text-xs text-ink/60 leading-relaxed max-w-[170px]">
+                Earned via double-blind peer reviews. 10.0 unlocks Keeper tier.
+              </p>
+            </div>
+            
+            <div className="relative w-24 h-24 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle 
+                  cx="48" 
+                  cy="48" 
+                  r={radius} 
+                  stroke="#EBEAE5" 
+                  strokeWidth="8" 
+                  fill="transparent" 
+                />
+                <motion.circle 
+                  cx="48" 
+                  cy="48" 
+                  r={radius} 
+                  stroke="#8E3C36" 
+                  strokeWidth="8" 
+                  fill="transparent" 
+                  strokeDasharray={circumference}
+                  initial={{ strokeDashoffset: circumference }}
+                  animate={{ strokeDashoffset }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                />
+              </svg>
+              <div className="absolute text-[11px] font-mono font-bold text-burgundy">{tokenPercent.toFixed(0)}%</div>
+            </div>
+          </div>
+
+          {/* Spendable Leaves Card */}
+          <div className="bg-white p-6 rounded-[32px] border border-sage/20 shadow-md flex flex-col justify-between relative overflow-hidden group hover:border-burgundy/10 transition-colors">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform">
+              <Coins size={80} className="text-burgundy" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">Spendable Leaves</span>
+              <div className="text-4xl font-display text-burgundy mt-1">{spendableLeaves} 🍃</div>
+            </div>
+            <p className="text-xs text-ink/60 leading-relaxed mt-4">
+              Your spendable bi-token currency. Redeem at local bookstore events or donate to chapter pools.
+            </p>
+          </div>
+
+          {/* Lifetime Leaves Milestone Card */}
+          <div className="bg-white p-6 rounded-[32px] border border-sage/20 shadow-md flex flex-col justify-between relative overflow-hidden group hover:border-burgundy/10 transition-colors">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform">
+              <Gift size={80} className="text-burgundy" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">Lifetime Leaves</span>
+              <div className="text-4xl font-display text-burgundy mt-1">{lifetimeLeaves} 🍃</div>
+            </div>
+            <div className="flex justify-between items-center text-xs text-ink/60 mt-4 border-t border-sage/10 pt-3">
+              <span>Next gift voucher:</span>
+              <span className="font-bold text-burgundy">{Math.floor(lifetimeLeaves / 500) + 1} (At {((Math.floor(lifetimeLeaves / 500) + 1) * 500)} Leaves)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Workspace Hub Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          {/* Writing Workspace Card */}
+          <Link href="/dashboard/write" className="group">
+            <motion.div 
+              whileHover={{ y: -4 }}
+              className="bg-white p-8 rounded-[32px] border border-sage/20 shadow-lg flex flex-col justify-between h-56 relative overflow-hidden group hover:border-burgundy/40 transition-all duration-300"
+            >
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all"></div>
+              
+              <div className="flex justify-between items-start">
+                <div className="bg-primary/5 text-burgundy p-3.5 rounded-2xl border border-primary/10 group-hover:bg-primary/10 transition-colors">
+                  <Flame size={24} className={profile.streak > 0 ? "animate-pulse text-burgundy" : ""} />
+                </div>
+                {profile.streak > 0 && (
+                  <span className="bg-primary/10 text-burgundy text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-primary/20">
+                    🔥 {profile.streak} Week Streak
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-xl font-display text-burgundy group-hover:text-accent transition-colors flex items-center gap-1.5">
+                  Writing Workspace <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </h3>
+                <p className="text-xs text-ink/60 mt-2 leading-relaxed">
+                  Compose and save offline-capable draft submissions for the weekly prompt. Syncs seamlessly online.
+                </p>
+              </div>
+            </motion.div>
+          </Link>
+
+          {/* Critique Workspace Card */}
+          <Link href="/dashboard/review" className="group">
+            <motion.div 
+              whileHover={{ y: -4 }}
+              className="bg-white p-8 rounded-[32px] border border-sage/20 shadow-lg flex flex-col justify-between h-56 relative overflow-hidden group hover:border-burgundy/40 transition-all duration-300"
+            >
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-sage/5 rounded-full blur-2xl group-hover:bg-sage/10 transition-all"></div>
+              
+              <div className="flex justify-between items-start">
+                <div className="bg-sage/5 text-sage p-3.5 rounded-2xl border border-sage/10 group-hover:bg-sage/10 transition-colors">
+                  <MessageSquare size={24} />
+                </div>
+                <span className="bg-sage/10 text-sage text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-sage/20">
+                  📚 {profile.weeklyReviews} / 3 Rewarded Crits
+                </span>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-display text-burgundy group-hover:text-accent transition-colors flex items-center gap-1.5">
+                  Critique Queue <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </h3>
+                <p className="text-xs text-ink/60 mt-2 leading-relaxed">
+                  Provide detailed critiques in the double-blind queue. Earn 1.0 Milestone Token per review (1.5 for early-birds).
+                </p>
+              </div>
+            </motion.div>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -114,8 +494,8 @@ export default function DashboardClient({ profile, initialOrders, recommendation
                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white p-2 pl-4 rounded-xl border border-sage/20">
                         <span className="font-mono text-xl font-bold text-ink tracking-[0.2em] flex-1 py-2 sm:py-0">{profile.lkid}</span>
                         <button onClick={copyDiscountCode} className="bg-sage/10 hover:bg-sage/20 text-ink px-6 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2">
-                          {copiedCode ? <CheckCircle2 size={16} className="text-sage"/> : <Copy size={16}/>}
-                          {copiedCode ? "Copied" : "Copy Code"}
+                           {copiedCode ? <CheckCircle2 size={16} className="text-sage"/> : <Copy size={16}/>}
+                           {copiedCode ? "Copied" : "Copy Code"}
                         </button>
                      </div>
                      <p className="text-[10px] text-ink/40 mt-4 italic text-center sm:text-left">* Apply this code at checkout to claim your lore.</p>
@@ -130,7 +510,7 @@ export default function DashboardClient({ profile, initialOrders, recommendation
               </div>
             </motion.div>
 
-            {/* Achievements & Cycles - NEW */}
+            {/* Achievements & Cycles */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Blackbox Tracker */}
               <div className="bg-ink text-cream p-8 rounded-[32px] shadow-xl relative overflow-hidden group">
@@ -222,8 +602,7 @@ export default function DashboardClient({ profile, initialOrders, recommendation
               </div>
             </motion.div>
 
-
-            {/* Recommendations Section - NEW */}
+            {/* Recommendations Section */}
             {recommendations && recommendations.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-6">
                 <div className="flex items-center justify-between px-2">
@@ -330,12 +709,79 @@ export default function DashboardClient({ profile, initialOrders, recommendation
           {/* Sidebar */}
           <div className="space-y-6">
             
+            {/* Pay It Forward Chapter Pool Gifting Widget */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              className="bg-white p-8 rounded-[32px] border border-sage/20 shadow-lg relative overflow-hidden"
+            >
+              <h3 className="font-bold text-ink mb-2 uppercase tracking-[0.2em] text-[10px]">Pay It Forward</h3>
+              <h4 className="font-display text-xl text-burgundy mb-4">Chapter Book Pool</h4>
+
+              {poolLoading ? (
+                <div className="py-8 text-center text-xs text-ink/40 font-medium">Loading chapter pool data...</div>
+              ) : !chapterPool ? (
+                <div className="bg-sage/5 border border-sage/10 rounded-2xl p-4 text-xs text-ink/60 leading-relaxed italic">
+                  To contribute to a chapter pool, please ensure you are registered to a specific chapter (Zaria, Kaduna, or Abuja).
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="bg-sage/5 border border-sage/15 rounded-2xl p-4">
+                    <div className="flex justify-between items-center text-xs font-bold text-ink/70 mb-2">
+                      <span className="flex items-center gap-1"><MapPin size={12} className="text-sage" /> {chapterPool.chapter_name}</span>
+                      <span>{poolBalance} / {poolLimit} Leaves</span>
+                    </div>
+                    
+                    <div className="w-full bg-sage/15 rounded-full h-2.5 mb-2 overflow-hidden">
+                      <motion.div 
+                        className="bg-sage h-2.5 rounded-full" 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${poolPercent}%` }}
+                        transition={{ duration: 1 }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-ink/50 leading-relaxed">
+                      At {poolLimit} leaves, the system auto-generates a book voucher to sponsor books for local chapter members.
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleDonate} className="space-y-3">
+                    <div className="flex items-stretch gap-2">
+                      <input 
+                        type="number" 
+                        placeholder="Leaves to donate..." 
+                        value={donationAmount}
+                        onChange={(e) => setDonationAmount(e.target.value)}
+                        min="1"
+                        max={spendableLeaves}
+                        disabled={donateLoading}
+                        className="flex-1 bg-cream/70 border border-sage/30 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-sage placeholder-ink/30 font-medium text-ink"
+                      />
+                      <button 
+                        type="submit" 
+                        disabled={donateLoading || !donationAmount}
+                        className="bg-sage hover:bg-sage/90 text-cream px-4 rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                      >
+                        Donate
+                      </button>
+                    </div>
+                    
+                    {donateMessage && (
+                      <p className={`text-[10px] font-bold ${donateMessage.type === 'success' ? 'text-green-700' : 'text-burgundy'}`}>
+                        {donateMessage.text}
+                      </p>
+                    )}
+                  </form>
+                </div>
+              )}
+            </motion.div>
+
             {/* Referral Widget */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-burgundy text-cream p-8 rounded-[32px] shadow-2xl relative overflow-hidden group">
               <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl group-hover:scale-110 transition-transform"></div>
               <h3 className="font-display text-2xl mb-4 relative z-10">Invite the Collective</h3>
               <p className="text-sm text-cream/70 mb-8 leading-relaxed relative z-10">
-                Share your personal link. Earn 1 referral point for every person who joins the Archive using it.
+                Share your personal link. Earn 1.2 Milestone Tokens & 12 Paper Leaves for each of your first 5 referrals.
               </p>
               <button 
                 onClick={copyRefLink}
@@ -366,6 +812,16 @@ export default function DashboardClient({ profile, initialOrders, recommendation
                     Upcoming Events
                   </Link>
                 </li>
+                {isAdmin && (
+                  <li>
+                    <Link href="/admin" className="group text-ink/70 hover:text-burgundy font-bold text-sm flex items-center gap-3 transition-colors">
+                      <div className="p-2 bg-burgundy/5 rounded-lg group-hover:bg-burgundy/10 transition-colors">
+                        <Settings size={16} className="text-burgundy"/>
+                      </div>
+                      Admin Panel Control
+                    </Link>
+                  </li>
+                )}
               </ul>
             </motion.div>
 

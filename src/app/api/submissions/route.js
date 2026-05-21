@@ -1,0 +1,165 @@
+import { NextResponse } from 'next/server';
+import { currentUser } from '@clerk/nextjs/server';
+import { Database } from '@/lib/db';
+import { syncOrCreateUser } from '@/lib/permissions';
+
+// 1. Create a submission (queued for the Saturday Batch Drop)
+export async function POST(request) {
+  try {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const dbUser = await syncOrCreateUser(clerkUser);
+    if (!dbUser) {
+      return NextResponse.json({ success: false, error: 'User sync failed' }, { status: 500 });
+    }
+
+    const body = await request.json();
+    const { title, genre, logline, bodyText } = body;
+
+    if (!title || !genre || !logline || !bodyText) {
+      return NextResponse.json({ success: false, error: 'All fields (title, genre, logline, body) are required.' }, { status: 400 });
+    }
+
+    // Submission Gate Lock Check: Friday 11:59 PM to Saturday 12:00 AM (Batch drop transition)
+    const now = new Date();
+    const day = now.getDay(); // 5 = Friday, 6 = Saturday
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+
+    const isFridayNightLock = (day === 5 && hours === 23 && minutes >= 59);
+    
+    if (isFridayNightLock) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'The Submission Gate is currently locked for Saturday Batch Drop preparations. Please try again in a few minutes.' 
+      }, { status: 403 });
+    }
+
+    // Insert new submission into PostgreSQL
+    // Status is 'queued' by default, waiting for the Saturday 12:00 AM cron to set it to 'active_batch'
+    const newSubmission = await Database.queryOne(`
+      INSERT INTO submissions (author_id, title, genre, logline, body_text, batch_status)
+      VALUES ($1, $2, $3, $4, $5, 'queued')
+      RETURNING id, title, genre, batch_status
+    `, [dbUser.id, title, genre, logline, bodyText]);
+
+    // Update user's last_submission_date
+    await Database.query(`
+      UPDATE users 
+      SET last_submission_date = CURRENT_DATE 
+      WHERE id = $1
+    `, [dbUser.id]);
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Submission successfully uploaded and queued for the Saturday Batch Drop.',
+      submission: newSubmission
+    });
+  } catch (error) {
+    console.error('Submission creation failed:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to submit' }, { status: 500 });
+  }
+}
+
+// 2. Fetch the Double-Blind Selection Queue
+// Returns 3 randomized active stories holding the lowest active review counts.
+export async function GET(request) {
+  try {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const dbUser = await syncOrCreateUser(clerkUser);
+    if (!dbUser) {
+      return NextResponse.json({ success: false, error: 'User sync failed' }, { status: 500 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const subId = searchParams.get('id');
+
+    if (subId) {
+      const submission = await Database.queryOne(`
+        SELECT id, title, genre, logline, body_text 
+        FROM submissions
+        WHERE id = $1 AND batch_status = 'active_batch' AND author_id != $2
+      `, [subId, dbUser.id]);
+
+      if (!submission) {
+        return NextResponse.json({ success: false, error: 'Submission not found or unauthorized.' }, { status: 404 });
+      }
+
+      return NextResponse.json({ success: true, submission });
+    }
+
+    // Dynamic queue query:
+    // Selects active submissions excluding the reviewer's own work,
+    // sorted by lowest review count first, breaking ties randomly
+    const blindCards = await Database.query(`
+      SELECT s.id, s.title, s.genre, s.logline, COUNT(r.id) as review_count
+      FROM submissions s
+      LEFT JOIN peer_reviews r ON r.submission_id = s.id
+      WHERE s.batch_status = 'active_batch' AND s.author_id != $1
+      GROUP BY s.id
+      ORDER BY review_count ASC, RANDOM()
+      LIMIT 3
+    `, [dbUser.id]);
+
+    // Strip metadata: we explicitly only return id, title, genre, and logline.
+    // Review counts are used only internally for sorting.
+    const strippedCards = blindCards.map(card => ({
+      id: card.id,
+      title: card.title,
+      genre: card.genre,
+      logline: card.logline
+    }));
+
+    return NextResponse.json({ 
+      success: true, 
+      queue: strippedCards 
+    });
+  } catch (error) {
+    console.error('Failed to load selection queue:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Queue fetch failed' }, { status: 500 });
+  }
+}
+
+// 3. Selection Intent Intercept: Record reader hook feedback (PATCH)
+export async function PATCH(request) {
+  try {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { submissionId, reason } = body;
+
+    const validReasons = ['title', 'genre', 'logline', 'outside_comfort'];
+    if (!submissionId || !reason || !validReasons.includes(reason)) {
+      return NextResponse.json({ success: false, error: 'Invalid submission ID or reason key.' }, { status: 400 });
+    }
+
+    // Increment selection_reason_counts using jsonb_set
+    await Database.query(`
+      UPDATE submissions
+      SET selection_reason_counts = jsonb_set(
+        selection_reason_counts, 
+        ARRAY[$1], 
+        (COALESCE(selection_reason_counts->>$1, '0')::int + 1)::text::jsonb
+      )
+      WHERE id = $2
+    `, [reason, submissionId]);
+
+    return NextResponse.json({ 
+      success: true, 
+      message: `Hook analytical intent '${reason}' recorded.` 
+    });
+  } catch (error) {
+    console.error('Failed to record intent survey:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Intent record failed' }, { status: 500 });
+  }
+}

@@ -1,54 +1,115 @@
 import { NextResponse } from 'next/server';
+import { Database } from '@/lib/db';
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const gasUrl = process.env.GAS_WEBAPP_URL;
-    
-    console.log('Attempting registration with GAS URL:', gasUrl ? `${gasUrl.substring(0, 30)}...` : 'MISSING');
+    const { fullName, instagram, whatsapp, email, chapter, referral } = body;
 
-    if (!gasUrl) {
-      console.error('GAS_WEBAPP_URL is not defined in environment variables');
-      return NextResponse.json({ success: false, error: 'Server configuration error' }, { status: 500 });
+    if (!fullName || !whatsapp || !email) {
+      return NextResponse.json({ success: false, error: 'Full name, WhatsApp number, and Email address are required.' }, { status: 400 });
     }
 
-    // Explicitly mapping fields for clarity and backend security
-    const payload = {
-      fullName: body.fullName,
-      instagram: body.instagram,
-      whatsapp: body.whatsapp,
-      email: body.email,
-      chapter: body.chapter,
-      referral: body.referral,
-      consent: body.consent
-    };
+    const cleanInstagram = instagram ? instagram.replace('@', '').trim() : null;
+    const cleanEmail = email.toLowerCase().trim();
 
-    console.log('Sending payload to GAS...');
-    const response = await fetch(gasUrl, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    // 1. Check duplicate email or instagram in database
+    const existingUser = await Database.queryOne(`
+      SELECT id, email, instagram FROM users 
+      WHERE email = $1 OR (instagram IS NOT NULL AND instagram = $2)
+    `, [cleanEmail, cleanInstagram]);
+
+    if (existingUser) {
+      if (existingUser.email === cleanEmail) {
+        return NextResponse.json({ success: false, error: 'This email address is already registered.' }, { status: 400 });
+      }
+      if (cleanInstagram && existingUser.instagram === cleanInstagram) {
+        return NextResponse.json({ success: false, error: 'This Instagram handle is already registered.' }, { status: 400 });
+      }
+    }
+
+    // 2. Resolve chapter name to chapter_id
+    let chapterRow = await Database.queryOne(`
+      SELECT id FROM chapters WHERE LOWER(name) = LOWER($1)
+    `, [chapter || 'Other']);
+
+    if (!chapterRow) {
+      chapterRow = await Database.queryOne(`SELECT id FROM chapters WHERE name = 'Other'`);
+    }
+
+    // 3. Resolve referrer if code is provided
+    let referrerId = null;
+    if (referral) {
+      const code = referral.trim().toUpperCase();
+      const referrerDetails = await Database.queryOne(`
+        SELECT id FROM users WHERE UPPER(lk_id) = $1
+      `, [code]);
+      if (referrerDetails) {
+        referrerId = referrerDetails.id;
+      }
+    }
+
+    // 4. Create user record inside a database transaction
+    const assignedLkId = await Database.transaction(async (client) => {
+      // Insert user
+      const userRes = await client.query(`
+        INSERT INTO users (full_name, instagram, whatsapp, email, chapter_id, referred_by_id)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id
+      `, [fullName, cleanInstagram, whatsapp, cleanEmail, chapterRow.id, referrerId]);
+
+      const newUserId = userRes.rows[0].id;
+      const year = new Date().getFullYear();
+      const lkId = `LK-${year}-${1000 + newUserId}`;
+
+      // Update the user record with the generated sequential lk_id code
+      await client.query(`
+        UPDATE users SET lk_id = $1 WHERE id = $2
+      `, [lkId, newUserId]);
+
+      // If referrer was found, apply tokens and check referral cap limit (max 5)
+      if (referrerId) {
+        const refsCount = await client.query(`
+          SELECT COUNT(*) as count FROM users WHERE referred_by_id = $1
+        `, [referrerId]);
+        
+        const count = parseInt(refsCount.rows[0].count || 0);
+        
+        // Anti-Influencer cap: Only reward the first 5 referrals
+        if (count <= 5) {
+          await client.query(`
+            UPDATE users 
+            SET milestone_tokens = milestone_tokens + 1.2,
+                spendable_leaves = spendable_leaves + 12,
+                lifetime_leaves = lifetime_leaves + 12
+            WHERE id = $1
+          `, [referrerId]);
+          
+          // Verify if referrer hit the 500 lifetime leaves milestone
+          const updatedReferrer = await client.queryOne(`
+            SELECT lifetime_leaves, book_vouchers_gifted FROM users WHERE id = $1
+          `, [referrerId]);
+          
+          const totalMilestones = Math.floor(updatedReferrer.lifetime_leaves / 500);
+          if (totalMilestones > (updatedReferrer.book_vouchers_gifted || 0)) {
+            await client.query(`
+              UPDATE users SET book_vouchers_gifted = $1 WHERE id = $2
+            `, [totalMilestones, referrerId]);
+          }
+        }
+      }
+
+      return lkId;
     });
-    console.log('GAS responded with status:', response.status);
 
-    const rawResponse = await response.text();
+    return NextResponse.json({
+      success: true,
+      lkId: assignedLkId,
+      message: 'Registration successful! Welcome to the Archive.'
+    });
 
-    if (!response.ok) {
-      console.error('GAS Error Response:', rawResponse);
-      return NextResponse.json({ success: false, error: `Backend returned ${response.status}` }, { status: response.status });
-    }
-
-    try {
-      const result = JSON.parse(rawResponse);
-      return NextResponse.json(result);
-    } catch (parseError) {
-      console.error('JSON Parse Error. Raw response:', rawResponse);
-      return NextResponse.json({ success: false, error: 'Malformed response from backend' }, { status: 500 });
-    }
   } catch (error) {
-    console.error('Registration API Error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Failed to process registration' }, { status: 500 });
+    console.error('Registration failed:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Registration failed' }, { status: 500 });
   }
 }

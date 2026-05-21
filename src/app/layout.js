@@ -4,6 +4,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import "./globals.css";
 import Navigation from "../components/Navigation";
 import EasterEgg from "../components/EasterEgg";
+import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -22,6 +23,7 @@ const lora = Lora({
 });
 
 export const metadata = {
+  manifest: '/manifest.json',
   title: {
     default: "Paper Thoughts - The Literary Clubhouse",
     template: "%s | Paper Thoughts"
@@ -65,6 +67,7 @@ export default function RootLayout({ children }) {
           suppressHydrationWarning
           className={`${playfair.variable} ${dmSans.variable} ${lora.variable} font-sans antialiased bg-cream text-ink min-h-screen flex flex-col`}
         >
+          <ServiceWorkerRegister />
           <Navigation />
           <div className="flex-1 w-full">
             {children}
