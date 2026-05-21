@@ -15,7 +15,8 @@ export default function Navigation() {
   const { user, isLoaded: userLoaded } = useUser();
   const isLoaded = authLoaded && userLoaded;
 
-  const isAdmin = user?.primaryEmailAddress?.emailAddress === "umorgan2001@gmail.com";
+  const email = (user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
+  const isAdmin = email === "umorgan2001@gmail.com";
 
   // Check if a link is active
   const isActive = (path) => {
@@ -37,7 +38,7 @@ export default function Navigation() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-6xl bg-cream/70 backdrop-blur-md border border-sage/15 py-3 px-6 rounded-2xl flex items-center justify-between shadow-lg"
+        className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-6xl bg-cream/95 backdrop-blur-lg border border-sage/15 py-3 px-6 rounded-2xl flex items-center justify-between shadow-lg"
       >
         <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
           <div className="bg-burgundy/5 p-2 rounded-xl border border-burgundy/10 group-hover:bg-burgundy/10 transition-colors">
@@ -116,7 +117,7 @@ export default function Navigation() {
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-cream/80 backdrop-blur-lg border border-sage/15 rounded-2xl shadow-2xl py-2 px-3 flex justify-around items-center lg:hidden"
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-cream/95 backdrop-blur-lg border border-sage/15 rounded-2xl shadow-2xl py-2 px-3 flex justify-around items-center lg:hidden"
       >
         {navLinks.map((link) => {
           const active = isActive(link.href);
@@ -147,9 +148,11 @@ export default function Navigation() {
         {isLoaded && !isSignedIn && (
           <Link 
             href="/sign-in?redirect_url=/dashboard" 
-            className="flex flex-col items-center justify-center p-2 rounded-xl text-ink/50"
+            className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
+              isActive('/sign-in') ? "text-burgundy scale-105" : "text-ink/50"
+            }`}
           >
-            <User size={20} className="stroke-[1.8px]" />
+            <User size={20} className={isActive('/sign-in') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
             <span className="text-[9px] font-sans font-bold mt-1 tracking-wide">Sign In</span>
           </Link>
         )}

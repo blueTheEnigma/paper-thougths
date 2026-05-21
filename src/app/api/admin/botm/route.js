@@ -17,7 +17,8 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'User sync failed' }, { status: 500 });
     }
 
-    const isSuperadmin = clerkUser.primaryEmailAddress?.emailAddress === SUPERADMIN_EMAIL;
+    const email = (clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
+    const isSuperadmin = email === SUPERADMIN_EMAIL.toLowerCase();
     const canModerate = await hasPermission(clerkUser.id, 'moderate_submissions');
 
     if (!isSuperadmin && !canModerate) {

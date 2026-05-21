@@ -29,8 +29,8 @@ export default async function VillagePage() {
   }
 
   const dbUser = await syncOrCreateUser(user);
-  if (!dbUser) {
-    redirect('/dashboard');
+  if (!dbUser || !dbUser.whatsapp) {
+    redirect('/join?message=please_register');
   }
 
   // Get active prompts

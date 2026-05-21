@@ -24,7 +24,8 @@ export default async function AdminPage() {
   }
 
   const permissions = await getUserPermissions(user.id);
-  const isSuperadmin = user.primaryEmailAddress?.emailAddress === SUPERADMIN_EMAIL;
+  const email = (user.primaryEmailAddress?.emailAddress || user.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
+  const isSuperadmin = email === SUPERADMIN_EMAIL.toLowerCase();
 
   // If user has no admin permissions and isn't the superadmin, bounce them back to dashboard
   if (permissions.length === 0 && !isSuperadmin) {
@@ -94,6 +95,34 @@ export default async function AdminPage() {
     LIMIT 1
   `);
 
+  // 8. Fetch upcoming birthdays (next 30 days)
+  const allUsersWithBirthdays = await Database.query(`
+    SELECT u.id, u.full_name as name, u.email, u.whatsapp, u.birthday, c.name as chapter
+    FROM users u
+    LEFT JOIN chapters c ON c.id = u.chapter_id
+    WHERE u.birthday IS NOT NULL
+  `);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingBirthdays = allUsersWithBirthdays.map(member => {
+    const bdayDate = new Date(member.birthday);
+    const nextBday = new Date(today.getFullYear(), bdayDate.getMonth(), bdayDate.getDate());
+    if (nextBday < today) {
+      nextBday.setFullYear(today.getFullYear() + 1);
+    }
+    const diffTime = nextBday - today;
+    const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return {
+      ...member,
+      birthday: member.birthday ? new Date(member.birthday).toISOString().split('T')[0] : null,
+      daysUntil
+    };
+  })
+  .filter(member => member.daysUntil <= 30)
+  .sort((a, b) => a.daysUntil - b.daysUntil);
+
   return (
     <AdminClient 
       initialMembers={members}
@@ -102,6 +131,7 @@ export default async function AdminPage() {
       initialPools={chapterPools}
       initialPrompts={prompts}
       initialBotm={currentBotm}
+      initialBirthdays={upcomingBirthdays}
       userPermissions={permissions}
       isSuperadmin={isSuperadmin}
     />

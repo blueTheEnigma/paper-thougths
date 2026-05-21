@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BookOpen, PenTool, Feather, Award, ArrowRight, 
@@ -9,8 +10,10 @@ import Link from 'next/link';
 
 export default function VillageClient({ storyPrompt, poemPrompt, userStats }) {
   const [showEntrance, setShowEntrance] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Check if we already showed it during this session to prevent repeating
     if (sessionStorage.getItem('seen_village_intro')) {
       setShowEntrance(false);
@@ -44,45 +47,48 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats }) {
 
   return (
     <>
-      {/* 1. Dramatic Entrance Portal Animation Overlay */}
-      <AnimatePresence>
-        {showEntrance && (
-          <motion.div 
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, y: -30 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-50 bg-[#120805] flex flex-col items-center justify-center text-cream px-6 text-center"
-          >
-            <div className="absolute inset-0 bg-radial-vignette opacity-70 pointer-events-none" />
+      {/* 1. Dramatic Entrance Portal Animation Overlay inside document.body */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {showEntrance && (
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-              className="max-w-md space-y-6 relative"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="fixed inset-0 z-[9999] bg-[#120805] flex flex-col items-center justify-center text-cream px-6 text-center"
             >
-              <div className="w-20 h-20 mx-auto rounded-full border border-primary/20 flex items-center justify-center bg-white/5 animate-pulse-subtle">
-                <BookOpen className="text-primary animate-float" size={32} />
-              </div>
-              <div className="space-y-2">
-                <span className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] text-primary">Entering the Workspace</span>
-                <h2 className="text-4xl md:text-5xl font-display font-extrabold text-cream leading-tight">Writers' Village</h2>
-                <p className="text-xs text-cream/60 font-serif leading-relaxed italic">
-                  "A village of ink and parchment, where Zaria, Kaduna, and Abuja voices converge."
-                </p>
-              </div>
-              <div className="pt-6">
-                <button 
-                  onClick={handleEnter}
-                  className="bg-primary hover:bg-white text-ink hover:text-burgundy px-8 py-3.5 rounded-xl uppercase tracking-widest text-xs font-bold transition-all shadow-lg inline-flex items-center gap-2 cursor-pointer active:scale-95"
-                >
-                  <span>Cross The Gate</span>
-                  <ArrowRight size={14} />
-                </button>
-              </div>
+              <div className="absolute inset-0 bg-radial-vignette opacity-70 pointer-events-none" />
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+                className="max-w-md space-y-6 relative"
+              >
+                <div className="w-20 h-20 mx-auto rounded-full border border-primary/20 flex items-center justify-center bg-white/5 animate-pulse-subtle">
+                  <BookOpen className="text-primary animate-float" size={32} />
+                </div>
+                <div className="space-y-2">
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] text-primary">Entering the Workspace</span>
+                  <h2 className="text-4xl md:text-5xl font-display font-extrabold text-cream leading-tight">Writers' Village</h2>
+                  <p className="text-xs text-cream/60 font-serif leading-relaxed italic">
+                    "A village of ink and parchment, where Zaria, Kaduna, and Abuja voices converge."
+                  </p>
+                </div>
+                <div className="pt-6">
+                  <button 
+                    onClick={handleEnter}
+                    className="bg-primary hover:bg-white text-ink hover:text-burgundy px-8 py-3.5 rounded-xl uppercase tracking-widest text-xs font-bold transition-all shadow-lg inline-flex items-center gap-2 cursor-pointer active:scale-95"
+                  >
+                    <span>Cross The Gate</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* 2. Main Writers' Village Workspace */}
       <main className="min-h-screen bg-cream pt-24 pb-20 px-4 md:px-8 relative overflow-hidden">

@@ -144,41 +144,86 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
       </section>
 
       {/* 2. Light Theme: The Editorial Highlights (Scroll Reveal) */}
-      <section className="py-28 px-6 md:px-8 bg-cream relative border-b border-ink/5">
+      <section className="py-24 px-6 md:px-8 bg-cream relative border-b border-ink/5">
         <motion.div 
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
-          className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-16"
+          className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12"
         >
-          <motion.div variants={fadeInReveal}>
-            <Link href="/bookstore" className="group block space-y-4">
-              <span className="text-6xl font-display text-sage/25 group-hover:text-primary transition-colors block leading-none font-black">01</span>
-              <h3 className="text-2xl font-display text-ink border-b border-ink/10 pb-4 group-hover:border-primary transition-colors font-bold">The Archive</h3>
-              <p className="text-sm sm:text-base text-ink/70 leading-relaxed font-sans font-medium">
-                We finally bring hardcopies to you. A rigorously curated selection. And absolutely none of them are PDFs.
-              </p>
+          {/* Card 1: The Bookstore (Standout) */}
+          <motion.div variants={fadeInReveal} className="flex">
+            <Link 
+              href="/bookstore" 
+              className="group relative flex flex-col justify-between p-8 rounded-3xl border-2 border-accent/40 bg-gradient-to-br from-card via-card to-primary/15 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 w-full"
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-4xl font-display text-accent/35 group-hover:text-accent transition-colors font-black">01</span>
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-sans font-bold px-3 py-1 bg-accent/10 text-accent rounded-full border border-accent/20">
+                    Featured Lore
+                  </span>
+                </div>
+                <h3 className="text-2xl font-display text-burgundy border-b border-accent/20 pb-4 group-hover:border-accent transition-colors font-bold">
+                  The Bookstore
+                </h3>
+                <p className="text-sm sm:text-base text-ink leading-relaxed font-sans font-medium">
+                  We finally bring hardcopies to you. A rigorously curated selection. And absolutely none of them are PDFs.
+                </p>
+              </div>
+              <div className="pt-6 flex items-center text-xs uppercase tracking-widest font-sans font-bold text-accent group-hover:text-burgundy transition-colors gap-2">
+                <span>Browse the store</span>
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </div>
             </Link>
           </motion.div>
 
-          <motion.div variants={fadeInReveal}>
-            <Link href="/events" className="group block space-y-4">
-              <span className="text-6xl font-display text-sage/25 group-hover:text-primary transition-colors block leading-none font-black">02</span>
-              <h3 className="text-2xl font-display text-ink border-b border-ink/10 pb-4 group-hover:border-primary transition-colors font-bold">The Assembly</h3>
-              <p className="text-sm sm:text-base text-ink/70 leading-relaxed font-sans font-medium">
-                Monthly events, readings, and fierce debates spanning three cities. People actually show up.
-              </p>
+          {/* Card 2: The Assembly (Events) */}
+          <motion.div variants={fadeInReveal} className="flex">
+            <Link 
+              href="/events" 
+              className="group relative flex flex-col justify-between p-8 rounded-3xl border border-ink/10 bg-card shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 w-full"
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-4xl font-display text-sage/20 group-hover:text-sage transition-colors font-black">02</span>
+                </div>
+                <h3 className="text-2xl font-display text-burgundy border-b border-ink/10 pb-4 group-hover:border-sage transition-colors font-bold">
+                  The Assembly
+                </h3>
+                <p className="text-sm sm:text-base text-ink leading-relaxed font-sans font-medium">
+                  Check out our next event and hang with the gang. People actually show up. Monthly events, readings, and fierce debates spanning three cities.
+                </p>
+              </div>
+              <div className="pt-6 flex items-center text-xs uppercase tracking-widest font-sans font-bold text-sage group-hover:text-burgundy transition-colors gap-2">
+                <span>View events</span>
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </div>
             </Link>
           </motion.div>
 
-          <motion.div variants={fadeInReveal}>
-            <Link href="/clubs" className="group block space-y-4">
-              <span className="text-6xl font-display text-sage/25 group-hover:text-primary transition-colors block leading-none font-black">03</span>
-              <h3 className="text-2xl font-display text-ink border-b border-ink/10 pb-4 group-hover:border-primary transition-colors font-bold">The Chapters</h3>
-              <p className="text-sm sm:text-base text-ink/70 leading-relaxed font-sans font-medium">
-                Zaria, Kaduna, and Abuja. Three cities bound by one very opinionated reading list.
-              </p>
+          {/* Card 3: The Chapters (Clubs) */}
+          <motion.div variants={fadeInReveal} className="flex">
+            <Link 
+              href="/clubs" 
+              className="group relative flex flex-col justify-between p-8 rounded-3xl border border-ink/10 bg-card shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 w-full"
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-4xl font-display text-primary/30 group-hover:text-primary transition-colors font-black">03</span>
+                </div>
+                <h3 className="text-2xl font-display text-burgundy border-b border-ink/10 pb-4 group-hover:border-primary transition-colors font-bold">
+                  The Chapters
+                </h3>
+                <p className="text-sm sm:text-base text-ink leading-relaxed font-sans font-medium">
+                  Connect with like minds in Zaria, Kaduna, and Abuja bound by one very opinionated reading list.
+                </p>
+              </div>
+              <div className="pt-6 flex items-center text-xs uppercase tracking-widest font-sans font-bold text-primary group-hover:text-burgundy transition-colors gap-2">
+                <span>Find your chapter</span>
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </div>
             </Link>
           </motion.div>
         </motion.div>

@@ -7,16 +7,16 @@ export default function Events({ initialEvents = [] }) {
   const displayEvents = initialEvents.length > 0 ? initialEvents : [];
 
   return (
-    <section id="events" className="py-24 px-6 bg-cream border-t border-sage/20 min-h-[80vh]">
+    <section id="events" className="py-12 md:py-24 px-4 sm:px-6 bg-cream min-h-[80vh]">
       <div className="max-w-4xl mx-auto flex flex-col items-center">
-        <h2 className="text-5xl font-display text-burgundy mb-2 text-center">Upcoming Gatherings</h2>
-        <p className="text-xl text-ink/80 mb-16 font-quote italic text-center">
+        <h2 className="text-3xl sm:text-5xl font-display text-burgundy mb-2 text-center">Upcoming Gatherings</h2>
+        <p className="text-base sm:text-xl text-ink/80 mb-8 sm:mb-16 font-quote italic text-center">
           Secure your spot at the table. We have a habit of running out of seats.
         </p>
 
 
         {/* Dynamic Events Listing */}
-        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {displayEvents.length > 0 ? (
             displayEvents.map((event, index) => (
               <motion.div 
@@ -25,7 +25,7 @@ export default function Events({ initialEvents = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="bg-white rounded-2xl shadow-xl border border-sage/30 p-6 md:p-8 flex flex-col group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+                className="bg-white rounded-[24px] shadow-xl border border-sage/30 p-6 sm:p-8 flex flex-col group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="text-xs font-bold text-accent uppercase tracking-widest mb-1 flex items-center gap-2">
                   <Calendar size={12} /> {event.date || "TBD"} 

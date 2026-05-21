@@ -5,7 +5,7 @@ import {
   Users, BookOpen, ShoppingBag, MapPin, Search, ShieldAlert, 
   CheckCircle, ArrowLeft, RefreshCw, Star, Gift, Flame, AlertCircle, 
   TrendingUp, Settings, ExternalLink, Archive, FileText, Shield, X, Loader2,
-  Book
+  Book, Cake, MessageCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -16,6 +16,7 @@ export default function AdminClient({
   initialPools,
   initialPrompts,
   initialBotm,
+  initialBirthdays = [],
   userPermissions,
   isSuperadmin
 }) {
@@ -25,6 +26,7 @@ export default function AdminClient({
   const [orders] = useState(initialOrders || []);
   const [pools, setPools] = useState(initialPools || []);
   const [prompts, setPrompts] = useState(initialPrompts || []);
+  const [birthdays] = useState(initialBirthdays || []);
   
   // Role adjustment state
   const [selectedMemberForRoles, setSelectedMemberForRoles] = useState(null);
@@ -278,6 +280,7 @@ export default function AdminClient({
             { id: 'pools', label: 'Chapter Pools', icon: MapPin },
             { id: 'prompts', label: 'Weekly Prompts', icon: FileText },
             { id: 'botm', label: 'Book of the Month', icon: Book },
+            { id: 'birthdays', label: 'Birthdays 🎂', icon: Cake },
           ].map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -907,6 +910,107 @@ export default function AdminClient({
                     </div>
                   </div>
                 </div>
+              </motion.div>
+            )}
+
+            {/* 7. UPCOMING BIRTHDAYS */}
+            {activeTab === 'birthdays' && (
+              <motion.div 
+                key="birthdays"
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-display text-2xl text-burgundy flex items-center gap-2">
+                      <Cake className="text-burgundy" size={24} /> Upcoming Celebrants
+                    </h3>
+                    <p className="text-[10px] text-ink/40 uppercase tracking-widest font-bold mt-1">
+                      Paper Thoughts members celebrating in the next 30 days. Send them some love!
+                    </p>
+                  </div>
+                </div>
+
+                {birthdays.length === 0 ? (
+                  <div className="bg-cream/20 border border-dashed border-sage/30 p-12 rounded-[24px] text-center space-y-3">
+                    <span className="text-4xl block">🎂</span>
+                    <p className="text-ink/50 font-serif italic text-sm">No birthdays coming up in the next 30 days.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {birthdays.map((member) => {
+                      const whatsappText = encodeURIComponent(
+                        `Happy Birthday, ${member.name}! 🎂📚 The whole Paper Thoughts family is wishing you an amazing day. Keep reading and keep writing — we're so glad you're one of us!`
+                      );
+                      const cleanedPhone = member.whatsapp ? member.whatsapp.replace(/\D/g, '') : '';
+                      const whatsappUrl = `https://wa.me/${cleanedPhone}?text=${whatsappText}`;
+
+                      return (
+                        <div 
+                          key={member.id} 
+                          className="bg-cream/30 border border-sage/20 hover:border-sage/40 rounded-3xl p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                        >
+                          <div>
+                            {/* Header: Name and Days Countdown Badge */}
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="min-w-0">
+                                <h4 className="font-display text-lg text-ink leading-snug truncate">{member.name}</h4>
+                                <span className="inline-block bg-burgundy/10 text-burgundy text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider mt-1.5">
+                                  {member.chapter || 'Other'}
+                                </span>
+                              </div>
+
+                              <span className={`text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm shrink-0 border ${
+                                member.daysUntil === 0 
+                                  ? 'bg-accent/20 text-burgundy border-accent/35 animate-pulse' 
+                                  : 'bg-sage/10 text-sage-800 border-sage/20'
+                              }`}>
+                                {member.daysUntil === 0 ? 'Today! 🎉' : `In ${member.daysUntil} day${member.daysUntil > 1 ? 's' : ''}`}
+                              </span>
+                            </div>
+
+                            {/* Details: Date of Birth & Email */}
+                            <div className="mt-4 space-y-1.5 text-xs text-ink/60">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-semibold text-ink/80">Birthday:</span>
+                                <span>
+                                  {member.birthday ? new Date(member.birthday).toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : 'N/A'}
+                                </span>
+                              </div>
+                              {member.email && (
+                                <div className="text-[10px] text-ink/40 truncate">{member.email}</div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* CTA: WhatsApp Button */}
+                          <div className="mt-6">
+                            {member.whatsapp ? (
+                              <a 
+                                href={whatsappUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-burgundy hover:bg-ink text-cream font-bold text-xs py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
+                              >
+                                <MessageCircle size={14} /> Send WhatsApp Wish
+                              </a>
+                            ) : (
+                              <button 
+                                disabled
+                                className="w-full bg-sage/10 text-ink/30 border border-sage/15 font-bold text-xs py-3 rounded-xl cursor-not-allowed flex items-center justify-center gap-1.5"
+                                title="No WhatsApp number available"
+                              >
+                                No WhatsApp Connected
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </motion.div>
             )}
 

@@ -18,7 +18,8 @@ export async function PATCH(request) {
     }
 
     // Auth verification: must be superadmin or have moderate_submissions permission
-    const isSuperadmin = clerkUser.primaryEmailAddress?.emailAddress === SUPERADMIN_EMAIL;
+    const email = (clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
+    const isSuperadmin = email === SUPERADMIN_EMAIL.toLowerCase();
     const canModerate = await hasPermission(clerkUser.id, 'moderate_submissions');
 
     if (!isSuperadmin && !canModerate) {

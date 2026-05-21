@@ -28,8 +28,8 @@ export async function GET(request) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const email = clerkUser.emailAddresses?.[0]?.emailAddress;
-    const isSuperadmin = email === SUPERADMIN_EMAIL;
+    const email = (clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
+    const isSuperadmin = email === SUPERADMIN_EMAIL.toLowerCase();
     const isModerator = await hasPermission(clerkUser.id, 'moderate_submissions');
 
     if (!isSuperadmin && !isModerator) {
@@ -57,8 +57,8 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const email = clerkUser.emailAddresses?.[0]?.emailAddress;
-    const isSuperadmin = email === SUPERADMIN_EMAIL;
+    const email = (clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
+    const isSuperadmin = email === SUPERADMIN_EMAIL.toLowerCase();
     const isModerator = await hasPermission(clerkUser.id, 'moderate_submissions');
 
     if (!isSuperadmin && !isModerator) {

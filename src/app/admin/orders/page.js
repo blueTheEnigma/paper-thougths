@@ -14,11 +14,14 @@ export default function AdminOrders() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
 
+  const email = (user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
+  const isAdmin = email === ADMIN_EMAIL.toLowerCase();
+
   useEffect(() => {
-    if (isLoaded && user?.primaryEmailAddress?.emailAddress === ADMIN_EMAIL) {
+    if (isLoaded && isAdmin) {
       fetchOrders();
     }
-  }, [isLoaded, user]);
+  }, [isLoaded, isAdmin]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -96,7 +99,7 @@ export default function AdminOrders() {
 
   if (!isLoaded) return <div className="min-h-screen bg-cream flex items-center justify-center font-display text-burgundy">Loading Archive...</div>;
 
-  if (user?.primaryEmailAddress?.emailAddress !== ADMIN_EMAIL) {
+  if (!isAdmin) {
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-6 text-center">
         <AlertCircle size={48} className="text-burgundy mb-4" />

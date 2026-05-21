@@ -18,7 +18,8 @@ export async function POST(request) {
     }
 
     // Only Superadmin is authorized to modify permissions
-    const isSuperadmin = clerkUser.primaryEmailAddress?.emailAddress === SUPERADMIN_EMAIL;
+    const email = (clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
+    const isSuperadmin = email === SUPERADMIN_EMAIL.toLowerCase();
     if (!isSuperadmin) {
       return NextResponse.json({ success: false, error: 'Access denied: Superadmin privileges required.' }, { status: 403 });
     }

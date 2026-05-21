@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Book, User, Mail, MapPin, Send, CheckCircle2, 
   Loader2, Sparkles, ShieldCheck, 
-  Copy, Share2, Award, Zap, Heart
+  Copy, Share2, Award, Zap, Heart, Gift
 } from 'lucide-react';
 import { FaInstagram } from 'react-icons/fa6';
 import confetti from 'canvas-confetti';
@@ -69,6 +69,7 @@ function JoinFormContent() {
       whatsapp: formData.get('whatsapp'),
       email: email || "",
       chapter: formData.get('chapter'),
+      birthday: formData.get('birthday') || null,
       referral: finalReferral,
       consent: formData.get('consent') === 'on'
     };
@@ -224,6 +225,22 @@ function JoinFormContent() {
             <span className="text-xs font-bold uppercase tracking-[0.2em] text-ink/40">Secure Registration</span>
           </div>
           
+          {searchParams.get('message') === 'please_register' && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }} 
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-card border-l-4 border-accent p-6 rounded-2xl mb-8 flex items-start gap-4 shadow-sm"
+            >
+              <div className="text-2xl mt-0.5">🏰</div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-burgundy text-sm">Writers' Village Gate Secured</h4>
+                <p className="text-xs text-ink/80 leading-relaxed font-sans font-medium">
+                  Welcome, traveler! Entering the Writers' Village requires an official LK-ID first. Please take a moment to register below so we can write your name into the grand ledger and secure your LK-ID.
+                </p>
+              </div>
+            </motion.div>
+          )}
+
           <h2 className="text-5xl font-display text-burgundy mb-4">Join the Collective</h2>
           <p className="text-ink/60 mb-10 text-lg font-quote italic">
             A home for the keepers of stories, the builders of libraries, and the seekers of lore.
@@ -306,6 +323,20 @@ function JoinFormContent() {
                 <option value="Abuja">Abuja</option>
                 <option value="Other">Other / Remote</option>
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-widest text-ink flex items-center gap-2">
+                <Gift size={14} className="text-primary" /> Date of Birth
+              </label>
+              <input 
+                type="date" 
+                name="birthday" 
+                className="w-full bg-transparent border-b-2 border-sage/20 px-0 py-4 focus:outline-none focus:border-primary transition-colors text-lg text-ink cursor-pointer"
+              />
+              <span className="text-[10px] text-ink/50 block mt-1">
+                Share your birthday so we can celebrate you! 🎂
+              </span>
             </div>
 
             <div className="space-y-2">

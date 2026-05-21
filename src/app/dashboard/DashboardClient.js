@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
   ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
-  BookOpen, MessageSquare, Gift, Coins, Settings 
+  BookOpen, MessageSquare, Gift, Coins, Settings, X 
 } from 'lucide-react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
@@ -30,6 +30,16 @@ export default function DashboardClient({ profile, initialOrders, recommendation
 
   // Milestone Celebration Overlay
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+
+  // Birthday banner dismissal
+  const [bdayDismissed, setBdayDismissed] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const dismissed = sessionStorage.getItem('dismissed_birthday') === 'true';
+      setBdayDismissed(dismissed);
+    }
+  }, []);
 
   // Check if today is birthday
   const isBirthdayToday = () => {
@@ -246,20 +256,34 @@ export default function DashboardClient({ profile, initialOrders, recommendation
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-sage/5 rounded-full blur-[120px] -z-10" />
 
       {/* Birthday Celebration Greeting Banner */}
-      {isBday && (
+      {isBday && !bdayDismissed && (
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
           animate={{ opacity: 1, y: 0 }} 
-          className="max-w-6xl mx-auto mb-8 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-cream p-5 rounded-2xl flex items-center justify-between shadow-lg relative overflow-hidden"
+          className="max-w-6xl mx-auto mb-8 bg-gradient-to-r from-primary/30 via-accent/35 to-primary/20 backdrop-blur-lg text-ink p-6 rounded-[24px] flex items-center justify-between shadow-md border border-accent/20 relative overflow-hidden animate-pulse-subtle"
         >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🎉</span>
+          <div className="flex items-center gap-4">
+            <span className="text-3xl animate-float">🎂📚</span>
             <div>
-              <h4 className="font-sans font-bold text-sm sm:text-base">Happy Birthday from the Paper Thoughts Archive!</h4>
-              <p className="text-xs text-white/95">Wishing you a year filled with grand stories, rich critiques, and endless leaves.</p>
+              <h4 className="font-display font-bold text-base sm:text-lg text-burgundy">Happy Birthday, {profile.name.split(' ')[0]}!</h4>
+              <p className="text-xs sm:text-sm text-ink/80 mt-1 leading-relaxed font-sans font-medium">
+                Your chapter loves you. ✨ Keep reading, keep writing — we're glad you're one of us. Wishing you a year of grand stories and rich critiques!
+              </p>
             </div>
           </div>
-          <Sparkles className="animate-pulse hidden sm:block text-yellow-300 animate-float" size={24} />
+          <div className="flex items-center gap-2">
+            <Sparkles className="animate-pulse hidden md:block text-accent/80" size={24} />
+            <button 
+              onClick={() => {
+                sessionStorage.setItem('dismissed_birthday', 'true');
+                setBdayDismissed(true);
+              }}
+              className="p-2 hover:bg-ink/10 rounded-full transition-colors text-ink/60 hover:text-ink cursor-pointer ml-4"
+              aria-label="Dismiss"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </motion.div>
       )}
 
