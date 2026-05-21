@@ -8,10 +8,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useAuth, useUser } from '@clerk/nextjs';
 
 // ─── Cinematic Entrance Portal ──────────────────────────────────────────────
 
-function EntrancePortal({ onEnter, userName, isSignedIn, isRegistered }) {
+function EntrancePortal({ onEnter, userName, isSignedIn }) {
   const [stage, setStage] = useState(0);
 
   // Sequence: 0 = fade-in logo  →  1 = quote line  →  2 = CTA revealed
@@ -120,7 +121,7 @@ function EntrancePortal({ onEnter, userName, isSignedIn, isRegistered }) {
             color: '#FAF7F2',
           }}
         >
-          {(!isSignedIn || !isRegistered) ? (
+          {!isSignedIn ? (
             <>
               To travel beyond,
               <br />
@@ -145,7 +146,7 @@ function EntrancePortal({ onEnter, userName, isSignedIn, isRegistered }) {
               className="font-quote italic leading-relaxed mb-8 text-sm sm:text-base px-2"
               style={{ color: 'rgba(250,247,242,0.55)' }}
             >
-              {(!isSignedIn || !isRegistered) ? (
+              {!isSignedIn ? (
                 `“A village of ink and parchment, where Zaria, Kaduna, and Abuja voices converge — and only the bold dare to write.”`
               ) : (
                 `“Welcome back to the creative heart of the clubhouse, ${userName?.split(' ')[0] || 'Writer'}. Your manuscripts, critiques, and leaves are waiting.”`
@@ -188,13 +189,6 @@ function EntrancePortal({ onEnter, userName, isSignedIn, isRegistered }) {
                       Claim your LK-ID first.
                     </span>
                   </>
-                ) : !isRegistered ? (
-                  <>
-                    Complete registration.{' '}
-                    <span style={{ color: 'rgba(250,247,242,0.35)' }}>
-                      Claim your LK-ID to enter.
-                    </span>
-                  </>
                 ) : (
                   <>
                     Ready, {userName?.split(' ')[0] || 'Writer'}?{' '}
@@ -219,21 +213,6 @@ function EntrancePortal({ onEnter, userName, isSignedIn, isRegistered }) {
                 >
                   <Sparkles size={16} style={{ color: '#F2A98A' }} />
                   Join the Collective
-                  <ArrowRight size={14} />
-                </Link>
-              ) : !isRegistered ? (
-                <Link
-                  href="/join?message=please_register"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-sans font-bold uppercase tracking-widest text-xs sm:text-sm cursor-pointer transition-all px-10 py-4 rounded-2xl"
-                  style={{
-                    background: 'linear-gradient(135deg, #5C1A2E 0%, #7A2040 100%)',
-                    color: '#FAF7F2',
-                    boxShadow: '0 0 30px rgba(92,26,46,0.5), 0 4px 20px rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(242,169,138,0.2)',
-                  }}
-                >
-                  <Sparkles size={16} style={{ color: '#F2A98A' }} />
-                  Complete Registration
                   <ArrowRight size={14} />
                 </Link>
               ) : (
@@ -312,12 +291,19 @@ const itemVariants = {
 
 // ─── Main VillageClient ───────────────────────────────────────────────────────
 
-export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSignedIn, isRegistered }) {
+export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSignedIn: serverIsSignedIn, isRegistered: serverIsRegistered }) {
   const [showEntrance, setShowEntrance] = useState(true);
   const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const redirectUrl = searchParams ? searchParams.get('redirect') : null;
+
+  // Client-side authentication sensing
+  const { isSignedIn: clientIsSignedIn, isLoaded: authLoaded } = useAuth();
+  const { user: clientUser } = useUser();
+
+  const isSignedIn = authLoaded ? clientIsSignedIn : serverIsSignedIn;
+  const userName = clientUser ? (clientUser.firstName || clientUser.fullName || userStats?.name || 'Writer') : (userStats?.name || 'Writer');
 
   useEffect(() => {
     setMounted(true);
@@ -338,9 +324,8 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
           {showEntrance && (
             <EntrancePortal
               onEnter={handleEnter}
-              userName={userStats?.name}
+              userName={userName}
               isSignedIn={isSignedIn}
-              isRegistered={isRegistered}
             />
           )}
         </AnimatePresence>,
@@ -370,7 +355,7 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
             </h1>
             <p className="text-sm md:text-base text-ink/70 leading-relaxed font-serif">
               Welcome,{' '}
-              <span className="font-sans font-bold text-burgundy">{userStats.name}</span>{' '}
+              <span className="font-sans font-bold text-burgundy">{userName}</span>{' '}
               <span className="text-ink/40 text-xs font-mono">({userStats.lkId})</span>
               . Hone your craft under weekly prompts, or critique anonymous manuscripts to guide your peers.
             </p>
