@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, BookOpen, ShoppingBag, MapPin, Search, ShieldAlert, 
   CheckCircle, ArrowLeft, RefreshCw, Star, Gift, Flame, AlertCircle, 
-  TrendingUp, Settings, ExternalLink, Archive, FileText, Shield, X, Loader2
+  TrendingUp, Settings, ExternalLink, Archive, FileText, Shield, X, Loader2,
+  Book
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -14,6 +15,7 @@ export default function AdminClient({
   initialOrders, 
   initialPools,
   initialPrompts,
+  initialBotm,
   userPermissions,
   isSuperadmin
 }) {
@@ -43,6 +45,52 @@ export default function AdminClient({
   // Loading indicator for action button
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
+
+  // Book of the Month states
+  const [botm, setBotm] = useState(initialBotm || null);
+  const [botmTitle, setBotmTitle] = useState(initialBotm?.title || '');
+  const [botmAuthor, setBotmAuthor] = useState(initialBotm?.author || '');
+  const [botmImageUrl, setBotmImageUrl] = useState(initialBotm?.imageUrl || '');
+  const [botmTeaser, setBotmTeaser] = useState(initialBotm?.teaser || '');
+  const [botmPrice, setBotmPrice] = useState(initialBotm?.price || '');
+  const [botmPurchaseLink, setBotmPurchaseLink] = useState(initialBotm?.purchaseLink || '');
+  const [isSubmittingBotm, setIsSubmittingBotm] = useState(false);
+
+  const handleUpdateBotm = async (e) => {
+    e.preventDefault();
+    if (!botmTitle.trim() || !botmAuthor.trim() || !botmImageUrl.trim() || !botmTeaser.trim()) {
+      setErrorMessage("Please fill in all required fields (Title, Author, Image URL, Teaser).");
+      return;
+    }
+
+    setIsSubmittingBotm(true);
+    setErrorMessage(null);
+    try {
+      const res = await fetch('/api/admin/botm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: botmTitle,
+          author: botmAuthor,
+          imageUrl: botmImageUrl,
+          teaser: botmTeaser,
+          price: botmPrice,
+          purchaseLink: botmPurchaseLink
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBotm(data.botm);
+        alert("Book of the Month updated successfully!");
+      } else {
+        setErrorMessage(data.error || 'Failed to update Book of the Month.');
+      }
+    } catch (err) {
+      setErrorMessage('Connection error occurred while updating Book of the Month.');
+    } finally {
+      setIsSubmittingBotm(false);
+    }
+  };
 
   // Submissions status update
   const handleUpdateSubStatus = async (submissionId, newStatus) => {
@@ -231,6 +279,7 @@ export default function AdminClient({
             { id: 'orders', label: 'Bookstore Orders', icon: ShoppingBag },
             { id: 'pools', label: 'Chapter Pools', icon: MapPin },
             { id: 'prompts', label: 'Weekly Prompts', icon: FileText },
+            { id: 'botm', label: 'Book of the Month', icon: Book },
           ].map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -712,6 +761,170 @@ export default function AdminClient({
                         ))}
                       </div>
                     )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* 6. BOOK OF THE MONTH MANAGEMENT */}
+            {activeTab === 'botm' && (
+              <motion.div 
+                key="botm"
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-display text-2xl text-burgundy">Book of the Month Showcase</h3>
+                    <p className="text-[10px] text-ink/40 uppercase tracking-widest font-bold mt-1">Manage the active editorial selection for the community.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  {/* Left Form: Edit Details (7 columns) */}
+                  <div className="lg:col-span-7 bg-cream/15 border border-sage/25 p-6 sm:p-8 rounded-3xl space-y-6">
+                    <h4 className="font-bold text-ink text-sm flex items-center gap-2">
+                      <Settings size={16} className="text-burgundy" /> Update Active Showcase
+                    </h4>
+
+                    <form onSubmit={handleUpdateBotm} className="space-y-5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Book Title *</label>
+                          <input
+                            type="text"
+                            required
+                            value={botmTitle}
+                            onChange={(e) => setBotmTitle(e.target.value)}
+                            placeholder="e.g. The Parlour Wife"
+                            className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 font-medium"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Author *</label>
+                          <input
+                            type="text"
+                            required
+                            value={botmAuthor}
+                            onChange={(e) => setBotmAuthor(e.target.value)}
+                            placeholder="e.g. Foluso Agbaje"
+                            className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Cover Image URL *</label>
+                        <input
+                          type="text"
+                          required
+                          value={botmImageUrl}
+                          onChange={(e) => setBotmImageUrl(e.target.value)}
+                          placeholder="e.g. /images/the_parlour_wife.png or Cloudinary link"
+                          className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 font-mono"
+                        />
+                        <p className="text-[9px] text-ink/40">Provide a local path (e.g. <code>/images/filename.png</code>) or Cloudinary URL.</p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Teaser / Description *</label>
+                        <textarea
+                          required
+                          rows={5}
+                          value={botmTeaser}
+                          onChange={(e) => setBotmTeaser(e.target.value)}
+                          placeholder="Write a compelling editorial teaser description for the home page spotlight..."
+                          className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 resize-none leading-relaxed font-serif"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Price (₦, optional)</label>
+                          <input
+                            type="text"
+                            value={botmPrice}
+                            onChange={(e) => setBotmPrice(e.target.value)}
+                            placeholder="e.g. 7,500"
+                            className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 font-medium"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Purchase Link (optional)</label>
+                          <input
+                            type="text"
+                            value={botmPurchaseLink}
+                            onChange={(e) => setBotmPurchaseLink(e.target.value)}
+                            placeholder="e.g. /bookstore"
+                            className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isSubmittingBotm}
+                        className="w-full bg-burgundy hover:bg-ink text-cream font-bold text-xs py-3.5 px-4 rounded-xl transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {isSubmittingBotm ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin" /> Saving Changes...
+                          </>
+                        ) : (
+                          'Update Book of the Month'
+                        )}
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Right Preview: Live Spotlight Mockup (5 columns) */}
+                  <div className="lg:col-span-5 space-y-4">
+                    <h4 className="font-bold text-ink text-sm">Live Preview</h4>
+                    
+                    <div className="bg-white border border-sage/20 rounded-[32px] shadow-lg p-6 relative overflow-hidden flex flex-col items-center text-center space-y-4">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-burgundy/5 rounded-full blur-2xl" />
+                      
+                      <span className="text-accent uppercase tracking-[0.25em] font-bold text-[8px] block">Current Spotlight</span>
+                      
+                      {/* Book Cover Preview */}
+                      <div className="w-[120px] aspect-[2/3] overflow-hidden bg-cream shadow-md rounded-sm flex-shrink-0 border border-sage/10">
+                        {botmImageUrl ? (
+                          <img 
+                            src={botmImageUrl} 
+                            alt={botmTitle || "Preview"} 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                              e.target.src = 'https://placehold.co/400x600?text=Invalid+Link';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[10px] text-ink/30 italic">No Cover</div>
+                        )}
+                      </div>
+
+                      {/* Info Preview */}
+                      <div className="space-y-2">
+                        <div>
+                          <h4 className="font-display text-lg text-ink leading-tight">{botmTitle || 'Book Title'}</h4>
+                          <p className="text-[10px] font-sans italic text-burgundy">by {botmAuthor || 'Author Name'}</p>
+                        </div>
+
+                        <p className="text-[10px] text-ink/75 leading-relaxed font-serif max-h-[100px] overflow-y-auto whitespace-pre-wrap">
+                          {botmTeaser || 'Editorial description teaser text will appear here...'}
+                        </p>
+
+                        <div className="pt-2 flex flex-col items-center gap-2">
+                          <span className="text-sm font-display text-ink font-bold">₦{botmPrice || '7,500'}</span>
+                          <span className="bg-burgundy text-cream px-4 py-2 uppercase tracking-widest text-[8px] font-bold rounded-lg inline-block">
+                            Purchase Hardcopy
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>

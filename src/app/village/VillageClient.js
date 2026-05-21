@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, PenTool, Feather, Award, ArrowRight, Sparkles, Clock, Compass } from 'lucide-react';
 import Link from 'next/link';
 
-export default function SalonClient({ storyPrompt, poemPrompt, userStats }) {
+export default function VillageClient({ storyPrompt, poemPrompt, userStats }) {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -43,10 +43,10 @@ export default function SalonClient({ storyPrompt, poemPrompt, userStats }) {
             <span>The Creative Hub</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-display text-burgundy tracking-tight">
-            The Writers' Salon
+            Writers' Village
           </h1>
           <p className="text-sm md:text-base text-ink/75 leading-relaxed font-serif">
-            Welcome, <span className="font-sans font-bold text-burgundy">{userStats.name}</span> ({userStats.lkId}). Enter the sacred chambers of the Clubhouse. Choose your path: hone your craft under weekly prompts, or critique anonymous manuscripts to guide your peers.
+            Welcome, <span className="font-sans font-bold text-burgundy">{userStats.name}</span> ({userStats.lkId}). Enter the creative village. Choose your path: hone your craft under weekly prompts, or critique anonymous manuscripts to guide your peers.
           </p>
         </motion.div>
 

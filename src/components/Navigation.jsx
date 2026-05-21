@@ -27,7 +27,7 @@ export default function Navigation() {
           <Link href="/" className="hover:text-accent transition-colors">Home</Link>
           <Link href="/bookstore" className="hover:text-accent transition-colors">Bookstore</Link>
           <Link href="/events" className="hover:text-accent transition-colors">Events</Link>
-          <Link href="/salon" className="hover:text-accent transition-colors">Salon</Link>
+          <Link href="/village" className="hover:text-accent transition-colors">Writers' Village</Link>
           <Link href="/clubs" className="hover:text-accent transition-colors">Clubs</Link>
         </div>
         
@@ -46,7 +46,7 @@ export default function Navigation() {
             <div className="flex items-center gap-6">
               {/* Secret Admin Link - Now using useUser() */}
               {user?.primaryEmailAddress?.emailAddress === "umorgan2001@gmail.com" && (
-                <Link href="/admin/orders" className="text-[10px] bg-accent text-burgundy px-3 py-1.5 rounded-full font-bold uppercase tracking-widest hover:bg-burgundy hover:text-cream transition-all shadow-sm">
+                <Link href="/admin" className="text-[10px] bg-accent text-burgundy px-3 py-1.5 rounded-full font-bold uppercase tracking-widest hover:bg-burgundy hover:text-cream transition-all shadow-sm">
                   Admin
                 </Link>
               )}
@@ -70,7 +70,8 @@ export default function Navigation() {
           <Link href="/" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Home</Link>
           <Link href="/bookstore" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Bookstore</Link>
           <Link href="/events" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Events</Link>
-          <Link href="/salon" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Salon</Link>
+          <Link href="/village" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Writers' Village</Link>
+
           <Link href="/clubs" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Clubs</Link>
           
           <div className="w-full h-[1px] bg-sage/20 my-2"></div>

@@ -222,7 +222,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
     setIsSyncing(true);
 
     if (!title.trim() || !logline.trim() || !bodyText.trim()) {
-      setErrorMessage('All fields (Title, Genre, Logline, and Manuscript body) are required to submit.');
+      setErrorMessage('All fields (Title, Genre, Teaser, and Manuscript body) are required to submit.');
       setIsSyncing(false);
       return;
     }
@@ -297,8 +297,8 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
         {/* Navigation Breadcrumbs & Sync Banner */}
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <Link href="/salon" className="flex items-center gap-1.5 text-xs font-bold text-burgundy uppercase tracking-widest hover:text-accent transition-colors">
-              <ArrowLeft size={16} /> Back to Salon
+            <Link href="/village" className="flex items-center gap-1.5 text-xs font-bold text-burgundy uppercase tracking-widest hover:text-accent transition-colors">
+              <ArrowLeft size={16} /> Back to Writers' Village
             </Link>
             <h1 className="text-3xl sm:text-5xl font-display text-burgundy mt-2">Writing Workspace</h1>
           </div>
@@ -416,7 +416,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
 
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Logline</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Teaser</label>
                   <span className={`text-[9px] font-bold ${logline.length > 200 ? 'text-burgundy' : 'text-ink/40'}`}>
                     {logline.length} / 200 chars
                   </span>

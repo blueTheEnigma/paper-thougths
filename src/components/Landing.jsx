@@ -13,7 +13,7 @@ const QUOTES = [
   { text: "I have loved the stars too fondly to be fearful of the night.", author: "Sarah Williams" }
 ];
 
-export default function Landing({ images, books = [], storyPrompt, poemPrompt }) {
+export default function Landing({ images, books = [], storyPrompt, poemPrompt, botm }) {
   const [quoteIndex, setQuoteIndex] = useState(0);
 
   const slideImages = [
@@ -35,10 +35,18 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt })
     return () => clearInterval(interval);
   }, []);
 
-  // Find book of the month (highest rated)
-  const botmBook = books && books.length > 0 
-    ? [...books].sort((a, b) => b.rating - a.rating)[0]
-    : null;
+  const botmBook = botm || {
+    title: 'The Parlour Wife',
+    author: 'Foluso Agbaje',
+    imageUrl: '/images/the_parlour_wife.png',
+    teaser: `Set against the backdrop of colonial Nigeria, 'The Parlour Wife' is a gripping historical drama exploring duty, class, secrets, and a woman's defiance. Foluso Agbaje weaves a rich tapestry of domestic intrigue and social upheaval with breathtaking prose.`,
+    price: '7,500',
+    purchaseLink: '/bookstore'
+  };
+
+  const formattedPrice = botmBook.price 
+    ? (botmBook.price.toString().includes(',') ? botmBook.price : parseFloat(botmBook.price).toLocaleString())
+    : '7,500';
 
   return (
     <div className="w-full bg-cream selection:bg-accent/30">
@@ -60,8 +68,8 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt })
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6">
-              <Link href="/salon" className="bg-burgundy text-cream px-8 py-4 uppercase tracking-widest text-sm font-bold flex items-center justify-center gap-3 hover:bg-ink transition-colors shadow-md">
-                Enter The Salon <ArrowRight size={16} />
+              <Link href="/village" className="bg-burgundy text-cream px-8 py-4 uppercase tracking-widest text-sm font-bold flex items-center justify-center gap-3 hover:bg-ink transition-colors shadow-md">
+                Enter The Village <ArrowRight size={16} />
               </Link>
               <Link href="/bookstore" className="border border-ink text-ink px-8 py-4 uppercase tracking-widest text-sm font-bold flex items-center justify-center hover:bg-ink/5 transition-colors">
                 Browse The Lore
@@ -87,100 +95,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt })
         </div>
       </section>
 
-      {/* 2. Panguin's Picks (Horizontal Cinematic Scroll) */}
-      {books.length > 0 && (
-        <section className="py-24 px-8 border-b border-ink/10 bg-white">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-end mb-12">
-              <div>
-                <h2 className="text-4xl md:text-5xl font-display text-burgundy mb-2">Panguin's Choice</h2>
-                <p className="text-ink/60 uppercase tracking-widest text-sm font-bold">Highest Rated Hardcopies</p>
-              </div>
-              <Link href="/bookstore" className="hidden md:flex text-accent font-bold uppercase tracking-widest text-xs items-center gap-2 hover:text-burgundy transition-colors">
-                View The Library <ArrowRight size={14}/>
-              </Link>
-            </div>
-
-            <div className="flex gap-8 overflow-x-auto pb-12 scrollbar-hide snap-x">
-              {books.slice(0, 10).map((book, idx) => (
-                <Link href="/bookstore" key={book.id} className="min-w-[280px] w-[280px] group snap-start">
-                  <div className="relative aspect-[2/3] mb-6 overflow-hidden bg-cream shadow-md transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl">
-                    <img src={book.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} alt={book.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out pointer-events-none z-10"></div>
-                  </div>
-                  <h3 className="font-display text-2xl text-ink leading-tight mb-2 group-hover:text-accent transition-colors">{book.title}</h3>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="italic text-ink/70">{book.author}</span>
-                    <span className="flex items-center gap-1 text-accent font-bold"><Star size={12} className="fill-accent"/> {book.rating}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Book of the Month (BOTM) Showcase */}
-      {botmBook && (
-        <section className="py-24 px-8 border-b border-ink/10 bg-cream/40 relative overflow-hidden">
-          <div className="max-w-5xl mx-auto space-y-12">
-            <div className="text-center">
-              <span className="text-accent uppercase tracking-[0.2em] font-bold text-xs mb-3 block">Editorial Spotlight</span>
-              <h2 className="text-4xl md:text-5xl font-display text-burgundy">Book of the Month</h2>
-            </div>
-
-            <div className="bg-white border border-sage/20 rounded-[40px] shadow-xl p-8 md:p-12 flex flex-col md:flex-row gap-12 items-center relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-burgundy/5 rounded-full blur-3xl -z-10" />
-              
-              {/* Book Cover */}
-              <div className="w-full md:w-1/3 max-w-[240px] aspect-[2/3] overflow-hidden bg-cream shadow-2xl relative group rounded-sm flex-shrink-0">
-                <img 
-                  src={botmBook.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} 
-                  alt={botmBook.title} 
-                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
-                />
-              </div>
-
-              {/* Book Info */}
-              <div className="flex-1 space-y-6">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5 text-accent">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          size={14} 
-                          className={i < Math.floor(botmBook.rating) ? "fill-accent text-accent" : "text-ink/20"} 
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs font-bold text-ink/60 font-mono">({botmBook.rating.toFixed(1)})</span>
-                  </div>
-                  <h3 className="text-3xl font-display text-ink leading-tight">{botmBook.title}</h3>
-                  <p className="text-sm font-medium text-burgundy/85 font-sans italic">— by {botmBook.author}</p>
-                </div>
-
-                <p className="text-sm text-ink/75 leading-relaxed font-serif whitespace-pre-wrap">
-                  {botmBook.description || "A magnificent masterwork handpicked by the Panguin clubhouse editors. Available in hardcopy at the bookstore."}
-                </p>
-
-                <div className="flex flex-wrap items-center gap-6 pt-4">
-                  <span className="text-2xl font-display text-ink font-bold">₦{parseFloat(botmBook.price || 0).toLocaleString()}</span>
-                  <Link 
-                    href="/bookstore" 
-                    className="bg-burgundy hover:bg-ink text-cream px-6 py-3.5 uppercase tracking-widest text-xs font-bold transition-all shadow-md flex items-center gap-2"
-                  >
-                    <span>Purchase Hardcopy</span>
-                    <ArrowRight size={14} />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 3. The Editorial Highlights */}
+      {/* 2. The Editorial Highlights */}
       <section className="py-24 px-8 bg-cream border-b border-ink/10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-16">
           <Link href="/bookstore" className="group">
@@ -209,7 +124,76 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt })
         </div>
       </section>
 
-      {/* Weekly Prompts & Critique Salon Section */}
+      {/* 3. Side-by-Side: Writers' Village Entrance & Book of the Month Showcase */}
+      <section className="py-24 px-8 bg-cream/40 border-b border-ink/10 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
+          
+          {/* Left: Writers' Village CTA Card (5 Cols) */}
+          <div className="lg:col-span-5 bg-gradient-to-br from-burgundy to-ink text-cream p-8 md:p-10 rounded-[40px] shadow-xl flex flex-col justify-between relative overflow-hidden border border-white/10 group min-h-[380px]">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/15 rounded-full blur-3xl -z-10 group-hover:scale-110 transition-transform duration-1000" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-burgundy/20 rounded-full blur-3xl -z-10" />
+            
+            <div className="space-y-4">
+              <span className="text-accent uppercase tracking-[0.25em] font-bold text-[10px] block">Portal Access</span>
+              <h3 className="text-3xl md:text-4xl font-display text-cream">Writers' Village</h3>
+              <p className="text-sm text-cream/70 font-serif leading-relaxed">
+                Step into our dedicated workspace. Submit your drafts to the weekly critique cycle, give constructive feedback on peer manuscripts, and track your milestone tokens. Where Zaria, Kaduna, and Abuja members write, read, and critique.
+              </p>
+            </div>
+            
+            <div className="pt-6">
+              <Link 
+                href="/village" 
+                className="bg-accent hover:bg-white text-burgundy hover:text-ink px-8 py-4 rounded-xl uppercase tracking-widest text-xs font-bold transition-all shadow-md inline-flex items-center gap-3 hover:-translate-y-0.5"
+              >
+                <span>Enter The Village</span>
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Right: Book of the Month Spotlight (7 Cols) */}
+          <div className="lg:col-span-7 bg-white border border-sage/20 rounded-[40px] shadow-xl p-8 md:p-10 flex flex-col sm:flex-row gap-8 items-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-burgundy/5 rounded-full blur-3xl -z-10" />
+            
+            {/* Book Cover */}
+            <div className="w-full sm:w-1/3 max-w-[180px] aspect-[2/3] overflow-hidden bg-cream shadow-2xl relative group rounded-sm flex-shrink-0">
+              <img 
+                src={botmBook.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} 
+                alt={botmBook.title} 
+                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
+              />
+            </div>
+
+            {/* Book Info */}
+            <div className="flex-1 space-y-4">
+              <div className="space-y-1.5">
+                <span className="text-accent uppercase tracking-[0.2em] font-bold text-[10px] block">Book of the Month</span>
+                <h3 className="text-2xl font-display text-ink leading-tight">{botmBook.title}</h3>
+                <p className="text-xs font-medium text-burgundy/85 font-sans italic">— by {botmBook.author}</p>
+              </div>
+
+              <p className="text-xs text-ink/75 leading-relaxed font-serif whitespace-pre-wrap">
+                {botmBook.teaser || "A magnificent masterwork handpicked by the Panguin clubhouse editors. Available in hardcopy at the bookstore."}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-6 pt-2">
+                <span className="text-xl font-display text-ink font-bold">₦{formattedPrice}</span>
+                <Link 
+                  href={botmBook.purchaseLink || "/bookstore"} 
+                  className="bg-burgundy hover:bg-ink text-cream px-6 py-3 uppercase tracking-widest text-[10px] font-bold transition-all shadow-md flex items-center gap-2"
+                >
+                  <span>Purchase Hardcopy</span>
+                  <ArrowRight size={12} />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 4. Weekly Prompts & Critique Village Section */}
       <section className="py-24 px-8 bg-white border-b border-ink/10 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sage/5 rounded-full blur-3xl -z-10" />
         
@@ -272,7 +256,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt })
             </motion.div>
           </div>
 
-          {/* Premium Call-to-Action to Salon */}
+          {/* Premium Call-to-Action to Village */}
           <div className="max-w-4xl mx-auto bg-gradient-to-r from-burgundy to-ink p-10 md:p-12 rounded-[40px] shadow-xl text-center space-y-6 relative overflow-hidden border border-white/10 group">
             <div className="absolute top-0 right-0 w-80 h-80 bg-accent/10 rounded-full blur-3xl -z-10 group-hover:scale-110 transition-transform duration-1000" />
             <div className="absolute bottom-0 left-0 w-80 h-80 bg-burgundy/20 rounded-full blur-3xl -z-10" />
@@ -281,16 +265,16 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt })
               <span className="text-accent uppercase tracking-[0.25em] font-bold text-[10px] block">Weekly Critique Cycle</span>
               <h3 className="text-3xl md:text-4xl font-display text-cream">Ready to Share or Critique?</h3>
               <p className="text-sm text-cream/70 font-serif leading-relaxed">
-                Step into the **Salon**. Read and review anonymous peer manuscripts, earn leaves and Milestone Tokens, or manage your ongoing drafts.
+                Step into the **Writers' Village**. Read and review anonymous peer manuscripts, earn leaves and Milestone Tokens, or manage your ongoing drafts.
               </p>
             </div>
 
             <div className="pt-4">
               <Link 
-                href="/salon" 
+                href="/village" 
                 className="bg-accent hover:bg-white text-burgundy hover:text-ink px-10 py-4.5 rounded-2xl uppercase tracking-widest text-xs font-bold transition-all shadow-md inline-flex items-center gap-3 hover:-translate-y-0.5"
               >
-                <span>Enter The Salon</span>
+                <span>Enter The Writers' Village</span>
                 <ArrowRight size={16} />
               </Link>
             </div>

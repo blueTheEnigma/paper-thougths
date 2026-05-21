@@ -34,15 +34,15 @@ export async function synthesizeWeeklyReviews(submissionId) {
       ### REVIEWER #${index + 1}
       - Pacing Assessment: ${r.pacing_rating}
       - Strong Elements Identified: ${(r.strengths_array || []).join(', ')}
-      - Theme Comprehension (The Mirror): "${r.mirror_response}"
-      - Standout Moment (The High-Water Mark): "${r.highwater_response}"
-      - Revision Target (The Constructive Pivot): "${r.pivot_response}"
+      - Theme Comprehension (Perception): "${r.mirror_response}"
+      - Standout Moment (Climax): "${r.highwater_response}"
+      - Revision Target (Constructive Feedback): "${r.pivot_response}"
     `).join('\n');
 
     const targetWorkContext = `
       WORK TITLE: "${submission.title}"
       GENRE: ${submission.genre}
-      ORIGINAL LOGLINE: "${submission.logline}"
+      ORIGINAL TEASER: "${submission.logline}"
     `;
 
     // 3. Trigger Synthesis (LLM vs Local Fallback)
@@ -160,7 +160,7 @@ CRITICAL RULES:
 OUTPUT JSON SCHEMA:
 {
   "core_resonance": "A 2-3 sentence summary of how the community collectively interpreted the piece's themes.",
-  "line_of_the_week": "Extract the specific line, phrase, or stanza that was quoted or praised most consistently across 'The High-Water Mark' inputs. Do not alter the author's words.",
+  "line_of_the_week": "Extract the specific line, phrase, or stanza that was quoted or praised most consistently across 'Climax' inputs. Do not alter the author's words.",
   "common_critiques": "A concise structural breakdown highlighting recurring weaknesses flagged by readers.",
   "action_step": "One direct, tactical revision assignment based on the most unified piece of feedback provided by the group. Start this sentence with an imperative action verb."
 }

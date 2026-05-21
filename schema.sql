@@ -124,3 +124,29 @@ CREATE TABLE IF NOT EXISTS orders (
     sales_rep VARCHAR(255) DEFAULT 'System',
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- 9. Book of the Month Table
+CREATE TABLE IF NOT EXISTS book_of_the_month (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(255) NOT NULL,
+    image_url TEXT NOT NULL,
+    teaser TEXT NOT NULL,
+    price VARCHAR(50) DEFAULT '0',
+    purchase_link TEXT DEFAULT '/bookstore',
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Seed initial Book of the Month (The Parlour Wife by Foluso Agbaje)
+INSERT INTO book_of_the_month (title, author, image_url, teaser, price, purchase_link, active)
+VALUES (
+    'The Parlour Wife', 
+    'Foluso Agbaje', 
+    '/images/the_parlour_wife.png', 
+    'Set against the backdrop of colonial Nigeria, ''The Parlour Wife'' is a gripping historical drama exploring duty, class, secrets, and a woman''s defiance. Foluso Agbaje weaves a rich tapestry of domestic intrigue and social upheaval with breathtaking prose.', 
+    '7,500', 
+    '/bookstore', 
+    TRUE
+) ON CONFLICT DO NOTHING;
+

@@ -24,6 +24,15 @@ export default async function Home() {
     LIMIT 1
   `);
 
+  // Fetch active Book of the Month from the database
+  const botm = await Database.queryOne(`
+    SELECT id, title, author, image_url as "imageUrl", teaser, price, purchase_link as "purchaseLink"
+    FROM book_of_the_month
+    WHERE active = TRUE
+    ORDER BY created_at DESC
+    LIMIT 1
+  `);
+
   return (
     <>
       <Landing 
@@ -31,6 +40,7 @@ export default async function Home() {
         books={featuredBooks} 
         storyPrompt={storyPrompt ? storyPrompt.promptText : "No active story prompt."}
         poemPrompt={poemPrompt ? poemPrompt.promptText : "No active poem prompt."}
+        botm={botm}
       />
       <ContactUs />
     </>

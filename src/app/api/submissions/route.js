@@ -20,7 +20,7 @@ export async function POST(request) {
     const { title, genre, logline, bodyText } = body;
 
     if (!title || !genre || !logline || !bodyText) {
-      return NextResponse.json({ success: false, error: 'All fields (title, genre, logline, body) are required.' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'All fields (title, genre, teaser, body) are required.' }, { status: 400 });
     }
 
     // Submission Gate Lock Check: Friday 11:59 PM to Saturday 12:00 AM (Batch drop transition)

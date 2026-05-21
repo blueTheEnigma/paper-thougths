@@ -53,7 +53,7 @@ export async function POST(request) {
     if (mirrorWordCount < 30 || highwaterWordCount < 30 || pivotWordCount < 30) {
       return NextResponse.json({ 
         success: false, 
-        error: `Critique rejected: All open-ended fields must contain at least 30 words. (The Mirror: ${mirrorWordCount} words, High-Water Mark: ${highwaterWordCount} words, Constructive Pivot: ${pivotWordCount} words)` 
+        error: `Critique rejected: All open-ended fields must contain at least 30 words. (Perception: ${mirrorWordCount} words, Climax: ${highwaterWordCount} words, Constructive Feedback: ${pivotWordCount} words)` 
       }, { status: 400 });
     }
 

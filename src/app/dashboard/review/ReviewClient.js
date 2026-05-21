@@ -278,7 +278,7 @@ export default function ReviewClient() {
                 </span>
                 <h1 className="text-3xl font-display text-burgundy mt-3">{selectedSubmission.title}</h1>
                 <div className="mt-4 p-4 bg-cream/40 rounded-xl border border-sage/10">
-                  <div className="text-[10px] uppercase tracking-widest font-bold text-ink/40 mb-1">Logline / Premise</div>
+                  <div className="text-[10px] uppercase tracking-widest font-bold text-ink/40 mb-1">Teaser / Premise</div>
                   <p className="text-xs text-ink/75 italic">"{selectedSubmission.logline}"</p>
                 </div>
               </div>
@@ -348,10 +348,10 @@ export default function ReviewClient() {
                   </div>
                 </div>
 
-                {/* 3. The Mirror Theme Comprehension */}
+                {/* 3. Perception Theme Comprehension */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-baseline">
-                    <label className="text-xs font-bold text-ink uppercase tracking-wider">3. The Mirror (Theme)</label>
+                    <label className="text-xs font-bold text-ink uppercase tracking-wider">3. Perception (Theme)</label>
                     <span className={`text-[10px] font-mono font-bold ${mirrorWordCount >= 30 ? 'text-green-700' : 'text-burgundy'}`}>
                       {mirrorWordCount} / 30 words
                     </span>
@@ -363,35 +363,35 @@ export default function ReviewClient() {
                     rows="3"
                     value={mirrorResponse}
                     onChange={(e) => setMirrorResponse(e.target.value)}
-                    placeholder="Provide a detailed assessment of the piece's themes..."
+                    placeholder="Provide a detailed assessment of your perception of the piece's themes..."
                     className="w-full bg-cream/20 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy placeholder-ink/30 text-ink leading-relaxed"
                   />
                 </div>
 
-                {/* 4. The High-Water Mark Standout Quote */}
+                {/* 4. Climax Standout Moment */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-baseline">
-                    <label className="text-xs font-bold text-ink uppercase tracking-wider">4. The High-Water Mark</label>
+                    <label className="text-xs font-bold text-ink uppercase tracking-wider">4. Climax (Standout Moment)</label>
                     <span className={`text-[10px] font-mono font-bold ${highwaterWordCount >= 30 ? 'text-green-700' : 'text-burgundy'}`}>
                       {highwaterWordCount} / 30 words
                     </span>
                   </div>
                   <p className="text-[10px] text-ink/50 leading-relaxed italic">
-                    Quote the exact line, stanza, or moment that had the highest impact, and why.
+                    Quote the exact line, stanza, or climax moment that had the highest impact, and why.
                   </p>
                   <textarea
                     rows="3"
                     value={highwaterResponse}
                     onChange={(e) => setHighwaterResponse(e.target.value)}
-                    placeholder="Highlight specific phrases and describe their resonance..."
+                    placeholder="Highlight specific phrases or climax moments and describe their resonance..."
                     className="w-full bg-cream/20 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy placeholder-ink/30 text-ink leading-relaxed"
                   />
                 </div>
 
-                {/* 5. The Constructive Pivot */}
+                {/* 5. Constructive Feedback */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-baseline">
-                    <label className="text-xs font-bold text-ink uppercase tracking-wider">5. The Constructive Pivot</label>
+                    <label className="text-xs font-bold text-ink uppercase tracking-wider">5. Constructive Feedback</label>
                     <span className={`text-[10px] font-mono font-bold ${pivotWordCount >= 30 ? 'text-green-700' : 'text-burgundy'}`}>
                       {pivotWordCount} / 30 words
                     </span>
@@ -403,7 +403,7 @@ export default function ReviewClient() {
                     rows="3"
                     value={pivotResponse}
                     onChange={(e) => setPivotResponse(e.target.value)}
-                    placeholder="Offer constructive guidance on what to target for revision..."
+                    placeholder="Offer constructive feedback on what to target for revision..."
                     className="w-full bg-cream/20 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy placeholder-ink/30 text-ink leading-relaxed"
                   />
                 </div>
@@ -458,7 +458,7 @@ export default function ReviewClient() {
                 {[
                   { key: 'title', label: 'The title sounds intriguing.' },
                   { key: 'genre', label: 'I am a fan of this genre.' },
-                  { key: 'logline', label: 'The logline hooks me immediately.' },
+                  { key: 'logline', label: 'The teaser hooks me immediately.' },
                   { key: 'outside_comfort', label: 'I want to step outside my comfort zone.' }
                 ].map((opt) => (
                   <button
@@ -496,7 +496,7 @@ export default function ReviewClient() {
               <ArrowLeft size={14} /> Back to Dashboard
             </Link>
             <h1 className="text-3xl sm:text-5xl font-display text-burgundy leading-none">The Critique Queue</h1>
-            <p className="text-xs text-ink/50 mt-2">Providing high-water mark insights for the community collective.</p>
+            <p className="text-xs text-ink/50 mt-2">Providing perception, climax, and constructive insights for the community collective.</p>
           </div>
 
           <button 

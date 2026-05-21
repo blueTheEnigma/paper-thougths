@@ -85,6 +85,15 @@ export default async function AdminPage() {
     ORDER BY active_date DESC, created_at DESC
   `);
 
+  // 7. Fetch Active Book of the Month
+  const currentBotm = await Database.queryOne(`
+    SELECT id, title, author, image_url as "imageUrl", teaser, price, purchase_link as "purchaseLink"
+    FROM book_of_the_month
+    WHERE active = TRUE
+    ORDER BY created_at DESC
+    LIMIT 1
+  `);
+
   return (
     <AdminClient 
       initialMembers={members}
@@ -92,6 +101,7 @@ export default async function AdminPage() {
       initialOrders={orders}
       initialPools={chapterPools}
       initialPrompts={prompts}
+      initialBotm={currentBotm}
       userPermissions={permissions}
       isSuperadmin={isSuperadmin}
     />

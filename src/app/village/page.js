@@ -2,10 +2,10 @@ import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser } from '@/lib/permissions';
-import SalonClient from './SalonClient';
+import VillageClient from './VillageClient';
 
 export const metadata = {
-  title: "The Salon - Paper Thoughts",
+  title: "Writers' Village - Paper Thoughts",
   description: "Enter the creative heart of the clubhouse. Draft your manuscripts or critique peers in the anonymous double-blind pool.",
 };
 
@@ -22,10 +22,10 @@ function getLastSaturdayStart() {
   return lastSaturday;
 }
 
-export default async function SalonPage() {
+export default async function VillagePage() {
   const user = await currentUser();
   if (!user) {
-    redirect('/sign-in?redirect_url=/salon');
+    redirect('/sign-in?redirect_url=/village');
   }
 
   const dbUser = await syncOrCreateUser(user);
@@ -67,7 +67,7 @@ export default async function SalonPage() {
   };
 
   return (
-    <SalonClient
+    <VillageClient
       storyPrompt={storyPrompt ? storyPrompt.promptText : "No active story prompt."}
       poemPrompt={poemPrompt ? poemPrompt.promptText : "No active poem prompt."}
       userStats={userStats}
