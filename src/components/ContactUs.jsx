@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { useAuth } from '@clerk/nextjs';
 import { Mail, Send, Loader2, CheckCircle2, BookOpen, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { FaInstagram, FaWhatsapp, FaXTwitter, FaTiktok, FaYoutube, FaLinkedin } from "react-icons/fa6";
 
 export default function ContactUs() {
+  const { isSignedIn, isLoaded } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -96,20 +98,42 @@ export default function ContactUs() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3 blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/10 rounded-full -translate-x-1/3 translate-y-1/3 blur-3xl"></div>
           
-          <div className="relative z-10">
+          <div className="relative z-10 w-full flex flex-col items-center">
             <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-white/20">
               <BookOpen size={40} className="text-cream" />
             </div>
             
-            <h3 className="text-4xl font-display text-cream mb-4">The Archive Awaits</h3>
-            <p className="text-cream/80 mb-10 text-lg font-quote italic max-w-sm mx-auto">
-              Ready to claim your LK-ID and start your journey from Reader to Keeper?
-            </p>
+            {!isLoaded ? (
+              <div className="flex flex-col items-center animate-pulse w-full">
+                <div className="h-10 bg-white/10 rounded-lg w-56 mb-4"></div>
+                <div className="h-6 bg-white/10 rounded-lg w-72 mb-12"></div>
+                <div className="h-14 bg-white/10 rounded-full w-48"></div>
+              </div>
+            ) : isSignedIn ? (
+              <>
+                <h3 className="text-4xl font-display text-cream mb-4">Welcome Back</h3>
+                <p className="text-cream/80 mb-10 text-lg font-quote italic max-w-sm mx-auto">
+                  Step back in. Your manuscripts, critiques, and leaves are waiting.
+                </p>
 
-            <Link href="/join" className="group relative inline-flex items-center gap-3 bg-cream text-burgundy font-bold py-5 px-10 rounded-full hover:bg-white transition-all shadow-xl hover:shadow-2xl">
-              <Sparkles size={20} className="text-accent" />
-              <span className="uppercase tracking-[0.2em] text-sm">Join the Collective</span>
-            </Link>
+                <Link href="/dashboard" className="group relative inline-flex items-center gap-3 bg-cream text-burgundy font-bold py-5 px-10 rounded-full hover:bg-white transition-all shadow-xl hover:shadow-2xl">
+                  <Sparkles size={20} className="text-accent" />
+                  <span className="uppercase tracking-[0.2em] text-sm">Go to Dashboard</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <h3 className="text-4xl font-display text-cream mb-4">The Archive Awaits</h3>
+                <p className="text-cream/80 mb-10 text-lg font-quote italic max-w-sm mx-auto">
+                  Ready to claim your LK-ID and start your journey from Reader to Keeper?
+                </p>
+
+                <Link href="/join" className="group relative inline-flex items-center gap-3 bg-cream text-burgundy font-bold py-5 px-10 rounded-full hover:bg-white transition-all shadow-xl hover:shadow-2xl">
+                  <Sparkles size={20} className="text-accent" />
+                  <span className="uppercase tracking-[0.2em] text-sm">Join the Collective</span>
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
