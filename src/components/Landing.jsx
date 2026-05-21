@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Star } from 'lucide-react';
+import { ArrowRight, Star, Feather, Sparkles } from 'lucide-react';
 
 const QUOTES = [
   { text: "There is no agony like bearing an untold story inside you.", author: "Zora Neale Hurston" },
@@ -13,7 +13,7 @@ const QUOTES = [
   { text: "I have loved the stars too fondly to be fearful of the night.", author: "Sarah Williams" }
 ];
 
-export default function Landing({ images, books = [] }) {
+export default function Landing({ images, books = [], storyPrompt, poemPrompt }) {
   const [quoteIndex, setQuoteIndex] = useState(0);
 
   const slideImages = [
@@ -35,6 +35,11 @@ export default function Landing({ images, books = [] }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Find book of the month (highest rated)
+  const botmBook = books && books.length > 0 
+    ? [...books].sort((a, b) => b.rating - a.rating)[0]
+    : null;
+
   return (
     <div className="w-full bg-cream selection:bg-accent/30">
       
@@ -55,11 +60,11 @@ export default function Landing({ images, books = [] }) {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6">
-              <Link href="/bookstore" className="bg-ink text-cream px-8 py-4 uppercase tracking-widest text-sm font-bold flex items-center justify-center gap-3 hover:bg-burgundy transition-colors">
-                Browse The Lore <ArrowRight size={16} />
+              <Link href="/salon" className="bg-burgundy text-cream px-8 py-4 uppercase tracking-widest text-sm font-bold flex items-center justify-center gap-3 hover:bg-ink transition-colors shadow-md">
+                Enter The Salon <ArrowRight size={16} />
               </Link>
-              <Link href="/clubs" className="border border-ink text-ink px-8 py-4 uppercase tracking-widest text-sm font-bold flex items-center justify-center hover:bg-ink/5 transition-colors">
-                Find Your Chapter
+              <Link href="/bookstore" className="border border-ink text-ink px-8 py-4 uppercase tracking-widest text-sm font-bold flex items-center justify-center hover:bg-ink/5 transition-colors">
+                Browse The Lore
               </Link>
             </div>
           </motion.div>
@@ -115,7 +120,67 @@ export default function Landing({ images, books = [] }) {
         </section>
       )}
 
-      {/* 3. The Editorial Highlights (Replacing generic icons) */}
+      {/* Book of the Month (BOTM) Showcase */}
+      {botmBook && (
+        <section className="py-24 px-8 border-b border-ink/10 bg-cream/40 relative overflow-hidden">
+          <div className="max-w-5xl mx-auto space-y-12">
+            <div className="text-center">
+              <span className="text-accent uppercase tracking-[0.2em] font-bold text-xs mb-3 block">Editorial Spotlight</span>
+              <h2 className="text-4xl md:text-5xl font-display text-burgundy">Book of the Month</h2>
+            </div>
+
+            <div className="bg-white border border-sage/20 rounded-[40px] shadow-xl p-8 md:p-12 flex flex-col md:flex-row gap-12 items-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-burgundy/5 rounded-full blur-3xl -z-10" />
+              
+              {/* Book Cover */}
+              <div className="w-full md:w-1/3 max-w-[240px] aspect-[2/3] overflow-hidden bg-cream shadow-2xl relative group rounded-sm flex-shrink-0">
+                <img 
+                  src={botmBook.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} 
+                  alt={botmBook.title} 
+                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
+                />
+              </div>
+
+              {/* Book Info */}
+              <div className="flex-1 space-y-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 text-accent">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          size={14} 
+                          className={i < Math.floor(botmBook.rating) ? "fill-accent text-accent" : "text-ink/20"} 
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs font-bold text-ink/60 font-mono">({botmBook.rating.toFixed(1)})</span>
+                  </div>
+                  <h3 className="text-3xl font-display text-ink leading-tight">{botmBook.title}</h3>
+                  <p className="text-sm font-medium text-burgundy/85 font-sans italic">— by {botmBook.author}</p>
+                </div>
+
+                <p className="text-sm text-ink/75 leading-relaxed font-serif whitespace-pre-wrap">
+                  {botmBook.description || "A magnificent masterwork handpicked by the Panguin clubhouse editors. Available in hardcopy at the bookstore."}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-6 pt-4">
+                  <span className="text-2xl font-display text-ink font-bold">₦{parseFloat(botmBook.price || 0).toLocaleString()}</span>
+                  <Link 
+                    href="/bookstore" 
+                    className="bg-burgundy hover:bg-ink text-cream px-6 py-3.5 uppercase tracking-widest text-xs font-bold transition-all shadow-md flex items-center gap-2"
+                  >
+                    <span>Purchase Hardcopy</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 3. The Editorial Highlights */}
       <section className="py-24 px-8 bg-cream border-b border-ink/10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-16">
           <Link href="/bookstore" className="group">
@@ -141,6 +206,95 @@ export default function Landing({ images, books = [] }) {
               Zaria, Kaduna, and Abuja. Three cities bound by one very opinionated reading list.
             </p>
           </Link>
+        </div>
+      </section>
+
+      {/* Weekly Prompts & Critique Salon Section */}
+      <section className="py-24 px-8 bg-white border-b border-ink/10 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sage/5 rounded-full blur-3xl -z-10" />
+        
+        <div className="max-w-7xl mx-auto space-y-16">
+          <div className="text-center space-y-3">
+            <span className="text-accent uppercase tracking-[0.2em] font-bold text-xs block">Active Weekly Prompts</span>
+            <h2 className="text-4xl md:text-5xl font-display text-burgundy">Weekly Writing Prompts</h2>
+            <p className="text-sm text-ink/60 max-w-md mx-auto">Select a prompt below, write your manuscript in the portal, and queue it for Saturday's drop.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Story Prompt Card - Vintage Ledger styling */}
+            <motion.div 
+              whileHover={{ y: -4 }}
+              className="bg-[#FAF6EE] border-2 border-[#E8DFC9] p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-burgundy/5 rounded-full blur-xl" />
+              <div className="space-y-4 flex-1 flex flex-col">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-burgundy bg-burgundy/5 px-3 py-1 rounded-full uppercase tracking-wider">The Story prompt</span>
+                  <Feather size={16} className="text-burgundy" />
+                </div>
+                <h3 className="text-2xl font-display text-ink border-b border-[#E8DFC9] pb-3">Prose & Narrative</h3>
+                <p className="text-xs text-ink/85 leading-relaxed font-serif italic min-h-[90px] bg-white/40 p-4 rounded-xl border border-[#E8DFC9]/50 flex-1 flex items-center justify-center">
+                  "{storyPrompt}"
+                </p>
+              </div>
+              <Link 
+                href="/dashboard/write?type=story"
+                className="bg-burgundy hover:bg-ink text-cream text-center font-bold text-xs py-3.5 px-6 rounded-xl uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-sm"
+              >
+                <span>Write Story Draft</span>
+                <ArrowRight size={14} />
+              </Link>
+            </motion.div>
+
+            {/* Poem Prompt Card - Calligraphy style */}
+            <motion.div 
+              whileHover={{ y: -4 }}
+              className="bg-[#F8F5FC] border-2 border-[#E7DEEE] p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full blur-xl" />
+              <div className="space-y-4 flex-1 flex flex-col">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-accent bg-accent/5 px-3 py-1 rounded-full uppercase tracking-wider">The Poem prompt</span>
+                  <Sparkles size={16} className="text-accent" />
+                </div>
+                <h3 className="text-2xl font-display text-ink border-b border-[#E7DEEE] pb-3">Verse & Poetry</h3>
+                <p className="text-xs text-ink/85 leading-relaxed font-serif italic min-h-[90px] bg-white/40 p-4 rounded-xl border border-[#E7DEEE]/50 flex-1 flex items-center justify-center">
+                  "{poemPrompt}"
+                </p>
+              </div>
+              <Link 
+                href="/dashboard/write?type=poem"
+                className="bg-accent hover:bg-ink text-burgundy hover:text-cream text-center font-bold text-xs py-3.5 px-6 rounded-xl uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-sm"
+              >
+                <span>Compose Poem Draft</span>
+                <ArrowRight size={14} />
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Premium Call-to-Action to Salon */}
+          <div className="max-w-4xl mx-auto bg-gradient-to-r from-burgundy to-ink p-10 md:p-12 rounded-[40px] shadow-xl text-center space-y-6 relative overflow-hidden border border-white/10 group">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-accent/10 rounded-full blur-3xl -z-10 group-hover:scale-110 transition-transform duration-1000" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-burgundy/20 rounded-full blur-3xl -z-10" />
+
+            <div className="max-w-2xl mx-auto space-y-4">
+              <span className="text-accent uppercase tracking-[0.25em] font-bold text-[10px] block">Weekly Critique Cycle</span>
+              <h3 className="text-3xl md:text-4xl font-display text-cream">Ready to Share or Critique?</h3>
+              <p className="text-sm text-cream/70 font-serif leading-relaxed">
+                Step into the **Salon**. Read and review anonymous peer manuscripts, earn leaves and Milestone Tokens, or manage your ongoing drafts.
+              </p>
+            </div>
+
+            <div className="pt-4">
+              <Link 
+                href="/salon" 
+                className="bg-accent hover:bg-white text-burgundy hover:text-ink px-10 py-4.5 rounded-2xl uppercase tracking-widest text-xs font-bold transition-all shadow-md inline-flex items-center gap-3 hover:-translate-y-0.5"
+              >
+                <span>Enter The Salon</span>
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 

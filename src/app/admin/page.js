@@ -9,7 +9,7 @@ export const metadata = {
   description: "Administrative console for managing literary batches, bookstore ledger, and chapter members.",
 };
 
-const SUPERADMIN_EMAIL = "ummorgan2001@gmail.com";
+const SUPERADMIN_EMAIL = "umorgan2001@gmail.com";
 
 export default async function AdminPage() {
   const user = await currentUser();

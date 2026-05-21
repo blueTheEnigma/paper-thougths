@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Wifi, WifiOff, Save, CheckCircle, AlertTriangle, 
-  Send, RefreshCw, BookOpen, Trash2, Check
+  Send, RefreshCw, BookOpen, Trash2, Check, Feather, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
@@ -11,7 +11,6 @@ import confetti from 'canvas-confetti';
 const DB_NAME = 'paper-thoughts-drafts';
 const DB_VERSION = 1;
 const STORE_NAME = 'drafts';
-const DRAFT_KEY = 'current-weekly-draft';
 
 const GENRES = [
   'Fiction',
@@ -41,14 +40,14 @@ function openDB() {
   });
 }
 
-// Helper to retrieve draft
-async function getSavedDraft() {
+// Helper to retrieve draft by mode ('story' or 'poem')
+async function getSavedDraft(mode) {
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(STORE_NAME, 'readonly');
       const store = transaction.objectStore(STORE_NAME);
-      const request = store.get(DRAFT_KEY);
+      const request = store.get(`draft-${mode}`);
       request.onsuccess = () => resolve(request.result || null);
       request.onerror = () => reject(request.error);
     });
@@ -58,14 +57,14 @@ async function getSavedDraft() {
   }
 }
 
-// Helper to save draft
-async function saveDraftToDB(draftData) {
+// Helper to save draft by mode
+async function saveDraftToDB(mode, draftData) {
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(STORE_NAME, 'readwrite');
       const store = transaction.objectStore(STORE_NAME);
-      const request = store.put({ id: DRAFT_KEY, ...draftData, updatedAt: new Date() });
+      const request = store.put({ id: `draft-${mode}`, ...draftData, updatedAt: new Date() });
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
@@ -74,14 +73,14 @@ async function saveDraftToDB(draftData) {
   }
 }
 
-// Helper to delete draft
-async function deleteDraftFromDB() {
+// Helper to delete draft by mode
+async function deleteDraftFromDB(mode) {
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(STORE_NAME, 'readwrite');
       const store = transaction.objectStore(STORE_NAME);
-      const request = store.delete(DRAFT_KEY);
+      const request = store.delete(`draft-${mode}`);
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
@@ -90,7 +89,8 @@ async function deleteDraftFromDB() {
   }
 }
 
-export default function WriteClient({ activePrompt, promptId }) {
+export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, poemPromptId }) {
+  const [writingMode, setWritingMode] = useState('story'); // 'story' or 'poem'
   const [title, setTitle] = useState('');
   const [genre, setGenre] = useState('Fiction');
   const [logline, setLogline] = useState('');
@@ -107,7 +107,7 @@ export default function WriteClient({ activePrompt, promptId }) {
 
   const saveTimeoutRef = useRef(null);
 
-  // 1. Initialize Network Status and Load Draft
+  // 1. Initialize Network Status
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setIsOnline(navigator.onLine);
@@ -125,20 +125,6 @@ export default function WriteClient({ activePrompt, promptId }) {
       window.addEventListener('online', handleOnline);
       window.addEventListener('offline', handleOffline);
 
-      // Load draft from IndexedDB
-      getSavedDraft().then((draft) => {
-        if (draft) {
-          setTitle(draft.title || '');
-          setGenre(draft.genre || 'Fiction');
-          setLogline(draft.logline || '');
-          setBodyText(draft.bodyText || '');
-          setIsPendingSync(!!draft.pendingSync);
-          if (draft.updatedAt) {
-            setLastSaved(new Date(draft.updatedAt));
-          }
-        }
-      });
-
       return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
@@ -146,10 +132,59 @@ export default function WriteClient({ activePrompt, promptId }) {
     }
   }, []);
 
-  // 2. Auto-save Draft to IndexedDB whenever user types
+  // 2. Parse URL parameters (e.g. from landing page buttons)
   useEffect(() => {
-    // Skip saving if all fields are empty (e.g. during initial render before load)
-    if (!title && !logline && !bodyText && genre === 'Fiction') return;
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get('type');
+      if (type === 'poem') {
+        setWritingMode('poem');
+        setGenre('Poetry');
+      } else if (type === 'story') {
+        setWritingMode('story');
+        setGenre('Fiction');
+      }
+    }
+  }, []);
+
+  // 3. Load draft from IndexedDB when writingMode changes
+  useEffect(() => {
+    let active = true;
+    getSavedDraft(writingMode).then((draft) => {
+      if (active) {
+        if (draft) {
+          setTitle(draft.title || '');
+          setGenre(draft.genre || (writingMode === 'poem' ? 'Poetry' : 'Fiction'));
+          setLogline(draft.logline || '');
+          setBodyText(draft.bodyText || '');
+          setIsPendingSync(!!draft.pendingSync);
+          if (draft.updatedAt) {
+            setLastSaved(new Date(draft.updatedAt));
+          }
+          setSaveStatus('Draft loaded from browser storage');
+        } else {
+          // Reset form fields for new draft
+          setTitle('');
+          setGenre(writingMode === 'poem' ? 'Poetry' : 'Fiction');
+          setLogline('');
+          setBodyText('');
+          setIsPendingSync(false);
+          setLastSaved(null);
+          setSaveStatus('Ready to write');
+        }
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [writingMode]);
+
+  // 4. Auto-save Draft to IndexedDB whenever user types
+  useEffect(() => {
+    // Skip saving if all fields are empty (e.g. during mode toggle or initial load)
+    const defaultGenre = writingMode === 'poem' ? 'Poetry' : 'Fiction';
+    if (!title && !logline && !bodyText && genre === defaultGenre) return;
 
     setSaveStatus('Saving draft locally...');
     
@@ -159,7 +194,7 @@ export default function WriteClient({ activePrompt, promptId }) {
 
     saveTimeoutRef.current = setTimeout(() => {
       const draftData = { title, genre, logline, bodyText, pendingSync: isPendingSync };
-      saveDraftToDB(draftData).then(() => {
+      saveDraftToDB(writingMode, draftData).then(() => {
         const now = new Date();
         setLastSaved(now);
         setSaveStatus(`Draft saved locally at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
@@ -171,9 +206,9 @@ export default function WriteClient({ activePrompt, promptId }) {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [title, genre, logline, bodyText, isPendingSync]);
+  }, [title, genre, logline, bodyText, isPendingSync, writingMode]);
 
-  // 3. Automatic sync dispatcher when network goes back online
+  // 5. Automatic sync dispatcher when network goes back online
   useEffect(() => {
     if (isOnline && isPendingSync) {
       console.log('Network online. Triggering automatic draft synchronization.');
@@ -181,7 +216,7 @@ export default function WriteClient({ activePrompt, promptId }) {
     }
   }, [isOnline, isPendingSync]);
 
-  // 4. Submission Handler
+  // 6. Submission Handler
   const handleSyncDraft = async () => {
     setErrorMessage(null);
     setIsSyncing(true);
@@ -197,7 +232,7 @@ export default function WriteClient({ activePrompt, promptId }) {
     // If user is currently offline, queue the draft to be synced automatically later
     if (!navigator.onLine) {
       setIsPendingSync(true);
-      await saveDraftToDB({ ...submissionData, pendingSync: true });
+      await saveDraftToDB(writingMode, { ...submissionData, pendingSync: true });
       setIsSyncing(false);
       alert('You are currently offline. Your manuscript has been saved as a pending upload, and will automatically synchronize with the clubhouse once your network connection is restored!');
       return;
@@ -219,10 +254,10 @@ export default function WriteClient({ activePrompt, promptId }) {
           origin: { y: 0.6 }
         });
 
-        await deleteDraftFromDB();
+        await deleteDraftFromDB(writingMode);
         setIsPendingSync(false);
         setTitle('');
-        setGenre('Fiction');
+        setGenre(writingMode === 'poem' ? 'Poetry' : 'Fiction');
         setLogline('');
         setBodyText('');
         setLastSaved(null);
@@ -238,12 +273,12 @@ export default function WriteClient({ activePrompt, promptId }) {
     }
   };
 
-  // 5. Delete local draft draft entirely
+  // 7. Delete local draft draft entirely
   const handleDeleteDraft = async () => {
     if (window.confirm('Are you sure you want to delete your current local draft? This action cannot be undone.')) {
-      await deleteDraftFromDB();
+      await deleteDraftFromDB(writingMode);
       setTitle('');
-      setGenre('Fiction');
+      setGenre(writingMode === 'poem' ? 'Poetry' : 'Fiction');
       setLogline('');
       setBodyText('');
       setLastSaved(null);
@@ -253,6 +288,7 @@ export default function WriteClient({ activePrompt, promptId }) {
   };
 
   const wordCount = bodyText.trim() === '' ? 0 : bodyText.trim().split(/\s+/).length;
+  const activePromptText = writingMode === 'poem' ? poemPrompt : storyPrompt;
 
   return (
     <main className="min-h-screen bg-cream pt-24 pb-20 px-4 md:px-8">
@@ -261,8 +297,8 @@ export default function WriteClient({ activePrompt, promptId }) {
         {/* Navigation Breadcrumbs & Sync Banner */}
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <Link href="/dashboard" className="flex items-center gap-1.5 text-xs font-bold text-burgundy uppercase tracking-widest hover:text-accent transition-colors">
-              <ArrowLeft size={16} /> Back to Dashboard
+            <Link href="/salon" className="flex items-center gap-1.5 text-xs font-bold text-burgundy uppercase tracking-widest hover:text-accent transition-colors">
+              <ArrowLeft size={16} /> Back to Salon
             </Link>
             <h1 className="text-3xl sm:text-5xl font-display text-burgundy mt-2">Writing Workspace</h1>
           </div>
@@ -280,6 +316,30 @@ export default function WriteClient({ activePrompt, promptId }) {
               <span>{saveStatus}</span>
             </div>
           </div>
+        </div>
+
+        {/* Toggle Mode Selector */}
+        <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-sage/20 shadow-sm max-w-sm mb-8">
+          <button
+            onClick={() => setWritingMode('story')}
+            className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+              writingMode === 'story'
+                ? 'bg-burgundy text-cream shadow-sm'
+                : 'text-ink/60 hover:text-burgundy hover:bg-burgundy/5'
+            }`}
+          >
+            <Feather size={14} /> Story Mode
+          </button>
+          <button
+            onClick={() => setWritingMode('poem')}
+            className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+              writingMode === 'poem'
+                ? 'bg-accent text-burgundy shadow-sm'
+                : 'text-ink/60 hover:text-accent hover:bg-accent/5'
+            }`}
+          >
+            <Sparkles size={14} /> Poetry Mode
+          </button>
         </div>
 
         {errorMessage && (
@@ -316,10 +376,10 @@ export default function WriteClient({ activePrompt, promptId }) {
             <div className="bg-white p-6 rounded-[32px] border border-sage/20 shadow-md relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-burgundy/5 rounded-full blur-xl"></div>
               <h3 className="font-display text-lg text-burgundy mb-3 flex items-center gap-2">
-                <BookOpen size={18} className="text-sage" /> Weekly Writing Prompt
+                <BookOpen size={18} className="text-sage" /> {writingMode === 'poem' ? 'Weekly Poetry Prompt' : 'Weekly Story Prompt'}
               </h3>
               <p className="text-xs text-ink/75 leading-relaxed bg-cream/30 border border-sage/10 p-4 rounded-2xl italic whitespace-pre-wrap font-serif">
-                "{activePrompt}"
+                "{activePromptText}"
               </p>
               <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-ink/40 uppercase tracking-widest">
                 <span>Cycle Drop: Saturday 12:00 AM</span>
@@ -336,7 +396,7 @@ export default function WriteClient({ activePrompt, promptId }) {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="The Name of the Wind..."
+                  placeholder={writingMode === 'poem' ? "The Sound of Rain..." : "The Name of the Wind..."}
                   className="w-full bg-cream/20 border border-sage/25 rounded-xl py-2.5 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink placeholder-ink/30"
                 />
               </div>
@@ -365,7 +425,7 @@ export default function WriteClient({ activePrompt, promptId }) {
                   value={logline}
                   maxLength={200}
                   onChange={(e) => setLogline(e.target.value)}
-                  placeholder="A short, one-sentence elevator pitch describing the hook and stakes of your weekly story..."
+                  placeholder={writingMode === 'poem' ? "A brief description of the themes, tone, and poetic devices in your weekly poem..." : "A short, one-sentence elevator pitch describing the hook and stakes of your weekly story..."}
                   rows={3}
                   className="w-full bg-cream/20 border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 resize-none leading-relaxed"
                 />
@@ -387,7 +447,7 @@ export default function WriteClient({ activePrompt, promptId }) {
             {/* Clubhouse Rules / Guide */}
             <div className="bg-sage/10 border border-sage/20 p-5 rounded-[24px] text-[11px] text-ink/70 space-y-2">
               <h4 className="font-bold text-burgundy uppercase tracking-wider text-[10px]">Submission Guidelines</h4>
-              <p className="leading-relaxed">All stories uploaded are completely hidden and stored in double-blind encryption until the **Saturday 12:00 AM** batch transition, where they are randomized into the critique queue.</p>
+              <p className="leading-relaxed">All submissions uploaded are completely hidden and stored in double-blind encryption until the **Saturday 12:00 AM** batch transition, where they are randomized into the critique queue.</p>
               <p className="leading-relaxed font-bold">Ensure your manuscript is original and conforms to the weekly prompt structure. Happy writing!</p>
             </div>
           </div>
@@ -402,16 +462,18 @@ export default function WriteClient({ activePrompt, promptId }) {
               
               <div className="relative z-10 flex-1 flex flex-col">
                 <div className="flex justify-between items-center mb-6 border-b-2 border-dashed border-[#E3D4B6] pb-4">
-                  <span className="font-display font-semibold text-[#8B7355] text-sm italic">Manuscript Paper</span>
+                  <span className="font-display font-semibold text-[#8B7355] text-sm italic">
+                    {writingMode === 'poem' ? 'Manuscript Paper — Poetry' : 'Manuscript Paper — Prose'}
+                  </span>
                   <span className="font-mono text-xs text-[#8B7355] font-bold bg-[#EADFC9]/40 py-1 px-3 rounded-full">
-                    {wordCount} words
+                    {wordCount} words / {bodyText.length} chars
                   </span>
                 </div>
                 
                 <textarea
                   value={bodyText}
                   onChange={(e) => setBodyText(e.target.value)}
-                  placeholder="Enter the body of your weekly manuscript here..."
+                  placeholder={writingMode === 'poem' ? "Write your poem here...\nUse line breaks and stanzas to format your verses." : "Enter the body of your weekly manuscript here..."}
                   className="w-full flex-1 bg-transparent border-none outline-none focus:ring-0 text-base leading-8 text-ink font-serif placeholder-[#8B7355]/40 resize-none min-h-[380px]"
                   style={{ backgroundImage: 'none' }}
                 />

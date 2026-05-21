@@ -27,7 +27,7 @@ export default function Navigation() {
           <Link href="/" className="hover:text-accent transition-colors">Home</Link>
           <Link href="/bookstore" className="hover:text-accent transition-colors">Bookstore</Link>
           <Link href="/events" className="hover:text-accent transition-colors">Events</Link>
-          <Link href="/collections" className="hover:text-accent transition-colors">Collections</Link>
+          <Link href="/salon" className="hover:text-accent transition-colors">Salon</Link>
           <Link href="/clubs" className="hover:text-accent transition-colors">Clubs</Link>
         </div>
         
@@ -70,7 +70,7 @@ export default function Navigation() {
           <Link href="/" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Home</Link>
           <Link href="/bookstore" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Bookstore</Link>
           <Link href="/events" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Events</Link>
-          <Link href="/collections" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Collections</Link>
+          <Link href="/salon" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Salon</Link>
           <Link href="/clubs" onClick={() => setIsOpen(false)} className="text-xl hover:text-accent">Clubs</Link>
           
           <div className="w-full h-[1px] bg-sage/20 my-2"></div>

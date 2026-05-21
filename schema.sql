@@ -57,13 +57,15 @@ CREATE TABLE IF NOT EXISTS user_permissions (
 CREATE TABLE IF NOT EXISTS prompts (
     id SERIAL PRIMARY KEY,
     prompt_text TEXT NOT NULL,
+    prompt_type VARCHAR(20) DEFAULT 'story', -- 'story', 'poem'
     active_date DATE DEFAULT CURRENT_DATE,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Seed an Initial Welcome Prompt
-INSERT INTO prompts (prompt_text, active_date) VALUES 
-('Write a short scene about discovering an ancient, dust-covered book in an unexpected place.', CURRENT_DATE)
+-- Seed Initial Welcome Prompts for Story and Poem
+INSERT INTO prompts (prompt_text, prompt_type, active_date) VALUES 
+('Write a short scene about discovering an ancient, dust-covered book in an unexpected place.', 'story', CURRENT_DATE),
+('Write a poem about the quiet chaos of a rainy afternoon in a bookstore.', 'poem', CURRENT_DATE)
 ON CONFLICT DO NOTHING;
 
 -- 5. Submissions Table

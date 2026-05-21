@@ -23,13 +23,28 @@ export async function syncOrCreateUser(clerkUser) {
     `, [clerkId, email.toLowerCase()]);
     
     if (!dbUser) {
-      // 2. If user doesn't exist, create a new record
-      dbUser = await Database.queryOne(`
-        INSERT INTO users (clerk_id, email, full_name)
-        VALUES ($1, $2, $3)
-        RETURNING *
-      `, [clerkId, email.toLowerCase(), fullName]);
-      console.log('Synchronized new Clerk user:', dbUser.email);
+      // 2. If user doesn't exist, create a new record and assign an LK-ID
+      dbUser = await Database.transaction(async (client) => {
+        const userRes = await client.query(`
+          INSERT INTO users (clerk_id, email, full_name)
+          VALUES ($1, $2, $3)
+          RETURNING id
+        `, [clerkId, email.toLowerCase(), fullName]);
+        
+        const newUserId = userRes.rows[0].id;
+        const year = new Date().getFullYear();
+        const lkId = `LK-${year}-${1000 + newUserId}`;
+        
+        const updatedRes = await client.query(`
+          UPDATE users 
+          SET lk_id = $1 
+          WHERE id = $2 
+          RETURNING *
+        `, [lkId, newUserId]);
+        
+        return updatedRes.rows[0];
+      });
+      console.log('Synchronized new Clerk user with LK-ID:', dbUser.email, dbUser.lk_id);
     } else {
       // 3. If user exists but clerk_id is mismatching or empty, update it
       let needsUpdate = false;
@@ -47,6 +62,15 @@ export async function syncOrCreateUser(clerkUser) {
       if (!dbUser.full_name && fullName) {
         updates.push(`full_name = $${paramCount++}`);
         params.push(fullName);
+        needsUpdate = true;
+      }
+
+      // Automatically generate LK-ID if user exists but lacks one
+      if (!dbUser.lk_id) {
+        const year = new Date().getFullYear();
+        const lkId = `LK-${year}-${1000 + dbUser.id}`;
+        updates.push(`lk_id = $${paramCount++}`);
+        params.push(lkId);
         needsUpdate = true;
       }
       

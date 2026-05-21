@@ -331,7 +331,7 @@ export default function DashboardClient({ profile, initialOrders, recommendation
         </div>
 
         {/* Bi-Token Economy Radial & Progress Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           
           {/* Milestone Tokens Circle Progress Card */}
           <div className="bg-white p-6 rounded-[32px] border border-sage/20 shadow-md flex items-center justify-between relative overflow-hidden group">
@@ -385,21 +385,6 @@ export default function DashboardClient({ profile, initialOrders, recommendation
             <p className="text-xs text-ink/60 leading-relaxed mt-4">
               Your spendable bi-token currency. Redeem at local bookstore events or donate to chapter pools.
             </p>
-          </div>
-
-          {/* Lifetime Leaves Milestone Card */}
-          <div className="bg-white p-6 rounded-[32px] border border-sage/20 shadow-md flex flex-col justify-between relative overflow-hidden group hover:border-burgundy/10 transition-colors">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform">
-              <Gift size={80} className="text-burgundy" />
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink/40">Lifetime Leaves</span>
-              <div className="text-4xl font-display text-burgundy mt-1">{lifetimeLeaves} 🍃</div>
-            </div>
-            <div className="flex justify-between items-center text-xs text-ink/60 mt-4 border-t border-sage/10 pt-3">
-              <span>Next gift voucher:</span>
-              <span className="font-bold text-burgundy">{Math.floor(lifetimeLeaves / 500) + 1} (At {((Math.floor(lifetimeLeaves / 500) + 1) * 500)} Leaves)</span>
-            </div>
           </div>
         </div>
 

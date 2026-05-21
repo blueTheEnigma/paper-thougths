@@ -3,7 +3,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser, hasPermission } from '@/lib/permissions';
 
-const SUPERADMIN_EMAIL = "ummorgan2001@gmail.com";
+const SUPERADMIN_EMAIL = "umorgan2001@gmail.com";
 
 // GET handler: fetch prompts
 export async function GET(request) {

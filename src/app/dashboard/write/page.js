@@ -20,18 +20,30 @@ export default async function WritePage() {
     redirect('/dashboard');
   }
 
-  // Get active weekly prompt
-  const activePrompt = await Database.queryOne(`
+  // Get active story prompt
+  const storyPrompt = await Database.queryOne(`
     SELECT prompt_text as "promptText", id
     FROM prompts
+    WHERE prompt_type = 'story'
+    ORDER BY active_date DESC, created_at DESC
+    LIMIT 1
+  `);
+
+  // Get active poem prompt
+  const poemPrompt = await Database.queryOne(`
+    SELECT prompt_text as "promptText", id
+    FROM prompts
+    WHERE prompt_type = 'poem'
     ORDER BY active_date DESC, created_at DESC
     LIMIT 1
   `);
 
   return (
     <WriteClient
-      activePrompt={activePrompt ? activePrompt.promptText : "Compose your draft here for the weekly Clubhouse selection cycle."}
-      promptId={activePrompt ? activePrompt.id : null}
+      storyPrompt={storyPrompt ? storyPrompt.promptText : "Write a short scene about discovering an ancient, dust-covered book in an unexpected place."}
+      storyPromptId={storyPrompt ? storyPrompt.id : null}
+      poemPrompt={poemPrompt ? poemPrompt.promptText : "Write a poem about the quiet chaos of a rainy afternoon in a bookstore."}
+      poemPromptId={poemPrompt ? poemPrompt.id : null}
     />
   );
 }
