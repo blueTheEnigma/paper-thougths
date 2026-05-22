@@ -379,7 +379,7 @@ export default function AdminClient({
                               <Flame size={12}/> {m.streak}
                             </span>
                           </td>
-                          <td className="py-4 px-6 font-mono font-bold text-burgundy">{(m.milestoneTokens || 0).toFixed(1)}</td>
+                          <td className="py-4 px-6 font-mono font-bold text-burgundy">{parseFloat(m.milestoneTokens || 0).toFixed(1)}</td>
                           <td className="py-4 px-6 font-medium text-ink/80">{m.spendableLeaves} 🍃</td>
                           <td className="py-4 px-6 font-bold text-ink">
                             <div className="flex items-center gap-2">

@@ -33,7 +33,7 @@ export default async function AdminPage() {
   }
 
   // 2. Fetch Members Ledger (Lifetime Leaves)
-  const members = await Database.query(`
+  const membersRaw = await Database.query(`
     SELECT u.id, u.full_name as name, u.email, u.lk_id as lkid, 
            u.milestone_tokens as "milestoneTokens", u.spendable_leaves as "spendableLeaves", 
            u.lifetime_leaves as "lifetimeLeaves", u.book_vouchers_gifted as "vouchersGifted", 
@@ -49,6 +49,15 @@ export default async function AdminPage() {
     LEFT JOIN chapters c ON c.id = u.chapter_id
     ORDER BY u.lifetime_leaves DESC, u.created_at ASC
   `);
+
+  const members = membersRaw.map(m => ({
+    ...m,
+    milestoneTokens: parseFloat(m.milestoneTokens || 0),
+    spendableLeaves: parseInt(m.spendableLeaves || 0),
+    lifetimeLeaves: parseInt(m.lifetimeLeaves || 0),
+    vouchersGifted: parseInt(m.vouchersGifted || 0),
+    streak: parseInt(m.streak || 0)
+  }));
 
   // 3. Fetch Submissions (For Batch Moderation)
   const submissions = await Database.query(`
