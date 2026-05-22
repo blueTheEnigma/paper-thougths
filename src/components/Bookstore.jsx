@@ -181,24 +181,7 @@ export default function Bookstore({ initialBooks }) {
           </button>
         </div>
 
-        {/* Panguin Picks */}
-        {featured.length > 0 && (
-          <div className="mb-16">
-            <h3 className="text-xl font-bold text-accent uppercase tracking-widest mb-6 flex items-center gap-3">
-              <span className="w-8 h-[1px] bg-accent"></span> Panguin Picks
-            </h3>
-            <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide">
-              {featured.map(b => (
-                <div key={`feat-${b.id}`} onClick={() => setSelectedBook(b)} className="min-w-[200px] w-[200px] cursor-pointer group">
-                  <div className="aspect-[2/3] w-full rounded-xl overflow-hidden shadow-md mb-3 border border-sage/20">
-                    <img src={b.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} alt={b.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                  </div>
-                  <h4 className="font-bold text-ink leading-tight group-hover:text-accent transition-colors">{b.title}</h4>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         <div className="flex flex-col lg:flex-row gap-8 items-start relative">
           
@@ -320,7 +303,7 @@ export default function Bookstore({ initialBooks }) {
           </div>
 
           {/* Right Content: Grid */}
-          <div className="flex-1 w-full grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
+          <div className="flex-1 w-full grid grid-cols-3 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 md:gap-8">
             {filteredBooks.map(book => (
               <div key={book.id} onClick={() => setSelectedBook(book)} className="group cursor-pointer flex flex-col">
                 <div className="aspect-[2/3] w-full rounded-xl overflow-hidden shadow-sm border border-sage/20 mb-3 bg-cream relative">
@@ -328,7 +311,7 @@ export default function Bookstore({ initialBooks }) {
                   <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out pointer-events-none z-10"></div>
                   
                   {book.status?.toUpperCase() === 'SOLD OUT' && (
-                    <div className="absolute top-2 right-2 bg-burgundy text-cream text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider z-20 shadow-lg">Sold Out</div>
+                    <div className="absolute top-1.5 right-1.5 bg-burgundy text-cream text-[8px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider z-20 shadow-lg">Sold Out</div>
                   )}
 
                   {book.status?.toUpperCase() !== 'SOLD OUT' && book.lastInterest && (
@@ -337,8 +320,8 @@ export default function Bookstore({ initialBooks }) {
                       const hoursSince = (new Date() - interestDate) / (1000 * 60 * 60);
                       if (hoursSince < 24) {
                         return (
-                          <div className="absolute top-2 left-2 bg-accent text-burgundy text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-widest z-20 shadow-lg flex items-center gap-1 animate-pulse">
-                            <Flame size={10} fill="currentColor" /> High Interest
+                          <div className="absolute top-1.5 left-1.5 bg-accent text-burgundy text-[7px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-widest z-20 shadow-lg flex items-center gap-0.5 animate-pulse">
+                            <Flame size={8} fill="currentColor" /> High Interest
                           </div>
                         );
                       }
@@ -347,15 +330,17 @@ export default function Bookstore({ initialBooks }) {
                   )}
                 </div>
                 <div className="flex flex-col flex-1">
-                  <div className="flex justify-between items-start mb-1 gap-2">
-                    <h4 className="font-bold text-ink leading-tight group-hover:text-accent transition-colors line-clamp-2">{book.title}</h4>
+                  <div className="flex justify-between items-start mb-0.5 gap-2">
+                    <h4 className="font-bold text-ink leading-tight group-hover:text-accent transition-colors line-clamp-2 text-xs sm:text-sm md:text-base">{book.title}</h4>
                   </div>
-                  <p className="text-sm text-ink/60 mb-2">
-                    {book.author} <span className="opacity-50 mx-1">•</span> <span className="font-mono text-xs opacity-70">#{book.id}</span>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-ink/60 mb-1.5">
+                    {book.author} <span className="opacity-50 mx-0.5 sm:mx-1">•</span> <span className="font-mono text-[9px] sm:text-xs opacity-70">#{book.id}</span>
                   </p>
-                  <div className="mt-auto flex justify-between items-baseline">
-                    <span className="font-display font-bold text-lg text-burgundy">₦{parseInt(book.price).toLocaleString()}</span>
-                    <RatingDots rating={book.rating} />
+                  <div className="mt-auto flex flex-col sm:flex-row justify-between sm:items-baseline gap-1">
+                    <span className="font-display font-bold text-sm sm:text-base md:text-lg text-burgundy">₦{parseInt(book.price).toLocaleString()}</span>
+                    <div className="hidden sm:block">
+                      <RatingDots rating={book.rating} />
+                    </div>
                   </div>
                 </div>
               </div>
