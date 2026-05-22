@@ -6,7 +6,7 @@ export default function Events({ initialEvents = [] }) {
   const displayEvents = initialEvents.length > 0 ? initialEvents : [];
 
   return (
-    <section id="events" className="px-4 sm:px-6 pb-16 md:pb-24 bg-cream min-h-[70vh]">
+    <section id="events" className="w-full px-4 sm:px-6 pb-16 md:pb-24 bg-cream min-h-[70vh] overflow-x-hidden">
       <div className="max-w-4xl mx-auto flex flex-col items-center">
 
         {/* Page header */}
@@ -29,7 +29,7 @@ export default function Events({ initialEvents = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.08, duration: 0.45 }}
-                className="bg-white rounded-2xl sm:rounded-[24px] shadow-md border border-sage/25 p-5 sm:p-7 flex flex-col group hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                className="bg-white rounded-2xl sm:rounded-[24px] shadow-md border border-sage/25 p-4 sm:p-6 flex flex-col group hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
               >
                 {/* Date & time row */}
                 <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-[11px] font-bold text-accent uppercase tracking-widest mb-2">

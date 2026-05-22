@@ -108,7 +108,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
         <div className="absolute inset-0 z-0">
           <motion.div
             initial={{ scale: 1.15, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.32 }}
+            animate={{ scale: 1, opacity: 0.60 }}
             transition={{ duration: 2.2, ease: "easeOut" }}
             className="w-full h-full"
           >
@@ -119,7 +119,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
             />
           </motion.div>
           {/* Rich Vignette and Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/60 to-ink/20" />
           <div className="absolute inset-0 bg-radial-vignette opacity-60" />
         </div>
         

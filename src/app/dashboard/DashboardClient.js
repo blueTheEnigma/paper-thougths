@@ -157,13 +157,13 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
                   <h4 className="text-xs font-bold uppercase tracking-wide text-primary flex items-center gap-1.5 font-sans">
                     <Award size={14} /> Milestone Tokens
                   </h4>
-                  <p className="text-[11px] text-cream/70 font-serif leading-relaxed">
-                    Power your journey to unlock the **Keeper** tier (lifetime {discountPercent} discount). Earn tokens by:
+                  <p className="text-xs sm:text-sm text-cream/90 font-serif leading-relaxed">
+                    Power your journey to unlock the <strong>Keeper</strong> tier (lifetime {discountPercent} discount). Earn tokens and leaves by completing activities:
                   </p>
-                  <ul className="text-[10px] text-cream/55 font-serif list-disc pl-4 space-y-1">
-                    <li>**Peer Critique**: Write reviews (+1.0 Token, or +1.5 for early-birds)</li>
-                    <li>**Weekly Submission**: Write prompt responses (+1.0 Token)</li>
-                    <li>**Invite Readers**: Refer friends (+1.2 Tokens for your first 5 referrals)</li>
+                  <ul className="text-[11px] sm:text-xs text-cream/85 font-serif list-disc pl-4 space-y-1.5">
+                    <li><strong>Peer Critique</strong>: Submit detailed reviews (<strong>+1.0 Token</strong> &amp; <strong>+10 Leaves</strong>, or <strong>+1.5 Tokens</strong> &amp; <strong>+15 Leaves</strong> for early-birds)</li>
+                    <li><strong>Weekly Submission</strong>: Write prompt responses (<strong>+1.0 Token</strong> &amp; <strong>+10 Leaves</strong>)</li>
+                    <li><strong>Invite Readers</strong>: Refer friends (<strong>+1.2 Tokens</strong> &amp; <strong>+12 Leaves</strong> per referral, up to your first 5)</li>
                   </ul>
                 </div>
 
@@ -172,11 +172,12 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
                   <h4 className="text-xs font-bold uppercase tracking-wide text-[#FF8D5C] flex items-center gap-1.5 font-sans">
                     <Coins size={14} /> Paper Leaves
                   </h4>
-                  <p className="text-[11px] text-cream/70 font-serif leading-relaxed">
-                    Your spendable currency earned for every action you take: submissions, reviews, referrals (+12 Leaves per referral), and participation.
+                  <p className="text-xs sm:text-sm text-cream/90 font-serif leading-relaxed">
+                    Your spendable currency earned for every contribution you make. Leaves help support the community:
                   </p>
-                  <ul className="text-[10px] text-cream/55 font-serif list-disc pl-4 space-y-1">
-                    <li>Donate leaves to your **Chapter Pool** to fund book vouchers for your local chapter!</li>
+                  <ul className="text-[11px] sm:text-xs text-cream/85 font-serif list-disc pl-4 space-y-1.5">
+                    <li>Donate leaves to your <strong>Chapter Pool</strong> to fund book vouchers for your local chapter!</li>
+                    <li>Vouchers are automatically generated when the pool crosses 500 leaves to pay it forward.</li>
                   </ul>
                 </div>
               </div>
@@ -565,9 +566,9 @@ export default function DashboardClient({ profile, initialOrders, recommendation
               <span className="text-ink/30">•</span>
               <button 
                 onClick={() => setShowPortal(true)}
-                className="bg-accent/10 hover:bg-accent/20 text-accent font-bold text-[10px] px-2.5 py-1 rounded border border-accent/20 uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-all"
+                className="bg-accent/15 hover:bg-accent hover:text-cream text-accent font-bold text-xs px-3.5 py-1.5 rounded-lg border border-accent/30 uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all duration-200"
               >
-                <BookOpen size={10}/> Rules & Guide
+                <BookOpen size={13}/> Rules & Guide
               </button>
               {isAdmin && (
                 <>
@@ -629,8 +630,8 @@ export default function DashboardClient({ profile, initialOrders, recommendation
                 </div>
               ) : (
                 <div className="bg-ink/5 rounded-xl p-4 border border-sage/10">
-                  <p className="text-[11px] text-ink/75 leading-relaxed font-serif">
-                    Upgrade to **Keeper** to unlock your lifetime {discountPercent} discount and exclusive Archive access.
+                  <p className="text-xs sm:text-sm text-ink/85 leading-relaxed font-serif">
+                    Upgrade to <strong>Keeper</strong> to unlock your lifetime {discountPercent} discount and exclusive Archive access.
                   </p>
                 </div>
               )}
@@ -790,30 +791,30 @@ export default function DashboardClient({ profile, initialOrders, recommendation
                   
                   <div className="space-y-4">
                     {/* Milestone Tokens */}
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       <h4 className="text-xs font-bold text-burgundy uppercase tracking-wider flex items-center gap-1.5 font-sans">
-                        <Award size={14} /> Milestone Tokens
+                        <Award size={14} /> Milestone Tokens &amp; Leaves
                       </h4>
-                      <p className="text-[11px] text-ink/75 leading-relaxed font-serif font-medium">
-                        Power your upgrade to the **Keeper** tier. Earn tokens by:
+                      <p className="text-xs text-ink/85 leading-relaxed font-serif font-medium">
+                        Power your upgrade to the <strong>Keeper</strong> tier. Earn tokens and leaves by completing activities:
                       </p>
-                      <ul className="text-[10px] text-ink/60 font-serif list-disc pl-4 space-y-1">
-                        <li>**Peer Critique**: Write reviews (+1.0 Token, or +1.5 for early-birds).</li>
-                        <li>**Weekly Submission**: Write weekly prompt responses (+1.0 Token).</li>
-                        <li>**Invite Readers**: Refer friends (+1.2 Tokens for your first 5 referrals).</li>
+                      <ul className="text-xs text-ink/80 font-serif list-disc pl-4 space-y-1.5">
+                        <li><strong>Peer Critique</strong>: Submit detailed reviews (<strong>+1.0 Token</strong> &amp; <strong>+10 Leaves</strong>, or <strong>+1.5 Tokens</strong> &amp; <strong>+15 Leaves</strong> for early-birds).</li>
+                        <li><strong>Weekly Submission</strong>: Write weekly prompt responses (<strong>+1.0 Token</strong> &amp; <strong>+10 Leaves</strong>).</li>
+                        <li><strong>Invite Readers</strong>: Refer friends (<strong>+1.2 Tokens</strong> &amp; <strong>+12 Leaves</strong> per referral, up to your first 5).</li>
                       </ul>
                     </div>
                     
                     {/* Paper Leaves */}
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       <h4 className="text-xs font-bold text-sage uppercase tracking-wider flex items-center gap-1.5 font-sans">
-                        <Coins size={14} className="text-sage" /> Paper Leaves
+                        <Coins size={14} className="text-sage" /> Paper Leaves Economy
                       </h4>
-                      <p className="text-[11px] text-ink/75 leading-relaxed font-serif font-medium">
-                        Earned for every active contribution: submissions, critiques, referrals (+12 Leaves per referral), and participation.
+                      <p className="text-xs text-ink/85 leading-relaxed font-serif font-medium">
+                        Spendable currency earned for every active contribution: submissions, critiques, referrals (+12 Leaves per referral), and active participation.
                       </p>
-                      <p className="text-[10px] text-ink/55 font-serif italic">
-                        * Donate leaves to the **Chapter Book Pool** to pay it forward and fund book bundles for your local chapter!
+                      <p className="text-[11px] text-ink/70 font-serif italic">
+                        Donate leaves to the <strong>Chapter Book Pool</strong> to pay it forward and fund book bundles for your local chapter!
                       </p>
                     </div>
                   </div>
@@ -1029,6 +1030,17 @@ export default function DashboardClient({ profile, initialOrders, recommendation
                     </div>
                     Upcoming Events
                   </Link>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setShowPortal(true)}
+                    className="w-full text-left group text-ink/75 hover:text-accent font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors cursor-pointer bg-transparent border-0 p-0"
+                  >
+                    <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
+                      <BookOpen size={16} className="text-sage" />
+                    </div>
+                    Rules & Onboarding Guide
+                  </button>
                 </li>
               </ul>
             </motion.div>

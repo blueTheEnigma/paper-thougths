@@ -445,9 +445,9 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
             </div>
 
             {/* Clubhouse Rules / Guide */}
-            <div className="bg-sage/10 border border-sage/20 p-5 rounded-[24px] text-[11px] text-ink/70 space-y-2">
+            <div className="bg-sage/10 border border-sage/20 p-5 rounded-[24px] text-xs text-ink/80 space-y-2">
               <h4 className="font-bold text-burgundy uppercase tracking-wider text-[10px]">Submission Guidelines</h4>
-              <p className="leading-relaxed">All submissions uploaded are completely hidden and stored in double-blind encryption until the **Saturday 12:00 AM** batch transition, where they are randomized into the critique queue.</p>
+              <p className="leading-relaxed">All submissions uploaded are completely hidden and stored in double-blind encryption until the <strong>Saturday 12:00 AM</strong> batch transition, where they are randomized into the critique queue.</p>
               <p className="leading-relaxed font-bold">Ensure your manuscript is original and conforms to the weekly prompt structure. Happy writing!</p>
             </div>
           </div>
