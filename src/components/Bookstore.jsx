@@ -16,8 +16,9 @@ export default function Bookstore({ initialBooks }) {
   const [bag, setBag] = useState([]);
   const [isBagOpen, setIsBagOpen] = useState(false);
   const [profile, setProfile] = useState(null);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [quote, setQuote] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -55,6 +56,57 @@ export default function Bookstore({ initialBooks }) {
     }
     return () => { document.body.style.overflow = 'unset'; };
   }, [selectedBook]);
+
+  useEffect(() => {
+    const quotesList = [
+      "“A room without books is like a body without a soul.” — Marcus Tullius Cicero",
+      "“I have always imagined that Paradise will be a kind of a library.” — Jorge Luis Borges",
+      "“Books are a uniquely portable magic.” — Stephen King",
+      "“There is no friend as loyal as a book.” — Ernest Hemingway",
+      "“Reading is a conversation. All books talk. But a good book listens as well.” — Mark Haddon",
+      "“To read is to voyage through time and space.”",
+      "“We live in the lines.” — Paper Thoughts"
+    ];
+    const randomQuote = quotesList[Math.floor(Math.random() * quotesList.length)];
+    setQuote(randomQuote);
+
+    if (!initialBooks || initialBooks.length === 0) {
+      setImagesLoaded(true);
+      return;
+    }
+
+    const urls = initialBooks
+      .map(b => b.imageUrl)
+      .filter(Boolean);
+
+    if (urls.length === 0) {
+      setImagesLoaded(true);
+      return;
+    }
+
+    let loadedCount = 0;
+    const totalCount = urls.length;
+
+    const timer = setTimeout(() => {
+      setImagesLoaded(true);
+    }, 4000);
+
+    urls.forEach(url => {
+      const img = new Image();
+      img.src = url;
+      const onImageLoadOrError = () => {
+        loadedCount++;
+        if (loadedCount >= totalCount) {
+          clearTimeout(timer);
+          setImagesLoaded(true);
+        }
+      };
+      img.onload = onImageLoadOrError;
+      img.onerror = onImageLoadOrError;
+    });
+
+    return () => clearTimeout(timer);
+  }, [initialBooks]);
 
   // Derive genres and counts
   const genres = useMemo(() => {
@@ -168,7 +220,59 @@ export default function Bookstore({ initialBooks }) {
   };
 
   return (
-    <section id="bookstore" className="bg-[#FFF5EC] py-20 px-6 border-b border-sage/30">
+    <section id="bookstore" className="bg-[#FFF5EC] py-20 px-6 border-b border-sage/30 relative overflow-hidden min-h-[600px]">
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {!imagesLoaded && (
+          <motion.div 
+            key="bookstore-loader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.5 } }}
+            className="absolute inset-0 bg-[#FFF5EC] z-50 flex flex-col items-center justify-center min-h-[500px] p-6 text-center"
+          >
+            <div className="flex flex-col items-center max-w-md gap-6">
+              {/* Animated Sailor's Wheel */}
+              <div className="relative w-20 h-20 flex items-center justify-center">
+                <div className="absolute inset-0 bg-accent/10 rounded-full blur-xl animate-pulse" />
+                <svg 
+                  className="w-16 h-16 animate-spin text-burgundy relative z-10" 
+                  viewBox="0 0 100 100" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="4" 
+                  strokeLinecap="round"
+                  style={{ animationDuration: '6s' }}
+                >
+                  <circle cx="50" cy="50" r="10" />
+                  <circle cx="50" cy="50" r="4" fill="currentColor" />
+                  <circle cx="50" cy="50" r="30" strokeWidth="3" />
+                  <circle cx="50" cy="50" r="20" strokeWidth="1.5" strokeDasharray="4 2" />
+                  <line x1="50" y1="10" x2="50" y2="90" />
+                  <line x1="10" y1="50" x2="90" y2="50" />
+                  <line x1="22" y1="22" x2="78" y2="78" />
+                  <line x1="22" y1="78" x2="78" y2="22" />
+                  <line x1="50" y1="20" x2="50" y2="2" strokeWidth="6" />
+                  <line x1="50" y1="80" x2="50" y2="98" strokeWidth="6" />
+                  <line x1="20" y1="50" x2="2" y2="50" strokeWidth="6" />
+                  <line x1="80" y1="50" x2="98" y2="50" strokeWidth="6" />
+                  <line x1="29" y1="29" x2="16" y2="16" strokeWidth="6" />
+                  <line x1="71" y1="71" x2="84" y2="84" strokeWidth="6" />
+                  <line x1="29" y1="71" x2="16" y2="84" strokeWidth="6" />
+                  <line x1="71" y1="29" x2="84" y2="16" strokeWidth="6" />
+                </svg>
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-ink/40">Preparing the Library</h4>
+                <p className="text-sm md:text-base text-burgundy font-quote italic leading-relaxed px-4">
+                  {quote}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto">
         <div className="mb-12 text-center">
           <h2 className="text-5xl font-display text-burgundy mb-4">Bookstore</h2>
@@ -303,7 +407,7 @@ export default function Bookstore({ initialBooks }) {
           </div>
 
           {/* Right Content: Grid */}
-          <div className="flex-1 w-full grid grid-cols-3 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 md:gap-8">
+          <div className="flex-1 w-full grid grid-cols-4 gap-1.5 sm:gap-4 md:gap-8">
             {filteredBooks.map(book => (
               <div key={book.id} onClick={() => setSelectedBook(book)} className="group cursor-pointer flex flex-col">
                 <div className="aspect-[2/3] w-full rounded-xl overflow-hidden shadow-sm border border-sage/20 mb-3 bg-cream relative">
@@ -311,7 +415,7 @@ export default function Bookstore({ initialBooks }) {
                   <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out pointer-events-none z-10"></div>
                   
                   {book.status?.toUpperCase() === 'SOLD OUT' && (
-                    <div className="absolute top-1.5 right-1.5 bg-burgundy text-cream text-[8px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider z-20 shadow-lg">Sold Out</div>
+                    <div className="absolute top-1 right-1 bg-burgundy text-cream text-[6px] sm:text-[8px] md:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase tracking-wider z-20 shadow-lg">Sold Out</div>
                   )}
 
                   {book.status?.toUpperCase() !== 'SOLD OUT' && book.lastInterest && (
@@ -320,8 +424,8 @@ export default function Bookstore({ initialBooks }) {
                       const hoursSince = (new Date() - interestDate) / (1000 * 60 * 60);
                       if (hoursSince < 24) {
                         return (
-                          <div className="absolute top-1.5 left-1.5 bg-accent text-burgundy text-[7px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-widest z-20 shadow-lg flex items-center gap-0.5 animate-pulse">
-                            <Flame size={8} fill="currentColor" /> High Interest
+                          <div className="absolute top-1 left-1 bg-accent text-burgundy text-[6px] sm:text-[8px] md:text-[9px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full uppercase tracking-widest z-20 shadow-lg flex items-center gap-0.5 animate-pulse">
+                            <Flame className="w-1.5 h-1.5 sm:w-2 sm:h-2" fill="currentColor" /> High Interest
                           </div>
                         );
                       }
@@ -330,14 +434,18 @@ export default function Bookstore({ initialBooks }) {
                   )}
                 </div>
                 <div className="flex flex-col flex-1">
-                  <div className="flex justify-between items-start mb-0.5 gap-2">
-                    <h4 className="font-bold text-ink leading-tight group-hover:text-accent transition-colors line-clamp-2 text-xs sm:text-sm md:text-base">{book.title}</h4>
+                  <div className="flex justify-between items-start mb-0.5 gap-1">
+                    <h4 className="font-bold text-ink leading-tight group-hover:text-accent transition-colors line-clamp-2 text-[10px] sm:text-xs md:text-sm">{book.title}</h4>
                   </div>
-                  <p className="text-[10px] sm:text-xs md:text-sm text-ink/60 mb-1.5">
-                    {book.author} <span className="opacity-50 mx-0.5 sm:mx-1">•</span> <span className="font-mono text-[9px] sm:text-xs opacity-70">#{book.id}</span>
+                  <p className="text-[8px] sm:text-[10px] md:text-xs text-ink/60 mb-1 sm:mb-1.5 truncate">
+                    {book.author}
+                    <span className="hidden sm:inline">
+                      <span className="opacity-50 mx-1">•</span>
+                      <span className="font-mono text-[9px] sm:text-xs opacity-70">#{book.id}</span>
+                    </span>
                   </p>
-                  <div className="mt-auto flex flex-col sm:flex-row justify-between sm:items-baseline gap-1">
-                    <span className="font-display font-bold text-sm sm:text-base md:text-lg text-burgundy">₦{parseInt(book.price).toLocaleString()}</span>
+                  <div className="mt-auto flex flex-col sm:flex-row justify-between sm:items-baseline gap-0.5">
+                    <span className="font-display font-bold text-xs sm:text-sm md:text-base text-burgundy">₦{parseInt(book.price).toLocaleString()}</span>
                     <div className="hidden sm:block">
                       <RatingDots rating={book.rating} />
                     </div>
@@ -351,7 +459,7 @@ export default function Bookstore({ initialBooks }) {
 
       {/* Floating Bag Trigger */}
       <AnimatePresence>
-        {bag.length > 0 && (
+        {bag.length > 0 && imagesLoaded && (
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
