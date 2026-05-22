@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { UserButton, SignOutButton } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -9,6 +10,211 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
+
+// ─── Cinematic Archive Entrance Portal ────────────────────────────────────────
+
+function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
+  const [stage, setStage] = useState(0);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setStage(1), 900);
+    const t2 = setTimeout(() => setStage(2), 2100);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  return (
+    <motion.div
+      key="archive-portal"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, scale: 1.04 }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-y-auto bg-ink p-4 sm:p-6"
+      style={{ background: 'radial-gradient(ellipse at 50% 60%, #1a0610 0%, #0d0406 60%, #060103 100%)' }}
+    >
+      {/* Ambient glow layers */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 60% 50% at 50% 55%, rgba(92,26,46,0.35) 0%, transparent 70%)',
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 40% 30% at 50% 50%, rgba(194,106,66,0.12) 0%, transparent 70%)',
+        }}
+      />
+
+      {/* Floating speck particles */}
+      {[...Array(18)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: `${1 + (i % 3)}px`,
+            height: `${1 + (i % 3)}px`,
+            left: `${5 + (i * 5.3) % 90}%`,
+            top: `${10 + (i * 7.1) % 80}%`,
+            background: i % 4 === 0 ? 'rgba(242,169,138,0.6)' : 'rgba(201,106,66,0.4)',
+          }}
+          animate={{
+            y: [0, -18, 0],
+            opacity: [0.2, 0.7, 0.2],
+          }}
+          transition={{
+            duration: 3 + (i % 3) * 1.2,
+            repeat: Infinity,
+            delay: (i * 0.25) % 3,
+            ease: 'easeInOut',
+          }}
+        />
+      ))}
+
+      {/* Central content */}
+      <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-2xl w-full my-auto py-8">
+        {/* Sailor's Wheel icon */}
+        <motion.div
+          initial={{ scale: 0.6, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.15, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-6"
+        >
+          <div
+            className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full flex items-center justify-center animate-pulse-subtle"
+            style={{
+              background: 'radial-gradient(circle, rgba(92,26,46,0.5) 0%, rgba(92,26,46,0.1) 100%)',
+              border: '1px solid rgba(242,169,138,0.25)',
+              boxShadow: '0 0 40px rgba(92,26,46,0.6), 0 0 80px rgba(92,26,46,0.2)',
+            }}
+          >
+            <svg 
+              className="w-10 h-10 animate-spin relative z-10" 
+              viewBox="0 0 100 100" 
+              fill="none" 
+              stroke="#F2A98A" 
+              strokeWidth="4" 
+              strokeLinecap="round"
+              style={{ animationDuration: '8s' }}
+            >
+              <circle cx="50" cy="50" r="10" />
+              <circle cx="50" cy="50" r="4" fill="#F2A98A" />
+              <circle cx="50" cy="50" r="30" strokeWidth="3" />
+              <circle cx="50" cy="50" r="20" strokeWidth="1.5" strokeDasharray="4 2" />
+              <line x1="50" y1="10" x2="50" y2="90" />
+              <line x1="10" y1="50" x2="90" y2="50" />
+              <line x1="22" y1="22" x2="78" y2="78" />
+              <line x1="22" y1="78" x2="78" y2="22" />
+              <line x1="50" y1="20" x2="50" y2="2" strokeWidth="6" />
+              <line x1="50" y1="80" x2="50" y2="98" strokeWidth="6" />
+              <line x1="20" y1="50" x2="2" y2="50" strokeWidth="6" />
+              <line x1="80" y1="50" x2="98" y2="50" strokeWidth="6" />
+              <line x1="29" y1="29" x2="16" y2="16" strokeWidth="6" />
+              <line x1="71" y1="71" x2="84" y2="84" strokeWidth="6" />
+              <line x1="29" y1="71" x2="16" y2="84" strokeWidth="6" />
+              <line x1="71" y1="29" x2="84" y2="16" strokeWidth="6" />
+            </svg>
+          </div>
+        </motion.div>
+
+        {/* Label */}
+        <motion.span
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.6 }}
+          className="block text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-[0.35em] mb-3"
+          style={{ color: '#C96A42' }}
+        >
+          THE ARCHIVE LEDGER
+        </motion.span>
+
+        {/* Main headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="font-display font-extrabold leading-tight mb-4 text-3xl sm:text-4xl text-cream"
+        >
+          Welcome, <span style={{ color: '#F2A98A' }}>{userName.split(' ')[0]}</span>
+        </motion.h1>
+
+        {/* Rules container */}
+        <AnimatePresence>
+          {stage >= 1 && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="w-full bg-[#1b0610]/80 border border-sage/20 rounded-[28px] p-5 sm:p-7 text-left space-y-5 mb-8 shadow-xl max-w-xl animate-pulse-subtle"
+            >
+              <h3 className="text-xs font-bold uppercase tracking-widest text-[#F2A98A] border-b border-sage/10 pb-2 text-center sm:text-left font-sans">
+                ARCHIVE RULES & ECONOMY
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-cream/90">
+                {/* Milestone Tokens Column */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wide text-primary flex items-center gap-1.5 font-sans">
+                    <Award size={14} /> Milestone Tokens
+                  </h4>
+                  <p className="text-[11px] text-cream/70 font-serif leading-relaxed">
+                    Power your journey to unlock the **Keeper** tier (lifetime {discountPercent} discount). Earn tokens by:
+                  </p>
+                  <ul className="text-[10px] text-cream/55 font-serif list-disc pl-4 space-y-1">
+                    <li>**Peer Critique**: Write reviews (+1.0 Token, or +1.5 for early-birds)</li>
+                    <li>**Weekly Submission**: Write prompt responses (+1.0 Token)</li>
+                    <li>**Invite Readers**: Refer friends (+1.2 Tokens for your first 5 referrals)</li>
+                  </ul>
+                </div>
+
+                {/* Spendable Leaves Column */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wide text-[#FF8D5C] flex items-center gap-1.5 font-sans">
+                    <Coins size={14} /> Paper Leaves
+                  </h4>
+                  <p className="text-[11px] text-cream/70 font-serif leading-relaxed">
+                    Your spendable currency earned for every action you take: submissions, reviews, referrals (+12 Leaves per referral), and participation.
+                  </p>
+                  <ul className="text-[10px] text-cream/55 font-serif list-disc pl-4 space-y-1">
+                    <li>Donate leaves to your **Chapter Pool** to fund book vouchers for your local chapter!</li>
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Action Button */}
+        <AnimatePresence>
+          {stage >= 2 && (
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full space-y-4"
+            >
+              <motion.button
+                onClick={onEnter}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-sans font-bold uppercase tracking-widest text-xs sm:text-sm cursor-pointer transition-all px-10 py-4 rounded-2xl"
+                style={{
+                  background: 'linear-gradient(135deg, #5C1A2E 0%, #7A2040 100%)',
+                  color: '#FAF7F2',
+                  boxShadow: '0 0 30px rgba(92,26,46,0.5), 0 4px 20px rgba(0,0,0,0.4)',
+                  border: '1px solid rgba(242,169,138,0.2)',
+                }}
+              >
+                <span>Pass into the Archive</span>
+                <ArrowRight size={14} />
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function DashboardClient({ profile, initialOrders, recommendations, userEmail }) {
   const [orders] = useState(initialOrders || []);
@@ -33,13 +239,23 @@ export default function DashboardClient({ profile, initialOrders, recommendation
 
   // Birthday banner dismissal
   const [bdayDismissed, setBdayDismissed] = useState(true);
+  const [showPortal, setShowPortal] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== 'undefined') {
       const dismissed = sessionStorage.getItem('dismissed_birthday') === 'true';
       setBdayDismissed(dismissed);
+      const seen = sessionStorage.getItem('seen_dashboard_portal') === 'true';
+      setShowPortal(!seen);
     }
   }, []);
+
+  const handleEnterPortal = () => {
+    sessionStorage.setItem('seen_dashboard_portal', 'true');
+    setShowPortal(false);
+  };
 
   // Check if today is birthday
   const isBirthdayToday = () => {
@@ -346,6 +562,13 @@ export default function DashboardClient({ profile, initialOrders, recommendation
               <span className="bg-white px-2.5 py-1 border border-sage/20 rounded shadow-sm text-burgundy font-bold">{profile.lkid}</span>
               <span className="text-ink/30">•</span>
               <span className="flex items-center gap-1.5 text-ink/60 font-bold"><MapPin size={12} className="text-sage"/> {profile.chapter}</span>
+              <span className="text-ink/30">•</span>
+              <button 
+                onClick={() => setShowPortal(true)}
+                className="bg-accent/10 hover:bg-accent/20 text-accent font-bold text-[10px] px-2.5 py-1 rounded border border-accent/20 uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-all"
+              >
+                <BookOpen size={10}/> Rules & Guide
+              </button>
               {isAdmin && (
                 <>
                   <span className="text-ink/30">•</span>
@@ -371,38 +594,78 @@ export default function DashboardClient({ profile, initialOrders, recommendation
           </div>
         </motion.div>
 
-        {/* Bi-Token Economy Radial & Progress Section */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Bi-Token Economy & Membership Status Section */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
+          {/* Membership Status Card */}
+          <div className="parchment-card p-8 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+            <div className="absolute top-0 right-0 p-4 opacity-5">
+              <Award size={120} />
+            </div>
+            <div className="relative z-10 space-y-4">
+              <div>
+                <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Membership Status</h3>
+                <div className="flex flex-wrap items-baseline gap-2 mt-1">
+                  <h2 className="text-4xl font-display font-extrabold text-burgundy leading-none tracking-tight">{profile.tier}</h2>
+                  {isKeeper && (
+                    <span className="bg-sage/10 text-sage font-bold text-[8px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-sage/20">
+                      Unlocked
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {isKeeper ? (
+                <div className="bg-primary/5 border border-primary/15 rounded-xl p-3.5 space-y-2.5">
+                   <h4 className="font-bold text-burgundy flex items-center gap-1.5 text-xs font-sans"><Ticket size={14}/> {discountPercent} Discount</h4>
+                   
+                   <div className="flex items-center gap-2 bg-white/70 p-1.5 pl-3 rounded-lg border border-sage/15">
+                      <span className="font-mono text-sm font-bold text-ink tracking-wider flex-1">{profile.lkid}</span>
+                      <button onClick={copyDiscountCode} className="bg-sage/10 hover:bg-sage/25 text-ink px-3 py-1.5 rounded text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer">
+                         {copiedCode ? <CheckCircle2 size={12} className="text-sage"/> : <Copy size={12}/>}
+                         {copiedCode ? "Copied" : "Copy"}
+                      </button>
+                   </div>
+                </div>
+              ) : (
+                <div className="bg-ink/5 rounded-xl p-4 border border-sage/10">
+                  <p className="text-[11px] text-ink/75 leading-relaxed font-serif">
+                    Upgrade to **Keeper** to unlock your lifetime {discountPercent} discount and exclusive Archive access.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Milestone Tokens Circle Progress Card */}
-          <div className="parchment-card p-8 flex items-center justify-between relative group">
+          <div className="parchment-card p-8 flex items-center justify-between relative group min-h-[220px]">
             <div className="space-y-3">
               <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Milestone Tokens</span>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-5xl font-display text-burgundy font-extrabold font-serif">{milestoneTokens.toFixed(1)}</span>
                 <span className="text-sm font-bold text-ink/40">/ {tokenGoal}</span>
               </div>
-              <p className="text-xs text-ink/60 leading-relaxed max-w-[200px] font-serif">
-                Earned via double-blind peer reviews. 10.0 unlocks Keeper status.
+              <p className="text-xs text-ink/60 leading-relaxed max-w-[160px] font-serif font-medium">
+                Earned via reviews, submissions, and referrals. 10.0 unlocks Keeper.
               </p>
             </div>
             
-            <div className="relative w-24 h-24 flex items-center justify-center flex-shrink-0">
+            <div className="relative w-20 h-20 flex items-center justify-center flex-shrink-0">
               <svg className="w-full h-full transform -rotate-90">
                 <circle 
-                  cx="48" 
-                  cy="48" 
+                  cx="40" 
+                  cy="40" 
                   r={radius} 
                   stroke="#E8DFC9" 
-                  strokeWidth="8" 
+                  strokeWidth="6" 
                   fill="transparent" 
                 />
                 <motion.circle 
-                  cx="48" 
-                  cy="48" 
+                  cx="40" 
+                  cy="40" 
                   r={radius} 
                   stroke="#5C1A2E" 
-                  strokeWidth="8" 
+                  strokeWidth="6" 
                   fill="transparent" 
                   strokeDasharray={circumference}
                   initial={{ strokeDashoffset: circumference }}
@@ -410,21 +673,21 @@ export default function DashboardClient({ profile, initialOrders, recommendation
                   transition={{ duration: 1.2, ease: "easeOut" }}
                 />
               </svg>
-              <div className="absolute text-sm font-sans font-extrabold text-burgundy">{tokenPercent.toFixed(0)}%</div>
+              <div className="absolute text-xs font-sans font-extrabold text-burgundy">{tokenPercent.toFixed(0)}%</div>
             </div>
           </div>
 
           {/* Spendable Leaves Card */}
-          <div className="parchment-card p-8 flex flex-col justify-between group">
+          <div className="parchment-card p-8 flex flex-col justify-between group min-h-[220px]">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform">
-              <Coins size={80} className="text-burgundy" />
+              <Coins size={60} className="text-burgundy" />
             </div>
             <div>
               <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Spendable Leaves</span>
               <div className="text-5xl font-display text-burgundy font-extrabold mt-1">{spendableLeaves} <span className="text-3xl">🍃</span></div>
             </div>
             <p className="text-xs text-ink/60 leading-relaxed mt-4 font-serif">
-              Your spendable bi-token currency. Redeem at local bookstore events or donate to chapter pools to sponsor book bundles.
+              Your spendable bi-token currency. Donate to your chapter pool to pay it forward and sponsor books for the community.
             </p>
           </div>
         </motion.div>
@@ -489,49 +752,7 @@ export default function DashboardClient({ profile, initialOrders, recommendation
           
           <div className="lg:col-span-2 space-y-8">
             
-            {/* Status Card */}
-            <motion.div variants={itemVariants} className="parchment-card p-8 sm:p-10 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 sm:p-8 opacity-5">
-                <Award size={180} />
-              </div>
-              <div className="relative z-10 space-y-6">
-                <div>
-                  <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40 mb-2">Membership Status</h3>
-                  <div className="flex flex-wrap items-end gap-4">
-                    <h2 className="text-4xl sm:text-6xl font-display font-extrabold text-burgundy leading-none tracking-tight">{profile.tier}</h2>
-                    {isKeeper && (
-                      <span className="bg-sage/10 text-sage font-bold text-[9px] px-3 py-1 rounded-full uppercase tracking-widest border border-sage/20 mb-1">
-                        Unlocked
-                      </span>
-                    )}
-                  </div>
-                </div>
 
-                {isKeeper ? (
-                  <div className="bg-primary/5 border border-primary/15 rounded-2xl p-5 sm:p-6 space-y-4">
-                     <h4 className="font-bold text-burgundy flex items-center gap-2 text-sm"><Ticket size={18}/> Your Cipher Discount</h4>
-                     <p className="text-xs sm:text-sm text-ink/70 leading-relaxed font-serif">
-                        As a trusted member of the Archive, you have a permanent <strong>{discountPercent} discount</strong> on all purchases.
-                     </p>
-                     
-                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white/70 p-2 pl-4 rounded-xl border border-sage/15">
-                        <span className="font-mono text-lg font-bold text-ink tracking-[0.2em] flex-1 py-2 sm:py-0">{profile.lkid}</span>
-                        <button onClick={copyDiscountCode} className="bg-sage/10 hover:bg-sage/25 text-ink px-6 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer">
-                           {copiedCode ? <CheckCircle2 size={16} className="text-sage"/> : <Copy size={16}/>}
-                           {copiedCode ? "Copied" : "Copy Code"}
-                        </button>
-                     </div>
-                     <p className="text-[9px] text-ink/45 italic">* Apply this code at checkout to claim your lore.</p>
-                  </div>
-                ) : (
-                  <div className="bg-ink/5 rounded-2xl p-6 border border-sage/10">
-                    <p className="text-xs sm:text-sm text-ink/75 leading-relaxed font-serif">
-                      You are currently a <strong>Reader</strong>. Upgrade to <strong>Keeper</strong> by attending events or referring friends to unlock your lifetime 5% discount and exclusive Archive access.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
 
             {/* Achievements & Cycles */}
             <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -562,68 +783,41 @@ export default function DashboardClient({ profile, initialOrders, recommendation
                 </div>
               </div>
 
-              {/* Lore Cycle Timer / Upgrade Info */}
+              {/* Archive Economy Guide */}
               <div className="parchment-card p-8 flex flex-col justify-between min-h-[220px]">
-                {!isKeeper ? (
-                  <>
-                    <div className="relative z-10 space-y-3">
-                      <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Status Potential</h3>
-                      <div className="flex items-center gap-3">
-                        <div className="bg-sage/5 text-sage p-2 rounded-xl">
-                          <ShieldCheck size={20} />
-                        </div>
-                        <div>
-                          <p className="text-base font-sans font-bold text-ink">Reader Status</p>
-                          <p className="text-[9px] font-sans font-bold text-sage uppercase tracking-widest">Awaiting Upgrade</p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-ink/65 leading-relaxed font-serif">
-                        Reach 6 events or 5 referrals to become a **Keeper**. Your 90-day Lore Cycle begins at upgrade.
+                <div className="relative z-10 space-y-4">
+                  <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Archive Economy Guide</h3>
+                  
+                  <div className="space-y-4">
+                    {/* Milestone Tokens */}
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-burgundy uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                        <Award size={14} /> Milestone Tokens
+                      </h4>
+                      <p className="text-[11px] text-ink/75 leading-relaxed font-serif font-medium">
+                        Power your upgrade to the **Keeper** tier. Earn tokens by:
+                      </p>
+                      <ul className="text-[10px] text-ink/60 font-serif list-disc pl-4 space-y-1">
+                        <li>**Peer Critique**: Write reviews (+1.0 Token, or +1.5 for early-birds).</li>
+                        <li>**Weekly Submission**: Write weekly prompt responses (+1.0 Token).</li>
+                        <li>**Invite Readers**: Refer friends (+1.2 Tokens for your first 5 referrals).</li>
+                      </ul>
+                    </div>
+                    
+                    {/* Paper Leaves */}
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-sage uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                        <Coins size={14} className="text-sage" /> Paper Leaves
+                      </h4>
+                      <p className="text-[11px] text-ink/75 leading-relaxed font-serif font-medium">
+                        Earned for every active contribution: submissions, critiques, referrals (+12 Leaves per referral), and participation.
+                      </p>
+                      <p className="text-[10px] text-ink/55 font-serif italic">
+                        * Donate leaves to the **Chapter Book Pool** to pay it forward and fund book bundles for your local chapter!
                       </p>
                     </div>
-                    {(profile.events >= eventsNeeded || profile.referrals >= referralsNeeded) && (
-                      <div className="bg-burgundy text-cream p-3 rounded-xl text-center mt-4">
-                        <p className="text-[9px] font-sans font-bold uppercase tracking-widest mb-0.5">Threshold Met!</p>
-                        <p className="text-[10px] font-serif font-medium">Updated in the next sync.</p>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="relative z-10 space-y-4">
-                      <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Current Lore Cycle</h3>
-                      <div className="flex items-center gap-3">
-                        <div className="bg-burgundy/5 text-burgundy p-2 rounded-xl">
-                          <Clock size={20} />
-                        </div>
-                        <div>
-                          <p className="text-base font-sans font-bold text-ink">90-Day Season</p>
-                          <p className="text-[9px] font-sans font-bold text-accent uppercase tracking-widest">Resets Status & Points</p>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between items-end mb-1.5">
-                          <span className="text-3xl font-display font-extrabold text-burgundy font-serif">
-                            {profile.cycleExpiry ? Math.max(0, Math.ceil((new Date(profile.cycleExpiry) - new Date()) / (1000 * 60 * 60 * 24))) : '90'} Days
-                          </span>
-                          <span className="text-[9px] font-sans font-bold text-ink/40 uppercase mb-1">Remaining</span>
-                        </div>
-                        <div className="w-full bg-sage/10 rounded-full h-1.5 mb-4 overflow-hidden">
-                          <div 
-                            className="bg-burgundy h-full rounded-full transition-all duration-1000" 
-                            style={{ width: `${Math.min(100, ( (profile.cycleExpiry ? Math.ceil((new Date(profile.cycleExpiry) - new Date()) / (1000 * 60 * 60 * 24)) : 90) / 90 ) * 100)}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-primary/5 border border-primary/10 rounded-xl">
-                      <p className="text-[9px] font-sans font-bold text-burgundy uppercase tracking-widest mb-0.5">Refuel Bonus</p>
-                      <p className="text-[10px] text-ink/60 font-serif leading-relaxed italic">
-                        Earn status points again before the cycle ends to add **+60 Days** to your season!
-                      </p>
-                    </div>
-                  </>
-                )}
+                  </div>
+                </div>
               </div>
             </motion.div>
 
@@ -841,8 +1035,22 @@ export default function DashboardClient({ profile, initialOrders, recommendation
 
           </div>
         </div>
-
       </motion.div>
+
+      {/* Onboarding Game Rules Portal */}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence mode="wait">
+          {showPortal && (
+            <ArchivePortal
+              onEnter={handleEnterPortal}
+              userName={profile.name}
+              profile={profile}
+              discountPercent={discountPercent}
+            />
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </main>
   );
 }

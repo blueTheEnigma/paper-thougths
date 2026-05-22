@@ -3,6 +3,22 @@ import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser } from '@/lib/permissions';
 
+// Saturday 12:00 AM batch cycle start calculator
+function getLastSaturdayStart() {
+  const now = new Date();
+  const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  
+  let daysSinceSaturday = currentDay - 6;
+  if (daysSinceSaturday < 0) {
+    daysSinceSaturday += 7;
+  }
+  
+  const lastSaturday = new Date(now);
+  lastSaturday.setDate(now.getDate() - daysSinceSaturday);
+  lastSaturday.setHours(0, 0, 0, 0);
+  return lastSaturday;
+}
+
 // 1. Create a submission (queued for the Saturday Batch Drop)
 export async function POST(request) {
   try {
@@ -53,9 +69,60 @@ export async function POST(request) {
       WHERE id = $1
     `, [dbUser.id]);
 
+    // Calculate current batch cycle start (Saturday 12:00 AM)
+    const lastSaturday = getLastSaturdayStart();
+
+    // Query submissions count in this batch cycle for this user (excluding the new one to check if this was the first)
+    const userSubmissionsThisWeek = await Database.queryOne(`
+      SELECT COUNT(*) as count 
+      FROM submissions 
+      WHERE author_id = $1 AND created_at >= $2 AND id != $3
+    `, [dbUser.id, lastSaturday, newSubmission.id]);
+
+    const submissionCount = parseInt(userSubmissionsThisWeek?.count || 0);
+    const isFirstSubmissionThisWeek = (submissionCount === 0);
+
+    let tokensRewarded = 0.0;
+    let leavesRewarded = 0;
+    let milestoneTriggered = false;
+
+    if (isFirstSubmissionThisWeek) {
+      tokensRewarded = 1.0;
+      leavesRewarded = 10;
+
+      const newTotalLeaves = (dbUser.spendable_leaves || 0) + leavesRewarded;
+      const newLifetimeLeaves = (dbUser.lifetime_leaves || 0) + leavesRewarded;
+
+      // Check for hidden 500-leaves milestone gift
+      const totalMilestonesEarned = Math.floor(newLifetimeLeaves / 500);
+      const originalMilestonesEarned = dbUser.book_vouchers_gifted || 0;
+      let vouchersEarned = dbUser.book_vouchers_gifted || 0;
+      
+      if (totalMilestonesEarned > originalMilestonesEarned) {
+        vouchersEarned = totalMilestonesEarned;
+        milestoneTriggered = true;
+      }
+
+      // Update rewards inside database
+      await Database.query(`
+        UPDATE users 
+        SET milestone_tokens = milestone_tokens + $1,
+            spendable_leaves = spendable_leaves + $2,
+            lifetime_leaves = lifetime_leaves + $2,
+            book_vouchers_gifted = $3
+        WHERE id = $4
+      `, [tokensRewarded, leavesRewarded, vouchersEarned, dbUser.id]);
+    }
+
     return NextResponse.json({ 
       success: true, 
-      message: 'Submission successfully uploaded and queued for the Saturday Batch Drop.',
+      message: isFirstSubmissionThisWeek
+        ? `Submission successfully uploaded and queued. Rewarded ${tokensRewarded} Milestone Tokens and ${leavesRewarded} Paper Leaves!`
+        : 'Submission successfully uploaded and queued.',
+      rewarded: isFirstSubmissionThisWeek,
+      tokensEarned: tokensRewarded,
+      leavesEarned: leavesRewarded,
+      milestoneTriggered,
       submission: newSubmission
     });
   } catch (error) {
