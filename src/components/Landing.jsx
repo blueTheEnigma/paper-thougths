@@ -28,6 +28,47 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
       "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=1200"
     ];
 
+  const fallbackFeaturedBooks = [
+    {
+      id: "1",
+      title: "The Death of Vivek Oji",
+      author: "Akwaeke Emezi",
+      genre: "Fiction",
+      price: "6500",
+      imageUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&h=600&fit=crop",
+      rating: 4.8
+    },
+    {
+      id: "2",
+      title: "Stay With Me",
+      author: "Ayobami Adebayo",
+      genre: "Fiction",
+      price: "5500",
+      imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400&h=600&fit=crop",
+      rating: 4.6
+    },
+    {
+      id: "3",
+      title: "Akata Witch",
+      author: "Nnedi Okorafor",
+      genre: "Fantasy",
+      price: "6000",
+      imageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=400&h=600&fit=crop",
+      rating: 4.5
+    },
+    {
+      id: "4",
+      title: "Chronicles from the Land of the Happiest People on Earth",
+      author: "Wole Soyinka",
+      genre: "Satire",
+      price: "8500",
+      imageUrl: "https://images.unsplash.com/photo-1495640388908-05fa85288e61?q=80&w=400&h=600&fit=crop",
+      rating: 4.7
+    }
+  ];
+
+  const bookstoreList = books && books.length > 0 ? books.slice(0, 4) : fallbackFeaturedBooks;
+
   useEffect(() => {
     const interval = setInterval(() => {
       setQuoteIndex(prev => (prev + 1) % QUOTES.length);
@@ -67,7 +108,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
         <div className="absolute inset-0 z-0">
           <motion.div
             initial={{ scale: 1.15, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.45 }}
+            animate={{ scale: 1, opacity: 0.32 }}
             transition={{ duration: 2.2, ease: "easeOut" }}
             className="w-full h-full"
           >
@@ -78,7 +119,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
             />
           </motion.div>
           {/* Rich Vignette and Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/60 to-ink/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/40" />
           <div className="absolute inset-0 bg-radial-vignette opacity-60" />
         </div>
         
@@ -98,17 +139,17 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
             initial={{ opacity: 0, y: 35 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-5xl sm:text-7xl md:text-8xl font-display leading-[1.05] tracking-tight font-extrabold"
+            className="text-5xl sm:text-7xl md:text-8xl font-display leading-[1.05] tracking-tight font-extrabold text-cream"
           >
-            We came for <span className="italic text-primary">the books.</span><br/>
-            We stayed for <span className="text-accent italic">the chaos.</span>
+            We came for <span className="italic text-primary font-bold">the books.</span><br/>
+            We stayed for <span className="text-[#FF8D5C] italic font-bold">the chaos.</span>
           </motion.h1>
 
           <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.1, duration: 1 }}
-            className="text-base sm:text-lg md:text-xl text-cream/80 max-w-2xl mx-auto font-sans font-medium"
+            className="text-base sm:text-lg md:text-xl text-cream/95 max-w-2xl mx-auto font-sans font-medium"
           >
             An opinionated reading community spanning Zaria, Kaduna, and Abuja. 
             We read heavily, debate fiercely, and never use PDFs.
@@ -143,89 +184,65 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
         </div>
       </section>
 
-      {/* 2. Light Theme: The Editorial Highlights (Scroll Reveal) */}
+      {/* 2. Light Theme: The Bookstore Showcase */}
       <section className="py-24 px-6 md:px-8 bg-cream relative border-b border-ink/5">
         <motion.div 
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
-          className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12"
+          className="max-w-7xl mx-auto space-y-16"
         >
-          {/* Card 1: The Bookstore (Standout) */}
-          <motion.div variants={fadeInReveal} className="flex">
+          <div className="text-center space-y-3">
+            <span className="text-accent uppercase tracking-[0.25em] font-sans font-bold text-xs block">Featured Collection</span>
+            <h2 className="text-4xl md:text-5xl font-display text-burgundy font-bold">The Bookstore</h2>
+            <p className="text-sm md:text-base text-ink/75 max-w-xl mx-auto font-sans font-medium">
+              We finally bring hardcopies to you. A rigorously curated selection. And absolutely none of them are PDFs.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            {bookstoreList.map((book) => (
+              <motion.div key={book.id} variants={fadeInReveal} className="flex">
+                <Link 
+                  href="/bookstore" 
+                  className="group flex flex-col justify-between w-full hover:-translate-y-1 transition-transform duration-300"
+                >
+                  <div className="space-y-4 w-full">
+                    <div className="aspect-[2/3] w-full rounded-2xl overflow-hidden shadow-md border border-sage/15 bg-card relative">
+                      <img 
+                        src={book.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} 
+                        alt={book.title} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span className="bg-cream text-burgundy text-[9px] font-sans font-bold uppercase tracking-widest px-4 py-2 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                          View Details
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-bold text-accent uppercase tracking-widest block mb-1">{book.genre}</span>
+                      <h4 className="font-bold text-ink leading-tight group-hover:text-accent transition-colors line-clamp-1 mb-1 font-display">{book.title}</h4>
+                      <p className="text-xs text-ink/60 mb-2 truncate">by {book.author}</p>
+                      <span className="font-display font-bold text-burgundy text-sm">₦{parseInt(book.price || 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center pt-4">
             <Link 
               href="/bookstore" 
-              className="group relative flex flex-col justify-between p-8 rounded-3xl border-2 border-accent/40 bg-gradient-to-br from-card via-card to-primary/15 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 w-full"
+              className="bg-burgundy hover:bg-ink text-cream hover:text-white px-8 py-4 uppercase tracking-widest text-xs font-bold transition-all shadow-md rounded-xl inline-flex items-center gap-3 hover:-translate-y-0.5"
             >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-4xl font-display text-accent/35 group-hover:text-accent transition-colors font-black">01</span>
-                  <span className="text-[10px] uppercase tracking-[0.2em] font-sans font-bold px-3 py-1 bg-accent/10 text-accent rounded-full border border-accent/20">
-                    Featured Lore
-                  </span>
-                </div>
-                <h3 className="text-2xl font-display text-burgundy border-b border-accent/20 pb-4 group-hover:border-accent transition-colors font-bold">
-                  The Bookstore
-                </h3>
-                <p className="text-sm sm:text-base text-ink leading-relaxed font-sans font-medium">
-                  We finally bring hardcopies to you. A rigorously curated selection. And absolutely none of them are PDFs.
-                </p>
-              </div>
-              <div className="pt-6 flex items-center text-xs uppercase tracking-widest font-sans font-bold text-accent group-hover:text-burgundy transition-colors gap-2">
-                <span>Browse the store</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </div>
+              <span>Explore the Bookstore</span>
+              <ArrowRight size={16} />
             </Link>
-          </motion.div>
-
-          {/* Card 2: The Assembly (Events) */}
-          <motion.div variants={fadeInReveal} className="flex">
-            <Link 
-              href="/events" 
-              className="group relative flex flex-col justify-between p-8 rounded-3xl border border-ink/10 bg-card shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 w-full"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-4xl font-display text-sage/20 group-hover:text-sage transition-colors font-black">02</span>
-                </div>
-                <h3 className="text-2xl font-display text-burgundy border-b border-ink/10 pb-4 group-hover:border-sage transition-colors font-bold">
-                  The Assembly
-                </h3>
-                <p className="text-sm sm:text-base text-ink leading-relaxed font-sans font-medium">
-                  Check out our next event and hang with the gang. People actually show up. Monthly events, readings, and fierce debates spanning three cities.
-                </p>
-              </div>
-              <div className="pt-6 flex items-center text-xs uppercase tracking-widest font-sans font-bold text-sage group-hover:text-burgundy transition-colors gap-2">
-                <span>View events</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-          </motion.div>
-
-          {/* Card 3: The Chapters (Clubs) */}
-          <motion.div variants={fadeInReveal} className="flex">
-            <Link 
-              href="/clubs" 
-              className="group relative flex flex-col justify-between p-8 rounded-3xl border border-ink/10 bg-card shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 w-full"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-4xl font-display text-primary/30 group-hover:text-primary transition-colors font-black">03</span>
-                </div>
-                <h3 className="text-2xl font-display text-burgundy border-b border-ink/10 pb-4 group-hover:border-primary transition-colors font-bold">
-                  The Chapters
-                </h3>
-                <p className="text-sm sm:text-base text-ink leading-relaxed font-sans font-medium">
-                  Connect with like minds in Zaria, Kaduna, and Abuja bound by one very opinionated reading list.
-                </p>
-              </div>
-              <div className="pt-6 flex items-center text-xs uppercase tracking-widest font-sans font-bold text-primary group-hover:text-burgundy transition-colors gap-2">
-                <span>Find your chapter</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-          </motion.div>
+          </div>
         </motion.div>
       </section>
 
@@ -476,6 +493,80 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
                ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* 6. Light Theme: The Assembly & The Chapters (Community at Bottom) */}
+      <section className="py-24 px-6 md:px-8 bg-cream/70 relative border-b border-ink/5 overflow-hidden">
+        {/* Background visual detail */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -z-10" />
+
+        <div className="max-w-7xl mx-auto space-y-16">
+          <div className="text-center space-y-3">
+            <span className="text-accent uppercase tracking-[0.2em] font-sans font-bold text-xs block">Our Collective</span>
+            <h2 className="text-4xl md:text-5xl font-display text-burgundy font-bold">The Assembly & The Chapters</h2>
+            <p className="text-sm text-ink/75 max-w-md mx-auto font-sans font-medium">
+              Step beyond the page. Meet the minds that read fiercely and write with passion across our physical chapters.
+            </p>
+          </div>
+
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto"
+          >
+            {/* Card 1: The Assembly (Events) */}
+            <motion.div 
+              variants={fadeInReveal}
+              className="bg-white border border-sage/15 p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-sage/5 rounded-full blur-xl" />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-sage bg-sage/10 border border-sage/20 px-3 py-1 rounded-full uppercase tracking-wider">The Assembly</span>
+                  <span className="text-4xl font-display text-sage/20 font-black">01</span>
+                </div>
+                <h3 className="text-2xl font-display text-burgundy border-b border-sage/10 pb-3 font-bold">Events & Readings</h3>
+                <p className="text-sm text-ink leading-relaxed font-sans font-medium">
+                  Check out our next event and hang with the gang. People actually show up. Monthly events, readings, and fierce debates spanning Zaria, Kaduna, and Abuja.
+                </p>
+              </div>
+              <Link 
+                href="/events"
+                className="bg-sage hover:bg-burgundy text-cream hover:text-white text-center font-sans font-bold text-xs py-3.5 px-6 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                <span>View Events Calendar</span>
+                <ArrowRight size={14} />
+              </Link>
+            </motion.div>
+
+            {/* Card 2: The Chapters (Clubs) */}
+            <motion.div 
+              variants={fadeInReveal}
+              className="bg-white border border-primary/15 p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-xl" />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full uppercase tracking-wider">The Chapters</span>
+                  <span className="text-4xl font-display text-primary/20 font-black">02</span>
+                </div>
+                <h3 className="text-2xl font-display text-burgundy border-b border-primary/10 pb-3 font-bold">Local Chapters</h3>
+                <p className="text-sm text-ink leading-relaxed font-sans font-medium">
+                  Connect with like minds in Zaria, Kaduna, and Abuja bound by one very opinionated reading list. Join a local group for weekly check-ins.
+                </p>
+              </div>
+              <Link 
+                href="/clubs"
+                className="bg-accent hover:bg-burgundy text-cream hover:text-white text-center font-sans font-bold text-xs py-3.5 px-6 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                <span>Find Your Chapter</span>
+                <ArrowRight size={14} />
+              </Link>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
