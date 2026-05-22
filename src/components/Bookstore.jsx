@@ -17,6 +17,7 @@ export default function Bookstore({ initialBooks }) {
   const [isBagOpen, setIsBagOpen] = useState(false);
   const [profile, setProfile] = useState(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -202,8 +203,8 @@ export default function Bookstore({ initialBooks }) {
         <div className="flex flex-col lg:flex-row gap-8 items-start relative">
           
           {/* Left Sidebar (Desktop Filters) & Top Control Bar (Mobile) */}
-          <div className="w-full lg:w-[250px] flex-shrink-0 flex flex-col gap-4 lg:gap-6 sticky top-[72px] sm:top-20 z-40 bg-cream/95 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none p-4 lg:p-0 rounded-2xl lg:rounded-none shadow-lg lg:shadow-none border border-sage/40 lg:border-none">
-            
+          {/* Desktop Filters Sidebar */}
+          <div className="hidden lg:flex w-[250px] flex-shrink-0 flex-col gap-6 sticky top-20 z-40">
             {/* Search */}
             <div className="relative w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40" size={18} />
@@ -212,12 +213,12 @@ export default function Bookstore({ initialBooks }) {
                 placeholder="Search titles or authors..." 
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full bg-cream lg:bg-transparent lg:border-none border border-sage/30 lg:border-b lg:border-ink/20 rounded-full lg:rounded-none py-3 pl-12 pr-4 text-ink focus:outline-none focus:border-ink transition-colors"
+                className="w-full bg-transparent border-none border-b border-ink/20 py-3 pl-12 pr-4 text-ink focus:outline-none focus:border-ink transition-colors"
               />
             </div>
             
-            {/* Desktop Category List */}
-            <div className="hidden lg:flex flex-col gap-1 w-full">
+            {/* Category List */}
+            <div className="flex flex-col gap-1 w-full">
               <h3 className="text-xs font-bold text-ink/40 uppercase tracking-widest mb-3 border-b border-sage/30 pb-2">Categories</h3>
               {genres.map(g => (
                 <button
@@ -229,27 +230,9 @@ export default function Bookstore({ initialBooks }) {
                 </button>
               ))}
             </div>
-
-            {/* Mobile Dropdown */}
-            <div className="w-full lg:hidden block">
-              <div className="relative w-full">
-                <select 
-                  value={activeGenre}
-                  onChange={e => setActiveGenre(e.target.value)}
-                  className="w-full bg-cream border border-sage/30 focus:border-accent transition-colors rounded-xl py-3 px-4 text-ink font-bold appearance-none cursor-pointer"
-                >
-                  {genres.map(g => (
-                    <option key={g.name} value={g.name}>
-                      {g.name} ({g.count})
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-ink/50 text-xs">▼</div>
-              </div>
-            </div>
             
             {/* Sold Out Toggle */}
-            <div className="flex items-center justify-between w-full pt-2 lg:mt-4 lg:pt-6 lg:border-t border-sage/20">
+            <div className="flex items-center justify-between w-full pt-6 border-t border-sage/20 mt-4">
               <span className="text-sm font-bold text-ink/70">Show Sold Out</span>
               <button 
                 onClick={() => setShowSoldOut(!showSoldOut)}
@@ -259,7 +242,81 @@ export default function Bookstore({ initialBooks }) {
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${showSoldOut ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
+          </div>
 
+          {/* Mobile Sticky Filter Control Bar */}
+          <div className="lg:hidden w-full sticky top-[72px] sm:top-20 z-40 bg-cream/95 backdrop-blur-xl p-3.5 rounded-2xl shadow-lg border border-sage/40 flex flex-col gap-3">
+            <div className="flex gap-2 items-center w-full">
+              {/* Search */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" size={16} />
+                <input 
+                  type="text" 
+                  placeholder="Search books..." 
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full bg-cream border border-sage/30 rounded-full py-2.5 pl-10 pr-4 text-xs text-ink focus:outline-none focus:border-accent transition-colors"
+                />
+              </div>
+              
+              {/* Filter Toggle Button */}
+              <button 
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full border text-xs font-bold transition-all ${
+                  showMobileFilters || activeGenre !== 'All' || showSoldOut
+                    ? 'bg-burgundy border-burgundy text-cream'
+                    : 'bg-cream border-sage/30 text-ink/75 hover:bg-sage/10'
+                }`}
+              >
+                <span>Filter</span>
+                {(activeGenre !== 'All' || showSoldOut) && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                )}
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {showMobileFilters && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden flex flex-col gap-4 pt-3.5 border-t border-sage/20"
+                >
+                  {/* Genre Select Dropdown */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[10px] font-bold text-ink/45 uppercase tracking-widest pl-1">Genre</span>
+                    <div className="relative w-full">
+                      <select 
+                        value={activeGenre}
+                        onChange={e => setActiveGenre(e.target.value)}
+                        className="w-full bg-cream border border-sage/30 focus:border-accent transition-colors rounded-xl py-2.5 px-3.5 text-xs text-ink font-bold appearance-none cursor-pointer"
+                      >
+                        {genres.map(g => (
+                          <option key={g.name} value={g.name}>
+                            {g.name} ({g.count})
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-ink/50 text-[10px]">▼</div>
+                    </div>
+                  </div>
+                  
+                  {/* Sold Out Toggle */}
+                  <div className="flex items-center justify-between w-full pt-1.5">
+                    <span className="text-xs font-bold text-ink/70 pl-1">Show Sold Out</span>
+                    <button 
+                      onClick={() => setShowSoldOut(!showSoldOut)}
+                      className={`relative inline-flex h-5.5 w-10 items-center rounded-full transition-colors duration-300 focus:outline-none ${showSoldOut ? 'bg-burgundy' : 'bg-sage/80'}`}
+                      aria-label="Toggle sold out books"
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-300 ${showSoldOut ? 'translate-x-5' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Right Content: Grid */}

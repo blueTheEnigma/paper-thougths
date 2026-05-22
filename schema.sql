@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
     book_vouchers_gifted INT DEFAULT 0,
     writing_streak INT DEFAULT 0,
     last_submission_date DATE,
+    preferred_genres TEXT[] DEFAULT '{}',
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -149,4 +150,7 @@ VALUES (
     '/bookstore', 
     TRUE
 ) ON CONFLICT DO NOTHING;
+
+-- Migration: Add preferred_genres column to users table if it does not exist
+ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_genres TEXT[] DEFAULT '{}';
 

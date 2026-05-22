@@ -10,6 +10,12 @@ import {
 import { FaInstagram } from 'react-icons/fa6';
 import confetti from 'canvas-confetti';
 
+const AVAILABLE_GENRES = [
+  'Fiction', 'Non-Fiction', 'Literary Fiction', 'Memoir', 
+  'Self-Help', 'Fantasy', 'Science Fiction', 'Thriller', 
+  'Romance', 'Historical Fiction', 'Classic Fiction', 'Humour'
+];
+
 function JoinFormContent() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,6 +24,15 @@ function JoinFormContent() {
   const [referredBy, setReferredBy] = useState("");
   const [assignedId, setAssignedId] = useState("");
   const [copied, setCopied] = useState(false);
+  const [selectedGenres, setSelectedGenres] = useState([]);
+
+  const toggleGenre = (genre) => {
+    setSelectedGenres(prev => 
+      prev.includes(genre) 
+        ? prev.filter(g => g !== genre) 
+        : [...prev, genre]
+    );
+  };
 
   useEffect(() => {
     // Priority: URL parameter > Manual input (handled in form)
@@ -71,7 +86,8 @@ function JoinFormContent() {
       chapter: formData.get('chapter'),
       birthday: formData.get('birthday') || null,
       referral: finalReferral,
-      consent: formData.get('consent') === 'on'
+      consent: formData.get('consent') === 'on',
+      preferredGenres: selectedGenres
     };
 
     try {
@@ -351,6 +367,35 @@ function JoinFormContent() {
                 defaultValue={referredBy}
                 className="w-full bg-transparent border-b-2 border-sage/20 px-0 py-4 focus:outline-none focus:border-primary transition-colors text-lg disabled:opacity-50"
               />
+            </div>
+            
+            {/* Preferred Genres Multi-Select */}
+            <div className="md:col-span-2 space-y-4 pt-4">
+              <label className="text-xs font-bold uppercase tracking-widest text-ink flex items-center gap-2">
+                <Book className="text-primary" size={14} /> Preferred Genres
+              </label>
+              <p className="text-xs text-ink/50 leading-relaxed pl-1">
+                Select your favorite genres (we'll use these to suggest books in your dashboard):
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-2">
+                {AVAILABLE_GENRES.map(genre => {
+                  const selected = selectedGenres.includes(genre);
+                  return (
+                    <button
+                      key={genre}
+                      type="button"
+                      onClick={() => toggleGenre(genre)}
+                      className={`px-4 py-3 rounded-2xl border text-xs font-bold text-center transition-all duration-200 hover:-translate-y-0.5 cursor-pointer ${
+                        selected 
+                          ? 'bg-burgundy border-burgundy text-cream shadow-md shadow-burgundy/15' 
+                          : 'bg-cream border-sage/20 text-ink/75 hover:bg-sage/10 hover:border-sage/40'
+                      }`}
+                    >
+                      {genre}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="md:col-span-2 pt-4">

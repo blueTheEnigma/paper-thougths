@@ -4,7 +4,7 @@ import { Database } from '@/lib/db';
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { fullName, instagram, whatsapp, email, chapter, referral, birthday } = body;
+    const { fullName, instagram, whatsapp, email, chapter, referral, birthday, preferredGenres } = body;
 
     if (!fullName || !whatsapp || !email) {
       return NextResponse.json({ success: false, error: 'Full name, WhatsApp number, and Email address are required.' }, { status: 400 });
@@ -53,10 +53,10 @@ export async function POST(request) {
     const assignedLkId = await Database.transaction(async (client) => {
       // Insert user
       const userRes = await client.query(`
-        INSERT INTO users (full_name, instagram, whatsapp, email, chapter_id, referred_by_id, birthday)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO users (full_name, instagram, whatsapp, email, chapter_id, referred_by_id, birthday, preferred_genres)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING id
-      `, [fullName, cleanInstagram, whatsapp, cleanEmail, chapterRow.id, referrerId, birthday || null]);
+      `, [fullName, cleanInstagram, whatsapp, cleanEmail, chapterRow.id, referrerId, birthday || null, preferredGenres || []]);
 
       const newUserId = userRes.rows[0].id;
       const year = new Date().getFullYear();

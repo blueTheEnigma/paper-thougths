@@ -85,7 +85,8 @@ async function getLocalArchiveData(clerkUser) {
       events: 0, // In standard DB, count event RSVPs. Set to 0 or count if events exist
       referrals: 0,
       permissions: [],
-      weeklyReviews: 0
+      weeklyReviews: 0,
+      preferredGenres: profileRow.preferred_genres || []
     };
 
     // Calculate actual referrals count
@@ -136,27 +137,46 @@ export default async function DashboardPage() {
 
   // Curated Recommendation Engine
   let recommendations = [];
-  if (orders && orders.length > 0 && allBooks.length > 0) {
-    const boughtItems = orders.flatMap(o => o.items.split(',').map(i => i.trim().toLowerCase()));
-    const boughtBooks = allBooks.filter(b => boughtItems.some(bi => b.title.toLowerCase().includes(bi)));
-    const favoriteGenres = [...new Set(boughtBooks.map(b => b.genre))];
+  if (allBooks.length > 0) {
+    const boughtItems = orders ? orders.flatMap(o => o.items.split(',').map(i => i.trim().toLowerCase())) : [];
+    const isBought = (book) => boughtItems.some(bi => book.title.toLowerCase().includes(bi));
+    const normalize = (g) => (g || '').trim().toLowerCase();
+    const userPreferredGenres = (profile?.preferredGenres || []).map(normalize);
 
-    if (favoriteGenres.length > 0) {
-      recommendations = allBooks
-        .filter(b => favoriteGenres.includes(b.genre) && !boughtItems.some(bi => b.title.toLowerCase().includes(bi)))
-        .sort((a, b) => b.rating - a.rating)
-        .slice(0, 4);
+    // 1. Match books matching user's preferred genres (excluding bought)
+    let preferredRecommendations = [];
+    if (userPreferredGenres.length > 0) {
+      preferredRecommendations = allBooks
+        .filter(b => userPreferredGenres.includes(normalize(b.genre)) && !isBought(b))
+        .sort((a, b) => b.rating - a.rating);
     }
-  }
+    recommendations = preferredRecommendations.slice(0, 4);
 
-  // Fallback to Featured/High Rated if no recommendations
-  if (recommendations.length < 3 && allBooks.length > 0) {
-    const fallback = allBooks
-      .filter(b => b.featured || b.rating >= 4.5)
-      .filter(b => !recommendations.some(r => r.id === b.id))
-      .sort((a, b) => b.rating - a.rating)
-      .slice(0, 4 - recommendations.length);
-    recommendations = [...recommendations, ...fallback];
+    // 2. If recommendations count < 4, fill remaining slots with purchase-based recommendations
+    if (recommendations.length < 4 && orders && orders.length > 0) {
+      const boughtBooks = allBooks.filter(isBought);
+      const favoriteGenres = [...new Set(boughtBooks.map(b => normalize(b.genre)))];
+
+      if (favoriteGenres.length > 0) {
+        const purchaseBased = allBooks
+          .filter(b => 
+            favoriteGenres.includes(normalize(b.genre)) && 
+            !isBought(b) && 
+            !recommendations.some(r => r.id === b.id)
+          )
+          .sort((a, b) => b.rating - a.rating);
+        recommendations = [...recommendations, ...purchaseBased].slice(0, 4);
+      }
+    }
+
+    // 3. Fallback to Featured/High Rated if still < 4
+    if (recommendations.length < 4) {
+      const fallback = allBooks
+        .filter(b => (b.featured || b.rating >= 4.5) && !isBought(b))
+        .filter(b => !recommendations.some(r => r.id === b.id))
+        .sort((a, b) => b.rating - a.rating);
+      recommendations = [...recommendations, ...fallback].slice(0, 4);
+    }
   }
 
   return (
