@@ -79,9 +79,7 @@ export async function POST(request) {
         if (count <= 5) {
           await client.query(`
             UPDATE users 
-            SET milestone_tokens = milestone_tokens + 1.2,
-                spendable_leaves = spendable_leaves + 12,
-                lifetime_leaves = lifetime_leaves + 12
+            SET milestone_tokens = milestone_tokens + 1.2
             WHERE id = $1
           `, [referrerId]);
           

@@ -158,12 +158,12 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
                     <Award size={14} /> Milestone Tokens
                   </h4>
                   <p className="text-xs sm:text-sm text-cream/90 font-serif leading-relaxed">
-                    Power your journey to unlock the <strong>Keeper</strong> tier (lifetime {discountPercent} discount). Earn tokens and leaves by completing activities:
+                    Power your journey to unlock the <strong>Keeper</strong> tier ({discountPercent} discount on all books for 90 days). Earn tokens by completing activities:
                   </p>
                   <ul className="text-[11px] sm:text-xs text-cream/85 font-serif list-disc pl-4 space-y-1.5">
-                    <li><strong>Peer Critique</strong>: Submit detailed reviews (<strong>+1.0 Token</strong> &amp; <strong>+10 Leaves</strong>, or <strong>+1.5 Tokens</strong> &amp; <strong>+15 Leaves</strong> for early-birds)</li>
-                    <li><strong>Weekly Submission</strong>: Write prompt responses (<strong>+1.0 Token</strong> &amp; <strong>+10 Leaves</strong>)</li>
-                    <li><strong>Invite Readers</strong>: Refer friends (<strong>+1.2 Tokens</strong> &amp; <strong>+12 Leaves</strong> per referral, up to your first 5)</li>
+                    <li><strong>Peer Critique</strong>: Submit detailed reviews (<strong>+1.0 Token</strong>, or <strong>+1.5 Tokens</strong> for early-birds).</li>
+                    <li><strong>Weekly Submission</strong>: Write weekly prompt responses (<strong>+1.0 Token</strong>).</li>
+                    <li><strong>Invite Readers</strong>: Refer friends (<strong>+1.2 Tokens</strong> per referral, up to your first 5).</li>
                   </ul>
                 </div>
 
@@ -173,7 +173,7 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
                     <Coins size={14} /> Paper Leaves
                   </h4>
                   <p className="text-xs sm:text-sm text-cream/90 font-serif leading-relaxed">
-                    Your spendable currency earned for every contribution you make. Leaves help support the community:
+                    Your spendable currency. <strong>Leaves can only be earned from peer critiques</strong> (<strong>+10 Leaves</strong>, or <strong>+15 Leaves</strong> for early-birds), capped at 3 rewarded critiques per week:
                   </p>
                   <ul className="text-[11px] sm:text-xs text-cream/85 font-serif list-disc pl-4 space-y-1.5">
                     <li>Donate leaves to your <strong>Chapter Pool</strong> to fund book vouchers for your local chapter!</li>
@@ -631,7 +631,7 @@ export default function DashboardClient({ profile, initialOrders, recommendation
               ) : (
                 <div className="bg-ink/5 rounded-xl p-4 border border-sage/10">
                   <p className="text-xs sm:text-sm text-ink/85 leading-relaxed font-serif">
-                    Upgrade to <strong>Keeper</strong> to unlock your lifetime {discountPercent} discount and exclusive Archive access.
+                    Upgrade to <strong>Keeper</strong> to unlock your {discountPercent} discount on all books for 90 days and exclusive Archive access.
                   </p>
                 </div>
               )}
@@ -683,13 +683,30 @@ export default function DashboardClient({ profile, initialOrders, recommendation
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform">
               <Coins size={60} className="text-burgundy" />
             </div>
-            <div>
-              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Spendable Leaves</span>
-              <div className="text-5xl font-display text-burgundy font-extrabold mt-1">{spendableLeaves} <span className="text-3xl">🍃</span></div>
+            <div className="space-y-4">
+              <div>
+                <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Spendable Leaves</span>
+                <div className="text-4xl font-display text-burgundy font-extrabold mt-1">{spendableLeaves} <span className="text-2xl">🍃</span></div>
+              </div>
+              
+              {/* Lifetime Leaves / Mystery Package Progression */}
+              <div className="border-t border-sage/10 pt-3.5">
+                <div className="flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/50 mb-1.5">
+                  <span className="flex items-center gap-1"><Gift size={11} className="text-accent" /> Next Mystery Gift</span>
+                  <span>{lifetimeLeaves % 500} / 500 🍃</span>
+                </div>
+                <div className="w-full bg-[#E8DFC9] rounded-full h-2 relative overflow-hidden border border-sage/5">
+                  <div 
+                    className="bg-accent h-2 rounded-full transition-all duration-1000 shadow-sm" 
+                    style={{ width: `${((lifetimeLeaves % 500) / 500) * 100}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between items-center text-[9px] text-ink/45 mt-1 font-serif">
+                  <span>Lifetime: {lifetimeLeaves} leaves</span>
+                  <span className="font-bold text-accent italic">🎁 Secret reward at 500</span>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-ink/60 leading-relaxed mt-4 font-serif">
-              Your spendable bi-token currency. Donate to your chapter pool to pay it forward and sponsor books for the community.
-            </p>
           </div>
         </motion.div>
 
@@ -793,15 +810,15 @@ export default function DashboardClient({ profile, initialOrders, recommendation
                     {/* Milestone Tokens */}
                     <div className="space-y-1.5">
                       <h4 className="text-xs font-bold text-burgundy uppercase tracking-wider flex items-center gap-1.5 font-sans">
-                        <Award size={14} /> Milestone Tokens &amp; Leaves
+                        <Award size={14} /> Milestone Tokens
                       </h4>
                       <p className="text-xs text-ink/85 leading-relaxed font-serif font-medium">
-                        Power your upgrade to the <strong>Keeper</strong> tier. Earn tokens and leaves by completing activities:
+                        Power your upgrade to the <strong>Keeper</strong> tier. Earn tokens by completing activities:
                       </p>
                       <ul className="text-xs text-ink/80 font-serif list-disc pl-4 space-y-1.5">
-                        <li><strong>Peer Critique</strong>: Submit detailed reviews (<strong>+1.0 Token</strong> &amp; <strong>+10 Leaves</strong>, or <strong>+1.5 Tokens</strong> &amp; <strong>+15 Leaves</strong> for early-birds).</li>
-                        <li><strong>Weekly Submission</strong>: Write weekly prompt responses (<strong>+1.0 Token</strong> &amp; <strong>+10 Leaves</strong>).</li>
-                        <li><strong>Invite Readers</strong>: Refer friends (<strong>+1.2 Tokens</strong> &amp; <strong>+12 Leaves</strong> per referral, up to your first 5).</li>
+                        <li><strong>Peer Critique</strong>: Submit detailed reviews (<strong>+1.0 Token</strong>, or <strong>+1.5 Tokens</strong> for early-birds).</li>
+                        <li><strong>Weekly Submission</strong>: Write weekly prompt responses (<strong>+1.0 Token</strong>).</li>
+                        <li><strong>Invite Readers</strong>: Refer friends (<strong>+1.2 Tokens</strong> per referral, up to your first 5).</li>
                       </ul>
                     </div>
                     
@@ -811,7 +828,7 @@ export default function DashboardClient({ profile, initialOrders, recommendation
                         <Coins size={14} className="text-sage" /> Paper Leaves Economy
                       </h4>
                       <p className="text-xs text-ink/85 leading-relaxed font-serif font-medium">
-                        Spendable currency earned for every active contribution: submissions, critiques, referrals (+12 Leaves per referral), and active participation.
+                        Spendable currency. <strong>Paper Leaves can only be earned from peer critiques</strong> (<strong>+10 Paper Leaves</strong>, or <strong>+15 Paper Leaves</strong> for early-birds), and rewards are capped after 3 reviews per week to avoid spamming. Submissions and referrals do not earn leaves.
                       </p>
                       <p className="text-[11px] text-ink/70 font-serif italic">
                         Donate leaves to the <strong>Chapter Book Pool</strong> to pay it forward and fund book bundles for your local chapter!
@@ -1000,7 +1017,7 @@ export default function DashboardClient({ profile, initialOrders, recommendation
               <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl group-hover:scale-110 transition-transform"></div>
               <h3 className="font-display font-extrabold text-2xl mb-4 relative z-10">Invite the Collective</h3>
               <p className="text-xs sm:text-sm text-cream/70 mb-8 leading-relaxed relative z-10 font-serif">
-                Share your personal link. Earn 1.2 Milestone Tokens & 12 Paper Leaves for each of your first 5 referrals.
+                Share your personal link. Earn 1.2 Milestone Tokens for each of your first 5 referrals. (Referrals do not earn leaves).
               </p>
               <button 
                 onClick={copyRefLink}

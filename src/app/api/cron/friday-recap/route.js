@@ -141,12 +141,10 @@ export async function POST(request) {
         // Award on 4th consecutive week milestone
         if (newStreak > 0 && newStreak % 4 === 0) {
           streakBonusAwarded = true;
-          // 2.5 Milestone Tokens and 25 Paper Leaves
+          // 2.5 Milestone Tokens (no Leaves)
           await Database.query(`
             UPDATE users 
             SET milestone_tokens = milestone_tokens + 2.5,
-                spendable_leaves = spendable_leaves + 25,
-                lifetime_leaves = lifetime_leaves + 25,
                 writing_streak = $1
             WHERE id = $2
           `, [newStreak, u.id]);

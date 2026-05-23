@@ -88,7 +88,7 @@ export async function POST(request) {
 
     if (isFirstSubmissionThisWeek) {
       tokensRewarded = 1.0;
-      leavesRewarded = 10;
+      leavesRewarded = 0;
 
       const newTotalLeaves = (dbUser.spendable_leaves || 0) + leavesRewarded;
       const newLifetimeLeaves = (dbUser.lifetime_leaves || 0) + leavesRewarded;

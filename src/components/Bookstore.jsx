@@ -49,13 +49,13 @@ export default function Bookstore({ initialBooks }) {
   }, [bag]);
 
   useEffect(() => {
-    if (selectedBook) {
+    if (!imagesLoaded || selectedBook) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };
-  }, [selectedBook]);
+  }, [imagesLoaded, selectedBook]);
 
   useEffect(() => {
     const quotesList = [
@@ -228,43 +228,43 @@ export default function Bookstore({ initialBooks }) {
             key="bookstore-loader"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.5 } }}
-            className="absolute inset-0 bg-[#FFF5EC] z-50 flex flex-col items-center justify-center min-h-[500px] p-6 text-center"
+            className="fixed inset-0 bg-[#FFF5EC] z-[9999] flex flex-col items-center justify-center p-6 text-center"
           >
-            <div className="flex flex-col items-center max-w-md gap-6">
-              {/* Animated Sailor's Wheel */}
-              <div className="relative w-20 h-20 flex items-center justify-center">
-                <div className="absolute inset-0 bg-accent/10 rounded-full blur-xl animate-pulse" />
+            <div className="flex flex-col items-center max-w-md gap-5">
+              {/* Refined, smaller and more elegant Sailor's Wheel */}
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <div className="absolute inset-0 bg-accent/5 rounded-full blur-lg animate-pulse" />
                 <svg 
-                  className="w-16 h-16 animate-spin text-burgundy relative z-10" 
+                  className="w-12 h-12 animate-spin text-burgundy relative z-10" 
                   viewBox="0 0 100 100" 
                   fill="none" 
                   stroke="currentColor" 
-                  strokeWidth="4" 
+                  strokeWidth="3.5" 
                   strokeLinecap="round"
                   style={{ animationDuration: '6s' }}
                 >
                   <circle cx="50" cy="50" r="10" />
                   <circle cx="50" cy="50" r="4" fill="currentColor" />
-                  <circle cx="50" cy="50" r="30" strokeWidth="3" />
-                  <circle cx="50" cy="50" r="20" strokeWidth="1.5" strokeDasharray="4 2" />
+                  <circle cx="50" cy="50" r="30" strokeWidth="2.5" />
+                  <circle cx="50" cy="50" r="20" strokeWidth="1.2" strokeDasharray="4 2" />
                   <line x1="50" y1="10" x2="50" y2="90" />
                   <line x1="10" y1="50" x2="90" y2="50" />
                   <line x1="22" y1="22" x2="78" y2="78" />
                   <line x1="22" y1="78" x2="78" y2="22" />
-                  <line x1="50" y1="20" x2="50" y2="2" strokeWidth="6" />
-                  <line x1="50" y1="80" x2="50" y2="98" strokeWidth="6" />
-                  <line x1="20" y1="50" x2="2" y2="50" strokeWidth="6" />
-                  <line x1="80" y1="50" x2="98" y2="50" strokeWidth="6" />
-                  <line x1="29" y1="29" x2="16" y2="16" strokeWidth="6" />
-                  <line x1="71" y1="71" x2="84" y2="84" strokeWidth="6" />
-                  <line x1="29" y1="71" x2="16" y2="84" strokeWidth="6" />
-                  <line x1="71" y1="29" x2="84" y2="16" strokeWidth="6" />
+                  <line x1="50" y1="20" x2="50" y2="2" strokeWidth="5" />
+                  <line x1="50" y1="80" x2="50" y2="98" strokeWidth="5" />
+                  <line x1="20" y1="50" x2="2" y2="50" strokeWidth="5" />
+                  <line x1="80" y1="50" x2="98" y2="50" strokeWidth="5" />
+                  <line x1="29" y1="29" x2="16" y2="16" strokeWidth="5" />
+                  <line x1="71" y1="71" x2="84" y2="84" strokeWidth="5" />
+                  <line x1="29" y1="71" x2="16" y2="84" strokeWidth="5" />
+                  <line x1="71" y1="29" x2="84" y2="16" strokeWidth="5" />
                 </svg>
               </div>
               
-              <div className="space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-ink/40">Preparing the Library</h4>
-                <p className="text-sm md:text-base text-burgundy font-quote italic leading-relaxed px-4">
+              <div className="space-y-3">
+                <h4 className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-ink/40">Preparing the Library</h4>
+                <p className="text-xs sm:text-sm text-burgundy font-quote italic leading-relaxed px-6">
                   {quote}
                 </p>
               </div>
