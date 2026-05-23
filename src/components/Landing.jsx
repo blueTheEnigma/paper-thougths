@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Star, Feather, Sparkles } from 'lucide-react';
+import { ArrowRight, Star, Feather, Sparkles, Send, Loader2 } from 'lucide-react';
 
 const QUOTES = [
   { text: "There is no agony like bearing an untold story inside you.", author: "Zora Neale Hurston" },
@@ -15,6 +15,34 @@ const QUOTES = [
 
 export default function Landing({ images, books = [], storyPrompt, poemPrompt, botm }) {
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [newsletterStatus, setNewsletterStatus] = useState(null);
+
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault();
+    setNewsletterLoading(true);
+    setNewsletterStatus(null);
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsletterEmail })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNewsletterStatus({ type: 'success', message: data.message });
+        setNewsletterEmail("");
+      } else {
+        setNewsletterStatus({ type: 'error', message: data.error || 'Subscription failed.' });
+      }
+    } catch (err) {
+      console.error(err);
+      setNewsletterStatus({ type: 'error', message: 'Failed to connect. Please try again.' });
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
 
   const slideImages = [
     ...(images?.community || []),
@@ -567,6 +595,64 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
               </Link>
             </motion.div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* 7. The Weekly Dispatch (Prominent Newsletter Signup Section) */}
+      <section className="py-24 px-6 md:px-8 bg-ink text-cream relative overflow-hidden">
+        {/* Background ambient highlights */}
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-burgundy/15 rounded-full blur-[120px] -z-10" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[120px] -z-10" />
+        
+        <div className="max-w-4xl mx-auto text-center space-y-8 relative z-10">
+          <div className="space-y-3">
+            <span className="text-primary uppercase tracking-[0.25em] font-sans font-bold text-xs block">Stay in the Loop</span>
+            <h2 className="text-3xl md:text-5xl font-display text-cream font-bold leading-tight">Join The Weekly Dispatch</h2>
+            <p className="text-sm sm:text-base text-cream/70 max-w-xl mx-auto font-serif leading-relaxed">
+              Subscribe to receive weekly prompt releases, curated book summaries, physical meetups notifications, and local chapter highlights straight to your inbox.
+            </p>
+          </div>
+
+          <form onSubmit={handleNewsletterSubmit} className="max-w-md mx-auto space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input 
+                type="email" 
+                required 
+                disabled={newsletterLoading}
+                placeholder="Enter your email address..." 
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-primary text-cream placeholder-cream/35 transition-all"
+              />
+              <button 
+                type="submit" 
+                disabled={newsletterLoading}
+                className="bg-primary hover:bg-cream text-ink font-sans font-bold text-xs uppercase tracking-widest px-8 py-4 rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-md active:scale-95 flex-shrink-0"
+              >
+                {newsletterLoading ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Subscribing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Subscribe</span>
+                    <Send size={14} />
+                  </>
+                )}
+              </button>
+            </div>
+            
+            {newsletterStatus && (
+              <motion.p 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`text-xs font-bold ${newsletterStatus.type === 'success' ? 'text-primary' : 'text-red-400'}`}
+              >
+                {newsletterStatus.message}
+              </motion.p>
+            )}
+          </form>
         </div>
       </section>
 

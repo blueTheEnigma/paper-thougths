@@ -95,6 +95,24 @@ CREATE TABLE IF NOT EXISTS peer_reviews (
     highwater_response TEXT NOT NULL,
     pivot_response TEXT NOT NULL,
     is_early_bird BOOLEAN DEFAULT FALSE,
+    intent_source VARCHAR(30) CHECK (intent_source IN ('title', 'trope', 'logline')),
+    pacing_score INT CHECK (pacing_score BETWEEN 1 AND 5),
+    technical_score INT CHECK (technical_score BETWEEN 1 AND 5),
+    mirror_text TEXT,
+    highwater_text TEXT,
+    pivot_text TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 10. Submission AI Reports Table (AI Synthesis caching)
+CREATE TABLE IF NOT EXISTS submission_ai_reports (
+    id SERIAL PRIMARY KEY,
+    submission_id INT UNIQUE NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+    intent_metrics JSONB NOT NULL DEFAULT '{"title_weight": 0, "trope_weight": 0, "logline_weight": 0}'::jsonb,
+    structural_metrics JSONB NOT NULL DEFAULT '{"pacing": 0, "technical": 0}'::jsonb,
+    synthesized_mirror TEXT NOT NULL,
+    synthesized_highwater TEXT NOT NULL,
+    synthesized_pivot TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );
 

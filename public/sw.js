@@ -67,6 +67,35 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Network-first strategy for AI reports
+  if (url.pathname === '/api/submissions/ai-report') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.status === 200) {
+            const clonedResponse = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, clonedResponse);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) return cachedResponse;
+            return new Response(
+              JSON.stringify({ 
+                success: false, 
+                error: "You are currently offline. This feedback report is not available in the cache." 
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          });
+        })
+    );
+    return;
+  }
+
   // Only handle GET requests for other assets
   if (event.request.method !== 'GET') {
     return;

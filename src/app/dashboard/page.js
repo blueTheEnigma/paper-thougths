@@ -112,10 +112,28 @@ async function getLocalArchiveData(clerkUser) {
     `, [dbUser.id, lastSaturday]);
     profile.weeklyReviews = parseInt(weeklyReviewsCount?.count || 0);
 
-    return { profile, orders };
+    // 5. Fetch user submissions
+    const submissionsRaw = await Database.query(`
+      SELECT s.id, s.title, s.genre, s.batch_status as "batchStatus", s.created_at as "createdAt",
+             (SELECT COUNT(*) FROM submission_ai_reports r WHERE r.submission_id = s.id) > 0 as "hasReport"
+      FROM submissions s
+      WHERE s.author_id = $1
+      ORDER BY s.created_at DESC
+    `, [dbUser.id]);
+
+    const submissions = submissionsRaw.map(s => ({
+      id: s.id,
+      title: s.title,
+      genre: s.genre,
+      batchStatus: s.batchStatus,
+      createdAt: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString(),
+      hasReport: s.hasReport
+    }));
+
+    return { profile, orders, submissions };
   } catch (e) {
     console.error("Dashboard database fetch failed:", e);
-    return { profile: null, orders: [] };
+    return { profile: null, orders: [], submissions: [] };
   }
 }
 
@@ -133,7 +151,7 @@ export default async function DashboardPage() {
     getBooks().catch(() => [])
   ]);
 
-  const { profile, orders } = archive;
+  const { profile, orders, submissions } = archive;
 
   // Curated Recommendation Engine
   let recommendations = [];
@@ -183,6 +201,7 @@ export default async function DashboardPage() {
     <DashboardClient 
       profile={profile} 
       initialOrders={orders} 
+      submissions={submissions}
       recommendations={recommendations}
       userEmail={email}
     />

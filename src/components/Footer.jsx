@@ -1,13 +1,37 @@
 "use client";
+import { useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Send } from 'lucide-react';
+import { BookOpen, Send, Loader2 } from 'lucide-react';
 import EasterEgg from './EasterEgg';
 
 export default function Footer() {
-  const handleNewsletterSubmit = (e) => {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(null);
+
+  const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
-    alert("Welcome to the circle! You have been subscribed.");
-    e.target.reset();
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatus({ type: 'success', message: data.message });
+        setEmail("");
+      } else {
+        setStatus({ type: 'error', message: data.error || 'Subscription failed.' });
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', message: 'Failed to connect. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,19 +111,30 @@ export default function Footer() {
           <p className="text-xs text-cream/65 leading-relaxed">
             Get community updates, reading lists, and event notifications.
           </p>
-          <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
-            <input 
-              type="email" 
-              required 
-              placeholder="Your email..." 
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary text-cream placeholder-cream/30"
-            />
-            <button 
-              type="submit" 
-              className="bg-primary hover:bg-cream text-ink px-3 rounded-xl transition-all flex items-center justify-center"
-            >
-              <Send size={12} />
-            </button>
+          <form onSubmit={handleNewsletterSubmit} className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <input 
+                type="email" 
+                required 
+                placeholder="Your email..." 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary text-cream placeholder-cream/30"
+              />
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="bg-primary hover:bg-cream text-ink px-3 rounded-xl transition-all flex items-center justify-center disabled:opacity-50 cursor-pointer"
+              >
+                {loading ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+              </button>
+            </div>
+            {status && (
+              <p className={`text-[10px] font-bold ${status.type === 'success' ? 'text-primary' : 'text-red-400'}`}>
+                {status.message}
+              </p>
+            )}
           </form>
         </div>
 

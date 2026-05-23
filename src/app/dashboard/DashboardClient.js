@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
+import FeedbackDashboard from '@/components/FeedbackDashboard';
 
 // ─── Cinematic Archive Entrance Portal ────────────────────────────────────────
 
@@ -217,10 +218,11 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
   );
 }
 
-export default function DashboardClient({ profile, initialOrders, recommendations, userEmail }) {
+export default function DashboardClient({ profile, initialOrders, submissions = [], recommendations, userEmail }) {
   const [orders] = useState(initialOrders || []);
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [selectedReportId, setSelectedReportId] = useState(null);
   
   // Local States for Bi-token economy
   const [spendableLeaves, setSpendableLeaves] = useState(profile?.spendableLeaves || 0);
@@ -595,8 +597,15 @@ export default function DashboardClient({ profile, initialOrders, recommendation
           </div>
         </motion.div>
 
-        {/* Bi-Token Economy & Membership Status Section */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {selectedReportId ? (
+          <FeedbackDashboard 
+            submissionId={selectedReportId} 
+            onClose={() => setSelectedReportId(null)} 
+          />
+        ) : (
+          <>
+            {/* Bi-Token Economy & Membership Status Section */}
+            <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Membership Status Card */}
           <div className="parchment-card p-8 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
@@ -1012,6 +1021,44 @@ export default function DashboardClient({ profile, initialOrders, recommendation
               )}
             </motion.div>
 
+            {/* My Manuscript Reports */}
+            {submissions && submissions.length > 0 && (
+              <motion.div 
+                variants={itemVariants}
+                className="parchment-card p-8"
+              >
+                <h3 className="font-bold text-ink mb-4 uppercase tracking-[0.2em] text-[10px] border-b border-sage/10 pb-3">My Manuscript Reports</h3>
+                <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                  {submissions.map((sub) => (
+                    <button
+                      key={sub.id}
+                      onClick={() => {
+                        if (sub.hasReport) {
+                          setSelectedReportId(sub.id);
+                        }
+                      }}
+                      disabled={!sub.hasReport}
+                      className={`w-full text-left p-3.5 rounded-xl border transition-all text-xs flex flex-col gap-1 ${
+                        sub.hasReport 
+                          ? 'border-sage/15 bg-white/40 hover:border-burgundy/25 hover:bg-white cursor-pointer' 
+                          : 'border-sage/5 bg-sage/5 opacity-50 cursor-not-allowed'
+                      }`}
+                    >
+                      <div className="font-bold text-ink truncate">{sub.title}</div>
+                      <div className="flex justify-between items-center text-[10px] text-ink/40 font-mono">
+                        <span className="capitalize">{sub.genre}</span>
+                        <span className={`px-2 py-0.5 rounded-full font-bold text-[8px] uppercase tracking-wider ${
+                          sub.hasReport ? 'bg-green-50 text-green-700 border border-green-150' : 'bg-ink/5 text-ink/45 border border-ink/10'
+                        }`}>
+                          {sub.hasReport ? 'Report Ready' : 'Pending Synthesis'}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
             {/* Referral Widget */}
             <motion.div variants={itemVariants} className="bg-burgundy text-cream p-8 rounded-[24px] shadow-xl relative overflow-hidden group border border-white/5">
               <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl group-hover:scale-110 transition-transform"></div>
@@ -1064,6 +1111,8 @@ export default function DashboardClient({ profile, initialOrders, recommendation
 
           </div>
         </div>
+          </>
+        )}
       </motion.div>
 
       {/* Onboarding Game Rules Portal */}
