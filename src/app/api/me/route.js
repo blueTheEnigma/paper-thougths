@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { syncOrCreateUser } from '@/lib/permissions';
+import { Database } from '@/lib/db';
+
 
 export async function GET() {
   try {

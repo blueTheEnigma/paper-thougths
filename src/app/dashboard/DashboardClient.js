@@ -802,7 +802,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                     <div className={`grid grid-cols-1 sm:grid-cols-2 ${profile.streak > 0 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4 sm:gap-6`}>
                       {/* Membership Status Card */}
                       <div className="parchment-card p-5 sm:p-8 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
-                        <div className="absolute top-0 right-0 p-4 opacity-5">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                           <Award size={120} />
                         </div>
                         <div className="relative z-10 space-y-4">
@@ -882,7 +882,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
 
                       {/* Spendable Leaves Card */}
                       <div className="parchment-card p-5 sm:p-8 flex flex-col justify-between group min-h-[220px]">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform pointer-events-none">
                           <Coins size={60} className="text-burgundy" />
                         </div>
                         <div className="space-y-4">
@@ -922,7 +922,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                       {/* Streak Card */}
                       {profile.streak > 0 && (
                         <div className="parchment-card p-5 sm:p-8 flex flex-col justify-between min-h-[220px] relative overflow-hidden group">
-                          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform pointer-events-none">
                             <Flame size={80} className="text-burgundy" />
                           </div>
                           <div className="space-y-4">
@@ -1382,7 +1382,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
 
                     {/* Blackbox Tracker */}
                     <div className="bg-ink text-cream p-5 sm:p-8 rounded-[24px] shadow-xl relative overflow-hidden group border border-white/5">
-                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform pointer-events-none">
                         <ShoppingBag size={120} />
                       </div>
                       <div className="relative z-10 h-full flex flex-col justify-between min-h-[160px]">
