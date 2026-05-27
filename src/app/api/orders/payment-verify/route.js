@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser } from '@/lib/permissions';
+import { sendEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -127,6 +128,60 @@ export async function POST(req) {
     } catch (e) {
       console.error('Failed to save order to local PostgreSQL database:', e);
       // We do not fail the request if local DB write fails, as the money was paid and sheets updated.
+    }
+
+    // 6. Send email notification to all admins with sales auth AND the buyer
+    try {
+      // Find all admins with 'view_sales_logs' permission
+      const admins = await Database.query(`
+        SELECT u.email FROM users u
+        JOIN user_permissions up ON u.id = up.user_id
+        JOIN permissions p ON p.id = up.permission_id
+        WHERE p.permission_key = 'view_sales_logs'
+      `);
+      const adminEmails = admins.map(a => a.email).filter(Boolean);
+
+      // Email to Admins
+      if (adminEmails.length > 0) {
+        await sendEmail({
+          to: adminEmails,
+          subject: `🚨 [New Sale Logged] Order ID: ${orderId}`,
+          html: `
+            <div style="font-family: sans-serif; padding: 20px; color: #1e1e1e; line-height: 1.6;">
+              <h2 style="color: #800020;">New Sale Confirmed via Paystack</h2>
+              <p><strong>Order ID:</strong> ${orderId}</p>
+              <p><strong>Customer Name:</strong> ${name || 'Guest Reader'}</p>
+              <p><strong>Customer Email:</strong> ${email || 'No email provided'}</p>
+              <p><strong>Items:</strong> ${itemsText}</p>
+              <p><strong>Total Paid:</strong> ₦${total}</p>
+              <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
+              <p style="font-size: 12px; color: #777;">This is an automated notification from the Paper Thoughts Archive.</p>
+            </div>
+          `
+        });
+      }
+
+      // Email to Buyer
+      if (email) {
+        await sendEmail({
+          to: email,
+          subject: `📚 Order Confirmed! ID: ${orderId} - Paper Thoughts Archive`,
+          html: `
+            <div style="font-family: sans-serif; padding: 20px; color: #1e1e1e; line-height: 1.6;">
+              <h2 style="color: #800020;">Thank you for your purchase!</h2>
+              <p>Hi ${name || 'Reader'}, your payment has been successfully processed and verified.</p>
+              <p><strong>Order ID:</strong> ${orderId}</p>
+              <p><strong>Items:</strong> ${itemsText}</p>
+              <p><strong>Total Paid:</strong> ₦${total}</p>
+              <p>Your books have been set aside. You can pick them up at our next <strong>Saturday meeting in Zaria</strong>.</p>
+              <br/>
+              <p>Warm regards,<br/>The Paper Thoughts Team</p>
+            </div>
+          `
+        });
+      }
+    } catch (e) {
+      console.error('Failed to send sales/buyer email notifications:', e);
     }
 
     return NextResponse.json({ success: true, orderId });

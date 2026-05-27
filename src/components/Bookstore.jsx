@@ -33,6 +33,7 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
   const [quote, setQuote] = useState('');
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [paymentSuccessOrder, setPaymentSuccessOrder] = useState(null);
+  const [paymentSuccessItems, setPaymentSuccessItems] = useState([]);
 
   useEffect(() => {
     setMounted(true);
@@ -225,6 +226,7 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
             const verifyData = await verifyRes.json();
 
             if (verifyData.success) {
+              setPaymentSuccessItems([...bag]);
               setPaymentSuccessOrder(verifyData.orderId);
               clearBag();
               setIsBagOpen(false);
@@ -750,9 +752,26 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
                   <br/><br/>
                   We have set your books aside. You can pick them up at the next <strong>Saturday meeting in Zaria</strong>.
                 </p>
+
+                {/* WhatsApp Notify Dispatch Action */}
+                {paymentSuccessItems.length > 0 && (
+                  <a 
+                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                      `Hi! I just purchased the book(s): *${paymentSuccessItems.map(i => i.title).join(', ')}* (Order ID: *${paymentSuccessOrder}*). Please verify the payment and list them for Saturday dispatch!`
+                    )}`}
+                    target="_blank" rel="noreferrer"
+                    className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-4 rounded-xl font-bold transition-all shadow-lg mb-3 active:scale-95 text-sm cursor-pointer"
+                  >
+                    <WhatsAppIcon size={18} /> Notify Dispatch
+                  </a>
+                )}
+
                 <button 
-                  onClick={() => setPaymentSuccessOrder(null)}
-                  className="w-full bg-burgundy hover:bg-ink text-cream py-4 rounded-xl font-bold transition-all shadow-lg active:scale-95 cursor-pointer text-sm"
+                  onClick={() => {
+                    setPaymentSuccessOrder(null);
+                    setPaymentSuccessItems([]);
+                  }}
+                  className="w-full bg-white hover:bg-sage/10 text-ink border border-sage/30 py-4 rounded-xl font-bold transition-all shadow-sm active:scale-95 cursor-pointer text-sm"
                 >
                   Return to Archive
                 </button>

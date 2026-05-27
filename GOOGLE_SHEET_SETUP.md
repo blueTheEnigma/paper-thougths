@@ -101,9 +101,27 @@ function handleDeleteOrder(data, ss) {
   
   var orderId = data.orderId;
   var orderData = sheet.getDataRange().getValues();
+  var archiveSheet = ss.getSheetByName("Archive");
   
   for (var i = 1; i < orderData.length; i++) {
     if (orderData[i][8] == orderId) {
+      // 1. Revert book statuses to "Available" if Archive sheet exists
+      if (archiveSheet) {
+        var itemsText = orderData[i][3]; // Column D is index 3
+        var bookTitles = itemsText.split(", ").map(function(s) { 
+          return s.split(" (")[0].toLowerCase().trim(); 
+        });
+        
+        var archiveData = archiveSheet.getDataRange().getValues();
+        for (var j = 3; j < archiveData.length; j++) {
+          var title = archiveData[j][1].toString().toLowerCase().trim();
+          if (bookTitles.indexOf(title) !== -1) {
+            archiveSheet.getRange(j + 1, 6).setValue("Available"); // Column F is index 5
+          }
+        }
+      }
+      
+      // 2. Delete the order row
       sheet.deleteRow(i + 1);
       return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
     }
