@@ -16,54 +16,63 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'No email address found for user' }, { status: 400 });
     }
 
+    // Always sync/create the user in the local database first
+    let dbUser = null;
+    try {
+      dbUser = await syncOrCreateUser(user);
+    } catch (dbErr) {
+      console.error("Failed to sync user to DB in /api/me:", dbErr);
+    }
+
+    // Try fetching profile from Google Apps Script
+    let gasProfile = null;
     const gasUrl = process.env.GAS_WEBAPP_URL;
     
-    if (!gasUrl) {
-      return NextResponse.json({ success: false, error: 'Server configuration error' }, { status: 500 });
-    }
+    if (gasUrl) {
+      try {
+        const response = await fetch(gasUrl, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'getProfile', email: emailAddress }),
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store'
+        });
 
-    const payload = {
-      action: 'getProfile',
-      email: emailAddress
-    };
-
-    const response = await fetch(gasUrl, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store' // Always fetch fresh profile
-    });
-
-    const rawResponse = await response.text();
-
-    if (!response.ok) {
-      return NextResponse.json({ success: false, error: `Backend returned ${response.status}` }, { status: response.status });
-    }
-
-    try {
-      const result = JSON.parse(rawResponse);
-      
-      if (result.success && result.profile) {
-        // Sync & fetch PostgreSQL user stats
-        try {
-          const dbUser = await syncOrCreateUser(user);
-          if (dbUser) {
-            result.profile.spendableLeaves = parseInt(dbUser.spendable_leaves || 0);
-            result.profile.lifetimeLeaves = parseInt(dbUser.lifetime_leaves || 0);
-            result.profile.lkid = dbUser.lk_id || result.profile.lkid || 'Guest';
+        if (response.ok) {
+          const rawResponse = await response.text();
+          try {
+            const result = JSON.parse(rawResponse);
+            if (result.success && result.profile) {
+              gasProfile = result.profile;
+            }
+          } catch (parseError) {
+            console.error("Failed to parse GAS profile response:", parseError);
           }
-        } catch (dbErr) {
-          console.error("Failed to merge DB stats to /api/me profile:", dbErr);
         }
+      } catch (gasErr) {
+        console.error("GAS profile fetch failed:", gasErr);
       }
-
-      return NextResponse.json(result);
-    } catch (parseError) {
-      return NextResponse.json({ success: false, error: 'Malformed response from backend' }, { status: 500 });
     }
+
+    // Build a unified profile — GAS profile as base, DB stats merged on top
+    // If GAS fails, we still return a minimal profile from the DB so the user
+    // is recognized as a member in the Bookstore and can use leaves.
+    const profile = gasProfile || {};
+    
+    // Always set the email (GAS might not include it)
+    profile.email = emailAddress;
+    profile.name = profile.name || dbUser?.full_name || user.firstName || 'Member';
+
+    // Merge DB stats
+    if (dbUser) {
+      profile.spendableLeaves = parseInt(dbUser.spendable_leaves || 0);
+      profile.lifetimeLeaves = parseInt(dbUser.lifetime_leaves || 0);
+      profile.lkid = dbUser.lk_id || profile.lkid || 'Guest';
+      profile.tier = profile.tier || (parseFloat(dbUser.milestone_tokens || 0) >= 10.0 ? 'Keeper' : 'Reader');
+    }
+
+    return NextResponse.json({ success: true, profile });
   } catch (error) {
+    console.error("/api/me unexpected error:", error);
     return NextResponse.json({ success: false, error: error.message || 'Failed to fetch profile' }, { status: 500 });
   }
 }
