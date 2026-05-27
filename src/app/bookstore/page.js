@@ -10,5 +10,6 @@ export const dynamic = 'force-dynamic';
 
 export default async function BookstorePage() {
   const books = await getBooks();
-  return <Bookstore initialBooks={books} />;
+  const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+  return <Bookstore initialBooks={books} paystackPublicKey={paystackPublicKey} />;
 }

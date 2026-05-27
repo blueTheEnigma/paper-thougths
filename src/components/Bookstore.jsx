@@ -7,7 +7,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 const WHATSAPP_NUMBER = "2348109546849";
 const CHECKOUT_URL = "https://docs.google.com/forms/d/e/1FAIpQLSchF6OdKRpWyjDZ7NxFLzyuAbaTLmd_11Dnn4eCiKz_HbyKkw/viewform?usp=header";
 
-export default function Bookstore({ initialBooks }) {
+const WhatsAppIcon = ({ size = 18, className = "" }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    width={size} 
+    height={size} 
+    className={className} 
+    fill="currentColor"
+  >
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.455 5.703 1.456h.004c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
+
+export default function Bookstore({ initialBooks, paystackPublicKey }) {
   const [activeGenre, setActiveGenre] = useState('All');
   const [search, setSearch] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
@@ -19,6 +31,8 @@ export default function Bookstore({ initialBooks }) {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [quote, setQuote] = useState('');
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [paymentSuccessOrder, setPaymentSuccessOrder] = useState(null);
 
   useEffect(() => {
     setMounted(true);
@@ -31,6 +45,15 @@ export default function Bookstore({ initialBooks }) {
       } catch (e) {
         console.error("Failed to parse bag", e);
       }
+    }
+
+    // Load Paystack inline script dynamically if not already loaded
+    if (typeof window !== 'undefined' && !window.PaystackPop) {
+      const script = document.createElement('script');
+      script.src = 'https://js.paystack.co/v1/inline.js';
+      script.async = true;
+      script.id = 'paystack-inline-js';
+      document.body.appendChild(script);
     }
   }, []);
 
@@ -160,52 +183,70 @@ export default function Bookstore({ initialBooks }) {
 
   const handleBagCheckout = async () => {
     if (bag.length === 0 || isCheckingOut) return;
-    
+
+    if (!window.PaystackPop) {
+      alert("Payment checkout is loading. Please wait a moment.");
+      return;
+    }
+
     setIsCheckingOut(true);
-    
-    // Log the order to the backend first
+
     try {
-      await fetch('/api/orders', {
-        method: 'POST',
-        body: JSON.stringify({
-          lkid: profile?.lkid || "Guest",
-          name: profile?.name || "Guest Reader",
-          items: bag.map(i => ({ title: i.title, price: i.price })),
-          subtotal,
-          discount,
-          total
-        }),
-        headers: { 'Content-Type': 'application/json' }
+      const paystackKey = paystackPublicKey || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+      if (!paystackKey) {
+        alert("Paystack Public Key is not configured. Please make sure NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY is set in your environment variables.");
+        setIsCheckingOut(false);
+        return;
+      }
+      const handler = window.PaystackPop.setup({
+        key: paystackKey,
+        email: profile?.email || 'guest@paperthoughts.org',
+        amount: total * 100, // Paystack amount is in kobo
+        currency: 'NGN',
+        ref: 'PT-' + Math.floor((Math.random() * 1000000000) + 1),
+        callback: async function(response) {
+          try {
+            const verifyRes = await fetch('/api/orders/payment-verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                reference: response.reference,
+                lkid: profile?.lkid || 'Guest',
+                name: profile?.name || 'Guest Reader',
+                email: profile?.email || 'guest@paperthoughts.org',
+                items: bag.map(i => ({ title: i.title, price: i.price })),
+                subtotal,
+                discount,
+                total
+              })
+            });
+            
+            const verifyData = await verifyRes.json();
+            
+            if (verifyData.success) {
+              setPaymentSuccessOrder(verifyData.orderId);
+              clearBag();
+              setIsBagOpen(false);
+            } else {
+              alert(verifyData.error || 'Failed to verify transaction. Please contact support.');
+            }
+          } catch (e) {
+            console.error('Failed to verify payment', e);
+            alert('A connection error occurred during verification. Please contact support with reference: ' + response.reference);
+          } finally {
+            setIsCheckingOut(false);
+          }
+        },
+        onClose: function() {
+          setIsCheckingOut(false);
+        }
       });
-    } catch (e) {
-      console.error("Failed to log order but proceeding to WhatsApp", e);
+      handler.openIframe();
+    } catch (err) {
+      console.error('Paystack setup error:', err);
+      setIsCheckingOut(false);
+      alert('Failed to initialize checkout.');
     }
-    
-    let message = `*Order Request - Paper Thoughts Archive*\n\n`;
-    if (profile) {
-      message += `*Member:* ${profile.name}\n*LK-ID:* ${profile.lkid}\n\n`;
-    }
-    
-    message += `*Items:*\n`;
-    bag.forEach((item, index) => {
-      message += `${index + 1}. ${item.title} (₦${parseInt(item.price).toLocaleString()})\n`;
-    });
-    
-    message += `\n*Subtotal:* ₦${subtotal.toLocaleString()}`;
-    if (discount > 0) {
-      message += `\n*Member Discount (${discountPercent * 100}%):* -₦${discount.toLocaleString()}`;
-      message += `\n*Final Total:* ₦${total.toLocaleString()}`;
-    } else {
-      message += `\n*Total:* ₦${total.toLocaleString()}`;
-    }
-    
-    message += `\n\n*Delivery:* Saturday @ Zaria Meeting`;
-    message += `\n*Note:* I'll be picking these up at the next Paper Thoughts gathering.`;
-    
-    message += `\n\n_Please confirm availability and delivery details._`;
-    
-    setIsCheckingOut(false);
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const RatingDots = ({ rating }) => {
@@ -584,11 +625,11 @@ export default function Bookstore({ initialBooks }) {
                         {isCheckingOut ? (
                           <>
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            Logging Order...
+                            Processing...
                           </>
                         ) : (
                           <>
-                            <MessageCircle size={20} /> Checkout via WhatsApp
+                            <ShoppingBag size={20} /> Pay Online with Paystack
                           </>
                         )}
                       </button>
@@ -666,10 +707,50 @@ export default function Bookstore({ initialBooks }) {
                       target="_blank" rel="noreferrer"
                       className="flex-1 flex justify-center items-center gap-2 bg-white text-ink border border-sage/30 py-4 rounded-xl font-bold hover:bg-sage/10 transition-colors"
                     >
-                      <MessageCircle size={18} /> Buy Now
+                      <WhatsAppIcon size={18} /> Buy Now
                     </a>
                   </div>
                 </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Paystack Payment Success Modal */}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {paymentSuccessOrder && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-ink/75 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 30 }} 
+                animate={{ opacity: 1, scale: 1, y: 0 }} 
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-md bg-[#FFF5EC] rounded-3xl p-8 border border-sage/20 shadow-2xl text-center z-10"
+              >
+                <div className="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-200 shadow-inner">
+                  <ShoppingBag size={28} />
+                </div>
+                <h3 className="text-3xl font-display text-burgundy font-bold mb-2">Payment Successful!</h3>
+                <p className="text-xs font-mono uppercase tracking-widest text-accent font-bold mb-4">Order ID: {paymentSuccessOrder}</p>
+                <p className="text-sm text-ink/75 leading-relaxed mb-6 font-serif">
+                  Thank you for paying it forward! Your books have been successfully purchased and logged in the Archive.
+                  <br/><br/>
+                  We have set your books aside. You can pick them up at the next <strong>Saturday meeting in Zaria</strong>.
+                </p>
+                <button 
+                  onClick={() => setPaymentSuccessOrder(null)}
+                  className="w-full bg-burgundy hover:bg-ink text-cream py-4 rounded-xl font-bold transition-all shadow-lg active:scale-95 cursor-pointer text-sm"
+                >
+                  Return to Archive
+                </button>
               </motion.div>
             </div>
           )}
