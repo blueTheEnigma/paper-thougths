@@ -47,10 +47,10 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
       }
     }
 
-    // Load Paystack inline script dynamically if not already loaded
-    if (typeof window !== 'undefined' && !window.PaystackPop) {
+    // Load Paystack Inline V2 script dynamically if not already loaded
+    if (typeof window !== 'undefined' && !document.getElementById('paystack-inline-js')) {
       const script = document.createElement('script');
-      script.src = 'https://js.paystack.co/v1/inline.js';
+      script.src = 'https://js.paystack.co/v2/inline.js';
       script.async = true;
       script.id = 'paystack-inline-js';
       document.body.appendChild(script);
@@ -184,33 +184,34 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
   const handleBagCheckout = async () => {
     if (bag.length === 0 || isCheckingOut) return;
 
-    if (!window.PaystackPop) {
-      alert("Payment checkout is loading. Please wait a moment.");
+    if (typeof window === 'undefined' || !window.PaystackPop) {
+      alert("Payment checkout is still loading. Please wait a moment and try again.");
+      return;
+    }
+
+    const paystackKey = paystackPublicKey || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+    if (!paystackKey) {
+      alert("Paystack is not configured. Please contact the site administrator.");
       return;
     }
 
     setIsCheckingOut(true);
 
     try {
-      const paystackKey = paystackPublicKey || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
-      if (!paystackKey) {
-        alert("Paystack Public Key is not configured. Please make sure NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY is set in your environment variables.");
-        setIsCheckingOut(false);
-        return;
-      }
-      const handler = window.PaystackPop.setup({
+      const popup = new window.PaystackPop();
+      popup.newTransaction({
         key: paystackKey,
         email: profile?.email || 'guest@paperthoughts.org',
         amount: total * 100, // Paystack amount is in kobo
         currency: 'NGN',
         ref: 'PT-' + Math.floor((Math.random() * 1000000000) + 1),
-        callback: async function(response) {
+        onSuccess: async (transaction) => {
           try {
             const verifyRes = await fetch('/api/orders/payment-verify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                reference: response.reference,
+                reference: transaction.reference,
                 lkid: profile?.lkid || 'Guest',
                 name: profile?.name || 'Guest Reader',
                 email: profile?.email || 'guest@paperthoughts.org',
@@ -220,9 +221,9 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
                 total
               })
             });
-            
+
             const verifyData = await verifyRes.json();
-            
+
             if (verifyData.success) {
               setPaymentSuccessOrder(verifyData.orderId);
               clearBag();
@@ -232,20 +233,24 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
             }
           } catch (e) {
             console.error('Failed to verify payment', e);
-            alert('A connection error occurred during verification. Please contact support with reference: ' + response.reference);
+            alert('A connection error occurred during verification. Please contact support with reference: ' + transaction.reference);
           } finally {
             setIsCheckingOut(false);
           }
         },
-        onClose: function() {
+        onCancel: () => {
           setIsCheckingOut(false);
+        },
+        onError: (error) => {
+          console.error('Paystack transaction error:', error);
+          setIsCheckingOut(false);
+          alert('An error occurred during payment. Please try again.');
         }
       });
-      handler.openIframe();
     } catch (err) {
-      console.error('Paystack setup error:', err);
+      console.error('Paystack initialization error:', err);
       setIsCheckingOut(false);
-      alert('Failed to initialize checkout.');
+      alert('Failed to initialize checkout. Please refresh the page and try again.');
     }
   };
 
