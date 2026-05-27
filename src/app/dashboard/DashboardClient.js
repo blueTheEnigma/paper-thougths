@@ -146,7 +146,7 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="w-full bg-[#1b0610]/80 border border-sage/20 rounded-[28px] p-5 sm:p-7 text-left space-y-5 mb-8 shadow-xl max-w-xl animate-pulse-subtle"
+              className="w-full bg-[#1b0610]/80 border border-sage/20 rounded-[28px] p-5 sm:p-7 text-left space-y-5 mb-8 shadow-xl max-w-2xl animate-pulse-subtle"
             >
               <h3 className="text-xs font-bold uppercase tracking-widest text-[#F2A98A] border-b border-sage/10 pb-2 text-center sm:text-left font-sans">
                 ARCHIVE RULES & ECONOMY
@@ -158,10 +158,10 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
                   <h4 className="text-xs font-bold uppercase tracking-wide text-primary flex items-center gap-1.5 font-sans">
                     <Award size={14} /> Milestone Tokens
                   </h4>
-                  <p className="text-xs sm:text-sm text-cream/90 font-serif leading-relaxed">
+                  <p className="text-[11px] sm:text-xs text-cream/90 font-serif leading-relaxed">
                     Power your journey to unlock the <strong>Keeper</strong> tier ({discountPercent} discount on all books for 90 days). Earn tokens by completing activities:
                   </p>
-                  <ul className="text-[11px] sm:text-xs text-cream/85 font-serif list-disc pl-4 space-y-1.5">
+                  <ul className="text-[10px] sm:text-[11px] text-cream/85 font-serif list-disc pl-4 space-y-1.5">
                     <li><strong>Peer Critique</strong>: Submit detailed reviews (<strong>+1.0 Token</strong>, or <strong>+1.5 Tokens</strong> for early-birds).</li>
                     <li><strong>Weekly Submission</strong>: Write weekly prompt responses (<strong>+1.0 Token</strong>).</li>
                     <li><strong>Invite Readers</strong>: Refer friends (<strong>+1.2 Tokens</strong> per referral, up to your first 5).</li>
@@ -171,14 +171,19 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
                 {/* Spendable Leaves Column */}
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold uppercase tracking-wide text-[#FF8D5C] flex items-center gap-1.5 font-sans">
-                    <Coins size={14} /> Paper Leaves
+                    <Coins size={14} /> Paper Leaves (Save to Buy)
                   </h4>
-                  <p className="text-xs sm:text-sm text-cream/90 font-serif leading-relaxed">
-                    Your spendable currency. <strong>Leaves can only be earned from peer critiques</strong> (<strong>+10 Leaves</strong>, or <strong>+15 Leaves</strong> for early-birds), capped at 3 rewarded critiques per week:
+                  <p className="text-[11px] sm:text-xs text-cream/90 font-serif leading-relaxed font-semibold" style={{ color: '#F2A98A' }}>
+                    1 Leaf = ₦10 at checkout. Spend leaves to buy physical books!
                   </p>
-                  <ul className="text-[11px] sm:text-xs text-cream/85 font-serif list-disc pl-4 space-y-1.5">
-                    <li>Donate leaves to your <strong>Chapter Pool</strong> to fund book vouchers for your local chapter!</li>
-                    <li>Vouchers are automatically generated when the pool crosses 500 leaves to pay it forward.</li>
+                  <p className="text-[11px] sm:text-xs text-cream/80 font-serif leading-relaxed">
+                    Accumulate leaves to discount or fully buy books. Grow your balance by:
+                  </p>
+                  <ul className="text-[10px] sm:text-[11px] text-cream/85 font-serif list-disc pl-4 space-y-1.5">
+                    <li><strong>Peer Critique</strong>: Earn leaves per critique (<strong>+10 Leaves</strong>, or <strong>+15 Leaves</strong> for early-birds, capped at 3 reviews/week).</li>
+                    <li><strong>Weekly Submission</strong>: Respond to weekly writing prompts (<strong>+5 Leaves</strong> for your first submission of the week).</li>
+                    <li><strong>Buy Bundles</strong>: Purchase bundles of leaves (e.g. 50, 100, 200, or 500 leaves) directly from your dashboard using Paystack.</li>
+                    <li><strong>Chapter Pool</strong>: Share the love by donating to your chapter's book pool to fund vouchers for your community.</li>
                   </ul>
                 </div>
               </div>
@@ -961,13 +966,21 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                     {/* Paper Leaves */}
                     <div className="space-y-1.5">
                       <h4 className="text-xs font-bold text-sage uppercase tracking-wider flex items-center gap-1.5 font-sans">
-                        <Coins size={14} className="text-sage" /> Paper Leaves Economy
+                        <Coins size={14} className="text-sage" /> Paper Leaves (Save to Buy)
                       </h4>
-                      <p className="text-xs text-ink/85 leading-relaxed font-serif font-medium">
-                        Spendable currency. <strong>Paper Leaves can only be earned from peer critiques</strong> (<strong>+10 Paper Leaves</strong>, or <strong>+15 Paper Leaves</strong> for early-birds), and rewards are capped after 3 reviews per week to avoid spamming. Submissions and referrals do not earn leaves.
+                      <p className="text-xs text-ink/85 leading-relaxed font-serif font-semibold text-accent">
+                        1 Leaf = ₦10 at checkout. Spend leaves to buy physical books!
                       </p>
-                      <p className="text-[11px] text-ink/70 font-serif italic">
-                        Donate leaves to the <strong>Chapter Book Pool</strong> to pay it forward and fund book bundles for your local chapter!
+                      <p className="text-xs text-ink/85 leading-relaxed font-serif font-medium">
+                        Your spendable currency to discount or fully buy physical books. Accumulate leaves by:
+                      </p>
+                      <ul className="text-xs text-ink/80 font-serif list-disc pl-4 space-y-1.5">
+                        <li><strong>Peer Critique</strong>: Earn <strong>+10 Leaves</strong> (or <strong>+15 Leaves</strong> for early-birds), capped at 3 rewarded critiques per week.</li>
+                        <li><strong>Weekly Submission</strong>: Earn <strong>+5 Leaves</strong> for your first prompt submission of the week.</li>
+                        <li><strong>Buy Bundles</strong>: Buy leaf bundles (50, 100, 200, or 500 leaves) instantly via Paystack.</li>
+                      </ul>
+                      <p className="text-[11px] text-ink/70 font-serif italic mt-2">
+                        You can also donate leaves to your <strong>Chapter Book Pool</strong> to generate book vouchers for chapter events!
                       </p>
                     </div>
                   </div>

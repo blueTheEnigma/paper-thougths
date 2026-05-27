@@ -672,35 +672,34 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
                           <span className="flex items-center gap-1.5">🍃 Save to Buy (Leaves)</span>
                           <span>{profile?.spendableLeaves || 0} Available</span>
                         </div>
-                        {(profile?.spendableLeaves || 0) > 0 ? (
-                          <>
-                            <p className="text-[11px] text-ink/70 font-serif leading-relaxed">
-                              Apply leaves to cover the book cost (1 leaf = ₦10).
-                            </p>
-                            <div className="flex items-stretch gap-2">
-                              <input
-                                type="number"
-                                min="0"
-                                max={maxLeavesPossible}
-                                value={leavesToUse || ''}
-                                onChange={(e) => {
-                                  const val = Math.min(maxLeavesPossible, Math.max(0, parseInt(e.target.value) || 0));
-                                  setLeavesToUse(val);
-                                }}
-                                className="w-full bg-cream border border-sage/30 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accent font-medium text-ink font-mono"
-                                placeholder="Leaves to apply..."
-                              />
-                              <button
-                                onClick={() => setLeavesToUse(maxLeavesPossible)}
-                                className="bg-burgundy text-cream px-3.5 rounded-xl text-[10px] font-sans font-bold hover:bg-ink transition-colors uppercase tracking-wider shrink-0 cursor-pointer"
-                              >
-                                Apply Max
-                              </button>
-                            </div>
-                          </>
-                        ) : (
-                          <p className="text-[11px] text-burgundy/80 font-serif leading-relaxed italic">
-                            You have 0 leaves. You can earn leaves from peer reviews, or buy bundles on your <a href="/dashboard" className="underline font-bold">Member Dashboard</a>.
+                        <p className="text-[11px] text-ink/70 font-serif leading-relaxed">
+                          Apply leaves to cover the book cost (1 leaf = ₦10).
+                        </p>
+                        <div className="flex items-stretch gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            max={maxLeavesPossible}
+                            value={leavesToUse || ''}
+                            disabled={(profile?.spendableLeaves || 0) === 0}
+                            onChange={(e) => {
+                              const val = Math.min(maxLeavesPossible, Math.max(0, parseInt(e.target.value) || 0));
+                              setLeavesToUse(val);
+                            }}
+                            className={`w-full bg-cream border border-sage/30 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accent font-medium text-ink font-mono ${(profile?.spendableLeaves || 0) === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            placeholder={(profile?.spendableLeaves || 0) === 0 ? "You have 0 leaves" : "Leaves to apply..."}
+                          />
+                          <button
+                            onClick={() => setLeavesToUse(maxLeavesPossible)}
+                            disabled={(profile?.spendableLeaves || 0) === 0}
+                            className="bg-burgundy text-cream px-3.5 rounded-xl text-[10px] font-sans font-bold hover:bg-ink transition-colors uppercase tracking-wider shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Apply Max
+                          </button>
+                        </div>
+                        {(profile?.spendableLeaves || 0) === 0 && (
+                          <p className="text-[10px] text-burgundy/85 font-serif leading-relaxed italic">
+                            You have 0 leaves. You can earn leaves from peer reviews (+10/critique) or prompt submissions (+5/first weekly submission), or buy bundles instantly on your <a href="/dashboard" className="underline font-bold hover:text-burgundy">Member Dashboard</a>.
                           </p>
                         )}
                       </div>
