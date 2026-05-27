@@ -228,7 +228,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview'); // Tab state: 'overview' or 'leaderboard'
+  const [activeTab, setActiveTab] = useState('overview'); // Tab state: 'overview', 'workspaces', 'ledger', 'honors'
   
   // Local States for Bi-token economy
   const [spendableLeaves, setSpendableLeaves] = useState(profile?.spendableLeaves || 0);
@@ -730,11 +730,11 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         ) : (
           <div className="space-y-8">
             {/* Tab Selection Navigation */}
-            <div className="flex border-b border-sage/15 gap-8">
+            <div className="flex border-b border-sage/15 gap-4 sm:gap-8 overflow-x-auto scrollbar-hide flex-nowrap pb-px">
               <button
                 type="button"
                 onClick={() => setActiveTab('overview')}
-                className={`pb-3 text-sm font-sans font-bold uppercase tracking-wider relative transition-colors cursor-pointer ${
+                className={`pb-3 text-xs sm:text-sm font-sans font-bold uppercase tracking-wider relative transition-colors cursor-pointer flex-shrink-0 ${
                   activeTab === 'overview' ? 'text-burgundy' : 'text-ink/40 hover:text-ink/75'
                 }`}
               >
@@ -743,600 +743,684 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                   <motion.div layoutId="dashboard-tab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
                 )}
               </button>
+
               <button
                 type="button"
-                onClick={() => setActiveTab('leaderboard')}
-                className={`pb-3 text-sm font-sans font-bold uppercase tracking-wider relative transition-colors flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'leaderboard' ? 'text-burgundy' : 'text-ink/40 hover:text-ink/75'
+                onClick={() => setActiveTab('workspaces')}
+                className={`pb-3 text-xs sm:text-sm font-sans font-bold uppercase tracking-wider relative transition-colors cursor-pointer flex-shrink-0 flex items-center gap-1.5 ${
+                  activeTab === 'workspaces' ? 'text-burgundy' : 'text-ink/40 hover:text-ink/75'
                 }`}
               >
-                <Award size={16} className={activeTab === 'leaderboard' ? 'text-burgundy' : 'text-ink/40'} />
+                <BookOpen size={16} className={activeTab === 'workspaces' ? 'text-burgundy' : 'text-ink/40'} />
+                Workspaces
+                {activeTab === 'workspaces' && (
+                  <motion.div layoutId="dashboard-tab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('ledger')}
+                className={`pb-3 text-xs sm:text-sm font-sans font-bold uppercase tracking-wider relative transition-colors cursor-pointer flex-shrink-0 flex items-center gap-1.5 ${
+                  activeTab === 'ledger' ? 'text-burgundy' : 'text-ink/40 hover:text-ink/75'
+                }`}
+              >
+                <Coins size={16} className={activeTab === 'ledger' ? 'text-burgundy' : 'text-ink/40'} />
+                Ledger & Pool
+                {activeTab === 'ledger' && (
+                  <motion.div layoutId="dashboard-tab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('honors')}
+                className={`pb-3 text-xs sm:text-sm font-sans font-bold uppercase tracking-wider relative transition-colors cursor-pointer flex-shrink-0 flex items-center gap-1.5 ${
+                  activeTab === 'honors' ? 'text-burgundy' : 'text-ink/40 hover:text-ink/75'
+                }`}
+              >
+                <Award size={16} className={activeTab === 'honors' ? 'text-burgundy' : 'text-ink/40'} />
                 Clubhouse Honors
-                {activeTab === 'leaderboard' && (
+                {activeTab === 'honors' && (
                   <motion.div layoutId="dashboard-tab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
                 )}
               </button>
             </div>
 
-            {activeTab === 'overview' ? (
-              <div className="space-y-8">
-                {/* Bi-Token Economy & Membership Status Section */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Membership Status Card */}
-          <div className="parchment-card p-8 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-              <Award size={120} />
-            </div>
-            <div className="relative z-10 space-y-4">
-              <div>
-                <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Membership Status</h3>
-                <div className="flex flex-wrap items-baseline gap-2 mt-1">
-                  <h2 className="text-4xl font-display font-extrabold text-burgundy leading-none tracking-tight">{profile.tier}</h2>
-                  {isKeeper && (
-                    <span className="bg-sage/10 text-sage font-bold text-[8px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-sage/20">
-                      Unlocked
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {isKeeper ? (
-                <div className="bg-primary/5 border border-primary/15 rounded-xl p-3.5 space-y-2.5">
-                   <h4 className="font-bold text-burgundy flex items-center gap-1.5 text-xs font-sans"><Ticket size={14}/> {discountPercent} Discount</h4>
-                   
-                   <div className="flex items-center gap-2 bg-white/70 p-1.5 pl-3 rounded-lg border border-sage/15">
-                      <span className="font-mono text-sm font-bold text-ink tracking-wider flex-1">{profile.lkid}</span>
-                      <button onClick={copyDiscountCode} className="bg-sage/10 hover:bg-sage/25 text-ink px-3 py-1.5 rounded text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer">
-                         {copiedCode ? <CheckCircle2 size={12} className="text-sage"/> : <Copy size={12}/>}
-                         {copiedCode ? "Copied" : "Copy"}
-                      </button>
-                   </div>
-                </div>
-              ) : (
-                <div className="bg-ink/5 rounded-xl p-4 border border-sage/10">
-                  <p className="text-xs sm:text-sm text-ink/85 leading-relaxed font-serif">
-                    Upgrade to <strong>Keeper</strong> to unlock your {discountPercent} discount on all books for 90 days and exclusive Archive access.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Milestone Tokens Circle Progress Card */}
-          <div className="parchment-card p-8 flex items-center justify-between relative group min-h-[220px]">
-            <div className="space-y-3">
-              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Milestone Tokens</span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-5xl font-display text-burgundy font-extrabold font-serif">{milestoneTokens.toFixed(1)}</span>
-                <span className="text-sm font-bold text-ink/40">/ {tokenGoal}</span>
-              </div>
-              <p className="text-xs text-ink/60 leading-relaxed max-w-[160px] font-serif font-medium">
-                Earned via reviews, submissions, and referrals. 10.0 unlocks Keeper.
-              </p>
-            </div>
-            
-            <div className="relative w-20 h-20 flex items-center justify-center flex-shrink-0">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle 
-                  cx="40" 
-                  cy="40" 
-                  r={radius} 
-                  stroke="#E8DFC9" 
-                  strokeWidth="6" 
-                  fill="transparent" 
-                />
-                <motion.circle 
-                  cx="40" 
-                  cy="40" 
-                  r={radius} 
-                  stroke="#5C1A2E" 
-                  strokeWidth="6" 
-                  fill="transparent" 
-                  strokeDasharray={circumference}
-                  initial={{ strokeDashoffset: circumference }}
-                  animate={{ strokeDashoffset }}
-                  transition={{ duration: 1.2, ease: "easeOut" }}
-                />
-              </svg>
-              <div className="absolute text-xs font-sans font-extrabold text-burgundy">{tokenPercent.toFixed(0)}%</div>
-            </div>
-          </div>
-
-          {/* Spendable Leaves Card */}
-          <div className="parchment-card p-8 flex flex-col justify-between group min-h-[220px]">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform">
-              <Coins size={60} className="text-burgundy" />
-            </div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Spendable Leaves</span>
-                  <div className="text-4xl font-display text-burgundy font-extrabold mt-1">{spendableLeaves} <span className="text-2xl">🍃</span></div>
-                </div>
-                <button
-                  onClick={() => setShowBuyLeavesModal(true)}
-                  className="bg-burgundy text-cream text-[10px] font-sans font-bold px-3 py-1.5 rounded-lg hover:bg-ink transition-colors uppercase tracking-wider mt-1.5 cursor-pointer shadow-sm active:scale-95"
-                >
-                  Buy Leaves
-                </button>
-              </div>
-              
-              {/* Lifetime Leaves / Mystery Package Progression */}
-              <div className="border-t border-sage/10 pt-3.5">
-                <div className="flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/50 mb-1.5">
-                  <span className="flex items-center gap-1"><Gift size={11} className="text-accent" /> Next Mystery Gift</span>
-                  <span>{lifetimeLeaves % 500} / 500 🍃</span>
-                </div>
-                <div className="w-full bg-[#E8DFC9] rounded-full h-2 relative overflow-hidden border border-sage/5">
-                  <div 
-                    className="bg-accent h-2 rounded-full transition-all duration-1000 shadow-sm" 
-                    style={{ width: `${((lifetimeLeaves % 500) / 500) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between items-center text-[9px] text-ink/45 mt-1 font-serif">
-                  <span>Lifetime: {lifetimeLeaves} leaves</span>
-                  <span className="font-bold text-accent italic">🎁 Secret reward at 500</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Workspace Hub Cards */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Writing Workspace Card */}
-          <Link href="/dashboard/write" className="group">
-            <div className="parchment-card p-8 flex flex-col justify-between h-56 relative group transition-all duration-300">
-              <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all"></div>
-              
-              <div className="flex justify-between items-start">
-                <div className="bg-primary/5 text-burgundy p-3.5 rounded-2xl border border-primary/10 group-hover:bg-primary/10 transition-colors">
-                  <Flame size={24} className={profile.streak > 0 ? "animate-pulse text-burgundy" : ""} />
-                </div>
-                {profile.streak > 0 && (
-                  <span className="bg-primary/10 text-burgundy text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-primary/20">
-                    🔥 {profile.streak} Week Streak
-                  </span>
-                )}
-              </div>
-
-              <div>
-                <h3 className="text-xl font-display font-extrabold text-burgundy group-hover:text-accent transition-colors flex items-center gap-1.5">
-                  Writing Workspace <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                </h3>
-                <p className="text-xs sm:text-sm text-ink/60 mt-2 leading-relaxed">
-                  Compose and save offline-capable draft submissions for the weekly prompt. Syncs seamlessly online.
-                </p>
-              </div>
-            </div>
-          </Link>
-
-          {/* Critique Workspace Card */}
-          <Link href="/dashboard/review" className="group">
-            <div className="parchment-card p-8 flex flex-col justify-between h-56 relative group transition-all duration-300">
-              <div className="absolute -top-10 -right-10 w-32 h-32 bg-sage/5 rounded-full blur-2xl group-hover:bg-sage/10 transition-all"></div>
-              
-              <div className="flex justify-between items-start">
-                <div className="bg-sage/5 text-sage p-3.5 rounded-2xl border border-sage/10 group-hover:bg-sage/10 transition-colors">
-                  <MessageSquare size={24} />
-                </div>
-                <span className="bg-sage/10 text-sage text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-sage/20">
-                  📚 {profile.weeklyReviews} / 3 Rewarded Crits
-                </span>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-display font-extrabold text-burgundy group-hover:text-accent transition-colors flex items-center gap-1.5">
-                  Critique Queue <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                </h3>
-                <p className="text-xs sm:text-sm text-ink/60 mt-2 leading-relaxed">
-                  Provide detailed critiques in the double-blind queue. Earn 1.0 Milestone Token per review (1.5 for early-birds).
-                </p>
-              </div>
-            </div>
-          </Link>
-        </motion.div>
-
-        {/* Dynamic Column Split */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          
-          <div className="lg:col-span-2 space-y-8">
-            
-
-
-            {/* Achievements & Cycles */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Blackbox Tracker */}
-              <div className="bg-ink text-cream p-8 rounded-[24px] shadow-xl relative overflow-hidden group border border-white/5">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
-                  <ShoppingBag size={120} />
-                </div>
-                <div className="relative z-10 h-full flex flex-col justify-between min-h-[160px]">
-                  <div>
-                    <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-cream/40 mb-2">The Archive Blackbox</h3>
-                    <div className="flex items-baseline gap-2 mb-6">
-                      <span className="text-5xl font-display font-extrabold font-serif">{orders.filter(o => o.status === 'Paid').length}</span>
-                      <span className="text-lg text-cream/40 font-display">/ 10</span>
-                    </div>
-                    <div className="w-full bg-white/10 rounded-full h-1.5 mb-4 overflow-hidden">
-                      <div 
-                        className="bg-accent h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(231,111,81,0.4)]" 
-                        style={{ width: `${Math.min(100, (orders.filter(o => o.status === 'Paid').length / 10) * 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <p className="text-[9px] font-bold text-cream/60 leading-relaxed uppercase tracking-wider">
-                    {orders.filter(o => o.status === 'Paid').length >= 10 
-                      ? "Blackbox Unlocked. Consult the Lore Keeper." 
-                      : `${10 - orders.filter(o => o.status === 'Paid').length} more paid orders until Blackbox.`}
-                  </p>
-                </div>
-              </div>
-
-              {/* Archive Economy Guide */}
-              <div className="parchment-card p-8 flex flex-col justify-between min-h-[220px]">
-                <div className="relative z-10 space-y-4">
-                  <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Archive Economy Guide</h3>
-                  
-                  <div className="space-y-4">
-                    {/* Milestone Tokens */}
-                    <div className="space-y-1.5">
-                      <h4 className="text-xs font-bold text-burgundy uppercase tracking-wider flex items-center gap-1.5 font-sans">
-                        <Award size={14} /> Milestone Tokens
-                      </h4>
-                      <p className="text-xs text-ink/85 leading-relaxed font-serif font-medium">
-                        Power your upgrade to the <strong>Keeper</strong> tier. Earn tokens by completing activities:
-                      </p>
-                      <ul className="text-xs text-ink/80 font-serif list-disc pl-4 space-y-1.5">
-                        <li><strong>Peer Critique</strong>: Submit detailed reviews (<strong>+1.0 Token</strong>, or <strong>+1.5 Tokens</strong> for early-birds).</li>
-                        <li><strong>Weekly Submission</strong>: Write weekly prompt responses (<strong>+1.0 Token</strong>).</li>
-                        <li><strong>Invite Readers</strong>: Refer friends (<strong>+1.2 Tokens</strong> per referral, up to your first 5).</li>
-                      </ul>
-                    </div>
+            {/* Overview Tab Content */}
+            {activeTab === 'overview' && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6 sm:space-y-8"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start">
+                  {/* Left Column (Stats & Economy Guide) */}
+                  <div className="lg:col-span-2 space-y-6 sm:space-y-8">
                     
-                    {/* Paper Leaves */}
-                    <div className="space-y-1.5">
-                      <h4 className="text-xs font-bold text-sage uppercase tracking-wider flex items-center gap-1.5 font-sans">
-                        <Coins size={14} className="text-sage" /> Paper Leaves (Save to Buy)
-                      </h4>
-                      <p className="text-xs text-ink/85 leading-relaxed font-serif font-semibold text-accent">
-                        1 Leaf = ₦10 at checkout. Spend leaves to buy physical books!
-                      </p>
-                      <p className="text-xs text-ink/85 leading-relaxed font-serif font-medium">
-                        Your spendable currency to discount or fully buy physical books. Accumulate leaves by:
-                      </p>
-                      <ul className="text-xs text-ink/80 font-serif list-disc pl-4 space-y-1.5">
-                        <li><strong>Peer Critique</strong>: Earn <strong>+10 Leaves</strong> (or <strong>+15 Leaves</strong> for early-birds), capped at 3 rewarded critiques per week.</li>
-                        <li><strong>Weekly Submission</strong>: Earn <strong>+5 Leaves</strong> for your first prompt submission of the week.</li>
-                        <li><strong>Buy Bundles</strong>: Buy leaf bundles (50, 100, 200, or 500 leaves) instantly via Paystack.</li>
-                      </ul>
-                      <p className="text-[11px] text-ink/70 font-serif italic mt-2">
-                        You can also donate leaves to your <strong>Chapter Book Pool</strong> to generate book vouchers for chapter events!
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+                    {/* User Stats Grid (Membership, Milestone Tokens, Spendable Leaves, Streak if active) */}
+                    <div className={`grid grid-cols-1 sm:grid-cols-2 ${profile.streak > 0 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4 sm:gap-6`}>
+                      {/* Membership Status Card */}
+                      <div className="parchment-card p-5 sm:p-8 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+                        <div className="absolute top-0 right-0 p-4 opacity-5">
+                          <Award size={120} />
+                        </div>
+                        <div className="relative z-10 space-y-4">
+                          <div>
+                            <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Membership Status</h3>
+                            <div className="flex flex-wrap items-baseline gap-2 mt-1">
+                              <h2 className="text-4xl font-display font-extrabold text-burgundy leading-none tracking-tight">{profile.tier}</h2>
+                              {isKeeper && (
+                                <span className="bg-sage/10 text-sage font-bold text-[8px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-sage/20">
+                                  Unlocked
+                                </span>
+                              )}
+                            </div>
+                          </div>
 
-            {/* Recommendations Section */}
-            {recommendations && recommendations.length > 0 && (
-              <motion.div variants={itemVariants} className="space-y-6">
-                <div className="flex items-center justify-between px-2">
-                  <h3 className="text-2xl font-display font-extrabold text-burgundy">Curated for Your Archive</h3>
-                  <Link href="/bookstore" className="text-xs font-bold text-accent hover:text-burgundy flex items-center gap-1 transition-colors">
-                    Explore Full Store <ArrowRight size={14} />
-                  </Link>
-                </div>
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
-                  {recommendations.map((book) => (
-                    <Link key={book.id} href={`/bookstore?search=${encodeURIComponent(book.title)}`} className="min-w-[160px] w-[160px] group block">
-                      <div className="aspect-[2/3] w-full rounded-xl overflow-hidden shadow-md border border-sage/10 mb-3 bg-white relative">
-                        <img src={book.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} alt={book.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-ink/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <div className="bg-cream text-burgundy p-2 rounded-full shadow-lg">
-                            <ShoppingBag size={18} />
+                          {isKeeper ? (
+                            <div className="bg-primary/5 border border-primary/15 rounded-xl p-3.5 space-y-2.5">
+                               <h4 className="font-bold text-burgundy flex items-center gap-1.5 text-xs font-sans"><Ticket size={14}/> {discountPercent} Discount</h4>
+                               
+                               <div className="flex items-center gap-2 bg-white/70 p-1.5 pl-3 rounded-lg border border-sage/15">
+                                  <span className="font-mono text-sm font-bold text-ink tracking-wider flex-1">{profile.lkid}</span>
+                                  <button onClick={copyDiscountCode} className="bg-sage/10 hover:bg-sage/25 text-ink px-3 py-1.5 rounded text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer">
+                                     {copiedCode ? <CheckCircle2 size={12} className="text-sage"/> : <Copy size={12}/>}
+                                     {copiedCode ? "Copied" : "Copy"}
+                                  </button>
+                               </div>
+                            </div>
+                          ) : (
+                            <div className="bg-ink/5 rounded-xl p-4 border border-sage/10">
+                              <p className="text-xs sm:text-sm text-ink/85 leading-relaxed font-serif">
+                                Upgrade to <strong>Keeper</strong> to unlock your {discountPercent} discount on all books for 90 days and exclusive Archive access.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Milestone Tokens Circle Progress Card */}
+                      <div className="parchment-card p-5 sm:p-8 flex items-center justify-between relative group min-h-[220px]">
+                        <div className="space-y-3">
+                          <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Milestone Tokens</span>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-5xl font-display text-burgundy font-extrabold font-serif">{milestoneTokens.toFixed(1)}</span>
+                            <span className="text-sm font-bold text-ink/40">/ {tokenGoal}</span>
+                          </div>
+                          <p className="text-xs text-ink/60 leading-relaxed max-w-[160px] font-serif font-medium">
+                            Earned via reviews, submissions, and referrals. 10.0 unlocks Keeper.
+                          </p>
+                        </div>
+                        
+                        <div className="relative w-20 h-20 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-full h-full transform -rotate-90">
+                            <circle 
+                              cx="40" 
+                              cy="40" 
+                              r={radius} 
+                              stroke="#E8DFC9" 
+                              strokeWidth="6" 
+                              fill="transparent" 
+                            />
+                            <motion.circle 
+                              cx="40" 
+                              cy="40" 
+                              r={radius} 
+                              stroke="#5C1A2E" 
+                              strokeWidth="6" 
+                              fill="transparent" 
+                              strokeDasharray={circumference}
+                              initial={{ strokeDashoffset: circumference }}
+                              animate={{ strokeDashoffset }}
+                              transition={{ duration: 1.2, ease: "easeOut" }}
+                            />
+                          </svg>
+                          <div className="absolute text-xs font-sans font-extrabold text-burgundy">{tokenPercent.toFixed(0)}%</div>
+                        </div>
+                      </div>
+
+                      {/* Spendable Leaves Card */}
+                      <div className="parchment-card p-5 sm:p-8 flex flex-col justify-between group min-h-[220px]">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform">
+                          <Coins size={60} className="text-burgundy" />
+                        </div>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Spendable Leaves</span>
+                              <div className="text-4xl font-display text-burgundy font-extrabold mt-1">{spendableLeaves} <span className="text-2xl">🍃</span></div>
+                            </div>
+                            <button
+                              onClick={() => setShowBuyLeavesModal(true)}
+                              className="bg-burgundy text-cream text-[10px] font-sans font-bold px-3 py-1.5 rounded-lg hover:bg-ink transition-colors uppercase tracking-wider mt-1.5 cursor-pointer shadow-sm active:scale-95"
+                            >
+                              Buy Leaves
+                            </button>
+                          </div>
+                          
+                          {/* Lifetime Leaves / Mystery Package Progression */}
+                          <div className="border-t border-sage/10 pt-3.5">
+                            <div className="flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/50 mb-1.5">
+                              <span className="flex items-center gap-1"><Gift size={11} className="text-accent" /> Next Mystery Gift</span>
+                              <span>{lifetimeLeaves % 500} / 500 🍃</span>
+                            </div>
+                            <div className="w-full bg-[#E8DFC9] rounded-full h-2 relative overflow-hidden border border-sage/5">
+                              <div 
+                                className="bg-accent h-2 rounded-full transition-all duration-1000 shadow-sm" 
+                                style={{ width: `${((lifetimeLeaves % 500) / 500) * 100}%` }}
+                              ></div>
+                            </div>
+                            <div className="flex justify-between items-center text-[9px] text-ink/45 mt-1 font-serif">
+                              <span>Lifetime: {lifetimeLeaves} leaves</span>
+                              <span className="font-bold text-accent italic">🎁 Secret reward at 500</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <h4 className="font-bold text-ink text-xs leading-tight line-clamp-2 group-hover:text-accent transition-colors">{book.title}</h4>
-                      <p className="text-[10px] text-ink/50 mt-1">{book.genre}</p>
-                    </Link>
-                  ))}
-                </div>
-              </motion.div>
-            )}
 
-            {/* Progress Trackers */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              
-              <div className="parchment-card p-6 sm:p-8">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h3 className="font-bold text-ink flex items-center gap-2 text-sm"><Ticket size={16} className="text-sage"/> Event Points</h3>
-                    <p className="text-[9px] text-ink/50 mt-1 uppercase tracking-wider font-bold">Physical: 2 • Virtual: 1</p>
-                  </div>
-                  <span className="font-display font-extrabold text-3xl text-burgundy font-serif">{profile.events}</span>
-                </div>
-                
-                <div className="w-full bg-sage/10 rounded-full h-2 mb-3 overflow-hidden border border-sage/5">
-                  <div className="bg-sage h-2 rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${eventsProgress}%` }}></div>
-                </div>
-                <div className="flex justify-between items-center text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40">
-                  <span>{eventsProgress.toFixed(0)}% Complete</span>
-                  <span>{profile.events}/{eventsNeeded}</span>
-                </div>
-              </div>
-
-              <div className="parchment-card p-6 sm:p-8">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h3 className="font-bold text-ink flex items-center gap-2 text-sm"><Users size={16} className="text-accent"/> Referrals</h3>
-                    <p className="text-[9px] text-ink/50 mt-1 uppercase tracking-wider font-bold">Invite the collective</p>
-                  </div>
-                  <span className="font-display font-extrabold text-3xl text-burgundy font-serif">{profile.referrals}</span>
-                </div>
-                
-                <div className="w-full bg-primary/10 rounded-full h-2 mb-3 overflow-hidden border border-primary/5">
-                  <div className="bg-accent h-2 rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${referralsProgress}%` }}></div>
-                </div>
-                <div className="flex justify-between items-center text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40">
-                  <span>{referralsProgress.toFixed(0)}% Complete</span>
-                  <span>{profile.referrals}/{referralsNeeded}</span>
-                </div>
-              </div>
-
-            </motion.div>
-
-            {/* My Archive Orders Section */}
-            <motion.div variants={itemVariants} className="parchment-card p-8 sm:p-10">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-display font-extrabold text-burgundy">My Archive Orders</h3>
-              </div>
-
-              {orders.length > 0 ? (
-                <div className="space-y-4">
-                  {orders.map((order, idx) => (
-                    <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 bg-sage/5 rounded-2xl border border-sage/10 group hover:border-burgundy/25 transition-all">
-                      <div>
-                        <div className="text-[9px] font-bold text-ink/40 uppercase tracking-widest mb-1">{order.orderId} · {new Date(order.date).toLocaleDateString()}</div>
-                        <h4 className="font-bold text-ink text-sm mb-1">{order.items}</h4>
-                        <p className="text-xs text-burgundy font-bold">₦{order.total}</p>
-                      </div>
-                      <div className="mt-4 sm:mt-0">
-                        <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
-                          order.status === 'Paid' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-burgundy/10 text-burgundy border border-burgundy/15'
-                        }`}>
-                          {order.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-12 text-center bg-cream/35 rounded-2xl border border-dashed border-sage/30">
-                  <p className="text-ink/40 font-serif italic">Your personal archive history is currently empty.</p>
-                  <Link href="/bookstore" className="inline-block mt-4 text-[10px] font-sans font-bold text-burgundy underline uppercase tracking-widest">Browse Bookstore</Link>
-                </div>
-              )}
-            </motion.div>
-
-            {/* Leaves Ledger Card */}
-            <motion.div variants={itemVariants} className="parchment-card p-8 sm:p-10 mt-6">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-display font-extrabold text-burgundy">Leaves Ledger</h3>
-                <span className="text-[10px] font-sans font-bold text-ink/40 uppercase tracking-widest">Transaction History</span>
-              </div>
-
-              {transactionsLoading ? (
-                <div className="py-8 text-center text-xs text-ink/40 font-medium font-serif italic">Loading transactions...</div>
-              ) : transactions.length > 0 ? (
-                <div className="space-y-4">
-                  {transactions.map((tx) => (
-                    <div key={tx.id} className="flex justify-between items-center p-4 bg-sage/5 rounded-2xl border border-sage/10 group hover:border-burgundy/25 transition-all">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-sm ${
-                          tx.amount > 0 ? 'bg-green-50 text-green-700' : 'bg-burgundy/5 text-burgundy'
-                        }`}>
-                          {tx.amount > 0 ? '🍃' : '💸'}
-                        </div>
-                        <div>
-                          <div className="text-[9px] font-mono text-ink/45 uppercase tracking-wider mb-0.5">
-                            {new Date(tx.date).toLocaleDateString()} · {tx.type.replace('_', ' ')}
+                      {/* Streak Card */}
+                      {profile.streak > 0 && (
+                        <div className="parchment-card p-5 sm:p-8 flex flex-col justify-between min-h-[220px] relative overflow-hidden group">
+                          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                            <Flame size={80} className="text-burgundy" />
                           </div>
-                          <p className="text-xs text-ink/85 leading-relaxed font-serif">{tx.description}</p>
+                          <div className="space-y-4">
+                            <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Writing Streak</span>
+                            <div className="flex items-baseline gap-2 mt-1">
+                              <h2 className="text-4xl font-display font-extrabold text-burgundy leading-none tracking-tight">
+                                {profile.streak} <span className="text-2xl">🔥</span>
+                              </h2>
+                            </div>
+                            <p className="text-xs text-ink/60 leading-relaxed font-serif font-medium">
+                              Amazing! You've kept your streak active for {profile.streak} consecutive week{profile.streak > 1 ? 's' : ''}.
+                            </p>
+                          </div>
+                          <div className="border-t border-sage/10 pt-3 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/40">
+                            <span>Status: Active</span>
+                            <span className="text-sage">Keep it up!</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Progress Trackers */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="parchment-card p-5 sm:p-8">
+                        <div className="flex justify-between items-start mb-6">
+                          <div>
+                            <h3 className="font-bold text-ink flex items-center gap-2 text-sm"><Ticket size={16} className="text-sage"/> Event Points</h3>
+                            <p className="text-[9px] text-ink/50 mt-1 uppercase tracking-wider font-bold">Physical: 2 • Virtual: 1</p>
+                          </div>
+                          <span className="font-display font-extrabold text-3xl text-burgundy font-serif">{profile.events}</span>
+                        </div>
+                        
+                        <div className="w-full bg-sage/10 rounded-full h-2 mb-3 overflow-hidden border border-sage/5">
+                          <div className="bg-sage h-2 rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${eventsProgress}%` }}></div>
+                        </div>
+                        <div className="flex justify-between items-center text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40">
+                          <span>{eventsProgress.toFixed(0)}% Complete</span>
+                          <span>{profile.events}/{eventsNeeded}</span>
                         </div>
                       </div>
-                      <span className={`font-mono text-xs font-bold ${
-                        tx.amount > 0 ? 'text-green-700' : 'text-burgundy'
-                      }`}>
-                        {tx.amount > 0 ? `+${tx.amount}` : tx.amount} 🍃
-                      </span>
+
+                      <div className="parchment-card p-5 sm:p-8">
+                        <div className="flex justify-between items-start mb-6">
+                          <div>
+                            <h3 className="font-bold text-ink flex items-center gap-2 text-sm"><Users size={16} className="text-accent"/> Referrals</h3>
+                            <p className="text-[9px] text-ink/50 mt-1 uppercase tracking-wider font-bold">Invite the collective</p>
+                          </div>
+                          <span className="font-display font-extrabold text-3xl text-burgundy font-serif">{profile.referrals}</span>
+                        </div>
+                        
+                        <div className="w-full bg-primary/10 rounded-full h-2 mb-3 overflow-hidden border border-primary/5">
+                          <div className="bg-accent h-2 rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${referralsProgress}%` }}></div>
+                        </div>
+                        <div className="flex justify-between items-center text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40">
+                          <span>{referralsProgress.toFixed(0)}% Complete</span>
+                          <span>{profile.referrals}/{referralsNeeded}</span>
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-12 text-center bg-cream/35 rounded-2xl border border-dashed border-sage/30">
-                  <p className="text-ink/40 font-serif italic">No leaf transactions recorded yet.</p>
-                  <p className="text-[10px] text-ink/50 mt-1 max-w-sm mx-auto font-serif">Earn leaves by reviewing prompt submissions or writing critiques.</p>
-                </div>
-              )}
-            </motion.div>
 
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            
-
-
-            {/* Pay It Forward Chapter Pool Gifting Widget (Glassmorphic) */}
-            <motion.div 
-              variants={itemVariants}
-              className="glass-counter p-8 rounded-[24px] shadow-lg relative overflow-hidden"
-            >
-              <h3 className="font-bold text-ink mb-2 uppercase tracking-[0.2em] text-[10px]">Pay It Forward</h3>
-              <h4 className="font-display font-extrabold text-xl text-burgundy mb-4">Chapter Book Pool</h4>
-
-              {poolLoading ? (
-                <div className="py-8 text-center text-xs text-ink/40 font-medium">Loading chapter pool data...</div>
-              ) : !chapterPool ? (
-                <div className="bg-sage/5 border border-sage/10 rounded-xl p-4 text-xs text-ink/60 leading-relaxed italic font-serif">
-                  To contribute to a chapter pool, please ensure you are registered to a specific chapter (Zaria, Kaduna, or Abuja).
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  <div className="bg-white/40 border border-sage/10 rounded-xl p-4 space-y-3">
-                    <div className="flex justify-between items-center text-xs font-bold text-ink/75">
-                      <span className="flex items-center gap-1.5"><MapPin size={12} className="text-sage" /> {chapterPool.chapter_name}</span>
-                      <span>{poolBalance} / {poolLimit} Leaves</span>
+                    {/* Archive Economy Guide */}
+                    <div className="parchment-card p-5 sm:p-8 flex flex-col justify-between min-h-[220px]">
+                      <div className="relative z-10 space-y-4">
+                        <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Archive Economy Guide</h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Milestone Tokens */}
+                          <div className="space-y-1.5">
+                            <h4 className="text-xs font-bold text-burgundy uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                              <Award size={14} /> Milestone Tokens
+                            </h4>
+                            <p className="text-xs text-ink/85 leading-relaxed font-serif font-medium">
+                              Power your upgrade to the <strong>Keeper</strong> tier. Earn tokens by completing activities:
+                            </p>
+                            <ul className="text-xs text-ink/80 font-serif list-disc pl-4 space-y-1.5">
+                              <li><strong>Peer Critique</strong>: Submit detailed reviews (<strong>+1.0 Token</strong>, or <strong>+1.5 Tokens</strong> for early-birds).</li>
+                              <li><strong>Weekly Submission</strong>: Write weekly prompt responses (<strong>+1.0 Token</strong>).</li>
+                              <li><strong>Invite Readers</strong>: Refer friends (<strong>+1.2 Tokens</strong> per referral, up to your first 5).</li>
+                            </ul>
+                          </div>
+                          
+                          {/* Paper Leaves */}
+                          <div className="space-y-1.5">
+                            <h4 className="text-xs font-bold text-sage uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                              <Coins size={14} className="text-sage" /> Paper Leaves (Save to Buy)
+                            </h4>
+                            <p className="text-xs text-ink/85 leading-relaxed font-serif font-semibold text-accent font-sans">
+                              1 Leaf = ₦10 at checkout. Spend leaves to buy physical books!
+                            </p>
+                            <p className="text-xs text-ink/85 leading-relaxed font-serif font-medium">
+                              Your spendable currency to discount or fully buy physical books. Accumulate leaves by:
+                            </p>
+                            <ul className="text-xs text-ink/80 font-serif list-disc pl-4 space-y-1.5">
+                              <li><strong>Peer Critique</strong>: Earn <strong>+10 Leaves</strong> (or <strong>+15 Leaves</strong> for early-birds), capped at 3 rewarded critiques per week.</li>
+                              <li><strong>Weekly Submission</strong>: Earn <strong>+5 Leaves</strong> for your first prompt submission of the week.</li>
+                              <li><strong>Buy Bundles</strong>: Buy leaf bundles (50, 100, 200, or 500 leaves) instantly via Paystack.</li>
+                            </ul>
+                            <p className="text-[11px] text-ink/70 font-serif italic mt-2">
+                              You can also donate leaves to your <strong>Chapter Book Pool</strong> to generate book vouchers for chapter events!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="w-full bg-sage/10 rounded-full h-2 overflow-hidden">
-                      <motion.div 
-                        className="bg-sage h-2 rounded-full" 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${poolPercent}%` }}
-                        transition={{ duration: 1 }}
-                      />
-                    </div>
-                    <p className="text-[9px] text-ink/50 leading-relaxed font-serif">
-                      At {poolLimit} leaves, the system auto-generates a book voucher to sponsor books for local chapter members.
-                    </p>
+
                   </div>
 
-                  <form onSubmit={handleDonate} className="space-y-3">
-                    <div className="flex items-stretch gap-2">
-                      <input 
-                        type="number" 
-                        placeholder="Leaves..." 
-                        value={donationAmount}
-                        onChange={(e) => setDonationAmount(e.target.value)}
-                        min="1"
-                        max={spendableLeaves}
-                        disabled={donateLoading}
-                        className="flex-1 bg-cream/70 border border-sage/20 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-sage placeholder-ink/30 font-medium text-ink"
-                      />
+                  {/* Sidebar Right Column */}
+                  <div className="space-y-6">
+                    {/* Referral Widget */}
+                    <div className="bg-burgundy text-cream p-5 sm:p-8 rounded-[24px] shadow-xl relative overflow-hidden group border border-white/5">
+                      <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl group-hover:scale-110 transition-transform"></div>
+                      <h3 className="font-display font-extrabold text-2xl mb-4 relative z-10">Invite the Collective</h3>
+                      <p className="text-xs sm:text-sm text-cream/70 mb-8 leading-relaxed relative z-10 font-serif">
+                        Share your personal link. Earn 1.2 Milestone Tokens for each of your first 5 referrals. (Referrals do not earn leaves).
+                      </p>
                       <button 
-                        type="submit" 
-                        disabled={donateLoading || !donationAmount}
-                        className="bg-sage hover:bg-ink hover:text-cream text-ink px-4 rounded-xl text-xs font-sans font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+                        onClick={copyRefLink}
+                        className="w-full bg-cream text-burgundy py-3.5 rounded-xl font-bold hover:bg-white transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 relative z-10 cursor-pointer text-xs"
                       >
-                        Donate
+                        {copied ? <CheckCircle2 size={16} className="text-sage"/> : <Copy size={16}/>}
+                        {copied ? "Link Copied!" : "Copy Referral Link"}
                       </button>
                     </div>
-                    
-                    {donateMessage && (
-                      <p className={`text-[10px] font-bold ${donateMessage.type === 'success' ? 'text-green-700' : 'text-burgundy'}`}>
-                        {donateMessage.text}
-                      </p>
-                    )}
-                  </form>
-                </div>
-              )}
-            </motion.div>
 
-            {/* My Manuscript Reports */}
-            {submissions && submissions.length > 0 && (
-              <motion.div 
-                variants={itemVariants}
-                className="parchment-card p-8"
-              >
-                <h3 className="font-bold text-ink mb-4 uppercase tracking-[0.2em] text-[10px] border-b border-sage/10 pb-3">My Manuscript Reports</h3>
-                <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                  {submissions.map((sub) => (
-                    <button
-                      key={sub.id}
-                      onClick={() => {
-                        if (sub.hasReport) {
-                          setSelectedReportId(sub.id);
-                        }
-                      }}
-                      disabled={!sub.hasReport}
-                      className={`w-full text-left p-3.5 rounded-xl border transition-all text-xs flex flex-col gap-1 ${
-                        sub.hasReport 
-                          ? 'border-sage/15 bg-white/40 hover:border-burgundy/25 hover:bg-white cursor-pointer' 
-                          : 'border-sage/5 bg-sage/5 opacity-50 cursor-not-allowed'
-                      }`}
-                    >
-                      <div className="font-bold text-ink truncate">{sub.title}</div>
-                      <div className="flex justify-between items-center text-[10px] text-ink/40 font-mono">
-                        <span className="capitalize">{sub.genre}</span>
-                        <span className={`px-2 py-0.5 rounded-full font-bold text-[8px] uppercase tracking-wider ${
-                          sub.hasReport ? 'bg-green-50 text-green-700 border border-green-150' : 'bg-ink/5 text-ink/45 border border-ink/10'
-                        }`}>
-                          {sub.hasReport ? 'Report Ready' : 'Pending Synthesis'}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
+                    {/* Quick Links */}
+                    <div className="parchment-card p-5 sm:p-8">
+                      <h3 className="font-bold text-ink mb-6 uppercase tracking-[0.2em] text-[10px] border-b border-sage/10 pb-3">Quick Navigation</h3>
+                      <ul className="space-y-4">
+                        <li>
+                          <Link href="/bookstore" className="group text-ink/75 hover:text-accent font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors">
+                            <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
+                              <ExternalLink size={16} className="text-sage" />
+                            </div>
+                            Browse Bookstore
+                          </Link>
+                        </li>
+                        <li>
+                          <Link href="/events" className="group text-ink/75 hover:text-accent font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors">
+                            <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
+                              <ExternalLink size={16} className="text-sage" />
+                            </div>
+                            Upcoming Events
+                          </Link>
+                        </li>
+                        <li>
+                          <button 
+                            onClick={() => setShowPortal(true)}
+                            className="w-full text-left group text-ink/75 hover:text-accent font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors cursor-pointer bg-transparent border-0 p-0"
+                          >
+                            <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
+                              <BookOpen size={16} className="text-sage" />
+                            </div>
+                            Rules & Onboarding Guide
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
 
-            {/* Referral Widget */}
-            <motion.div variants={itemVariants} className="bg-burgundy text-cream p-8 rounded-[24px] shadow-xl relative overflow-hidden group border border-white/5">
-              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl group-hover:scale-110 transition-transform"></div>
-              <h3 className="font-display font-extrabold text-2xl mb-4 relative z-10">Invite the Collective</h3>
-              <p className="text-xs sm:text-sm text-cream/70 mb-8 leading-relaxed relative z-10 font-serif">
-                Share your personal link. Earn 1.2 Milestone Tokens for each of your first 5 referrals. (Referrals do not earn leaves).
-              </p>
-              <button 
-                onClick={copyRefLink}
-                className="w-full bg-cream text-burgundy py-3.5 rounded-xl font-bold hover:bg-white transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 relative z-10 cursor-pointer text-xs"
+            {/* Workspaces Tab Content */}
+            {activeTab === 'workspaces' && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6 sm:space-y-8"
               >
-                {copied ? <CheckCircle2 size={16} className="text-sage"/> : <Copy size={16}/>}
-                {copied ? "Link Copied!" : "Copy Referral Link"}
-              </button>
-            </motion.div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start">
+                  {/* Left Column (Writing and Critique Workspaces) */}
+                  <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                      {/* Writing Workspace Card */}
+                      <Link href="/dashboard/write" className="group">
+                        <div className="parchment-card p-5 sm:p-8 flex flex-col justify-between h-56 relative group transition-all duration-300">
+                          <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all"></div>
+                          
+                          <div className="flex justify-between items-start">
+                            <div className="bg-primary/5 text-burgundy p-3.5 rounded-2xl border border-primary/10 group-hover:bg-primary/10 transition-colors">
+                              <Flame size={24} className={profile.streak > 0 ? "animate-pulse text-burgundy" : ""} />
+                            </div>
+                            {profile.streak > 0 && (
+                              <span className="bg-primary/10 text-burgundy text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-primary/20">
+                                🔥 {profile.streak} Week Streak
+                              </span>
+                            )}
+                          </div>
 
-            {/* Quick Links */}
-            <motion.div variants={itemVariants} className="parchment-card p-8">
-              <h3 className="font-bold text-ink mb-6 uppercase tracking-[0.2em] text-[10px] border-b border-sage/10 pb-3">Quick Navigation</h3>
-              <ul className="space-y-4">
-                <li>
-                  <Link href="/bookstore" className="group text-ink/75 hover:text-accent font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors">
-                    <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
-                      <ExternalLink size={16} className="text-sage" />
-                    </div>
-                    Browse Bookstore
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/events" className="group text-ink/75 hover:text-accent font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors">
-                    <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
-                      <ExternalLink size={16} className="text-sage" />
-                    </div>
-                    Upcoming Events
-                  </Link>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setShowPortal(true)}
-                    className="w-full text-left group text-ink/75 hover:text-accent font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors cursor-pointer bg-transparent border-0 p-0"
-                  >
-                    <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
-                      <BookOpen size={16} className="text-sage" />
-                    </div>
-                    Rules & Onboarding Guide
-                  </button>
-                </li>
-              </ul>
-            </motion.div>
+                          <div>
+                            <h3 className="text-xl font-display font-extrabold text-burgundy group-hover:text-accent transition-colors flex items-center gap-1.5">
+                              Writing Workspace <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                            </h3>
+                            <p className="text-xs sm:text-sm text-ink/60 mt-2 leading-relaxed">
+                              Compose and save offline-capable draft submissions for the weekly prompt. Syncs seamlessly online.
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
 
-          </div>
-        </div>
-              </div>
-            ) : (
-              <motion.div 
-                initial={{ opacity: 0, y: 15 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                className="space-y-8"
+                      {/* Critique Workspace Card */}
+                      <Link href="/dashboard/review" className="group">
+                        <div className="parchment-card p-5 sm:p-8 flex flex-col justify-between h-56 relative group transition-all duration-300">
+                          <div className="absolute -top-10 -right-10 w-32 h-32 bg-sage/5 rounded-full blur-2xl group-hover:bg-sage/10 transition-all"></div>
+                          
+                          <div className="flex justify-between items-start">
+                            <div className="bg-sage/5 text-sage p-3.5 rounded-2xl border border-sage/10 group-hover:bg-sage/10 transition-colors">
+                              <MessageSquare size={24} />
+                            </div>
+                            <span className="bg-sage/10 text-sage text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-sage/20">
+                              📚 {profile.weeklyReviews} / 3 Rewarded Crits
+                            </span>
+                          </div>
+
+                          <div>
+                            <h3 className="text-xl font-display font-extrabold text-burgundy group-hover:text-accent transition-colors flex items-center gap-1.5">
+                              Critique Queue <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                            </h3>
+                            <p className="text-xs sm:text-sm text-ink/60 mt-2 leading-relaxed">
+                              Provide detailed critiques in the double-blind queue. Earn 1.0 Milestone Token per review (1.5 for early-birds).
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Sidebar Right Column */}
+                  <div className="space-y-6">
+                    {/* My Manuscript Reports */}
+                    {submissions && submissions.length > 0 ? (
+                      <div className="parchment-card p-5 sm:p-8">
+                        <h3 className="font-bold text-ink mb-4 uppercase tracking-[0.2em] text-[10px] border-b border-sage/10 pb-3">My Manuscript Reports</h3>
+                        <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                          {submissions.map((sub) => (
+                            <button
+                              key={sub.id}
+                              onClick={() => {
+                                if (sub.hasReport) {
+                                  setSelectedReportId(sub.id);
+                                }
+                              }}
+                              disabled={!sub.hasReport}
+                              className={`w-full text-left p-3.5 rounded-xl border transition-all text-xs flex flex-col gap-1 ${
+                                sub.hasReport 
+                                  ? 'border-sage/15 bg-white/40 hover:border-burgundy/25 hover:bg-white cursor-pointer' 
+                                  : 'border-sage/5 bg-sage/5 opacity-50 cursor-not-allowed'
+                              }`}
+                            >
+                              <div className="font-bold text-ink truncate">{sub.title}</div>
+                              <div className="flex justify-between items-center text-[10px] text-ink/40 font-mono">
+                                <span className="capitalize">{sub.genre}</span>
+                                <span className={`px-2 py-0.5 rounded-full font-bold text-[8px] uppercase tracking-wider ${
+                                  sub.hasReport ? 'bg-green-50 text-green-700 border border-green-150' : 'bg-ink/5 text-ink/45 border border-ink/10'
+                                }`}>
+                                  {sub.hasReport ? 'Report Ready' : 'Pending Synthesis'}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="parchment-card p-5 sm:p-8">
+                        <h3 className="font-bold text-ink mb-4 uppercase tracking-[0.2em] text-[10px] border-b border-sage/10 pb-3">My Manuscript Reports</h3>
+                        <div className="py-6 text-center bg-cream/35 rounded-2xl border border-dashed border-sage/30">
+                          <p className="text-xs text-ink/40 font-serif italic">No submissions or feedback reports yet.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Ledger & Pool Tab Content */}
+            {activeTab === 'ledger' && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6 sm:space-y-8"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start">
+                  {/* Left Column (Recommendations, Ledger, Orders) */}
+                  <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+                    
+                    {/* Curated Bookstore Recommendations */}
+                    {recommendations && recommendations.length > 0 && (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between px-2">
+                          <h3 className="text-xl font-display font-extrabold text-burgundy">Curated for Your Archive</h3>
+                          <Link href="/bookstore" className="text-xs font-bold text-accent hover:text-burgundy flex items-center gap-1 transition-colors">
+                            Explore Full Store <ArrowRight size={14} />
+                          </Link>
+                        </div>
+                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
+                          {recommendations.map((book) => (
+                            <Link key={book.id} href={`/bookstore?search=${encodeURIComponent(book.title)}`} className="min-w-[140px] w-[140px] group block flex-shrink-0">
+                              <div className="aspect-[2/3] w-full rounded-xl overflow-hidden shadow-md border border-sage/10 mb-2.5 bg-white relative">
+                                <img src={book.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} alt={book.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                <div className="absolute inset-0 bg-ink/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <div className="bg-cream text-burgundy p-2 rounded-full shadow-lg">
+                                    <ShoppingBag size={18} />
+                                  </div>
+                                </div>
+                              </div>
+                              <h4 className="font-bold text-ink text-xs leading-tight line-clamp-2 group-hover:text-accent transition-colors">{book.title}</h4>
+                              <p className="text-[10px] text-ink/50 mt-1">{book.genre}</p>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Leaves Ledger Card */}
+                    <div className="parchment-card p-5 sm:p-8 md:p-10">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl sm:text-2xl font-display font-extrabold text-burgundy">Leaves Ledger</h3>
+                        <span className="text-[10px] font-sans font-bold text-ink/40 uppercase tracking-widest">Transaction History</span>
+                      </div>
+
+                      {transactionsLoading ? (
+                        <div className="py-8 text-center text-xs text-ink/40 font-medium font-serif italic">Loading transactions...</div>
+                      ) : transactions.length > 0 ? (
+                        <div className="space-y-4">
+                          {transactions.map((tx) => (
+                            <div key={tx.id} className="flex justify-between items-center p-4 bg-sage/5 rounded-2xl border border-sage/10 group hover:border-burgundy/25 transition-all">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-sm ${
+                                  tx.amount > 0 ? 'bg-green-50 text-green-700' : 'bg-burgundy/5 text-burgundy'
+                                }`}>
+                                  {tx.amount > 0 ? '🍃' : '💸'}
+                                </div>
+                                <div>
+                                  <div className="text-[9px] font-mono text-ink/45 uppercase tracking-wider mb-0.5">
+                                    {new Date(tx.date).toLocaleDateString()} · {tx.type.replace('_', ' ')}
+                                  </div>
+                                  <p className="text-xs text-ink/85 leading-relaxed font-serif">{tx.description}</p>
+                                </div>
+                              </div>
+                              <span className={`font-mono text-xs font-bold ${
+                                tx.amount > 0 ? 'text-green-700' : 'text-burgundy'
+                              }`}>
+                                {tx.amount > 0 ? `+${tx.amount}` : tx.amount} 🍃
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-12 text-center bg-cream/35 rounded-2xl border border-dashed border-sage/30">
+                          <p className="text-ink/40 font-serif italic">No leaf transactions recorded yet.</p>
+                          <p className="text-[10px] text-ink/50 mt-1 max-w-sm mx-auto font-serif">Earn leaves by reviewing prompt submissions or writing critiques.</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bookstore Orders history */}
+                    <div className="parchment-card p-5 sm:p-8 md:p-10">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl sm:text-2xl font-display font-extrabold text-burgundy">My Archive Orders</h3>
+                      </div>
+
+                      {orders.length > 0 ? (
+                        <div className="space-y-4">
+                          {orders.map((order, idx) => (
+                            <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 bg-sage/5 rounded-2xl border border-sage/10 group hover:border-burgundy/25 transition-all">
+                              <div>
+                                <div className="text-[9px] font-bold text-ink/40 uppercase tracking-widest mb-1">{order.orderId} · {new Date(order.date).toLocaleDateString()}</div>
+                                <h4 className="font-bold text-ink text-sm mb-1">{order.items}</h4>
+                                <p className="text-xs text-burgundy font-bold">₦{order.total}</p>
+                              </div>
+                              <div className="mt-4 sm:mt-0">
+                                <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
+                                  order.status === 'Paid' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-burgundy/10 text-burgundy border border-burgundy/15'
+                                }`}>
+                                  {order.status}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-12 text-center bg-cream/35 rounded-2xl border border-dashed border-sage/30">
+                          <p className="text-ink/40 font-serif italic">Your personal archive history is currently empty.</p>
+                          <Link href="/bookstore" className="inline-block mt-4 text-[10px] font-sans font-bold text-burgundy underline uppercase tracking-widest">Browse Bookstore</Link>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+
+                  {/* Sidebar Right Column */}
+                  <div className="space-y-6">
+                    {/* Chapter Pool Gifting Widget */}
+                    <div className="glass-counter p-5 sm:p-8 rounded-[24px] shadow-lg relative overflow-hidden">
+                      <h3 className="font-bold text-ink mb-2 uppercase tracking-[0.2em] text-[10px]">Pay It Forward</h3>
+                      <h4 className="font-display font-extrabold text-xl text-burgundy mb-4">Chapter Book Pool</h4>
+
+                      {poolLoading ? (
+                        <div className="py-8 text-center text-xs text-ink/40 font-medium">Loading chapter pool data...</div>
+                      ) : !chapterPool ? (
+                        <div className="bg-sage/5 border border-sage/10 rounded-xl p-4 text-xs text-ink/60 leading-relaxed italic font-serif">
+                          To contribute to a chapter pool, please ensure you are registered to a specific chapter (Zaria, Kaduna, or Abuja).
+                        </div>
+                      ) : (
+                        <div className="space-y-5">
+                          <div className="bg-white/40 border border-sage/10 rounded-xl p-4 space-y-3">
+                            <div className="flex justify-between items-center text-xs font-bold text-ink/75">
+                              <span className="flex items-center gap-1.5"><MapPin size={12} className="text-sage" /> {chapterPool.chapter_name}</span>
+                              <span>{poolBalance} / {poolLimit} Leaves</span>
+                            </div>
+                            
+                            <div className="w-full bg-sage/10 rounded-full h-2 overflow-hidden">
+                              <motion.div 
+                                className="bg-sage h-2 rounded-full" 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${poolPercent}%` }}
+                                transition={{ duration: 1 }}
+                              />
+                            </div>
+                            <p className="text-[9px] text-ink/50 leading-relaxed font-serif">
+                              At {poolLimit} leaves, the system auto-generates a book voucher to sponsor books for local chapter members.
+                            </p>
+                          </div>
+
+                          <form onSubmit={handleDonate} className="space-y-3">
+                            <div className="flex items-stretch gap-2">
+                              <input 
+                                type="number" 
+                                placeholder="Leaves..." 
+                                value={donationAmount}
+                                onChange={(e) => setDonationAmount(e.target.value)}
+                                min="1"
+                                max={spendableLeaves}
+                                disabled={donateLoading}
+                                className="flex-1 bg-cream/70 border border-sage/20 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-sage placeholder-ink/30 font-medium text-ink"
+                              />
+                              <button 
+                                type="submit" 
+                                disabled={donateLoading || !donationAmount}
+                                className="bg-sage hover:bg-ink hover:text-cream text-ink px-4 rounded-xl text-xs font-sans font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
+                              >
+                                Donate
+                              </button>
+                            </div>
+                            
+                            {donateMessage && (
+                              <p className={`text-[10px] font-bold ${donateMessage.type === 'success' ? 'text-green-700' : 'text-burgundy'}`}>
+                                {donateMessage.text}
+                              </p>
+                            )}
+                          </form>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Blackbox Tracker */}
+                    <div className="bg-ink text-cream p-5 sm:p-8 rounded-[24px] shadow-xl relative overflow-hidden group border border-white/5">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+                        <ShoppingBag size={120} />
+                      </div>
+                      <div className="relative z-10 h-full flex flex-col justify-between min-h-[160px]">
+                        <div>
+                          <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-cream/40 mb-2">The Archive Blackbox</h3>
+                          <div className="flex items-baseline gap-2 mb-6">
+                            <span className="text-5xl font-display font-extrabold font-serif">{orders.filter(o => o.status === 'Paid').length}</span>
+                            <span className="text-lg text-cream/40 font-display">/ 10</span>
+                          </div>
+                          <div className="w-full bg-white/10 rounded-full h-1.5 mb-4 overflow-hidden">
+                            <div 
+                              className="bg-accent h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(231,111,81,0.4)]" 
+                              style={{ width: `${Math.min(100, (orders.filter(o => o.status === 'Paid').length / 10) * 100)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                        <p className="text-[9px] font-bold text-cream/60 leading-relaxed uppercase tracking-wider">
+                          {orders.filter(o => o.status === 'Paid').length >= 10 
+                            ? "Blackbox Unlocked. Consult the Lore Keeper." 
+                            : `${10 - orders.filter(o => o.status === 'Paid').length} more paid orders until Blackbox.`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Honors Tab Content */}
+            {activeTab === 'honors' && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6 sm:space-y-8"
               >
                 {/* Header card */}
                 <div 
-                  className="parchment-card p-8 md:p-10 relative overflow-hidden border border-accent/20 rounded-[32px] shadow-md text-center max-w-4xl mx-auto"
+                  className="parchment-card p-5 sm:p-8 md:p-10 relative overflow-hidden border border-accent/20 rounded-[32px] shadow-md text-center max-w-4xl mx-auto"
                   style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(242,169,138,0.08) 0%, rgba(250,247,242,1) 90%)' }}
                 >
                   <div className="absolute top-0 right-0 p-6 opacity-5 animate-pulse-subtle">
@@ -1360,11 +1444,11 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                     <p className="text-xs text-ink/40 mt-2 font-sans font-medium">As reviews flow in, the editors will elect and publish the leaderboard.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-5xl mx-auto">
                     
                     {/* General Bookie card */}
                     {activeLeaderboard.generalBookieName && (
-                      <div className="bg-white border border-sage/15 p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="bg-white border border-sage/15 p-5 sm:p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden hover:shadow-md transition-shadow">
                         <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
                         <div className="space-y-4 relative z-10">
                           <span className="bg-primary/10 text-burgundy text-[9px] font-bold px-3 py-1 rounded-full border border-primary/20 uppercase tracking-widest inline-block">
@@ -1384,7 +1468,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
 
                     {/* Abuja Bookie card */}
                     {activeLeaderboard.abujaBookieName && (
-                      <div className="bg-white border border-sage/15 p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="bg-white border border-sage/15 p-5 sm:p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden hover:shadow-md transition-shadow">
                         <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/5 rounded-full blur-2xl"></div>
                         <div className="space-y-4 relative z-10">
                           <span className="bg-accent/15 text-accent text-[9px] font-bold px-3 py-1 rounded-full border border-accent/20 uppercase tracking-widest inline-block">
@@ -1404,7 +1488,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
 
                     {/* Review of the Month card */}
                     {activeLeaderboard.reviewWinnerName && (
-                      <div className="bg-[#1E110A] text-cream border border-primary/20 p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden md:col-span-2">
+                      <div className="bg-[#1E110A] text-cream border border-primary/20 p-5 sm:p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden md:col-span-2">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-burgundy/10 rounded-full blur-2xl"></div>
                         <div className="space-y-4 relative z-10">
                           <div className="flex items-center justify-between">
@@ -1427,7 +1511,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
 
                     {/* Author of the Month card */}
                     {activeLeaderboard.authorWinnerName && (
-                      <div className="bg-[#160B18] text-cream border border-accent/20 p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden">
+                      <div className="bg-[#160B18] text-cream border border-accent/20 p-5 sm:p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-accent/15 rounded-full blur-2xl"></div>
                         <div className="space-y-4 relative z-10">
                           <span className="bg-accent/10 text-accent text-[9px] font-bold px-3 py-1 rounded-full border border-accent/20 uppercase tracking-widest inline-block">
@@ -1447,7 +1531,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
 
                     {/* Most Improved Author card */}
                     {activeLeaderboard.improvedWinnerName && (
-                      <div className="bg-white border border-sage/15 p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden">
+                      <div className="bg-white border border-sage/15 p-5 sm:p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden">
                         <div className="absolute -top-10 -right-10 w-32 h-32 bg-sage/5 rounded-full blur-2xl"></div>
                         <div className="space-y-4 relative z-10">
                           <span className="bg-sage/10 text-sage text-[9px] font-bold px-3 py-1 rounded-full border border-sage/20 uppercase tracking-widest inline-block">
