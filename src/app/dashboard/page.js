@@ -197,6 +197,8 @@ export default async function DashboardPage() {
     }
   }
 
+  const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+
   return (
     <DashboardClient 
       profile={profile} 
@@ -204,6 +206,7 @@ export default async function DashboardPage() {
       submissions={submissions}
       recommendations={recommendations}
       userEmail={email}
+      paystackPublicKey={paystackPublicKey}
     />
   );
 }

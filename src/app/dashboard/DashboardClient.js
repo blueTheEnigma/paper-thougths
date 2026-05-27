@@ -218,7 +218,7 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
   );
 }
 
-export default function DashboardClient({ profile, initialOrders, submissions = [], recommendations, userEmail }) {
+export default function DashboardClient({ profile, initialOrders, submissions = [], recommendations, userEmail, paystackPublicKey }) {
   const [orders] = useState(initialOrders || []);
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -230,6 +230,12 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const [lifetimeLeaves, setLifetimeLeaves] = useState(profile?.lifetimeLeaves || 0);
   const [bookVouchersGifted, setBookVouchersGifted] = useState(profile?.bookVouchersGifted || 0);
   
+  // States for leaf purchases & transactions history
+  const [showBuyLeavesModal, setShowBuyLeavesModal] = useState(false);
+  const [isBuyingLeaves, setIsBuyingLeaves] = useState(false);
+  const [transactions, setTransactions] = useState([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
+
   // Chapter Pool States
   const [chapterPool, setChapterPool] = useState(null);
   const [donationAmount, setDonationAmount] = useState('');
@@ -245,6 +251,29 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const [showPortal, setShowPortal] = useState(true);
   const [mounted, setMounted] = useState(false);
 
+  // Load transaction history ledger from local DB
+  const fetchTransactions = async () => {
+    try {
+      setTransactionsLoading(true);
+      const res = await fetch('/api/leaves/transactions');
+      const data = await res.json();
+      if (data.success) {
+        setTransactions(data.transactions);
+      }
+    } catch (e) {
+      console.error("Failed to fetch transactions:", e);
+    } finally {
+      setTransactionsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (mounted) {
+      fetchTransactions();
+    }
+  }, [mounted]);
+
+  // Load Paystack Inline script on client mount
   useEffect(() => {
     setMounted(true);
     if (typeof window !== 'undefined') {
@@ -252,8 +281,97 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
       setBdayDismissed(dismissed);
       const seen = sessionStorage.getItem('seen_dashboard_portal') === 'true';
       setShowPortal(!seen);
+
+      if (!document.getElementById('paystack-inline-js')) {
+        const script = document.createElement('script');
+        script.src = 'https://js.paystack.co/v2/inline.js';
+        script.async = true;
+        script.id = 'paystack-inline-js';
+        document.body.appendChild(script);
+      }
     }
   }, []);
+
+  // Purchase Leaves inline payment with Paystack
+  const handlePurchaseLeaves = async (leavesAmount, priceAmount) => {
+    if (isBuyingLeaves) return;
+
+    const paystackKey = paystackPublicKey || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+    if (!paystackKey) {
+      alert("Paystack is not configured on the client.");
+      return;
+    }
+
+    if (typeof window === 'undefined' || !window.PaystackPop) {
+      alert("Paystack script is still loading. Please try again in a few seconds.");
+      return;
+    }
+
+    setIsBuyingLeaves(true);
+
+    try {
+      const popup = new window.PaystackPop();
+      popup.newTransaction({
+        key: paystackKey,
+        email: userEmail || profile?.email || 'member@paperthoughts.org',
+        amount: priceAmount * 100, // NGN in kobo
+        currency: 'NGN',
+        ref: 'PL-' + Math.floor((Math.random() * 1000000000) + 1),
+        onSuccess: async (transaction) => {
+          try {
+            const verifyRes = await fetch('/api/leaves/purchase', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                reference: transaction.reference,
+                bundleAmount: leavesAmount,
+                price: priceAmount
+              })
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.success) {
+              setSpendableLeaves(verifyData.spendableLeaves);
+              setLifetimeLeaves(prev => prev + leavesAmount);
+              
+              // Trigger confetti celebration
+              confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { y: 0.6 }
+              });
+
+              alert(`Success! You have purchased ${leavesAmount} leaves.`);
+              setShowBuyLeavesModal(false);
+              
+              // Refetch transactions ledger list
+              fetchTransactions();
+            } else {
+              alert(verifyData.error || 'Failed to verify transaction. Please contact support.');
+            }
+          } catch (e) {
+            console.error('Failed to verify leaf purchase', e);
+            alert('A connection error occurred during verification. Reference: ' + transaction.reference);
+          } finally {
+            setIsBuyingLeaves(false);
+          }
+        },
+        onCancel: () => {
+          setIsBuyingLeaves(false);
+        },
+        onError: (error) => {
+          console.error('Paystack transaction error:', error);
+          setIsBuyingLeaves(false);
+          alert('An error occurred during payment. Please try again.');
+        }
+      });
+    } catch (err) {
+      console.error('Paystack initialization error:', err);
+      setIsBuyingLeaves(false);
+      alert('Failed to initialize checkout. Please try again.');
+    }
+  };
 
   const handleEnterPortal = () => {
     sessionStorage.setItem('seen_dashboard_portal', 'true');
@@ -378,6 +496,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
           current_leaves_balance: data.data.remainingBalance
         }));
         setDonationAmount('');
+        fetchTransactions(); // Refresh transactions ledger history!
         
         if (data.data.vouchersGenerated > 0) {
           setDonateMessage({ 
@@ -693,9 +812,17 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
               <Coins size={60} className="text-burgundy" />
             </div>
             <div className="space-y-4">
-              <div>
-                <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Spendable Leaves</span>
-                <div className="text-4xl font-display text-burgundy font-extrabold mt-1">{spendableLeaves} <span className="text-2xl">🍃</span></div>
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Spendable Leaves</span>
+                  <div className="text-4xl font-display text-burgundy font-extrabold mt-1">{spendableLeaves} <span className="text-2xl">🍃</span></div>
+                </div>
+                <button
+                  onClick={() => setShowBuyLeavesModal(true)}
+                  className="bg-burgundy text-cream text-[10px] font-sans font-bold px-3 py-1.5 rounded-lg hover:bg-ink transition-colors uppercase tracking-wider mt-1.5 cursor-pointer shadow-sm active:scale-95"
+                >
+                  Buy Leaves
+                </button>
               </div>
               
               {/* Lifetime Leaves / Mystery Package Progression */}
@@ -950,6 +1077,48 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
               )}
             </motion.div>
 
+            {/* Leaves Ledger Card */}
+            <motion.div variants={itemVariants} className="parchment-card p-8 sm:p-10 mt-6">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-2xl font-display font-extrabold text-burgundy">Leaves Ledger</h3>
+                <span className="text-[10px] font-sans font-bold text-ink/40 uppercase tracking-widest">Transaction History</span>
+              </div>
+
+              {transactionsLoading ? (
+                <div className="py-8 text-center text-xs text-ink/40 font-medium font-serif italic">Loading transactions...</div>
+              ) : transactions.length > 0 ? (
+                <div className="space-y-4">
+                  {transactions.map((tx) => (
+                    <div key={tx.id} className="flex justify-between items-center p-4 bg-sage/5 rounded-2xl border border-sage/10 group hover:border-burgundy/25 transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-sm ${
+                          tx.amount > 0 ? 'bg-green-50 text-green-700' : 'bg-burgundy/5 text-burgundy'
+                        }`}>
+                          {tx.amount > 0 ? '🍃' : '💸'}
+                        </div>
+                        <div>
+                          <div className="text-[9px] font-mono text-ink/45 uppercase tracking-wider mb-0.5">
+                            {new Date(tx.date).toLocaleDateString()} · {tx.type.replace('_', ' ')}
+                          </div>
+                          <p className="text-xs text-ink/85 leading-relaxed font-serif">{tx.description}</p>
+                        </div>
+                      </div>
+                      <span className={`font-mono text-xs font-bold ${
+                        tx.amount > 0 ? 'text-green-700' : 'text-burgundy'
+                      }`}>
+                        {tx.amount > 0 ? `+${tx.amount}` : tx.amount} 🍃
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-12 text-center bg-cream/35 rounded-2xl border border-dashed border-sage/30">
+                  <p className="text-ink/40 font-serif italic">No leaf transactions recorded yet.</p>
+                  <p className="text-[10px] text-ink/50 mt-1 max-w-sm mx-auto font-serif">Earn leaves by reviewing prompt submissions or writing critiques.</p>
+                </div>
+              )}
+            </motion.div>
+
           </div>
 
           {/* Sidebar */}
@@ -1125,6 +1294,83 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
               profile={profile}
               discountPercent={discountPercent}
             />
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Buy Leaves Modal */}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showBuyLeavesModal && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-ink/75 backdrop-blur-sm"
+                onClick={() => setShowBuyLeavesModal(false)}
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 30 }} 
+                animate={{ opacity: 1, scale: 1, y: 0 }} 
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-xl bg-cream rounded-3xl p-8 border border-sage/20 shadow-2xl z-10 max-h-[90vh] overflow-y-auto"
+              >
+                <button 
+                  onClick={() => setShowBuyLeavesModal(false)} 
+                  className="absolute top-4 right-4 bg-white/50 backdrop-blur rounded-full p-2 hover:bg-white transition-colors z-20"
+                >
+                  <X size={20} className="text-ink" />
+                </button>
+                
+                <div className="text-center mb-6">
+                  <div className="w-12 h-12 bg-accent/10 text-accent rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Coins size={24} className="text-burgundy" />
+                  </div>
+                  <h3 className="text-2xl font-display text-burgundy font-bold">Purchase Paper Leaves</h3>
+                  <p className="text-xs text-ink/70 mt-1 max-w-md mx-auto leading-relaxed font-serif">
+                    Instantly buy bundles of Paper Leaves. 1 Leaf is worth ₦10 at checkout to purchase physical books from the bookstore.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  {[
+                    { leaves: 50, price: 500, label: "Starter Bundle" },
+                    { leaves: 100, price: 1000, label: "Reader Choice" },
+                    { leaves: 200, price: 2000, label: "Bookworm Pack" },
+                    { leaves: 500, price: 5000, label: "Ledger Premium" }
+                  ].map((bundle) => (
+                    <button
+                      key={bundle.leaves}
+                      onClick={() => handlePurchaseLeaves(bundle.leaves, bundle.price)}
+                      disabled={isBuyingLeaves}
+                      className="bg-white hover:bg-sage/10 p-6 rounded-2xl border border-sage/20 text-center flex flex-col items-center justify-center gap-1.5 transition-all shadow-sm hover:shadow active:scale-95 group cursor-pointer disabled:opacity-50"
+                    >
+                      <span className="text-[10px] font-sans font-bold text-accent uppercase tracking-wider">{bundle.label}</span>
+                      <span className="text-3xl font-display font-extrabold text-burgundy flex items-center gap-1">
+                        {bundle.leaves} <span className="text-lg">🍃</span>
+                      </span>
+                      <span className="text-xs font-bold text-ink/60 font-mono mt-1">₦{bundle.price.toLocaleString()}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {isBuyingLeaves && (
+                  <div className="flex items-center justify-center gap-2 text-xs font-bold text-burgundy mb-2 font-serif italic">
+                    <div className="w-4 h-4 border-2 border-burgundy/30 border-t-burgundy rounded-full animate-spin"></div>
+                    Processing transaction with Paystack...
+                  </div>
+                )}
+                
+                <button 
+                  onClick={() => setShowBuyLeavesModal(false)}
+                  className="w-full bg-white hover:bg-sage/10 text-ink border border-sage/30 py-3.5 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>,
         document.body

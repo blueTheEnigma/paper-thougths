@@ -8,58 +8,20 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   try {
-    const { reference, lkid, name, email, items, subtotal, discount, total } = await requestData(req);
+    const { reference, lkid, name, email, items, subtotal, discount, total, leavesUsed } = await requestData(req);
 
-    if (!reference) {
-      return NextResponse.json({ success: false, error: 'Missing transaction reference.' }, { status: 400 });
-    }
+    const finalTotal = Math.max(0, parseFloat(total || 0));
+    const leaves = parseInt(leavesUsed || 0, 10);
+    const isLeafOnly = finalTotal === 0;
 
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
-    if (!paystackSecret) {
-      return NextResponse.json({ success: false, error: 'Paystack is not configured on the server.' }, { status: 500 });
-    }
-
-    const gasUrl = process.env.GAS_WEBAPP_URL;
-    if (!gasUrl) {
-      return NextResponse.json({ success: false, error: 'Google Sheets configuration missing.' }, { status: 500 });
-    }
-
-    // 1. Verify payment with Paystack API
-    const paystackRes = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${paystackSecret}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!paystackRes.ok) {
-      const errText = await paystackRes.text();
-      console.error('Paystack verification request failed:', errText);
-      return NextResponse.json({ success: false, error: 'Failed to contact Paystack.' }, { status: 400 });
-    }
-
-    const paystackData = await paystackRes.json();
-    
-    if (!paystackData.status || paystackData.data.status !== 'success') {
-      return NextResponse.json({ success: false, error: 'Payment was not successful.' }, { status: 400 });
-    }
-
-    // Verify amount matches (Paystack amount is in kobo)
-    const expectedKobo = total * 100;
-    const actualKobo = paystackData.data.amount;
-    
-    if (Math.abs(actualKobo - expectedKobo) > 100) { // Allow up to 1 NGN difference for safety
-      return NextResponse.json({ success: false, error: 'Payment amount mismatch.' }, { status: 400 });
-    }
-
-    // 2. Resolve User ID in PostgreSQL
+    // 1. Resolve User ID and validate leaves
+    let dbUser = null;
     let dbUserId = null;
     let guestName = name || 'Guest Reader';
     try {
       const clerkUser = await currentUser();
       if (clerkUser) {
-        const dbUser = await syncOrCreateUser(clerkUser);
+        dbUser = await syncOrCreateUser(clerkUser);
         if (dbUser) {
           dbUserId = dbUser.id;
           guestName = null;
@@ -68,6 +30,62 @@ export async function POST(req) {
     } catch (e) {
       console.warn('Authentication check failed or user is not logged in:', e.message);
     }
+
+    if (leaves > 0) {
+      if (!dbUser) {
+        return NextResponse.json({ success: false, error: 'You must be signed in to purchase with Paper Leaves.' }, { status: 401 });
+      }
+      if ((dbUser.spendable_leaves || 0) < leaves) {
+        return NextResponse.json({ success: false, error: `Insufficient leaves balance: You only have ${dbUser.spendable_leaves || 0} Paper Leaves.` }, { status: 400 });
+      }
+    }
+
+    // 2. Verify payment with Paystack if not a leaf-only order
+    if (!isLeafOnly) {
+      if (!reference) {
+        return NextResponse.json({ success: false, error: 'Missing transaction reference.' }, { status: 400 });
+      }
+
+      const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+      if (!paystackSecret) {
+        return NextResponse.json({ success: false, error: 'Paystack is not configured on the server.' }, { status: 500 });
+      }
+
+      const paystackRes = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${paystackSecret}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!paystackRes.ok) {
+        const errText = await paystackRes.text();
+        console.error('Paystack verification request failed:', errText);
+        return NextResponse.json({ success: false, error: 'Failed to contact Paystack.' }, { status: 400 });
+      }
+
+      const paystackData = await paystackRes.json();
+      
+      if (!paystackData.status || paystackData.data.status !== 'success') {
+        return NextResponse.json({ success: false, error: 'Payment was not successful.' }, { status: 400 });
+      }
+
+      // Verify amount matches (Paystack amount is in kobo)
+      const expectedKobo = finalTotal * 100;
+      const actualKobo = paystackData.data.amount;
+      
+      if (Math.abs(actualKobo - expectedKobo) > 100) { // Allow up to 1 NGN difference for safety
+        return NextResponse.json({ success: false, error: 'Payment amount mismatch.' }, { status: 400 });
+      }
+    }
+
+    const gasUrl = process.env.GAS_WEBAPP_URL;
+    if (!gasUrl) {
+      return NextResponse.json({ success: false, error: 'Google Sheets configuration missing.' }, { status: 500 });
+    }
+
+    const salesRep = isLeafOnly ? 'Leaves' : (leaves > 0 ? 'Paystack + Leaves' : 'Paystack');
 
     // 3. Log the order to Google Sheets (createOrder)
     let orderId = 'ORD-' + Math.floor(Math.random() * 1000000);
@@ -81,9 +99,9 @@ export async function POST(req) {
           name: name || 'Guest Reader',
           items: items.map(i => ({ title: i.title, price: i.price })),
           subtotal,
-          discount,
-          total,
-          salesRep: 'Paystack'
+          discount: parseFloat(discount || 0) + (leaves * 10), // Total discount includes applied leaves value
+          total: finalTotal,
+          salesRep
         })
       });
       const createData = await createRes.json();
@@ -93,7 +111,7 @@ export async function POST(req) {
     } catch (e) {
       console.error('Failed to log order to Google Sheets:', e);
     }
-
+ 
     // 4. Finalize the order to 'Paid' in Google Sheets (marks books Sold Out in sheet)
     try {
       await fetch(gasUrl, {
@@ -107,27 +125,44 @@ export async function POST(req) {
     } catch (e) {
       console.error('Failed to finalize order in Google Sheets:', e);
     }
-
-    // 5. Write the order to the local PostgreSQL database
+ 
+    // 5. Write the order and update leaves in local PostgreSQL database (transaction)
     const itemsText = items.map(i => i.title).join(', ');
     try {
-      await Database.query(`
-        INSERT INTO orders (order_id, user_id, guest_name, items, subtotal, discount, total, status, sales_rep)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      `, [
-        orderId,
-        dbUserId,
-        guestName,
-        itemsText,
-        subtotal,
-        discount,
-        total,
-        'Paid',
-        'Paystack'
-      ]);
+      await Database.transaction(async (client) => {
+        // Insert order record
+        await client.query(`
+          INSERT INTO orders (order_id, user_id, guest_name, items, subtotal, discount, total, status, sales_rep, leaves_spent)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `, [
+          orderId,
+          dbUserId,
+          guestName,
+          itemsText,
+          subtotal,
+          discount,
+          finalTotal,
+          'Paid',
+          salesRep,
+          leaves
+        ]);
+
+        // Deduct spendable leaves from user and log transaction
+        if (leaves > 0) {
+          await client.query(`
+            UPDATE users 
+            SET spendable_leaves = spendable_leaves - $1 
+            WHERE id = $2
+          `, [leaves, dbUserId]);
+
+          await client.query(`
+            INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
+            VALUES ($1, $2, 'checkout_spend', $3)
+          `, [dbUserId, -leaves, `Spent ${leaves} leaves on order ${orderId}`]);
+        }
+      });
     } catch (e) {
-      console.error('Failed to save order to local PostgreSQL database:', e);
-      // We do not fail the request if local DB write fails, as the money was paid and sheets updated.
+      console.error('Failed to save order/deduct leaves in local PostgreSQL:', e);
     }
 
     // 6. Send email notification to all admins with sales auth AND the buyer

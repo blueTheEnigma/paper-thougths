@@ -34,6 +34,7 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [paymentSuccessOrder, setPaymentSuccessOrder] = useState(null);
   const [paymentSuccessItems, setPaymentSuccessItems] = useState([]);
+  const [leavesToUse, setLeavesToUse] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -182,28 +183,83 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
   const discount = Math.round(subtotal * discountPercent);
   const total = subtotal - discount;
 
+  // Maximum leaves that can be applied to the order (1 leaf = N10, capped at user balance or total order price)
+  const maxLeavesPossible = useMemo(() => {
+    if (!profile) return 0;
+    const maxLeavesForCost = Math.floor(total / 10);
+    return Math.min(profile.spendableLeaves || 0, maxLeavesForCost);
+  }, [profile, total]);
+
+  useEffect(() => {
+    setLeavesToUse(prev => Math.min(prev, maxLeavesPossible));
+  }, [maxLeavesPossible]);
+
+  const leavesDiscountValue = leavesToUse * 10;
+  const finalTotal = Math.max(0, total - leavesDiscountValue);
+
   const handleBagCheckout = async () => {
     if (bag.length === 0 || isCheckingOut) return;
 
-    if (typeof window === 'undefined' || !window.PaystackPop) {
-      alert("Payment checkout is still loading. Please wait a moment and try again.");
-      return;
-    }
-
     const paystackKey = paystackPublicKey || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
-    if (!paystackKey) {
+    if (finalTotal > 0 && !paystackKey) {
       alert("Paystack is not configured. Please contact the site administrator.");
       return;
     }
 
     setIsCheckingOut(true);
 
+    // If finalTotal is 0 (fully covered by leaves), skip Paystack popup entirely!
+    if (finalTotal === 0) {
+      try {
+        const verifyRes = await fetch('/api/orders/payment-verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reference: null,
+            lkid: profile?.lkid || 'Guest',
+            name: profile?.name || 'Guest Reader',
+            email: profile?.email || 'guest@paperthoughts.org',
+            items: bag.map(i => ({ title: i.title, price: i.price })),
+            subtotal,
+            discount,
+            total: finalTotal,
+            leavesUsed: leavesToUse
+          })
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.success) {
+          setPaymentSuccessItems([...bag]);
+          setPaymentSuccessOrder(verifyData.orderId);
+          clearBag();
+          setLeavesToUse(0);
+          setIsBagOpen(false);
+          fetchProfile(); // Reload leaves balance
+        } else {
+          alert(verifyData.error || 'Failed to verify transaction. Please contact support.');
+        }
+      } catch (e) {
+        console.error('Failed to verify payment', e);
+        alert('A connection error occurred during verification. Please contact support.');
+      } finally {
+        setIsCheckingOut(false);
+      }
+      return;
+    }
+
+    if (typeof window === 'undefined' || !window.PaystackPop) {
+      alert("Payment checkout is still loading. Please wait a moment and try again.");
+      setIsCheckingOut(false);
+      return;
+    }
+
     try {
       const popup = new window.PaystackPop();
       popup.newTransaction({
         key: paystackKey,
         email: profile?.email || 'guest@paperthoughts.org',
-        amount: total * 100, // Paystack amount is in kobo
+        amount: finalTotal * 100, // Paystack amount is in kobo
         currency: 'NGN',
         ref: 'PT-' + Math.floor((Math.random() * 1000000000) + 1),
         onSuccess: async (transaction) => {
@@ -219,7 +275,8 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
                 items: bag.map(i => ({ title: i.title, price: i.price })),
                 subtotal,
                 discount,
-                total
+                total: finalTotal,
+                leavesUsed: leavesToUse
               })
             });
 
@@ -229,7 +286,9 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
               setPaymentSuccessItems([...bag]);
               setPaymentSuccessOrder(verifyData.orderId);
               clearBag();
+              setLeavesToUse(0);
               setIsBagOpen(false);
+              fetchProfile(); // Reload leaves balance
             } else {
               alert(verifyData.error || 'Failed to verify transaction. Please contact support.');
             }
@@ -605,24 +664,63 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
                         </div>
                       </div>
                     )}
+
+                    {/* Paper Leaves Applied UI */}
+                    {isMember && (profile?.spendableLeaves > 0 || leavesToUse > 0) && (
+                      <div className="bg-[#FAF7F2] border border-[#C96A42]/30 p-4 rounded-2xl space-y-2 mb-2">
+                        <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-burgundy">
+                          <span className="flex items-center gap-1.5">🍃 Save to Buy (Leaves)</span>
+                          <span>{profile?.spendableLeaves} Available</span>
+                        </div>
+                        <p className="text-[11px] text-ink/70 font-serif leading-relaxed">
+                          Apply leaves to cover the book cost (1 leaf = ₦10).
+                        </p>
+                        <div className="flex items-stretch gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            max={maxLeavesPossible}
+                            value={leavesToUse || ''}
+                            onChange={(e) => {
+                              const val = Math.min(maxLeavesPossible, Math.max(0, parseInt(e.target.value) || 0));
+                              setLeavesToUse(val);
+                            }}
+                            className="w-full bg-cream border border-sage/30 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accent font-medium text-ink font-mono"
+                            placeholder="Leaves to apply..."
+                          />
+                          <button
+                            onClick={() => setLeavesToUse(maxLeavesPossible)}
+                            className="bg-burgundy text-cream px-3.5 rounded-xl text-[10px] font-sans font-bold hover:bg-ink transition-colors uppercase tracking-wider shrink-0 cursor-pointer"
+                          >
+                            Apply Max
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-ink/60">Subtotal</span>
                         <span className="font-bold text-ink font-mono">₦{subtotal.toLocaleString()}</span>
                       </div>
-                      {isMember && (
+                      {isMember && discount > 0 && (
                         <div className="flex justify-between text-sm text-sage font-bold">
                           <span>Archive Discount</span>
                           <span className="font-mono">-₦{discount.toLocaleString()}</span>
                         </div>
                       )}
+                      {leavesToUse > 0 && (
+                        <div className="flex justify-between text-sm text-green-700 font-bold">
+                          <span>Leaves Redeemed ({leavesToUse} 🍃)</span>
+                          <span className="font-mono">-₦{leavesDiscountValue.toLocaleString()}</span>
+                        </div>
+                      )}
                       <div className="pt-2 border-t border-sage/20 flex justify-between items-baseline">
                         <span className="text-lg font-display text-ink">Total</span>
-                        <span className="text-2xl font-display text-burgundy">₦{total.toLocaleString()}</span>
+                        <span className="text-2xl font-display text-burgundy">₦{finalTotal.toLocaleString()}</span>
                       </div>
                     </div>
-
+ 
                     <div className="pt-4 space-y-3">
                       <button 
                         onClick={handleBagCheckout}
@@ -636,12 +734,15 @@ export default function Bookstore({ initialBooks, paystackPublicKey }) {
                           </>
                         ) : (
                           <>
-                            <ShoppingBag size={20} /> Pay Online with Paystack
+                            <ShoppingBag size={20} /> {finalTotal === 0 ? "Checkout with Leaves" : "Pay Online with Paystack"}
                           </>
                         )}
                       </button>
                       <button 
-                        onClick={clearBag}
+                        onClick={() => {
+                          clearBag();
+                          setLeavesToUse(0);
+                        }}
                         className="w-full text-ink/40 text-xs font-bold uppercase tracking-widest hover:text-ink transition-colors py-2"
                       >
                         Empty Bag

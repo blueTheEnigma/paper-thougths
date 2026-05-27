@@ -89,59 +89,77 @@ export async function POST(request) {
     const earlyBirdLimit = new Date(lastSaturday.getTime() + 24 * 60 * 60 * 1000);
     const isEarlyBird = now >= lastSaturday && now < earlyBirdLimit;
 
-    // Create the review
-    const newReview = await Database.queryOne(`
-      INSERT INTO peer_reviews (submission_id, reviewer_id, pacing_rating, strengths_array, mirror_response, highwater_response, pivot_response, is_early_bird)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING id, is_early_bird, created_at
-    `, [submissionId, dbUser.id, pacingRating, strengthsArray, mirrorResponse, highwaterResponse, pivotResponse, isEarlyBird]);
+    // Create the review and update rewards in a transaction
+    const result = await Database.transaction(async (client) => {
+      // 1. Insert review record
+      const reviewRes = await client.query(`
+        INSERT INTO peer_reviews (submission_id, reviewer_id, pacing_rating, strengths_array, mirror_response, highwater_response, pivot_response, is_early_bird)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id, is_early_bird, created_at
+      `, [submissionId, dbUser.id, pacingRating, strengthsArray, mirrorResponse, highwaterResponse, pivotResponse, isEarlyBird]);
+      const newReview = reviewRes.rows[0];
 
-    let tokensRewarded = 0.0;
-    let leavesRewarded = 0;
-    let newTotalLeaves = dbUser.spendable_leaves;
-    let newLifetimeLeaves = dbUser.lifetime_leaves;
-    let vouchersEarned = dbUser.book_vouchers_gifted;
-    let milestoneTriggered = false;
+      let tokensRewarded = 0.0;
+      let leavesRewarded = 0;
+      let milestoneTriggered = false;
 
-    if (isRewarded) {
-      // Calculate reward payouts
-      tokensRewarded = isEarlyBird ? 1.5 : 1.0;
-      leavesRewarded = isEarlyBird ? 15 : 10;
+      if (isRewarded) {
+        // Calculate reward payouts
+        tokensRewarded = isEarlyBird ? 1.5 : 1.0;
+        leavesRewarded = isEarlyBird ? 15 : 10;
 
-      newTotalLeaves = dbUser.spendable_leaves + leavesRewarded;
-      newLifetimeLeaves = dbUser.lifetime_leaves + leavesRewarded;
+        // Fetch user leaves stats to check milestones
+        const userStatsRes = await client.query(`
+          SELECT spendable_leaves, lifetime_leaves, book_vouchers_gifted FROM users WHERE id = $1
+        `, [dbUser.id]);
+        const userStats = userStatsRes.rows[0];
 
-      // Check for hidden 500-leaves milestone gift
-      const totalMilestonesEarned = Math.floor(newLifetimeLeaves / 500);
-      const originalMilestonesEarned = dbUser.book_vouchers_gifted || 0;
-      
-      if (totalMilestonesEarned > originalMilestonesEarned) {
-        vouchersEarned = totalMilestonesEarned;
-        milestoneTriggered = true;
+        const newLifetimeLeaves = (userStats.lifetime_leaves || 0) + leavesRewarded;
+        const totalMilestonesEarned = Math.floor(newLifetimeLeaves / 500);
+        const originalMilestonesEarned = userStats.book_vouchers_gifted || 0;
+        let vouchersEarned = userStats.book_vouchers_gifted || 0;
+        
+        if (totalMilestonesEarned > originalMilestonesEarned) {
+          vouchersEarned = totalMilestonesEarned;
+          milestoneTriggered = true;
+        }
+
+        // Update rewards inside database
+        await client.query(`
+          UPDATE users 
+          SET milestone_tokens = milestone_tokens + $1,
+              spendable_leaves = spendable_leaves + $2,
+              lifetime_leaves = lifetime_leaves + $2,
+              book_vouchers_gifted = $3
+          WHERE id = $4
+        `, [tokensRewarded, leavesRewarded, vouchersEarned, dbUser.id]);
+
+        // Log transaction to leaf_transactions
+        await client.query(`
+          INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
+          VALUES ($1, $2, 'review', $3)
+        `, [dbUser.id, leavesRewarded, `Earned ${leavesRewarded} leaves for critique of submission #${submissionId}`]);
       }
 
-      // Update rewards inside database
-      await Database.query(`
-        UPDATE users 
-        SET milestone_tokens = milestone_tokens + $1,
-            spendable_leaves = spendable_leaves + $2,
-            lifetime_leaves = lifetime_leaves + $2,
-            book_vouchers_gifted = $3
-        WHERE id = $4
-      `, [tokensRewarded, leavesRewarded, vouchersEarned, dbUser.id]);
-    }
+      return {
+        newReview,
+        tokensRewarded,
+        leavesRewarded,
+        milestoneTriggered
+      };
+    });
 
     return NextResponse.json({
       success: true,
       message: isRewarded 
-        ? `Critique submitted successfully! Rewarded ${tokensRewarded} Milestone Tokens and ${leavesRewarded} Paper Leaves.`
+        ? `Critique submitted successfully! Rewarded ${result.tokensRewarded} Milestone Tokens and ${result.leavesRewarded} Paper Leaves.`
         : 'Critique submitted successfully! You have already completed 3 rewarded reviews this week, so this critique was recorded without adding extra tokens.',
       rewarded: isRewarded,
       earlyBird: isEarlyBird,
-      tokensEarned: tokensRewarded,
-      leavesEarned: leavesRewarded,
-      milestoneTriggered,
-      review: newReview
+      tokensEarned: result.tokensRewarded,
+      leavesEarned: result.leavesRewarded,
+      milestoneTriggered: result.milestoneTriggered,
+      review: result.newReview
     });
 
   } catch (error) {

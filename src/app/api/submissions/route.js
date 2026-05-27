@@ -54,76 +54,94 @@ export async function POST(request) {
       }, { status: 403 });
     }
 
-    // Insert new submission into PostgreSQL
-    // Status is 'queued' by default, waiting for the Saturday 12:00 AM cron to set it to 'active_batch'
-    const newSubmission = await Database.queryOne(`
-      INSERT INTO submissions (author_id, title, genre, logline, body_text, batch_status)
-      VALUES ($1, $2, $3, $4, $5, 'queued')
-      RETURNING id, title, genre, batch_status
-    `, [dbUser.id, title, genre, logline, bodyText]);
-
-    // Update user's last_submission_date
-    await Database.query(`
-      UPDATE users 
-      SET last_submission_date = CURRENT_DATE 
-      WHERE id = $1
-    `, [dbUser.id]);
-
     // Calculate current batch cycle start (Saturday 12:00 AM)
     const lastSaturday = getLastSaturdayStart();
 
-    // Query submissions count in this batch cycle for this user (excluding the new one to check if this was the first)
-    const userSubmissionsThisWeek = await Database.queryOne(`
-      SELECT COUNT(*) as count 
-      FROM submissions 
-      WHERE author_id = $1 AND created_at >= $2 AND id != $3
-    `, [dbUser.id, lastSaturday, newSubmission.id]);
+    const result = await Database.transaction(async (client) => {
+      // 1. Create submission
+      const subRes = await client.query(`
+        INSERT INTO submissions (author_id, title, genre, logline, body_text, batch_status)
+        VALUES ($1, $2, $3, $4, $5, 'queued')
+        RETURNING id, title, genre, batch_status
+      `, [dbUser.id, title, genre, logline, bodyText]);
+      const newSubmission = subRes.rows[0];
 
-    const submissionCount = parseInt(userSubmissionsThisWeek?.count || 0);
-    const isFirstSubmissionThisWeek = (submissionCount === 0);
+      // 2. Update user's last_submission_date
+      await client.query(`
+        UPDATE users 
+        SET last_submission_date = CURRENT_DATE 
+        WHERE id = $1
+      `, [dbUser.id]);
 
-    let tokensRewarded = 0.0;
-    let leavesRewarded = 0;
-    let milestoneTriggered = false;
+      // 3. Count weekly submissions (excluding this new one)
+      const userSubmissionsThisWeek = await client.query(`
+        SELECT COUNT(*) as count 
+        FROM submissions 
+        WHERE author_id = $1 AND created_at >= $2 AND id != $3
+      `, [dbUser.id, lastSaturday, newSubmission.id]);
+      const submissionCount = parseInt(userSubmissionsThisWeek.rows[0]?.count || 0);
+      const isFirstSubmissionThisWeek = (submissionCount === 0);
 
-    if (isFirstSubmissionThisWeek) {
-      tokensRewarded = 1.0;
-      leavesRewarded = 0;
+      let tokensRewarded = 0.0;
+      let leavesRewarded = 0;
+      let milestoneTriggered = false;
 
-      const newTotalLeaves = (dbUser.spendable_leaves || 0) + leavesRewarded;
-      const newLifetimeLeaves = (dbUser.lifetime_leaves || 0) + leavesRewarded;
+      if (isFirstSubmissionThisWeek) {
+        tokensRewarded = 1.0;
+        leavesRewarded = 5;
 
-      // Check for hidden 500-leaves milestone gift
-      const totalMilestonesEarned = Math.floor(newLifetimeLeaves / 500);
-      const originalMilestonesEarned = dbUser.book_vouchers_gifted || 0;
-      let vouchersEarned = dbUser.book_vouchers_gifted || 0;
-      
-      if (totalMilestonesEarned > originalMilestonesEarned) {
-        vouchersEarned = totalMilestonesEarned;
-        milestoneTriggered = true;
+        // Fetch user leaves stats to check hidden milestone
+        const userStatsRes = await client.query(`
+          SELECT spendable_leaves, lifetime_leaves, book_vouchers_gifted FROM users WHERE id = $1
+        `, [dbUser.id]);
+        const userStats = userStatsRes.rows[0];
+
+        const newLifetimeLeaves = (userStats.lifetime_leaves || 0) + leavesRewarded;
+        const totalMilestonesEarned = Math.floor(newLifetimeLeaves / 500);
+        const originalMilestonesEarned = userStats.book_vouchers_gifted || 0;
+        let vouchersEarned = userStats.book_vouchers_gifted || 0;
+        
+        if (totalMilestonesEarned > originalMilestonesEarned) {
+          vouchersEarned = totalMilestonesEarned;
+          milestoneTriggered = true;
+        }
+
+        // Update rewards inside database
+        await client.query(`
+          UPDATE users 
+          SET milestone_tokens = milestone_tokens + $1,
+              spendable_leaves = spendable_leaves + $2,
+              lifetime_leaves = lifetime_leaves + $2,
+              book_vouchers_gifted = $3
+          WHERE id = $4
+        `, [tokensRewarded, leavesRewarded, vouchersEarned, dbUser.id]);
+
+        // Log transaction to leaf_transactions
+        await client.query(`
+          INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
+          VALUES ($1, $2, 'submission', $3)
+        `, [dbUser.id, leavesRewarded, `Earned ${leavesRewarded} leaves for the first weekly prompt submission`]);
       }
 
-      // Update rewards inside database
-      await Database.query(`
-        UPDATE users 
-        SET milestone_tokens = milestone_tokens + $1,
-            spendable_leaves = spendable_leaves + $2,
-            lifetime_leaves = lifetime_leaves + $2,
-            book_vouchers_gifted = $3
-        WHERE id = $4
-      `, [tokensRewarded, leavesRewarded, vouchersEarned, dbUser.id]);
-    }
+      return {
+        newSubmission,
+        isFirstSubmissionThisWeek,
+        tokensRewarded,
+        leavesRewarded,
+        milestoneTriggered
+      };
+    });
 
     return NextResponse.json({ 
       success: true, 
-      message: isFirstSubmissionThisWeek
-        ? `Submission successfully uploaded and queued. Rewarded ${tokensRewarded} Milestone Tokens and ${leavesRewarded} Paper Leaves!`
+      message: result.isFirstSubmissionThisWeek
+        ? `Submission successfully uploaded and queued. Rewarded ${result.tokensRewarded} Milestone Tokens and ${result.leavesRewarded} Paper Leaves!`
         : 'Submission successfully uploaded and queued.',
-      rewarded: isFirstSubmissionThisWeek,
-      tokensEarned: tokensRewarded,
-      leavesEarned: leavesRewarded,
-      milestoneTriggered,
-      submission: newSubmission
+      rewarded: result.isFirstSubmissionThisWeek,
+      tokensEarned: result.tokensRewarded,
+      leavesEarned: result.leavesRewarded,
+      milestoneTriggered: result.milestoneTriggered,
+      submission: result.newSubmission
     });
   } catch (error) {
     console.error('Submission creation failed:', error);

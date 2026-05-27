@@ -39,6 +39,12 @@ export async function POST(request) {
         WHERE id = $2
       `, [donationAmount, dbUser.id]);
 
+      // 1b. Log to leaf_transactions ledger
+      await client.query(`
+        INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
+        VALUES ($1, $2, 'chapter_pool_donation', $3)
+      `, [dbUser.id, -donationAmount, `Donated ${donationAmount} leaves to chapter pool`]);
+
       // 2. Fetch current chapter pool details
       const pool = await client.queryOne(`
         SELECT id, current_leaves_balance, target_leaves_limit 

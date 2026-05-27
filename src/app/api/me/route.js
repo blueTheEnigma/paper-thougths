@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
+import { syncOrCreateUser } from '@/lib/permissions';
 
 export async function GET() {
   try {
@@ -43,6 +44,21 @@ export async function GET() {
 
     try {
       const result = JSON.parse(rawResponse);
+      
+      if (result.success && result.profile) {
+        // Sync & fetch PostgreSQL user stats
+        try {
+          const dbUser = await syncOrCreateUser(user);
+          if (dbUser) {
+            result.profile.spendableLeaves = parseInt(dbUser.spendable_leaves || 0);
+            result.profile.lifetimeLeaves = parseInt(dbUser.lifetime_leaves || 0);
+            result.profile.lkid = dbUser.lk_id || result.profile.lkid || 'Guest';
+          }
+        } catch (dbErr) {
+          console.error("Failed to merge DB stats to /api/me profile:", dbErr);
+        }
+      }
+
       return NextResponse.json(result);
     } catch (parseError) {
       return NextResponse.json({ success: false, error: 'Malformed response from backend' }, { status: 500 });
