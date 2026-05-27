@@ -881,11 +881,11 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                       </div>
 
                       {/* Spendable Leaves Card */}
-                      <div className="parchment-card p-5 sm:p-8 flex flex-col justify-between group min-h-[220px]">
+                      <div className="parchment-card p-5 sm:p-8 relative overflow-hidden flex flex-col justify-between group min-h-[220px]">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform pointer-events-none">
                           <Coins size={60} className="text-burgundy" />
                         </div>
-                        <div className="space-y-4">
+                        <div className="relative z-10 space-y-4">
                           <div className="flex justify-between items-start">
                             <div>
                               <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Spendable Leaves</span>
@@ -925,7 +925,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform pointer-events-none">
                             <Flame size={80} className="text-burgundy" />
                           </div>
-                          <div className="space-y-4">
+                          <div className="relative z-10 space-y-4">
                             <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Writing Streak</span>
                             <div className="flex items-baseline gap-2 mt-1">
                               <h2 className="text-4xl font-display font-extrabold text-burgundy leading-none tracking-tight">
@@ -936,7 +936,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                               Amazing! You've kept your streak active for {profile.streak} consecutive week{profile.streak > 1 ? 's' : ''}.
                             </p>
                           </div>
-                          <div className="border-t border-sage/10 pt-3 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/40">
+                          <div className="relative z-10 border-t border-sage/10 pt-3 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/40">
                             <span>Status: Active</span>
                             <span className="text-sage">Keep it up!</span>
                           </div>
