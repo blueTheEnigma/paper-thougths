@@ -26,24 +26,35 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { title, author, imageUrl, teaser, price, purchaseLink } = body;
+    const { title, author, imageUrl, teaser, price, purchaseLink, chapterId } = body;
 
     if (!title || !author || !imageUrl || !teaser) {
       return NextResponse.json({ success: false, error: 'Missing required fields: title, author, imageUrl, or teaser.' }, { status: 400 });
     }
 
-    // Set all existing books of the month to inactive and insert the new active one
+    const cleanChapterId = chapterId ? parseInt(chapterId, 10) : null;
+
+    // Set existing books of the month for this chapter to inactive and insert the new active one
     const newBotm = await Database.transaction(async (client) => {
-      await client.query(`
-        UPDATE book_of_the_month
-        SET active = FALSE
-      `);
+      if (cleanChapterId === null) {
+        await client.query(`
+          UPDATE book_of_the_month
+          SET active = FALSE
+          WHERE chapter_id IS NULL
+        `);
+      } else {
+        await client.query(`
+          UPDATE book_of_the_month
+          SET active = FALSE
+          WHERE chapter_id = $1
+        `, [cleanChapterId]);
+      }
 
       const res = await client.query(`
-        INSERT INTO book_of_the_month (title, author, image_url, teaser, price, purchase_link, active)
-        VALUES ($1, $2, $3, $4, $5, $6, TRUE)
-        RETURNING id, title, author, image_url as "imageUrl", teaser, price, purchase_link as "purchaseLink", active
-      `, [title, author, imageUrl, teaser, price || '0', purchaseLink || '/bookstore']);
+        INSERT INTO book_of_the_month (title, author, image_url, teaser, price, purchase_link, active, chapter_id)
+        VALUES ($1, $2, $3, $4, $5, $6, TRUE, $7)
+        RETURNING id, title, author, image_url as "imageUrl", teaser, price, purchase_link as "purchaseLink", active, chapter_id as "chapterId"
+      `, [title, author, imageUrl, teaser, price || '0', purchaseLink || '/bookstore', cleanChapterId]);
 
       return res.rows[0];
     });

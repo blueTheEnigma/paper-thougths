@@ -5,7 +5,7 @@ import {
   Users, BookOpen, ShoppingBag, MapPin, Search, ShieldAlert, 
   CheckCircle, ArrowLeft, RefreshCw, Star, Gift, Flame, AlertCircle, 
   TrendingUp, Settings, ExternalLink, Archive, FileText, Shield, X, Loader2,
-  Book, Cake, MessageCircle
+  Book, Cake, MessageCircle, Award
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -49,12 +49,123 @@ export default function AdminClient({
   const [errorMessage, setErrorMessage] = useState(null);
 
   // Book of the Month states
-  const [botm, setBotm] = useState(initialBotm || null);
-  const [botmTitle, setBotmTitle] = useState(initialBotm?.title || '');
-  const [botmAuthor, setBotmAuthor] = useState(initialBotm?.author || '');
-  const [botmImageUrl, setBotmImageUrl] = useState(initialBotm?.imageUrl || '');
-  const [botmTeaser, setBotmTeaser] = useState(initialBotm?.teaser || '');
+  const activeGen = Array.isArray(initialBotm) ? initialBotm.find(b => b.chapterId === null) : null;
+  const activeAbj = Array.isArray(initialBotm) ? initialBotm.find(b => b.chapterId === 3) : null;
+  
+  const [botmGeneral, setBotmGeneral] = useState(activeGen || null);
+  const [botmAbuja, setBotmAbuja] = useState(activeAbj || null);
+
+  const [botmChapterId, setBotmChapterId] = useState('');
+  const [botmTitle, setBotmTitle] = useState(activeGen?.title || '');
+  const [botmAuthor, setBotmAuthor] = useState(activeGen?.author || '');
+  const [botmImageUrl, setBotmImageUrl] = useState(activeGen?.imageUrl || '');
+  const [botmTeaser, setBotmTeaser] = useState(activeGen?.teaser || '');
   const [isSubmittingBotm, setIsSubmittingBotm] = useState(false);
+
+  const handleStreamChange = (val) => {
+    setBotmChapterId(val);
+    const book = val === "3" ? botmAbuja : botmGeneral;
+    setBotmTitle(book?.title || '');
+    setBotmAuthor(book?.author || '');
+    setBotmImageUrl(book?.imageUrl || '');
+    setBotmTeaser(book?.teaser || '');
+  };
+
+  const getMonthYearString = () => {
+    const d = new Date();
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    return `${months[d.getMonth()]} ${d.getFullYear()}`;
+  };
+
+  // Leaderboard states
+  const [leaderboardMonthYear, setLeaderboardMonthYear] = useState(getMonthYearString());
+  const [isGeneratingLeaderboard, setIsGeneratingLeaderboard] = useState(false);
+  const [isPublishingLeaderboard, setIsPublishingLeaderboard] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState(null);
+
+  const handleGenerateLeaderboard = async () => {
+    if (!leaderboardMonthYear.trim()) {
+      setErrorMessage("Please specify a month/year (e.g. May 2026).");
+      return;
+    }
+    setIsGeneratingLeaderboard(true);
+    setErrorMessage(null);
+    try {
+      const res = await fetch('/api/admin/leaderboard/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ monthYear: leaderboardMonthYear })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLeaderboardData({
+          generalBookieUserId: data.generalBookie?.id || null,
+          generalBookieName: data.generalBookie?.name || '',
+          generalBookieBook: data.generalBookie?.bookTitle || '',
+          generalBookieText: '',
+          
+          abujaBookieUserId: data.abujaBookie?.id || null,
+          abujaBookieName: data.abujaBookie?.name || '',
+          abujaBookieBook: data.abujaBookie?.bookTitle || '',
+          abujaBookieText: '',
+
+          reviewWinnerUserId: data.nominations.reviewOfTheMonth.userId,
+          reviewWinnerName: data.nominations.reviewOfTheMonth.name,
+          reviewWinnerText: data.nominations.reviewOfTheMonth.text,
+
+          authorWinnerUserId: data.nominations.authorOfTheMonth.userId,
+          authorWinnerName: data.nominations.authorOfTheMonth.name,
+          authorWinnerText: data.nominations.authorOfTheMonth.text,
+
+          improvedWinnerUserId: data.nominations.mostImprovedAuthor.userId,
+          improvedWinnerName: data.nominations.mostImprovedAuthor.name,
+          improvedWinnerText: data.nominations.mostImprovedAuthor.text
+        });
+      } else {
+        setErrorMessage(data.error || 'Failed to generate leaderboard suggestions.');
+      }
+    } catch (err) {
+      setErrorMessage('Connection error occurred while generating leaderboard.');
+    } finally {
+      setIsGeneratingLeaderboard(false);
+    }
+  };
+
+  const handlePublishLeaderboard = async () => {
+    if (!leaderboardData) return;
+    setIsPublishingLeaderboard(true);
+    setErrorMessage(null);
+    try {
+      const res = await fetch('/api/admin/leaderboard/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          monthYear: leaderboardMonthYear,
+          generalBookieUserId: leaderboardData.generalBookieUserId,
+          generalBookieText: leaderboardData.generalBookieText,
+          abujaBookieUserId: leaderboardData.abujaBookieUserId,
+          abujaBookieText: leaderboardData.abujaBookieText,
+          reviewOfTheMonthUserId: leaderboardData.reviewWinnerUserId,
+          reviewOfTheMonthText: leaderboardData.reviewWinnerText,
+          authorOfTheMonthUserId: leaderboardData.authorWinnerUserId,
+          authorOfTheMonthText: leaderboardData.authorWinnerText,
+          mostImprovedAuthorUserId: leaderboardData.improvedWinnerUserId,
+          mostImprovedAuthorText: leaderboardData.improvedWinnerText,
+          published: true
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Leaderboard published successfully to the dashboard!");
+      } else {
+        setErrorMessage(data.error || 'Failed to publish leaderboard.');
+      }
+    } catch (err) {
+      setErrorMessage('Connection error occurred while publishing leaderboard.');
+    } finally {
+      setIsPublishingLeaderboard(false);
+    }
+  };
 
   const handleUpdateBotm = async (e) => {
     e.preventDefault();
@@ -63,6 +174,7 @@ export default function AdminClient({
       return;
     }
 
+    const cleanChapterId = botmChapterId ? parseInt(botmChapterId, 10) : null;
     setIsSubmittingBotm(true);
     setErrorMessage(null);
     try {
@@ -75,12 +187,17 @@ export default function AdminClient({
           imageUrl: botmImageUrl,
           teaser: botmTeaser,
           price: '',
-          purchaseLink: ''
+          purchaseLink: '',
+          chapterId: cleanChapterId
         })
       });
       const data = await res.json();
       if (data.success) {
-        setBotm(data.botm);
+        if (cleanChapterId === null) {
+          setBotmGeneral(data.botm);
+        } else if (cleanChapterId === 3) {
+          setBotmAbuja(data.botm);
+        }
         alert("Book of the Month updated successfully!");
       } else {
         setErrorMessage(data.error || 'Failed to update Book of the Month.');
@@ -280,6 +397,7 @@ export default function AdminClient({
             { id: 'pools', label: 'Chapter Pools', icon: MapPin },
             { id: 'prompts', label: 'Weekly Prompts', icon: FileText },
             { id: 'botm', label: 'Book of the Month', icon: Book },
+            { id: 'leaderboard', label: 'Monthly Honors 🏆', icon: Award },
             { id: 'birthdays', label: 'Birthdays 🎂', icon: Cake },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -791,6 +909,18 @@ export default function AdminClient({
                     </h4>
 
                     <form onSubmit={handleUpdateBotm} className="space-y-5">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Target Stream / Region *</label>
+                        <select
+                          value={botmChapterId}
+                          onChange={(e) => handleStreamChange(e.target.value)}
+                          className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 font-medium"
+                        >
+                          <option value="">Paper Thoughts General (General Stream)</option>
+                          <option value="3">Abuja Edition (Abuja Chapter)</option>
+                        </select>
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Book Title *</label>
@@ -867,7 +997,9 @@ export default function AdminClient({
                     <div className="bg-white border border-sage/20 rounded-[32px] shadow-lg p-6 relative overflow-hidden flex flex-col items-center text-center space-y-4">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-burgundy/5 rounded-full blur-2xl" />
                       
-                      <span className="text-accent uppercase tracking-[0.25em] font-bold text-[8px] block">Current Spotlight</span>
+                      <span className="text-accent uppercase tracking-[0.25em] font-bold text-[8px] block">
+                        {botmChapterId === '3' ? '📍 Abuja stream Showcase Preview' : '🌍 General stream Showcase Preview'}
+                      </span>
                       
                       {/* Book Cover Preview */}
                       <div className="w-[120px] aspect-[2/3] overflow-hidden bg-cream shadow-md rounded-sm flex-shrink-0 border border-sage/10">
@@ -913,7 +1045,299 @@ export default function AdminClient({
               </motion.div>
             )}
 
-            {/* 7. UPCOMING BIRTHDAYS */}
+            {/* 7. LEADERBOARD / MONTHLY HONORS MANAGEMENT */}
+            {activeTab === 'leaderboard' && (
+              <motion.div 
+                key="leaderboard"
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h3 className="font-display text-2xl text-burgundy flex items-center gap-2">
+                      <Award className="text-burgundy" size={24} /> Clubhouse Honors & Leaderboard
+                    </h3>
+                    <p className="text-[10px] text-ink/40 uppercase tracking-widest font-bold mt-1">
+                      Generate, customize, and publish monthly highlights and honors.
+                    </p>
+                  </div>
+                  
+                  {/* Select Month/Year and Generate Button */}
+                  <div className="flex flex-wrap gap-3 items-stretch">
+                    <input
+                      type="text"
+                      value={leaderboardMonthYear}
+                      onChange={(e) => setLeaderboardMonthYear(e.target.value)}
+                      placeholder="e.g. May 2026"
+                      className="bg-white border border-sage/20 rounded-xl px-4 py-2 text-xs font-bold text-ink placeholder-ink/30"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGenerateLeaderboard}
+                      disabled={isGeneratingLeaderboard}
+                      className="bg-burgundy text-cream text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-ink transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm"
+                    >
+                      {isGeneratingLeaderboard ? (
+                        <>
+                          <Loader2 size={12} className="animate-spin" />
+                          <span>Analyzing Stats...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw size={12} />
+                          <span>Generate with AI</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Main Leaderboard Editor */}
+                {leaderboardData ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Left: Editor form (7 columns) */}
+                    <div className="lg:col-span-7 bg-cream/15 border border-sage/25 p-6 sm:p-8 rounded-3xl space-y-6">
+                      <h4 className="font-bold text-ink text-sm flex items-center gap-2">
+                        <Settings size={16} className="text-burgundy" /> Customize Nominees ({leaderboardMonthYear})
+                      </h4>
+
+                      <div className="space-y-5">
+                        {/* Bookies of the Month (Ready-Only Stats) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/50 p-4 rounded-2xl border border-sage/10">
+                          <div>
+                            <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy block">General Bookie (Dynamic)</span>
+                            <span className="font-sans font-bold text-xs text-ink block mt-0.5">
+                              {leaderboardData.generalBookieName || 'No bookie crowned yet.'}
+                            </span>
+                            <p className="text-[10px] text-ink/50 font-serif italic mt-1 leading-relaxed">
+                              {leaderboardData.generalBookieBook ? `Determined as first to finish and review "${leaderboardData.generalBookieBook}".` : 'No active General book reviews found.'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy block">Abuja Bookie (Dynamic)</span>
+                            <span className="font-sans font-bold text-xs text-ink block mt-0.5">
+                              {leaderboardData.abujaBookieName || 'No bookie crowned yet.'}
+                            </span>
+                            <p className="text-[10px] text-ink/50 font-serif italic mt-1 leading-relaxed">
+                              {leaderboardData.abujaBookieBook ? `Determined as first to finish and review "${leaderboardData.abujaBookieBook}".` : 'No active Abuja book reviews found.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Nominee 1: Reviewer of the Month */}
+                        <div className="bg-white/40 p-4 rounded-2xl border border-sage/10 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-accent">Reviewer of the Month</span>
+                            <select
+                              value={leaderboardData.reviewWinnerUserId || ''}
+                              onChange={(e) => {
+                                const id = parseInt(e.target.value, 10);
+                                const name = members.find(m => m.id === id)?.name || 'N/A';
+                                setLeaderboardData(prev => ({
+                                  ...prev,
+                                  reviewWinnerUserId: id || null,
+                                  reviewWinnerName: name
+                                }));
+                              }}
+                              className="bg-white border border-sage/20 rounded-lg px-2 py-1 text-[11px] text-ink font-semibold focus:outline-none focus:border-burgundy"
+                            >
+                              <option value="">Select User...</option>
+                              {members.map(m => (
+                                <option key={m.id} value={m.id}>{m.name} ({m.chapter})</option>
+                              ))}
+                            </select>
+                          </div>
+                          <textarea
+                            rows={3}
+                            value={leaderboardData.reviewWinnerText || ''}
+                            onChange={(e) => setLeaderboardData(prev => ({ ...prev, reviewWinnerText: e.target.value }))}
+                            className="w-full bg-white border border-sage/20 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 resize-none font-serif leading-relaxed"
+                          />
+                        </div>
+
+                        {/* Nominee 2: Author of the Month */}
+                        <div className="bg-white/40 p-4 rounded-2xl border border-sage/10 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-accent">Author of the Month</span>
+                            <select
+                              value={leaderboardData.authorWinnerUserId || ''}
+                              onChange={(e) => {
+                                const id = parseInt(e.target.value, 10);
+                                const name = members.find(m => m.id === id)?.name || 'N/A';
+                                setLeaderboardData(prev => ({
+                                  ...prev,
+                                  authorWinnerUserId: id || null,
+                                  authorWinnerName: name
+                                }));
+                              }}
+                              className="bg-white border border-sage/20 rounded-lg px-2 py-1 text-[11px] text-ink font-semibold focus:outline-none focus:border-burgundy"
+                            >
+                              <option value="">Select User...</option>
+                              {members.map(m => (
+                                <option key={m.id} value={m.id}>{m.name} ({m.chapter})</option>
+                              ))}
+                            </select>
+                          </div>
+                          <textarea
+                            rows={3}
+                            value={leaderboardData.authorWinnerText || ''}
+                            onChange={(e) => setLeaderboardData(prev => ({ ...prev, authorWinnerText: e.target.value }))}
+                            className="w-full bg-white border border-sage/20 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 resize-none font-serif leading-relaxed"
+                          />
+                        </div>
+
+                        {/* Nominee 3: Most Improved Author */}
+                        <div className="bg-white/40 p-4 rounded-2xl border border-sage/10 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-accent">Most Improved Author</span>
+                            <select
+                              value={leaderboardData.improvedWinnerUserId || ''}
+                              onChange={(e) => {
+                                const id = parseInt(e.target.value, 10);
+                                const name = members.find(m => m.id === id)?.name || 'N/A';
+                                setLeaderboardData(prev => ({
+                                  ...prev,
+                                  improvedWinnerUserId: id || null,
+                                  improvedWinnerName: name
+                                }));
+                              }}
+                              className="bg-white border border-sage/20 rounded-lg px-2 py-1 text-[11px] text-ink font-semibold focus:outline-none focus:border-burgundy"
+                            >
+                              <option value="">Select User...</option>
+                              {members.map(m => (
+                                <option key={m.id} value={m.id}>{m.name} ({m.chapter})</option>
+                              ))}
+                            </select>
+                          </div>
+                          <textarea
+                            rows={3}
+                            value={leaderboardData.improvedWinnerText || ''}
+                            onChange={(e) => setLeaderboardData(prev => ({ ...prev, improvedWinnerText: e.target.value }))}
+                            className="w-full bg-white border border-sage/20 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 resize-none font-serif leading-relaxed"
+                          />
+                        </div>
+
+                        {/* Publish Buttons */}
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={handlePublishLeaderboard}
+                            disabled={isPublishingLeaderboard}
+                            className="flex-1 bg-burgundy hover:bg-ink text-cream hover:text-white font-bold text-xs py-3.5 px-4 rounded-xl transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            {isPublishingLeaderboard ? (
+                              <>
+                                <Loader2 size={12} className="animate-spin" />
+                                <span>Publishing Honors...</span>
+                              </>
+                            ) : (
+                              <span>Save & Publish Leaderboard</span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Live Preview Panel */}
+                    <div className="lg:col-span-5 space-y-4">
+                      <h4 className="font-bold text-ink text-sm">Dashboard Widget Preview</h4>
+                      
+                      <div 
+                        className="parchment-card p-6 relative overflow-hidden border border-accent/15 rounded-[24px] shadow-md text-left"
+                        style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(242,169,138,0.05) 0%, rgba(250,247,242,1) 85%)' }}
+                      >
+                        <div className="absolute top-0 right-0 p-4 opacity-5">
+                          <Award size={80} className="text-burgundy" />
+                        </div>
+                        
+                        <div className="relative z-10 space-y-4">
+                          <div className="flex justify-between items-center border-b border-sage/10 pb-3">
+                            <div>
+                              <h3 className="text-[9px] font-sans font-bold uppercase tracking-[0.2em] text-accent">Clubhouse Honors</h3>
+                              <h4 className="font-display font-extrabold text-base text-burgundy mt-0.5">
+                                🏆 Leaderboard: {leaderboardMonthYear}
+                              </h4>
+                            </div>
+                            <span className="bg-primary/10 text-burgundy text-[8px] font-bold px-2 py-0.5 rounded-full border border-primary/20 uppercase tracking-widest">
+                              Honors
+                            </span>
+                          </div>
+
+                          <div className="space-y-4">
+                            {/* General Bookie */}
+                            {leaderboardData.generalBookieName && (
+                              <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
+                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy/85 flex items-center gap-1">🌍 General Bookie</span>
+                                <span className="font-sans font-bold text-xs text-ink block">{leaderboardData.generalBookieName}</span>
+                                <p className="text-[11px] text-ink/65 font-serif leading-normal italic">
+                                  "{leaderboardData.generalBookieText || `First to complete Natasha Bowen's '${leaderboardData.generalBookieBook || 'Skin of the Sea'}' and submit a review.`}"
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Abuja Bookie */}
+                            {leaderboardData.abujaBookieName && (
+                              <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
+                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy/85 flex items-center gap-1">📍 Abuja Bookie</span>
+                                <span className="font-sans font-bold text-xs text-ink block">{leaderboardData.abujaBookieName}</span>
+                                <p className="text-[11px] text-ink/65 font-serif leading-normal italic">
+                                  "{leaderboardData.abujaBookieText || `First to complete '${leaderboardData.abujaBookieBook || 'The Parlour Wife'}' and submit a review.`}"
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Reviewer of the Month */}
+                            {leaderboardData.reviewWinnerName && (
+                              <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
+                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-accent block">✍️ Reviewer of the Month</span>
+                                <span className="font-sans font-bold text-xs text-ink block">{leaderboardData.reviewWinnerName}</span>
+                                <p className="text-[11px] text-ink/75 font-serif leading-normal italic">
+                                  "{leaderboardData.reviewWinnerText || 'Reasoning text will appear here...'}"
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Author of the Month */}
+                            {leaderboardData.authorWinnerName && (
+                              <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
+                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-accent block">🖋️ Author of the Month</span>
+                                <span className="font-sans font-bold text-xs text-ink block">{leaderboardData.authorWinnerName}</span>
+                                <p className="text-[11px] text-ink/75 font-serif leading-normal italic">
+                                  "{leaderboardData.authorWinnerText || 'Reasoning text will appear here...'}"
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Most Improved Author */}
+                            {leaderboardData.improvedWinnerName && (
+                              <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
+                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-accent block">📈 Most Improved</span>
+                                <span className="font-sans font-bold text-xs text-ink block">{leaderboardData.improvedWinnerName}</span>
+                                <p className="text-[11px] text-ink/75 font-serif leading-normal italic">
+                                  "{leaderboardData.improvedWinnerText || 'Reasoning text will appear here...'}"
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-cream/10 border border-dashed border-sage/35 p-12 rounded-[24px] text-center space-y-4">
+                    <Award className="mx-auto text-ink/30 animate-pulse-subtle" size={48} />
+                    <div>
+                      <p className="text-ink/65 font-serif italic text-sm">No leaderboard draft loaded for {leaderboardMonthYear}.</p>
+                      <p className="text-[10px] text-ink/40 font-sans mt-1">Click the "Generate with AI" button above to pull user stats and analyze activity.</p>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* 8. UPCOMING BIRTHDAYS */}
             {activeTab === 'birthdays' && (
               <motion.div 
                 key="birthdays"

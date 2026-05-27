@@ -24,14 +24,16 @@ export default async function Home() {
     LIMIT 1
   `);
 
-  // Fetch active Book of the Month from the database
-  const botm = await Database.queryOne(`
-    SELECT id, title, author, image_url as "imageUrl", teaser, price, purchase_link as "purchaseLink"
+  // Fetch active Books of the Month from the database
+  const activeBooks = await Database.query(`
+    SELECT id, title, author, image_url as "imageUrl", teaser, price, purchase_link as "purchaseLink", chapter_id as "chapterId"
     FROM book_of_the_month
     WHERE active = TRUE
     ORDER BY created_at DESC
-    LIMIT 1
   `);
+
+  const generalBotm = activeBooks.find(b => b.chapterId === null) || null;
+  const abujaBotm = activeBooks.find(b => b.chapterId === 3) || null;
 
   return (
     <>
@@ -40,7 +42,8 @@ export default async function Home() {
         books={featuredBooks} 
         storyPrompt={storyPrompt ? storyPrompt.promptText : "No active story prompt."}
         poemPrompt={poemPrompt ? poemPrompt.promptText : "No active poem prompt."}
-        botm={botm}
+        generalBotm={generalBotm}
+        abujaBotm={abujaBotm}
       />
       <ContactUs />
     </>

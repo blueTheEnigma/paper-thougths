@@ -95,13 +95,12 @@ export default async function AdminPage() {
     ORDER BY active_date DESC, created_at DESC
   `);
 
-  // 7. Fetch Active Book of the Month
-  const currentBotm = await Database.queryOne(`
-    SELECT id, title, author, image_url as "imageUrl", teaser, price, purchase_link as "purchaseLink"
+  // 7. Fetch Active Books of the Month
+  const currentBotm = await Database.query(`
+    SELECT id, title, author, image_url as "imageUrl", teaser, price, purchase_link as "purchaseLink", chapter_id as "chapterId"
     FROM book_of_the_month
     WHERE active = TRUE
     ORDER BY created_at DESC
-    LIMIT 1
   `);
 
   // 8. Fetch upcoming birthdays (next 30 days)

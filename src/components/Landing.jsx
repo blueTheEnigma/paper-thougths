@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Star, Feather, Sparkles, Send, Loader2 } from 'lucide-react';
+import { ArrowRight, Star, Feather, Sparkles, Send, Loader2, X, CheckCircle2, ShieldAlert, BookOpen } from 'lucide-react';
 
 const QUOTES = [
   { text: "There is no agony like bearing an untold story inside you.", author: "Zora Neale Hurston" },
@@ -13,11 +13,107 @@ const QUOTES = [
   { text: "I have loved the stars too fondly to be fearful of the night.", author: "Sarah Williams" }
 ];
 
-export default function Landing({ images, books = [], storyPrompt, poemPrompt, botm }) {
+export default function Landing({ images, books = [], storyPrompt, poemPrompt, generalBotm, abujaBotm }) {
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterLoading, setNewsletterLoading] = useState(false);
   const [newsletterStatus, setNewsletterStatus] = useState(null);
+  
+  const [activeStream, setActiveStream] = useState('general');
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // Review modal states
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [isFinished, setIsFinished] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState(null);
+  const [reviewSuccess, setReviewSuccess] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('/api/me');
+        const data = await res.json();
+        if (data.success) {
+          setProfile(data.profile);
+        }
+      } catch (e) {
+        console.error("Auth check failed", e);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const fetchReviews = async (bookId) => {
+    setReviewsLoading(true);
+    try {
+      const res = await fetch(`/api/book-of-the-month/reviews?bookId=${bookId}`);
+      const data = await res.json();
+      if (data.success) {
+        setReviews(data.reviews || []);
+      }
+    } catch (err) {
+      console.error("Failed to load reviews", err);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const handleOpenReviews = (book) => {
+    setSelectedBook(book);
+    setReviewText("");
+    setIsFinished(false);
+    setRating(5);
+    setReviewError(null);
+    setReviewSuccess(null);
+    fetchReviews(book.id);
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!profile) return;
+    setSubmittingReview(true);
+    setReviewError(null);
+    setReviewSuccess(null);
+    try {
+      const res = await fetch('/api/book-of-the-month/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookId: selectedBook.id,
+          rating,
+          reviewText,
+          isFinished
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReviewSuccess(data.message);
+        setReviewText("");
+        setIsFinished(false);
+        setRating(5);
+        fetchReviews(selectedBook.id);
+        const profRes = await fetch('/api/me');
+        const profData = await profRes.json();
+        if (profData.success) {
+          setProfile(profData.profile);
+        }
+      } else {
+        setReviewError(data.error || 'Failed to submit review.');
+      }
+    } catch (err) {
+      setReviewError('Connection error occurred while submitting review.');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
@@ -104,12 +200,25 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
     return () => clearInterval(interval);
   }, []);
 
-  const botmBook = botm || {
+  const fallbackGeneral = {
+    id: 1,
+    title: 'Skin of the Sea',
+    author: 'Natasha Bowen',
+    imageUrl: '/images/skin_of_the_sea.png',
+    teaser: `A story of sirens, Yoruba gods, and a choice that could change the world. Natasha Bowen's debut is a breathtaking fantasy set in a world where history and mythology collide.`
+  };
+
+  const fallbackAbuja = {
+    id: 2,
     title: 'The Parlour Wife',
     author: 'Foluso Agbaje',
     imageUrl: '/images/the_parlour_wife.png',
     teaser: `Set against the backdrop of colonial Nigeria, 'The Parlour Wife' is a gripping historical drama exploring duty, class, secrets, and a woman's defiance. Foluso Agbaje weaves a rich tapestry of domestic intrigue and social upheaval with breathtaking prose.`
   };
+
+  const botmGeneral = generalBotm || fallbackGeneral;
+  const botmAbuja = abujaBotm || fallbackAbuja;
+  const botmBook = activeStream === 'general' ? botmGeneral : botmAbuja;
 
   // Scroll animations variants
   const fadeInReveal = {
@@ -314,41 +423,72 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
           {/* Right: Book of the Month Spotlight (7 Columns) - Pure Community Focus */}
           <motion.div 
             variants={fadeInReveal}
-            className="lg:col-span-7 bg-white border border-sage/15 rounded-[32px] shadow-xl p-8 md:p-10 flex flex-col sm:flex-row gap-8 items-center relative overflow-hidden group"
+            className="lg:col-span-7 bg-white border border-sage/15 rounded-[32px] shadow-xl p-8 md:p-10 flex flex-col relative overflow-hidden group justify-between"
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-burgundy/5 rounded-full blur-3xl -z-10" />
             
-            {/* Book Cover */}
-            <div className="w-full sm:w-2/5 aspect-[2/3] overflow-hidden bg-cream shadow-xl relative group rounded-lg flex-shrink-0 border border-ink/5">
-              <img 
-                src={botmBook.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} 
-                alt={botmBook.title} 
-                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
-              />
+            {/* Stream Toggle Tabs */}
+            <div className="flex border-b border-sage/10 pb-4 mb-6 justify-between items-center">
+              <span className="text-accent uppercase tracking-[0.2em] font-bold text-[10px]">Book of the Month</span>
+              <div className="flex bg-cream p-1 rounded-xl border border-sage/15">
+                <button
+                  type="button"
+                  onClick={() => setActiveStream('general')}
+                  className={`px-4 py-1.5 rounded-lg text-[10px] font-sans font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    activeStream === 'general' 
+                      ? 'bg-burgundy text-cream shadow-sm' 
+                      : 'text-ink/60 hover:text-ink'
+                  }`}
+                >
+                  General Stream
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveStream('abuja')}
+                  className={`px-4 py-1.5 rounded-lg text-[10px] font-sans font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    activeStream === 'abuja' 
+                      ? 'bg-burgundy text-cream shadow-sm' 
+                      : 'text-ink/60 hover:text-ink'
+                  }`}
+                >
+                  Abuja Edition
+                </button>
+              </div>
             </div>
 
-            {/* Book Info */}
-            <div className="flex-1 flex flex-col justify-between h-full space-y-5">
-              <div className="space-y-2">
-                <span className="text-accent uppercase tracking-[0.2em] font-bold text-[9px] block">Book of the Month</span>
-                <h3 className="text-2xl md:text-3xl font-display text-ink leading-tight font-extrabold">{botmBook.title}</h3>
-                <p className="text-xs font-bold text-burgundy/85 font-sans italic">— by {botmBook.author}</p>
+            <div className="flex flex-col sm:flex-row gap-8 items-center flex-1">
+              {/* Book Cover */}
+              <div className="w-full sm:w-2/5 aspect-[2/3] overflow-hidden bg-cream shadow-xl relative group rounded-lg flex-shrink-0 border border-ink/5">
+                <img 
+                  src={botmBook.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} 
+                  alt={botmBook.title} 
+                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
+                />
               </div>
 
-              <p className="text-xs sm:text-sm text-ink/75 leading-relaxed font-serif italic whitespace-pre-wrap">
-                "{botmBook.teaser || "A magnificent masterwork handpicked by the community editors. Available for checkout and discussions in our physical chapters."}"
-              </p>
-
-              {/* Rating and Community Status (NO prices/commercial metrics) */}
-              <div className="pt-4 border-t border-sage/10 flex items-center gap-4 text-xs font-sans font-bold text-ink/65">
-                <div className="flex items-center gap-1 text-accent">
-                  <Star size={14} className="fill-accent stroke-accent" />
-                  <Star size={14} className="fill-accent stroke-accent" />
-                  <Star size={14} className="fill-accent stroke-accent" />
-                  <Star size={14} className="fill-accent stroke-accent" />
-                  <Star size={14} className="stroke-accent" />
+              {/* Book Info */}
+              <div className="flex-1 flex flex-col justify-between h-full space-y-4">
+                <div className="space-y-2">
+                  <span className="text-burgundy/80 uppercase tracking-widest text-[9px] font-bold">
+                    {activeStream === 'general' ? '🌍 Paper Thoughts General' : '📍 Abuja Chapter Exclusive'}
+                  </span>
+                  <h3 className="text-2xl md:text-3xl font-display text-ink leading-tight font-extrabold">{botmBook.title}</h3>
+                  <p className="text-xs font-bold text-burgundy/85 font-sans italic">— by {botmBook.author}</p>
                 </div>
-                <span>Community pick & discussion active</span>
+
+                <p className="text-xs sm:text-sm text-ink/75 leading-relaxed font-serif italic whitespace-pre-wrap font-medium">
+                  "{botmBook.teaser || "A magnificent masterwork handpicked by the community editors. Available for checkout and discussions in our physical chapters."}"
+                </p>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => handleOpenReviews(botmBook)}
+                    className="w-full bg-burgundy hover:bg-ink text-cream hover:text-white px-5 py-3 uppercase tracking-widest text-[10px] font-bold transition-all shadow-md rounded-xl inline-flex items-center justify-center gap-2 hover:-translate-y-0.5 cursor-pointer"
+                  >
+                    <span>View Reviews & Discussion</span>
+                    <ArrowRight size={12} />
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -656,6 +796,249 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
         </div>
       </section>
 
+      {/* 8. Book of the Month Reviews and Discussion Modal Overlay */}
+      <AnimatePresence>
+        {selectedBook && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-ink/75 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="max-w-4xl w-full max-h-[90vh] bg-cream border border-sage/20 rounded-[32px] p-6 md:p-8 shadow-2xl flex flex-col overflow-hidden relative"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedBook(null)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-ink/5 text-ink/50 hover:text-ink transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+
+              {/* Modal Header */}
+              <div className="border-b border-sage/10 pb-4 mb-6">
+                <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-burgundy block">
+                  {selectedBook.chapterId === 3 ? '📍 Abuja Stream Exclusive' : '🌍 Paper Thoughts General Stream'}
+                </span>
+                <h3 className="text-xl md:text-2xl font-display font-extrabold text-ink">{selectedBook.title}</h3>
+                <span className="text-xs text-ink/65 italic font-serif">by {selectedBook.author}</span>
+              </div>
+
+              {/* Modal Body */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 overflow-y-auto flex-1 pr-2">
+                {/* Left: Book Cover and Status (5 columns) */}
+                <div className="md:col-span-5 flex flex-col items-center text-center space-y-5">
+                  <div className="w-40 aspect-[2/3] overflow-hidden bg-cream shadow-lg rounded-xl border border-ink/5">
+                    <img
+                      src={selectedBook.imageUrl || 'https://placehold.co/400x600?text=No+Cover'}
+                      alt={selectedBook.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  
+                  {/* Bookie Badge */}
+                  <div className="w-full bg-[#1b0610]/5 border border-sage/15 rounded-2xl p-4">
+                    <h5 className="text-[10px] font-sans font-bold text-accent uppercase tracking-widest mb-2">Bookie of the Month</h5>
+                    {reviews.some(r => r.isBookie) ? (
+                      <div className="flex flex-col items-center">
+                        <span className="bg-primary/20 text-burgundy text-xs font-sans font-bold uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5">
+                          🏆 {reviews.find(r => r.isBookie)?.reviewerName}
+                        </span>
+                        <p className="text-[10px] text-ink/60 font-serif italic mt-2">
+                          Crowned for being the first to finish and review this book!
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <span className="bg-sage/10 text-ink/50 text-[10px] font-sans font-semibold uppercase tracking-wider px-3 py-1 rounded-full inline-block">
+                          Crown is up for grabs!
+                        </span>
+                        <p className="text-[10px] text-ink/50 font-serif italic mt-2 leading-relaxed">
+                          Be the first to finish the book and submit your review to earn the 🏆 Bookie title and **+50 Leaves bonus**!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-ink/70 font-serif leading-relaxed text-left font-medium">
+                    {selectedBook.teaser}
+                  </p>
+                </div>
+
+                {/* Right: Reviews Feed & Submission Form (7 columns) */}
+                <div className="md:col-span-7 flex flex-col space-y-6">
+                  {/* Feed Section */}
+                  <div className="flex-1 flex flex-col min-h-[220px]">
+                    <h4 className="text-xs font-sans font-bold text-ink uppercase tracking-wider mb-3">
+                      Member Reviews ({reviews.length})
+                    </h4>
+                    
+                    {reviewsLoading ? (
+                      <div className="flex-1 flex flex-col items-center justify-center py-8 text-ink/40">
+                        <Loader2 className="animate-spin mb-2" size={24} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider font-sans">Loading reviews...</span>
+                      </div>
+                    ) : reviews.length === 0 ? (
+                      <div className="flex-1 flex flex-col items-center justify-center py-8 text-ink/40 text-center">
+                        <BookOpen className="opacity-30 mb-2" size={32} />
+                        <p className="text-xs font-serif italic">No reviews submitted yet. Start the conversation!</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 overflow-y-auto max-h-[240px] pr-2">
+                        {reviews.map(r => (
+                          <div
+                            key={r.id}
+                            className={`p-4 rounded-2xl border ${
+                              r.isBookie ? 'bg-primary/5 border-primary/20 shadow-sm' : 'bg-white border-sage/10'
+                            }`}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <span className="font-sans font-bold text-xs text-ink block">{r.reviewerName}</span>
+                                <span className="text-[9px] font-sans font-medium text-ink/45 uppercase tracking-wider">
+                                  {r.chapterName || 'Other'}
+                                </span>
+                              </div>
+                              <div className="flex flex-col items-end">
+                                <div className="flex gap-0.5 text-accent">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      size={10}
+                                      className={i < r.rating ? 'fill-accent stroke-accent' : 'stroke-accent'}
+                                    />
+                                  ))}
+                                </div>
+                                <div className="flex gap-1 mt-1.5">
+                                  {r.isFinished && (
+                                    <span className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[8px] font-sans font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full">
+                                      Finished
+                                    </span>
+                                  )}
+                                  {r.isBookie && (
+                                    <span className="bg-primary/20 text-burgundy border border-primary/30 text-[8px] font-sans font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                      🏆 Bookie
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-xs text-ink/80 font-serif leading-relaxed whitespace-pre-wrap italic">
+                              "{r.reviewText}"
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Submission Form Section */}
+                  <div className="border-t border-sage/10 pt-4">
+                    {!profile ? (
+                      <div className="bg-ink/5 p-4 rounded-2xl text-center border border-sage/15">
+                        <p className="text-xs text-ink/70 font-serif mb-3">You must be signed in to submit a Book of the Month review.</p>
+                        <Link
+                          href="/sign-in?redirect_url=/"
+                          className="bg-burgundy text-cream text-[10px] font-sans font-bold uppercase tracking-widest px-6 py-2.5 rounded-xl inline-block hover:-translate-y-0.5 transition-all cursor-pointer"
+                        >
+                          Sign In
+                        </Link>
+                      </div>
+                    ) : reviews.some(r => r.reviewerName === profile.name) ? (
+                      <div className="bg-emerald-500/5 border border-emerald-500/15 p-4 rounded-2xl flex items-center gap-2 text-emerald-800">
+                        <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0" />
+                        <span className="text-xs font-sans font-semibold">
+                          You have submitted your review for this Book of the Month! (Standard rewards credited)
+                        </span>
+                      </div>
+                    ) : selectedBook.chapterId === 3 && profile.chapter !== 'Abuja' ? (
+                      <div className="bg-amber-500/5 border border-amber-500/15 p-4 rounded-2xl flex items-center gap-2 text-amber-800">
+                        <ShieldAlert size={16} className="text-amber-600 flex-shrink-0" />
+                        <span className="text-xs font-sans font-semibold leading-relaxed">
+                          The Abuja stream is restricted. Only Abuja chapter members can review this book.
+                        </span>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleSubmitReview} className="space-y-4">
+                        <h4 className="text-xs font-sans font-bold text-ink uppercase tracking-wider">Leave a Review</h4>
+                        
+                        {reviewError && (
+                          <div className="bg-red-500/5 border border-red-500/15 p-3 rounded-xl text-red-600 text-xs font-sans font-semibold">
+                            {reviewError}
+                          </div>
+                        )}
+                        
+                        {reviewSuccess && (
+                          <div className="bg-emerald-500/5 border border-emerald-500/15 p-3 rounded-xl text-emerald-700 text-xs font-sans font-semibold">
+                            {reviewSuccess}
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4">
+                          <span className="text-xs font-sans text-ink/75 font-semibold">Rating:</span>
+                          <div className="flex gap-1 text-accent">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setRating(star)}
+                                className="hover:scale-120 transition-transform cursor-pointer"
+                              >
+                                <Star
+                                  size={16}
+                                  className={star <= rating ? 'fill-accent stroke-accent' : 'stroke-accent'}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <textarea
+                            required
+                            rows={3}
+                            value={reviewText}
+                            onChange={(e) => setReviewText(e.target.value)}
+                            placeholder="How did you find this book? (Minimum 30 words required to qualify for rewards)"
+                            className="w-full bg-white border border-sage/20 rounded-2xl p-4 text-xs font-serif focus:outline-none focus:border-burgundy text-ink placeholder-ink/35 transition-all resize-none font-medium"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-2 text-xs font-sans font-medium text-ink/75 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isFinished}
+                              onChange={(e) => setIsFinished(e.target.checked)}
+                              className="rounded border-sage/35 text-burgundy focus:ring-burgundy"
+                            />
+                            <span>I have finished reading this book</span>
+                          </label>
+                          
+                          <button
+                            type="submit"
+                            disabled={submittingReview}
+                            className="bg-burgundy hover:bg-ink text-cream hover:text-white px-6 py-2.5 rounded-xl text-[10px] font-sans font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
+                          >
+                            {submittingReview ? (
+                              <>
+                                <Loader2 size={12} className="animate-spin" />
+                                <span>Submitting...</span>
+                              </>
+                            ) : (
+                              <span>Submit Review</span>
+                            )}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
