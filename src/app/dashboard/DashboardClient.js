@@ -228,6 +228,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview'); // Tab state: 'overview' or 'leaderboard'
   
   // Local States for Bi-token economy
   const [spendableLeaves, setSpendableLeaves] = useState(profile?.spendableLeaves || 0);
@@ -727,8 +728,39 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
             onClose={() => setSelectedReportId(null)} 
           />
         ) : (
-          <>
-            {/* Bi-Token Economy & Membership Status Section */}
+          <div className="space-y-8">
+            {/* Tab Selection Navigation */}
+            <div className="flex border-b border-sage/15 gap-8">
+              <button
+                type="button"
+                onClick={() => setActiveTab('overview')}
+                className={`pb-3 text-sm font-sans font-bold uppercase tracking-wider relative transition-colors cursor-pointer ${
+                  activeTab === 'overview' ? 'text-burgundy' : 'text-ink/40 hover:text-ink/75'
+                }`}
+              >
+                Overview
+                {activeTab === 'overview' && (
+                  <motion.div layoutId="dashboard-tab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('leaderboard')}
+                className={`pb-3 text-sm font-sans font-bold uppercase tracking-wider relative transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'leaderboard' ? 'text-burgundy' : 'text-ink/40 hover:text-ink/75'
+                }`}
+              >
+                <Award size={16} className={activeTab === 'leaderboard' ? 'text-burgundy' : 'text-ink/40'} />
+                Clubhouse Honors
+                {activeTab === 'leaderboard' && (
+                  <motion.div layoutId="dashboard-tab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
+                )}
+              </button>
+            </div>
+
+            {activeTab === 'overview' ? (
+              <div className="space-y-8">
+                {/* Bi-Token Economy & Membership Status Section */}
             <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Membership Status Card */}
@@ -1137,96 +1169,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
           {/* Sidebar */}
           <div className="space-y-6">
             
-            {/* Monthly Leaderboard Highlights Card */}
-            <motion.div 
-              variants={itemVariants}
-              className="parchment-card p-6 relative overflow-hidden border border-accent/15 rounded-[24px] shadow-sm"
-              style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(242,169,138,0.05) 0%, rgba(250,247,242,1) 85%)' }}
-            >
-              <div className="absolute top-0 right-0 p-4 opacity-5">
-                <Award size={80} className="text-burgundy" />
-              </div>
-              <div className="relative z-10 space-y-4">
-                <div className="flex justify-between items-center border-b border-sage/10 pb-3">
-                  <div>
-                    <h3 className="text-[9px] font-sans font-bold uppercase tracking-[0.2em] text-accent">Clubhouse Honors</h3>
-                    <h4 className="font-display font-extrabold text-base text-burgundy mt-0.5">
-                      {activeLeaderboard ? `🏆 Leaderboard: ${activeLeaderboard.monthYear}` : '🏆 Monthly Leaderboard'}
-                    </h4>
-                  </div>
-                  <span className="bg-primary/10 text-burgundy text-[8px] font-bold px-2 py-0.5 rounded-full border border-primary/20 uppercase tracking-widest">
-                    Honors
-                  </span>
-                </div>
 
-                {!activeLeaderboard ? (
-                  <div className="py-4 text-center text-ink/40 font-serif italic text-xs leading-relaxed">
-                    No highlights published for this cycle yet. Check back soon as members complete reviews!
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {/* General Bookie */}
-                    {activeLeaderboard.generalBookieName && (
-                      <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy/85 flex items-center gap-1">🌍 General Bookie</span>
-                        </div>
-                        <span className="font-sans font-bold text-xs text-ink block">{activeLeaderboard.generalBookieName}</span>
-                        <p className="text-[11px] text-ink/65 font-serif leading-normal italic">
-                          "{activeLeaderboard.generalBookieText || 'First to finish and review the General Book of the Month!'}"
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Abuja Bookie */}
-                    {activeLeaderboard.abujaBookieName && (
-                      <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy/85 flex items-center gap-1">📍 Abuja Bookie</span>
-                        </div>
-                        <span className="font-sans font-bold text-xs text-ink block">{activeLeaderboard.abujaBookieName}</span>
-                        <p className="text-[11px] text-ink/65 font-serif leading-normal italic">
-                          "{activeLeaderboard.abujaBookieText || 'First to finish and review the Abuja Book of the Month!'}"
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Review of the Month */}
-                    {activeLeaderboard.reviewWinnerName && (
-                      <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
-                        <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-accent block">✍️ Reviewer of the Month</span>
-                        <span className="font-sans font-bold text-xs text-ink block">{activeLeaderboard.reviewWinnerName}</span>
-                        <p className="text-[11px] text-ink/75 font-serif leading-normal italic">
-                          "{activeLeaderboard.reviewOfTheMonthText}"
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Author of the Month */}
-                    {activeLeaderboard.authorWinnerName && (
-                      <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
-                        <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-accent block">🖋️ Author of the Month</span>
-                        <span className="font-sans font-bold text-xs text-ink block">{activeLeaderboard.authorWinnerName}</span>
-                        <p className="text-[11px] text-ink/75 font-serif leading-normal italic">
-                          "{activeLeaderboard.authorOfTheMonthText}"
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Most Improved Author */}
-                    {activeLeaderboard.improvedWinnerName && (
-                      <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
-                        <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-accent block">📈 Most Improved</span>
-                        <span className="font-sans font-bold text-xs text-ink block">{activeLeaderboard.improvedWinnerName}</span>
-                        <p className="text-[11px] text-ink/75 font-serif leading-normal italic">
-                          "{activeLeaderboard.mostImprovedAuthorText}"
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </motion.div>
 
             {/* Pay It Forward Chapter Pool Gifting Widget (Glassmorphic) */}
             <motion.div 
@@ -1384,7 +1327,149 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
 
           </div>
         </div>
-          </>
+              </div>
+            ) : (
+              <motion.div 
+                initial={{ opacity: 0, y: 15 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                className="space-y-8"
+              >
+                {/* Header card */}
+                <div 
+                  className="parchment-card p-8 md:p-10 relative overflow-hidden border border-accent/20 rounded-[32px] shadow-md text-center max-w-4xl mx-auto"
+                  style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(242,169,138,0.08) 0%, rgba(250,247,242,1) 90%)' }}
+                >
+                  <div className="absolute top-0 right-0 p-6 opacity-5 animate-pulse-subtle">
+                    <Award size={180} className="text-burgundy" />
+                  </div>
+                  <div className="relative z-10 max-w-2xl mx-auto space-y-4">
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-accent">Clubhouse Ledger</span>
+                    <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-burgundy">
+                      {activeLeaderboard ? `🏆 The Clubhouse Honors: ${activeLeaderboard.monthYear}` : '🏆 Clubhouse Honors'}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-ink/75 font-serif leading-relaxed">
+                      Every month, we celebrate the members who read with depth, write with passion, and support the community. Here are the crowned laureles for this cycle.
+                    </p>
+                  </div>
+                </div>
+
+                {!activeLeaderboard ? (
+                  <div className="py-20 text-center bg-white/50 backdrop-blur-sm border border-dashed border-sage/35 rounded-[32px] max-w-xl mx-auto">
+                    <Award className="opacity-25 mx-auto mb-4 text-burgundy" size={48} />
+                    <p className="text-ink/50 font-serif italic">No honors have been published for this cycle yet.</p>
+                    <p className="text-xs text-ink/40 mt-2 font-sans font-medium">As reviews flow in, the editors will elect and publish the leaderboard.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                    
+                    {/* General Bookie card */}
+                    {activeLeaderboard.generalBookieName && (
+                      <div className="bg-white border border-sage/15 p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden hover:shadow-md transition-shadow">
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
+                        <div className="space-y-4 relative z-10">
+                          <span className="bg-primary/10 text-burgundy text-[9px] font-bold px-3 py-1 rounded-full border border-primary/20 uppercase tracking-widest inline-block">
+                            🌍 General Bookie
+                          </span>
+                          <h3 className="text-2xl font-display font-bold text-burgundy">{activeLeaderboard.generalBookieName}</h3>
+                          <p className="text-xs sm:text-sm text-ink/80 font-serif leading-relaxed italic font-medium">
+                            "{activeLeaderboard.generalBookieText || 'First to finish and submit an in-depth review for the General Book of the Month!'}"
+                          </p>
+                        </div>
+                        <div className="border-t border-sage/10 pt-4 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/40">
+                          <span>Status: Crowned 🏆</span>
+                          <span className="text-accent">+50 Leaves Bonus</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Abuja Bookie card */}
+                    {activeLeaderboard.abujaBookieName && (
+                      <div className="bg-white border border-sage/15 p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden hover:shadow-md transition-shadow">
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/5 rounded-full blur-2xl"></div>
+                        <div className="space-y-4 relative z-10">
+                          <span className="bg-accent/15 text-accent text-[9px] font-bold px-3 py-1 rounded-full border border-accent/20 uppercase tracking-widest inline-block">
+                            📍 Abuja Bookie
+                          </span>
+                          <h3 className="text-2xl font-display font-bold text-burgundy">{activeLeaderboard.abujaBookieName}</h3>
+                          <p className="text-xs sm:text-sm text-ink/80 font-serif leading-relaxed italic font-medium">
+                            "{activeLeaderboard.abujaBookieText || 'First to finish and submit an in-depth review for the Abuja Book of the Month!'}"
+                          </p>
+                        </div>
+                        <div className="border-t border-sage/10 pt-4 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/40">
+                          <span>Status: Crowned 🏆</span>
+                          <span className="text-accent">+50 Leaves Bonus</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Review of the Month card */}
+                    {activeLeaderboard.reviewWinnerName && (
+                      <div className="bg-[#1E110A] text-cream border border-primary/20 p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden md:col-span-2">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-burgundy/10 rounded-full blur-2xl"></div>
+                        <div className="space-y-4 relative z-10">
+                          <div className="flex items-center justify-between">
+                            <span className="bg-primary/10 text-primary text-[9px] font-bold px-3 py-1 rounded-full border border-primary/20 uppercase tracking-widest inline-block">
+                              ✍️ Review of the Month
+                            </span>
+                            <Sparkles className="text-primary animate-pulse" size={16} />
+                          </div>
+                          <h3 className="text-2xl font-display font-bold text-cream">{activeLeaderboard.reviewWinnerName}</h3>
+                          <p className="text-sm text-cream/90 font-serif leading-relaxed italic font-medium">
+                            "{activeLeaderboard.reviewOfTheMonthText}"
+                          </p>
+                        </div>
+                        <div className="border-t border-white/10 pt-4 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-cream/40">
+                          <span>Awarded by Editors</span>
+                          <span className="text-primary">Master Critique Laureate</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Author of the Month card */}
+                    {activeLeaderboard.authorWinnerName && (
+                      <div className="bg-[#160B18] text-cream border border-accent/20 p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-accent/15 rounded-full blur-2xl"></div>
+                        <div className="space-y-4 relative z-10">
+                          <span className="bg-accent/10 text-accent text-[9px] font-bold px-3 py-1 rounded-full border border-accent/20 uppercase tracking-widest inline-block">
+                            🖋️ Author of the Month
+                          </span>
+                          <h3 className="text-2xl font-display font-bold text-cream">{activeLeaderboard.authorWinnerName}</h3>
+                          <p className="text-xs sm:text-sm text-cream/90 font-serif leading-relaxed italic font-medium">
+                            "{activeLeaderboard.authorOfTheMonthText}"
+                          </p>
+                        </div>
+                        <div className="border-t border-white/10 pt-4 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-cream/40">
+                          <span>Consistent Excellence</span>
+                          <span className="text-accent">Prime Writer</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Most Improved Author card */}
+                    {activeLeaderboard.improvedWinnerName && (
+                      <div className="bg-white border border-sage/15 p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden">
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-sage/5 rounded-full blur-2xl"></div>
+                        <div className="space-y-4 relative z-10">
+                          <span className="bg-sage/10 text-sage text-[9px] font-bold px-3 py-1 rounded-full border border-sage/20 uppercase tracking-widest inline-block">
+                            📈 Most Improved Author
+                          </span>
+                          <h3 className="text-2xl font-display font-bold text-burgundy">{activeLeaderboard.improvedWinnerName}</h3>
+                          <p className="text-xs sm:text-sm text-ink/80 font-serif leading-relaxed italic font-medium">
+                            "{activeLeaderboard.mostImprovedAuthorText}"
+                          </p>
+                        </div>
+                        <div className="border-t border-sage/10 pt-4 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/40">
+                          <span>Highest Growth</span>
+                          <span className="text-sage">Rising Star</span>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </div>
         )}
       </motion.div>
 

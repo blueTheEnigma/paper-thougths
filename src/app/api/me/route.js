@@ -68,6 +68,14 @@ export async function GET() {
       profile.lifetimeLeaves = parseInt(dbUser.lifetime_leaves || 0);
       profile.lkid = dbUser.lk_id || profile.lkid || 'Guest';
       profile.tier = profile.tier || (parseFloat(dbUser.milestone_tokens || 0) >= 10.0 ? 'Keeper' : 'Reader');
+      
+      // Merge chapter details from local database if GAS hasn't populated it
+      if (!profile.chapter && dbUser.chapter_id) {
+        const chap = await Database.queryOne('SELECT name FROM chapters WHERE id = $1', [dbUser.chapter_id]);
+        if (chap) {
+          profile.chapter = chap.name.includes('Abuja') ? 'Abuja' : chap.name;
+        }
+      }
     }
 
     return NextResponse.json({ success: true, profile });
