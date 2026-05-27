@@ -164,7 +164,7 @@ VALUES (
     'Foluso Agbaje', 
     '/images/the_parlour_wife.png', 
     'Set against the backdrop of colonial Nigeria, ''The Parlour Wife'' is a gripping historical drama exploring duty, class, secrets, and a woman''s defiance. Foluso Agbaje weaves a rich tapestry of domestic intrigue and social upheaval with breathtaking prose.', 
-    '7,500', 
+    '', 
     '/bookstore', 
     TRUE
 ) ON CONFLICT DO NOTHING;

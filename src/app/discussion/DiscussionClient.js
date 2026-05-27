@@ -286,9 +286,6 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
                   </span>
                   <h2 className="text-2xl font-display font-bold text-ink leading-tight">{activeBook.title}</h2>
                   <p className="text-xs text-burgundy font-sans italic">— by {activeBook.author}</p>
-                  <p className="text-sm font-semibold text-ink/75 font-serif mt-2 italic">
-                    Price: ₦{parseInt(activeBook.price || 0).toLocaleString()}
-                  </p>
                 </div>
               </div>
 
