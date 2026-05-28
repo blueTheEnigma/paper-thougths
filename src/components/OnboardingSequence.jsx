@@ -179,10 +179,10 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
             <div className="relative w-64 h-64 sm:w-80 sm:h-80 cursor-pointer" onClick={handleEggTap}>
               {/* Seedling (Hidden behind egg until shatter) */}
               <motion.div 
-                className="absolute inset-0 flex items-center justify-center"
+                className="absolute inset-0 flex items-center justify-center z-50"
                 initial={{ scale: 0.3, opacity: 0 }}
-                animate={crackStage === 3 ? { scale: 1, opacity: 1 } : { scale: 0.3, opacity: 0 }}
-                transition={crackStage === 3 ? { type: "spring", stiffness: 120, damping: 10, delay: 0.4 } : { duration: 0 }}
+                animate={crackStage === 3 ? { scale: 2.5, opacity: 1 } : { scale: 0.3, opacity: 0 }}
+                transition={crackStage === 3 ? { type: "spring", stiffness: 100, damping: 12, delay: 0.4 } : { duration: 0 }}
               >
                 <div className="relative w-48 h-48 sm:w-56 sm:h-56">
                   {crackStage === 3 && (
@@ -201,10 +201,11 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
                 {crackStage < 3 && (
                   <motion.div 
                     key="the-egg"
-                    className="absolute inset-0"
+                    className="absolute inset-0 z-40"
                     animate={{ y: [0, -8, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                     whileHover={crackStage < 3 ? { rotate: [0, -3, 3, -2, 0], transition: { duration: 0.3 } } : {}}
+                    exit={{ scale: 3, opacity: 0, filter: "brightness(2) blur(10px)", transition: { duration: 0.5, ease: "easeOut" } }}
                   >
                     <motion.div
                       animate={
@@ -266,10 +267,10 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
               {crackStage === 3 && (
                 <>
                   <motion.div 
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-4 border-primary/60 pointer-events-none"
-                    initial={{ scale: 0, opacity: 0.8 }}
-                    animate={{ scale: 4, opacity: 0 }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border-4 border-primary/80 pointer-events-none z-50"
+                    initial={{ scale: 0.5, opacity: 1 }}
+                    animate={{ scale: 8, opacity: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
                   />
                   {Array.from({ length: 12 }).map((_, i) => (
                     <motion.div
