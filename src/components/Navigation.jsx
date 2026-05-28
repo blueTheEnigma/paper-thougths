@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth, useUser, UserButton } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
+import PanguinAvatar from '@/components/PanguinAvatar';
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -17,6 +18,25 @@ export default function Navigation() {
 
   const email = (user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
   const isAdmin = email === "umorgan2001@gmail.com";
+
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      const fetchProfile = async () => {
+        try {
+          const res = await fetch('/api/me');
+          const data = await res.json();
+          if (data.success) {
+            setProfile(data.profile);
+          }
+        } catch (e) {
+          console.error("Auth check failed in nav", e);
+        }
+      };
+      fetchProfile();
+    }
+  }, [isSignedIn]);
 
   // Check if a link is active
   const isActive = (path) => {
@@ -104,7 +124,10 @@ export default function Navigation() {
               >
                 Dashboard
               </Link>
-              <div className="bg-white/40 p-0.5 rounded-full border border-sage/10">
+              <div className="flex items-center gap-2 bg-white/40 p-1 rounded-full border border-sage/10">
+                {profile && (
+                  <PanguinAvatar lifetimeLeaves={profile.lifetimeLeaves || 0} variant="icon" />
+                )}
                 <UserButton afterSignOutUrl="/" />
               </div>
             </div>

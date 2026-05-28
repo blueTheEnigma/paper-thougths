@@ -6,6 +6,7 @@ import {
   CheckCircle2, ShieldAlert, Sparkles, Clock, Coins 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import PanguinAvatar from '@/components/PanguinAvatar';
 
 export default function DiscussionClient({ generalBotm, abujaBotm, initialStream }) {
   const [activeStream, setActiveStream] = useState(initialStream || 'general');
@@ -474,11 +475,14 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
                     >
                       {/* Review Card Header */}
                       <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <span className="font-sans font-bold text-sm text-ink block">{rev.reviewerName}</span>
-                          <span className="text-[10px] font-sans font-semibold text-ink/45 uppercase tracking-wider">
-                            {rev.chapterName || 'Other Chapter'}
-                          </span>
+                        <div className="flex items-center gap-3">
+                          <PanguinAvatar lifetimeLeaves={rev.lifetimeLeaves || 0} variant="compact" />
+                          <div>
+                            <span className="font-sans font-bold text-sm text-ink block">{rev.reviewerName}</span>
+                            <span className="text-[10px] font-sans font-semibold text-ink/45 uppercase tracking-wider">
+                              {rev.chapterName || 'Other Chapter'}
+                            </span>
+                          </div>
                         </div>
                         <div className="flex flex-col items-end gap-1.5">
                           <div className="flex gap-0.5 text-accent">

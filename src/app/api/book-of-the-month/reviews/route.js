@@ -23,7 +23,8 @@ export async function GET(request) {
     const reviews = await Database.query(`
       SELECT r.id, r.rating, r.review_text as "reviewText", r.is_finished as "isFinished",
              r.is_bookie as "isBookie", r.created_at as "createdAt",
-             u.full_name as "reviewerName", c.name as "chapterName"
+             u.full_name as "reviewerName", c.name as "chapterName",
+             u.lifetime_leaves as "lifetimeLeaves"
       FROM book_of_the_month_reviews r
       JOIN users u ON u.id = r.user_id
       LEFT JOIN chapters c ON c.id = u.chapter_id

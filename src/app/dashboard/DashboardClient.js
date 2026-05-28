@@ -11,6 +11,8 @@ import {
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
 import FeedbackDashboard from '@/components/FeedbackDashboard';
+import PanguinAvatar from '@/components/PanguinAvatar';
+import { getAvatarStage } from '@/lib/avatar';
 
 // ─── Cinematic Archive Entrance Portal ────────────────────────────────────────
 
@@ -251,6 +253,8 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
 
   // Milestone Celebration Overlay
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+  const [showEvolutionModal, setShowEvolutionModal] = useState(false);
+  const [evolvedStage, setEvolvedStage] = useState(null);
 
   // Birthday banner dismissal
   const [bdayDismissed, setBdayDismissed] = useState(true);
@@ -455,6 +459,32 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         }, 1500);
         localStorage.setItem(key, 'true');
       }
+    }
+
+    // 4. Panguin Evolution Celebration check
+    if (profile?.lifetimeLeaves >= 0) {
+      const currentStageObj = getAvatarStage(profile.lifetimeLeaves);
+      const storageKey = `panguin_stage_${profile.id}`;
+      const savedStage = localStorage.getItem(storageKey);
+      
+      if (savedStage && savedStage !== currentStageObj.name) {
+        // Find if they moved up
+        const isLevelUp = currentStageObj.stageIndex > parseInt(localStorage.getItem(`${storageKey}_idx`) || -1);
+        if (isLevelUp) {
+          setTimeout(() => {
+            setEvolvedStage(currentStageObj);
+            setShowEvolutionModal(true);
+            confetti({
+              particleCount: 150,
+              spread: 80,
+              origin: { y: 0.6 },
+              colors: ['#F2A98A', '#5C1A2E', '#8F9B82']
+            });
+          }, 2000);
+        }
+      }
+      localStorage.setItem(storageKey, currentStageObj.name);
+      localStorage.setItem(`${storageKey}_idx`, currentStageObj.stageIndex);
     }
   }, [profile, bookVouchersGifted, isBday]);
 
@@ -672,6 +702,44 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         )}
       </AnimatePresence>
 
+      {/* Panguin Evolution Modal Celebration */}
+      <AnimatePresence>
+        {showEvolutionModal && evolvedStage && (
+          <div className="fixed inset-0 bg-ink/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.9, opacity: 0 }} 
+              className="bg-white max-w-lg w-full p-8 rounded-[32px] border border-sage/20 shadow-2xl text-center relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-accent via-burgundy to-accent"></div>
+              
+              <div className="mx-auto mb-6 flex justify-center">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-sage/30 shadow-lg relative animate-float">
+                  <img src={evolvedStage.image} alt={evolvedStage.name} className="w-full h-full object-cover" />
+                </div>
+              </div>
+              
+              <h2 className="text-3xl font-display text-burgundy font-bold mb-2">Panguin Evolved!</h2>
+              <h3 className="text-lg font-bold text-accent mb-4">You are now a {evolvedStage.name}</h3>
+              
+              <p className="text-sm text-ink/70 leading-relaxed mb-6 font-serif">
+                {evolvedStage.description}. 
+                <br/><br/>
+                Your continued contributions to the Archive have caused your panguin to grow! Keep writing, reviewing, and participating to discover its next form.
+              </p>
+
+              <button 
+                onClick={() => setShowEvolutionModal(false)}
+                className="w-full bg-burgundy hover:bg-ink text-cream py-4 rounded-2xl font-bold transition-all shadow-lg active:scale-95 cursor-pointer"
+              >
+                Amazing!
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <motion.div 
         className="max-w-6xl mx-auto space-y-10"
         initial="hidden"
@@ -680,35 +748,38 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
       >
         
         {/* Header */}
-        <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-sage/10">
-          <div className="w-full md:w-auto">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display text-burgundy leading-none tracking-tight font-extrabold mb-3">
-              Welcome back, <br className="sm:hidden" />
-              <span className="text-burgundy/90">{profile.name.split(' ')[0]}</span>
-            </h1>
-            <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] sm:text-xs">
-              <span className="bg-white px-2.5 py-1 border border-sage/20 rounded shadow-sm text-burgundy font-bold">{profile.lkid}</span>
-              <span className="text-ink/30">•</span>
-              <span className="flex items-center gap-1.5 text-ink/60 font-bold"><MapPin size={12} className="text-sage"/> {profile.chapter}</span>
-              <span className="text-ink/30">•</span>
-              <button 
-                onClick={() => setShowPortal(true)}
-                className="bg-accent/15 hover:bg-accent hover:text-cream text-accent font-bold text-xs px-3.5 py-1.5 rounded-lg border border-accent/30 uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all duration-200"
-              >
-                <BookOpen size={13}/> Rules & Guide
-              </button>
-              {isAdmin && (
-                <>
-                  <span className="text-ink/30">•</span>
-                  <span className="bg-burgundy/5 text-burgundy font-bold text-[9px] px-2.5 py-1 rounded border border-burgundy/15 uppercase tracking-wide flex items-center gap-1">
-                    <ShieldCheck size={10}/> Admin
-                  </span>
-                </>
-              )}
+        <motion.div variants={itemVariants} className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 sm:gap-8 pb-8 border-b border-sage/10">
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
+            <PanguinAvatar lifetimeLeaves={lifetimeLeaves} variant="full" />
+            <div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-display text-burgundy leading-none tracking-tight font-extrabold mb-3">
+                Welcome back, <br className="sm:hidden" />
+                <span className="text-burgundy/90">{profile.name.split(' ')[0]}</span>
+              </h1>
+              <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] sm:text-xs">
+                <span className="bg-white px-2.5 py-1 border border-sage/20 rounded shadow-sm text-burgundy font-bold">{profile.lkid}</span>
+                <span className="text-ink/30">•</span>
+                <span className="flex items-center gap-1.5 text-ink/60 font-bold"><MapPin size={12} className="text-sage"/> {profile.chapter}</span>
+                <span className="text-ink/30">•</span>
+                <button 
+                  onClick={() => setShowPortal(true)}
+                  className="bg-accent/15 hover:bg-accent hover:text-cream text-accent font-bold text-xs px-3.5 py-1.5 rounded-lg border border-accent/30 uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all duration-200"
+                >
+                  <BookOpen size={13}/> Rules & Guide
+                </button>
+                {isAdmin && (
+                  <>
+                    <span className="text-ink/30">•</span>
+                    <span className="bg-burgundy/5 text-burgundy font-bold text-[9px] px-2.5 py-1 rounded border border-burgundy/15 uppercase tracking-wide flex items-center gap-1">
+                      <ShieldCheck size={10}/> Admin
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
           
-          <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-3">
+          <div className="w-full lg:w-auto flex items-center justify-between lg:justify-end gap-3">
             {isAdmin && (
               <Link href="/admin" className="bg-burgundy/10 hover:bg-burgundy/15 text-burgundy p-3 rounded-2xl border border-burgundy/20 transition-all flex items-center gap-2 text-sm font-bold shadow-sm">
                 <Settings size={16}/>

@@ -45,6 +45,7 @@ export default async function VillagePage() {
 
   let userStats = {
     spendableLeaves: 0,
+    lifetimeLeaves: 0,
     milestoneTokens: 0.0,
     weeklyReviews: 0,
     lkId: 'Guest',
@@ -62,6 +63,7 @@ export default async function VillagePage() {
 
     userStats = {
       spendableLeaves: dbUser.spendable_leaves || 0,
+      lifetimeLeaves: dbUser.lifetime_leaves || 0,
       milestoneTokens: parseFloat(dbUser.milestone_tokens || 0.0),
       weeklyReviews: parseInt(reviewsCount?.count || 0),
       lkId: dbUser.lk_id || 'Guest',
