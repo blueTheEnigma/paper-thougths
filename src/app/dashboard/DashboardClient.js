@@ -309,7 +309,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         document.body.appendChild(script);
       }
     }
-  }, []);
+  }, [profile]);
 
   // Purchase Leaves inline payment with Paystack
   const handlePurchaseLeaves = async (leavesAmount, priceAmount) => {

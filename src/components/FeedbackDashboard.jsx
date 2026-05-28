@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, RefreshCw, BarChart2, CheckSquare, Eye, Compass, Star, ChevronRight, FileText } from 'lucide-react';
 
@@ -9,7 +9,7 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -27,13 +27,13 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [submissionId]);
 
   useEffect(() => {
     if (submissionId) {
       fetchReport();
     }
-  }, [submissionId]);
+  }, [submissionId, fetchReport]);
 
   if (loading) {
     return (

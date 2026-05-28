@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Wifi, WifiOff, Save, CheckCircle, AlertTriangle, 
@@ -214,10 +214,10 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
       console.log('Network online. Triggering automatic draft synchronization.');
       handleSyncDraft();
     }
-  }, [isOnline, isPendingSync]);
+  }, [isOnline, isPendingSync, handleSyncDraft]);
 
   // 6. Submission Handler
-  const handleSyncDraft = async () => {
+  const handleSyncDraft = useCallback(async () => {
     setErrorMessage(null);
     setIsSyncing(true);
 
@@ -271,7 +271,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [title, genre, logline, bodyText, writingMode]);
 
   // 7. Delete local draft draft entirely
   const handleDeleteDraft = async () => {
