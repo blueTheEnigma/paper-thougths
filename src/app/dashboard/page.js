@@ -86,7 +86,8 @@ async function getLocalArchiveData(clerkUser) {
       referrals: 0,
       permissions: [],
       weeklyReviews: 0,
-      preferredGenres: profileRow.preferred_genres || []
+      preferredGenres: profileRow.preferred_genres || [],
+      onboarded: profileRow.onboarded || false
     };
 
     // Calculate actual referrals count

@@ -78,6 +78,7 @@ export async function GET() {
           profile.chapter = chap.name.includes('Abuja') ? 'Abuja' : chap.name;
         }
       }
+      profile.onboarded = dbUser.onboarded || false;
     }
 
     return NextResponse.json({ success: true, profile });

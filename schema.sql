@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS users (
     writing_streak INT DEFAULT 0,
     last_submission_date DATE,
     preferred_genres TEXT[] DEFAULT '{}',
+    onboarded BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW()
 );
 

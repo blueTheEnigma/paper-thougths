@@ -12,6 +12,7 @@ import Link from 'next/link';
 import confetti from 'canvas-confetti';
 import FeedbackDashboard from '@/components/FeedbackDashboard';
 import PanguinAvatar from '@/components/PanguinAvatar';
+import OnboardingSequence from '@/components/OnboardingSequence';
 import { getAvatarStage } from '@/lib/avatar';
 
 // ─── Cinematic Archive Entrance Portal ────────────────────────────────────────
@@ -259,6 +260,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   // Birthday banner dismissal
   const [bdayDismissed, setBdayDismissed] = useState(true);
   const [showPortal, setShowPortal] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Load transaction history ledger from local DB
@@ -290,7 +292,14 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
       const dismissed = sessionStorage.getItem('dismissed_birthday') === 'true';
       setBdayDismissed(dismissed);
       const seen = sessionStorage.getItem('seen_dashboard_portal') === 'true';
-      setShowPortal(!seen);
+      
+      // Onboarding logic:
+      if (profile && profile.onboarded === false) {
+        setShowOnboarding(true);
+        setShowPortal(false); // Hide standard portal until onboarding finishes
+      } else {
+        setShowPortal(!seen);
+      }
 
       if (!document.getElementById('paystack-inline-js')) {
         const script = document.createElement('script');
@@ -380,6 +389,22 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
       console.error('Paystack initialization error:', err);
       setIsBuyingLeaves(false);
       alert('Failed to initialize checkout. Please try again.');
+    }
+  };
+
+  const handleCompleteOnboarding = async () => {
+    setShowOnboarding(false);
+    
+    // Once onboarding finishes, they should see the rules portal if they haven't seen it in this session
+    const seen = sessionStorage.getItem('seen_dashboard_portal') === 'true';
+    if (!seen) {
+      setShowPortal(true);
+    }
+
+    try {
+      await fetch('/api/me/onboard', { method: 'POST' });
+    } catch (e) {
+      console.error("Failed to save onboarding state", e);
     }
   };
 
@@ -1628,11 +1653,20 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         )}
       </motion.div>
 
-      {/* Onboarding Game Rules Portal */}
+      {/* Onboarding & Game Rules Portals */}
       {mounted && typeof document !== 'undefined' && createPortal(
         <AnimatePresence mode="wait">
-          {showPortal && (
+          {showOnboarding && (
+            <OnboardingSequence 
+              key="onboarding-sequence"
+              userName={profile.name.split(' ')[0]} 
+              lkId={profile.lkid} 
+              onComplete={handleCompleteOnboarding} 
+            />
+          )}
+          {!showOnboarding && showPortal && (
             <ArchivePortal
+              key="archive-portal"
               onEnter={handleEnterPortal}
               userName={profile.name}
               profile={profile}
