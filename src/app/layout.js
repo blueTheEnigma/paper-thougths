@@ -56,6 +56,9 @@ export const metadata = {
     index: true,
     follow: true,
   },
+};
+
+export const viewport = {
   themeColor: "#4A0E0E",
 };
 

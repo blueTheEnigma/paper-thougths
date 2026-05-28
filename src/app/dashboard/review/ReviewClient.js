@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, MessageSquare, Flame, CheckCircle2, AlertCircle, 
-  HelpCircle, Sparkles, BookOpen, Clock, PenTool, Check 
+  HelpCircle, Sparkles, BookOpen, Clock, PenTool, Check, Gift 
 } from 'lucide-react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
@@ -279,7 +279,7 @@ export default function ReviewClient() {
                 <h1 className="text-3xl font-display text-burgundy mt-3">{selectedSubmission.title}</h1>
                 <div className="mt-4 p-4 bg-cream/40 rounded-xl border border-sage/10">
                   <div className="text-[10px] uppercase tracking-widest font-bold text-ink/40 mb-1">Teaser / Premise</div>
-                  <p className="text-xs text-ink/75 italic">"{selectedSubmission.logline}"</p>
+                  <p className="text-xs text-ink/75 italic">&quot;{selectedSubmission.logline}&quot;</p>
                 </div>
               </div>
 
@@ -559,7 +559,7 @@ export default function ReviewClient() {
                       {card.title}
                     </h3>
                     <p className="text-xs text-ink/60 leading-relaxed italic line-clamp-4">
-                      "{card.logline}"
+                      &quot;{card.logline}&quot;
                     </p>
                   </div>
 

@@ -307,7 +307,8 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
   const userName = clientUser ? (clientUser.firstName || clientUser.fullName || userStats?.name || 'Writer') : (userStats?.name || 'Writer');
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleEnter = () => {

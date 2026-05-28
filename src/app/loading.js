@@ -1,10 +1,8 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function GlobalLoading() {
-  const [quote, setQuote] = useState('');
-
-  useEffect(() => {
+  const [quote] = useState(() => {
     const quotesList = [
       "“A room without books is like a body without a soul.” — Marcus Tullius Cicero",
       "“I have always imagined that Paradise will be a kind of a library.” — Jorge Luis Borges",
@@ -14,9 +12,8 @@ export default function GlobalLoading() {
       "“To read is to voyage through time and space.”",
       "“We live in the lines.” — Paper Thoughts"
     ];
-    const randomQuote = quotesList[Math.floor(Math.random() * quotesList.length)];
-    setQuote(randomQuote);
-  }, []);
+    return quotesList[Math.floor(Math.random() * quotesList.length)];
+  });
 
   return (
     <div className="fixed inset-0 bg-[#FFF5EC] z-[9999] flex flex-col items-center justify-center p-6 text-center">

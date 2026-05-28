@@ -5,6 +5,15 @@ import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import { PenTool, Flame, TreePine } from 'lucide-react';
 
+// Simple deterministic LCG random generator to ensure hydration consistency and satisfy React purity rules.
+const createRandom = (seed) => {
+  let val = seed;
+  return () => {
+    val = (val * 1103515245 + 12345) & 0x7fffffff;
+    return val / 2147483648;
+  };
+};
+
 export default function OnboardingSequence({ userName, lkId, onComplete }) {
   // Acts: 1: Egg, 2: Hatching, 3: Naming, 4: Scrolls, 5: Doors
   const [act, setAct] = useState(1);
@@ -78,14 +87,37 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
   };
 
   // Particle background logic
-  const particles = Array.from({ length: 25 }).map((_, i) => ({
-    width: `${1 + (i % 3)}px`,
-    height: `${1 + (i % 3)}px`,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    duration: 3 + Math.random() * 4,
-    delay: Math.random() * 3,
-  }));
+  const particles = React.useMemo(() => {
+    const rnd = createRandom(42);
+    return Array.from({ length: 25 }).map((_, i) => ({
+      width: `${1 + (i % 3)}px`,
+      height: `${1 + (i % 3)}px`,
+      left: `${rnd() * 100}%`,
+      top: `${rnd() * 100}%`,
+      duration: 3 + rnd() * 4,
+      delay: rnd() * 3,
+    }));
+  }, []);
+
+  // Pre-generate stable random values for shard explosion
+  const shardOffsets = React.useMemo(() => {
+    const rnd = createRandom(101);
+    return Array.from({ length: 12 }).map(() => ({
+      distance: 150 + rnd() * 100,
+      rotate: rnd() * 360,
+    }));
+  }, []);
+
+  // Pre-generate stable random values for ink splash
+  const inkSplashes = React.useMemo(() => {
+    const rnd = createRandom(202);
+    return Array.from({ length: 8 }).map(() => ({
+      distanceX: 80 + rnd() * 60,
+      distanceY: 60 + rnd() * 40,
+      scale: rnd() * 1.5 + 0.5,
+      size: rnd() * 12 + 4,
+    }));
+  }, []);
 
   const bgStyle = act >= 3 && act < 5 
     ? { backgroundColor: '#FFF5EC' } // Parchment
@@ -272,21 +304,24 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
                     animate={{ scale: 8, opacity: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
                   />
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <motion.div
-                      key={`shard-${i}`}
-                      className="absolute top-1/2 left-1/2 w-4 h-8 bg-cream/90 rounded-sm"
-                      initial={{ scale: 1, x: "-50%", y: "-50%", rotate: 0, opacity: 1 }}
-                      animate={{ 
-                        x: `calc(-50% + ${Math.cos((i * 30) * Math.PI / 180) * (150 + Math.random() * 100)}px)`, 
-                        y: `calc(-50% + ${Math.sin((i * 30) * Math.PI / 180) * (150 + Math.random() * 100)}px)`,
-                        rotate: Math.random() * 360,
-                        opacity: 0,
-                        scale: 0.5
-                      }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
-                    />
-                  ))}
+                  {Array.from({ length: 12 }).map((_, i) => {
+                    const offset = shardOffsets[i];
+                    return (
+                      <motion.div
+                        key={`shard-${i}`}
+                        className="absolute top-1/2 left-1/2 w-4 h-8 bg-cream/90 rounded-sm"
+                        initial={{ scale: 1, x: "-50%", y: "-50%", rotate: 0, opacity: 1 }}
+                        animate={{ 
+                          x: `calc(-50% + ${Math.cos((i * 30) * Math.PI / 180) * offset.distance}px)`, 
+                          y: `calc(-50% + ${Math.sin((i * 30) * Math.PI / 180) * offset.distance}px)`,
+                          rotate: offset.rotate,
+                          opacity: 0,
+                          scale: 0.5
+                        }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                      />
+                    );
+                  })}
                 </>
               )}
             </div>
@@ -365,21 +400,24 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
                 </motion.h1>
                 
                 {/* Ink Splash */}
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <motion.div
-                    key={`ink-${i}`}
-                    className="absolute top-1/2 left-1/2 rounded-full bg-burgundy/80 z-0"
-                    initial={{ scale: 0, x: "-50%", y: "-50%", opacity: 1 }}
-                    animate={{ 
-                      x: `calc(-50% + ${Math.cos((i * 45) * Math.PI / 180) * (80 + Math.random() * 60)}px)`, 
-                      y: `calc(-50% + ${Math.sin((i * 45) * Math.PI / 180) * (60 + Math.random() * 40)}px)`,
-                      scale: Math.random() * 1.5 + 0.5,
-                      opacity: 0
-                    }}
-                    transition={{ duration: 0.6, delay: 1.8, ease: "easeOut" }}
-                    style={{ width: `${Math.random() * 12 + 4}px`, height: `${Math.random() * 12 + 4}px` }}
-                  />
-                ))}
+                {Array.from({ length: 8 }).map((_, i) => {
+                  const splash = inkSplashes[i];
+                  return (
+                    <motion.div
+                      key={`ink-${i}`}
+                      className="absolute top-1/2 left-1/2 rounded-full bg-burgundy/80 z-0"
+                      initial={{ scale: 0, x: "-50%", y: "-50%", opacity: 1 }}
+                      animate={{ 
+                        x: `calc(-50% + ${Math.cos((i * 45) * Math.PI / 180) * splash.distanceX}px)`, 
+                        y: `calc(-50% + ${Math.sin((i * 45) * Math.PI / 180) * splash.distanceY}px)`,
+                        scale: splash.scale,
+                        opacity: 0
+                      }}
+                      transition={{ duration: 0.6, delay: 1.8, ease: "easeOut" }}
+                      style={{ width: `${splash.size}px`, height: `${splash.size}px` }}
+                    />
+                  );
+                })}
               </div>
 
               <motion.div 
@@ -469,7 +507,7 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
                       animate={{ opacity: scrollsOpened.has(idx) ? 1 : 0 }}
                       transition={{ duration: 0.3, delay: scrollsOpened.has(idx) ? 0.2 : 0 }}
                     >
-                      <p className="font-quote text-ink/75 leading-relaxed text-[15px] italic">"{rule.text}"</p>
+                      <p className="font-quote text-ink/75 leading-relaxed text-[15px] italic">&quot;{rule.text}&quot;</p>
                     </motion.div>
                   </motion.div>
                   
