@@ -142,6 +142,10 @@ CREATE TABLE IF NOT EXISTS orders (
     total NUMERIC(10,2) NOT NULL,
     status VARCHAR(30) DEFAULT 'Pending',       -- 'Pending', 'Paid'
     sales_rep VARCHAR(255) DEFAULT 'System',
+    transaction_fees NUMERIC(10,2) DEFAULT 0.00,
+    vat_applied NUMERIC(10,2) DEFAULT 0.00,
+    net_amount NUMERIC(10,2) DEFAULT 0.00,
+    leaves_spent INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -170,6 +174,46 @@ VALUES (
     TRUE
 ) ON CONFLICT DO NOTHING;
 
+-- 11. Leaf Transactions Table (Ledger)
+CREATE TABLE IF NOT EXISTS leaf_transactions (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    amount INT NOT NULL,
+    transaction_type VARCHAR(50) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 12. Digital Books Table
+CREATE TABLE IF NOT EXISTS digital_books (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) UNIQUE NOT NULL,
+    author VARCHAR(255) NOT NULL,
+    price NUMERIC(10,2) NOT NULL,
+    download_url TEXT,
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 13. Book Vouchers Table
+CREATE TABLE IF NOT EXISTS book_vouchers (
+    id SERIAL PRIMARY KEY,
+    voucher_code VARCHAR(100) UNIQUE NOT NULL,
+    status VARCHAR(30) DEFAULT 'Active', -- 'Active', 'Redeemed'
+    creator_id INT REFERENCES users(id) ON DELETE SET NULL,
+    redeemer_id INT REFERENCES users(id) ON DELETE SET NULL,
+    chapter_pool_id INT REFERENCES chapter_pools(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    redeemed_at TIMESTAMP
+);
+
 -- Migration: Add preferred_genres column to users table if it does not exist
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_genres TEXT[] DEFAULT '{}';
+
+-- Migration: Add transaction audit columns to orders table if they do not exist
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS transaction_fees NUMERIC(10,2) DEFAULT 0.00;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS vat_applied NUMERIC(10,2) DEFAULT 0.00;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS net_amount NUMERIC(10,2) DEFAULT 0.00;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS leaves_spent INT DEFAULT 0;
+
 
