@@ -13,7 +13,7 @@ import PanguinAvatar from '@/components/PanguinAvatar';
 
 // ─── Cinematic Entrance Portal ──────────────────────────────────────────────
 
-function EntrancePortal({ onEnter, userName, isSignedIn }) {
+function EntrancePortal({ onEnter, userName, isSignedIn, redirectUrl }) {
   const [stage, setStage] = useState(0);
 
   // Sequence: 0 = fade-in logo  →  1 = quote line  →  2 = CTA revealed
@@ -239,7 +239,7 @@ function EntrancePortal({ onEnter, userName, isSignedIn }) {
               <div>
                 {!isSignedIn ? (
                   <Link
-                    href="/sign-in?redirect_url=/village"
+                    href={redirectUrl ? `/sign-in?redirect_url=${encodeURIComponent(`/village?redirect=${encodeURIComponent(redirectUrl)}`)}` : "/sign-in?redirect_url=/village"}
                     className="text-[11px] font-sans font-medium transition-colors hover:text-white"
                     style={{ color: 'rgba(250,247,242,0.35)' }}
                   >
@@ -328,6 +328,7 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
               onEnter={handleEnter}
               userName={userName}
               isSignedIn={isSignedIn}
+              redirectUrl={redirectUrl}
             />
           )}
         </AnimatePresence>,

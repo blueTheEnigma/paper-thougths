@@ -467,7 +467,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
                 </p>
               </div>
               <Link 
-                href="/village?redirect=/dashboard/write?type=story"
+                href={`/village?redirect=${encodeURIComponent('/dashboard/write?type=story')}`}
                 className="bg-primary hover:bg-white text-ink text-center font-sans font-bold text-xs py-3.5 px-6 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
               >
                 <span>Write Story Draft</span>
@@ -493,7 +493,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
                 </p>
               </div>
               <Link 
-                href="/village?redirect=/dashboard/write?type=poem"
+                href={`/village?redirect=${encodeURIComponent('/dashboard/write?type=poem')}`}
                 className="bg-accent hover:bg-white text-burgundy hover:text-ink text-center font-sans font-bold text-xs py-3.5 px-6 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
               >
                 <span>Compose Poem Draft</span>

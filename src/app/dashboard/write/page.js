@@ -9,10 +9,14 @@ export const metadata = {
   description: "Compose and save offline-capable drafts for the weekly prompt. Syncs automatically when online.",
 };
 
-export default async function WritePage() {
+export default async function WritePage({ searchParams }) {
+  const resolvedParams = await searchParams;
+  const type = resolvedParams?.type;
+
   const user = await currentUser();
   if (!user) {
-    redirect('/sign-in?redirect_url=/dashboard/write');
+    const redirectPath = type ? `/dashboard/write?type=${type}` : '/dashboard/write';
+    redirect(`/sign-in?redirect_url=${encodeURIComponent(redirectPath)}`);
   }
 
   const dbUser = await syncOrCreateUser(user);

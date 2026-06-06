@@ -41,6 +41,9 @@ export async function POST(req) {
     }
 
     // 2. Verify payment with Paystack if not a leaf-only order
+    let transactionFees = 0.00;
+    let vatApplied = 0.00; // Physical books are VAT-exempt (0%)
+
     if (!isLeafOnly) {
       if (!reference) {
         return NextResponse.json({ success: false, error: 'Missing transaction reference.' }, { status: 400 });
@@ -78,7 +81,13 @@ export async function POST(req) {
       if (Math.abs(actualKobo - expectedKobo) > 100) { // Allow up to 1 NGN difference for safety
         return NextResponse.json({ success: false, error: 'Payment amount mismatch.' }, { status: 400 });
       }
+
+      // Paystack returns fees in kobo; convert to NGN
+      const feesKobo = paystackData.data.fees || 0;
+      transactionFees = feesKobo / 100;
     }
+
+    const netAmount = finalTotal - transactionFees;
 
     const gasUrl = process.env.GAS_WEBAPP_URL;
     if (!gasUrl) {
@@ -132,8 +141,11 @@ export async function POST(req) {
       await Database.transaction(async (client) => {
         // Insert order record
         await client.query(`
-          INSERT INTO orders (order_id, user_id, guest_name, items, subtotal, discount, total, status, sales_rep, leaves_spent)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          INSERT INTO orders (
+            order_id, user_id, guest_name, items, subtotal, discount, total, status, sales_rep, leaves_spent,
+            transaction_fees, vat_applied, net_amount
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         `, [
           orderId,
           dbUserId,
@@ -144,7 +156,10 @@ export async function POST(req) {
           finalTotal,
           'Paid',
           salesRep,
-          leaves
+          leaves,
+          transactionFees,
+          vatApplied,
+          netAmount
         ]);
 
         // Deduct spendable leaves from user and log transaction
