@@ -208,14 +208,6 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
     };
   }, [title, genre, logline, bodyText, isPendingSync, writingMode]);
 
-  // 5. Automatic sync dispatcher when network goes back online
-  useEffect(() => {
-    if (isOnline && isPendingSync) {
-      console.log('Network online. Triggering automatic draft synchronization.');
-      handleSyncDraft();
-    }
-  }, [isOnline, isPendingSync, handleSyncDraft]);
-
   // 6. Submission Handler
   const handleSyncDraft = useCallback(async () => {
     setErrorMessage(null);
@@ -272,6 +264,14 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
       setIsSyncing(false);
     }
   }, [title, genre, logline, bodyText, writingMode]);
+
+  // 5. Automatic sync dispatcher when network goes back online
+  useEffect(() => {
+    if (isOnline && isPendingSync) {
+      console.log('Network online. Triggering automatic draft synchronization.');
+      handleSyncDraft();
+    }
+  }, [isOnline, isPendingSync, handleSyncDraft]);
 
   // 7. Delete local draft draft entirely
   const handleDeleteDraft = async () => {
