@@ -2,7 +2,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import DashboardClient from './DashboardClient';
 import { getBooks } from '@/lib/data';
 import { Database } from '@/lib/db';
-import { syncOrCreateUser } from '@/lib/permissions';
+import { syncOrCreateUser, isCrewMember } from '@/lib/permissions';
 
 export const metadata = {
   title: "Dashboard",
@@ -87,7 +87,8 @@ async function getLocalArchiveData(clerkUser) {
       permissions: [],
       weeklyReviews: 0,
       preferredGenres: profileRow.preferred_genres || [],
-      onboarded: profileRow.onboarded || false
+      onboarded: profileRow.onboarded || false,
+      isCrewMember: await isCrewMember(clerkUser.id)
     };
 
     // Calculate actual referrals count

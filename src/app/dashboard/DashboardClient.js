@@ -648,7 +648,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   };
 
   return (
-    <main className="min-h-screen bg-cream pt-24 pb-20 px-4 md:px-8 relative overflow-hidden">
+    <main className="min-h-screen bg-cream pt-4 pb-20 px-4 md:px-8 relative overflow-hidden">
       
       {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-burgundy/5 rounded-full blur-[120px] -z-10" />
@@ -795,24 +795,38 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                 {isAdmin && (
                   <>
                     <span className="text-ink/30">•</span>
-                    <span className="bg-burgundy/5 text-burgundy font-bold text-[9px] px-2.5 py-1 rounded border border-burgundy/15 uppercase tracking-wide flex items-center gap-1">
-                      <ShieldCheck size={10}/> Admin
-                    </span>
+                    <Link href="/admin" className="bg-[#5C1A2E]/10 hover:bg-[#5C1A2E]/20 text-[#5C1A2E] font-bold text-[10px] px-2.5 py-1.5 rounded-lg border border-[#5C1A2E]/20 uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer">
+                      <ShieldCheck size={12}/> Admin Panel
+                    </Link>
+                  </>
+                )}
+                {profile?.isCrewMember && (
+                  <>
+                    <span className="text-ink/30">•</span>
+                    <Link href="/round-table" className="bg-sage/15 hover:bg-sage/20 text-sage font-bold text-[10px] px-2.5 py-1.5 rounded-lg border border-sage/20 uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer">
+                      <BookOpen size={12}/> Crew CRM
+                    </Link>
                   </>
                 )}
               </div>
             </div>
           </div>
           
-          <div className="w-full lg:w-auto flex items-center justify-between lg:justify-end gap-3">
+          <div className="w-full lg:w-auto flex flex-wrap items-center justify-start sm:justify-between lg:justify-end gap-2.5">
             {isAdmin && (
-              <Link href="/admin" className="bg-burgundy/10 hover:bg-burgundy/15 text-burgundy p-3 rounded-2xl border border-burgundy/20 transition-all flex items-center gap-2 text-sm font-bold shadow-sm">
-                <Settings size={16}/>
-                <span className="hidden sm:inline">Admin Panel</span>
+              <Link href="/admin" className="bg-[#5C1A2E]/10 hover:bg-[#5C1A2E]/15 text-[#5C1A2E] px-4 py-2.5 rounded-2xl border border-[#5C1A2E]/20 transition-all flex items-center gap-2 text-xs font-bold shadow-sm cursor-pointer">
+                <Settings size={14}/>
+                <span>Admin Panel</span>
               </Link>
             )}
-            <div className="bg-white/50 backdrop-blur-sm border border-sage/15 py-2.5 px-5 rounded-2xl flex items-center justify-between md:justify-start gap-4 shadow-sm">
-               <span className="text-xs font-bold text-ink/70 truncate max-w-[180px] sm:max-w-none">{userEmail}</span>
+            {profile?.isCrewMember && (
+              <Link href="/round-table" className="bg-sage/10 hover:bg-sage/15 text-sage px-4 py-2.5 rounded-2xl border border-sage/20 transition-all flex items-center gap-2 text-xs font-bold shadow-sm cursor-pointer">
+                <BookOpen size={14}/>
+                <span>Crew CRM</span>
+              </Link>
+            )}
+            <div className="bg-white/50 backdrop-blur-sm border border-sage/15 py-2 px-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
+               <span className="text-xs font-bold text-ink/70 truncate max-w-[140px] sm:max-w-none">{userEmail}</span>
                <UserButton afterSignOutUrl="/" />
             </div>
           </div>
