@@ -21,7 +21,7 @@ export default async function RoundTableLayout({ children }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#FAF7F2] text-ink mt-[-6rem] md:mt-[-8rem]">
+    <div className="flex min-h-screen bg-[#FAF7F2] text-ink mt-[-5rem] md:mt-[-8rem]">
       {/* Collapsible Sidebar */}
       <Sidebar crewMember={crewMember} />
 

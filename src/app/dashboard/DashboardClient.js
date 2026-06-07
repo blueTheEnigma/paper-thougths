@@ -634,7 +634,10 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const poolPercent = Math.min(100, (poolBalance / poolLimit) * 100);
 
   // Check if admin
-  const isAdmin = profile.permissions && profile.permissions.length > 0;
+  const superadminEmail = (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase().trim();
+  const isSuperadmin = (userEmail?.toLowerCase().trim() === superadminEmail) || 
+                       (profile?.email?.toLowerCase().trim() === superadminEmail);
+  const isAdmin = (profile.permissions && profile.permissions.length > 0) || isSuperadmin;
 
   // Stagger variants
   const containerVariants = {
@@ -648,7 +651,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   };
 
   return (
-    <main className="min-h-screen bg-cream pt-4 pb-20 px-4 md:px-8 relative overflow-hidden">
+    <main className="min-h-screen bg-cream pt-2 md:pt-4 pb-20 px-4 md:px-8 relative overflow-hidden">
       
       {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-burgundy/5 rounded-full blur-[120px] -z-10" />
@@ -766,22 +769,22 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
       </AnimatePresence>
 
       <motion.div 
-        className="max-w-6xl mx-auto space-y-10"
+        className="max-w-6xl mx-auto space-y-6 md:space-y-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
         
         {/* Header */}
-        <motion.div variants={itemVariants} className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 sm:gap-8 pb-8 border-b border-sage/10">
-          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
+        <motion.div variants={itemVariants} className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 md:gap-8 pb-4 md:pb-8 border-b border-sage/10">
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-8">
             <PanguinAvatar lifetimeLeaves={lifetimeLeaves} variant="full" />
             <div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-display text-burgundy leading-none tracking-tight font-extrabold mb-3">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl font-display text-burgundy leading-none tracking-tight font-extrabold mb-2 md:mb-3">
                 Welcome back, <br className="sm:hidden" />
                 <span className="text-burgundy/90">{profile.name.split(' ')[0]}</span>
               </h1>
-              <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] sm:text-xs">
+              <div className="flex flex-wrap items-center gap-2 md:gap-3 font-mono text-[10px] sm:text-xs">
                 <span className="bg-white px-2.5 py-1 border border-sage/20 rounded shadow-sm text-burgundy font-bold">{profile.lkid}</span>
                 <span className="text-ink/30">•</span>
                 <span className="flex items-center gap-1.5 text-ink/60 font-bold"><MapPin size={12} className="text-sage"/> {profile.chapter}</span>

@@ -19,11 +19,12 @@ export default function Navigation() {
   const { user, isLoaded: userLoaded } = useUser();
   const isLoaded = authLoaded && userLoaded;
 
-  const email = (user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
-  const superadminEmail = (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase();
-  const isAdmin = email === superadminEmail;
-
   const [profile, setProfile] = useState(null);
+
+  const email = (user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || "").toLowerCase().trim();
+  const superadminEmail = (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase().trim();
+  const isSuperadmin = (email === superadminEmail) || (profile?.email?.toLowerCase().trim() === superadminEmail);
+  const isAdmin = isSuperadmin || (profile?.permissions && profile.permissions.length > 0);
 
   useEffect(() => {
     if (isSignedIn) {
@@ -167,6 +168,28 @@ export default function Navigation() {
             </Link>
           );
         })}
+        {isLoaded && isSignedIn && profile?.isCrewMember && (
+          <Link 
+            href="/round-table" 
+            className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
+              isActive('/round-table') ? "text-burgundy scale-105" : "text-sage"
+            }`}
+          >
+            <BookOpen size={20} className={isActive('/round-table') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
+            <span className="text-[9px] font-sans font-bold mt-1 tracking-wide">CRM</span>
+          </Link>
+        )}
+        {isLoaded && isSignedIn && isAdmin && (
+          <Link 
+            href="/admin" 
+            className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
+              isActive('/admin') ? "text-burgundy scale-105" : "text-accent"
+            }`}
+          >
+            <ShieldCheck size={20} className={isActive('/admin') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
+            <span className="text-[9px] font-sans font-bold mt-1 tracking-wide">Admin</span>
+          </Link>
+        )}
         {isLoaded && isSignedIn && (
           <Link 
             href="/dashboard" 

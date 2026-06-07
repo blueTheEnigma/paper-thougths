@@ -248,7 +248,7 @@ export default function TaskDetailPanel({
               </div>
 
               {/* Flex grid fields */}
-              <div className="grid grid-cols-2 gap-6 p-4 bg-[#FAF7F2] rounded-2xl border border-ink/5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 p-4 bg-[#FAF7F2] rounded-2xl border border-ink/5">
                 {/* Column 1 */}
                 <div className="space-y-4">
                   {/* Status Picker */}
@@ -316,7 +316,7 @@ export default function TaskDetailPanel({
                 </div>
 
                 {/* Due Date Row */}
-                <div className="col-span-2 space-y-1">
+                <div className="col-span-1 sm:col-span-2 space-y-1">
                   <label className="text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40">Due Date</label>
                   <div className="flex items-center gap-3">
                     <input 
@@ -426,7 +426,7 @@ export default function TaskDetailPanel({
                 {task.attachments.length === 0 ? (
                   <p className="text-xs text-ink/30 italic">No attachments uploaded.</p>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {task.attachments.map(att => (
                       <div 
                         key={att.id} 

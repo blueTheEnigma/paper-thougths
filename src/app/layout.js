@@ -72,7 +72,7 @@ export default function RootLayout({ children }) {
         >
           <ServiceWorkerRegister />
           <Navigation />
-          <div className="flex-1 w-full pt-24 pb-8 md:pt-32">
+          <div className="flex-1 w-full pt-20 pb-8 md:pt-32">
             {children}
           </div>
           <Footer />

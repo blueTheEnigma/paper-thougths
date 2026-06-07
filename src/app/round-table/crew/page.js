@@ -361,7 +361,7 @@ export default function CrewPage() {
                 {/* Departments Checkboxes */}
                 <div className="space-y-2">
                   <label className="font-bold text-ink/50 uppercase tracking-widest text-[9px] block">Departments Membership</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {departments.map(d => (
                       <button
                         key={d.id}
@@ -442,7 +442,7 @@ export default function CrewPage() {
               {/* Departments Checkboxes */}
               <div className="space-y-2">
                 <label className="font-bold text-ink/50 uppercase tracking-widest text-[9px] block">Departments Membership</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {departments.map(d => (
                     <button
                       key={d.id}
