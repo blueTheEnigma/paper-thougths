@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
-import { syncOrCreateUser } from '@/lib/permissions';
+import { syncOrCreateUser, isCrewMember } from '@/lib/permissions';
 import { Database } from '@/lib/db';
 
 
@@ -79,6 +79,7 @@ export async function GET() {
         }
       }
       profile.onboarded = dbUser.onboarded || false;
+      profile.isCrewMember = await isCrewMember(user.id);
     }
 
     return NextResponse.json({ success: true, profile });

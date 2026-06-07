@@ -12,12 +12,16 @@ import PanguinAvatar from '@/components/PanguinAvatar';
 
 export default function Navigation() {
   const pathname = usePathname();
+  if (pathname?.startsWith('/round-table')) {
+    return null;
+  }
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const { user, isLoaded: userLoaded } = useUser();
   const isLoaded = authLoaded && userLoaded;
 
   const email = (user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
-  const isAdmin = email === "umorgan2001@gmail.com";
+  const superadminEmail = (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase();
+  const isAdmin = email === superadminEmail;
 
   const [profile, setProfile] = useState(null);
 
@@ -114,6 +118,12 @@ export default function Navigation() {
                 <Link href="/admin" className="hidden md:flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border border-accent/20">
                   <ShieldCheck size={14} />
                   <span>Admin</span>
+                </Link>
+              )}
+              {profile?.isCrewMember && (
+                <Link href="/round-table" className="hidden md:flex items-center gap-1.5 bg-burgundy/10 text-burgundy hover:bg-burgundy/20 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border border-burgundy/20">
+                  <BookOpen size={14} />
+                  <span>Crew CRM</span>
                 </Link>
               )}
               <Link 

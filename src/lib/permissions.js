@@ -183,3 +183,43 @@ export async function revokePermission(userId, permissionKey) {
     throw error;
   }
 }
+
+/**
+ * Check if a user has crew access.
+ * Returns true if the user is the superadmin, has the 'crew_access' permission,
+ * or has an active entry in the crew_members table.
+ */
+export async function isCrewMember(clerkId) {
+  if (!clerkId) return false;
+
+  try {
+    // 1. Get user details from database
+    const dbUser = await Database.queryOne(`
+      SELECT id, email FROM users WHERE clerk_id = $1
+    `, [clerkId]);
+
+    if (!dbUser) return false;
+
+    // 2. Check superadmin (from env, fallback to umorgan2001@gmail.com)
+    const superadminEmail = (process.env.SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase();
+    if (dbUser.email && dbUser.email.toLowerCase() === superadminEmail) {
+      return true;
+    }
+
+    // 3. Check for 'crew_access' permission
+    const hasPerm = await hasPermission(clerkId, 'crew_access');
+    if (hasPerm) return true;
+
+    // 4. Check crew_members active membership
+    const crewMember = await Database.queryOne(`
+      SELECT 1 FROM crew_members 
+      WHERE user_id = $1 AND is_active = TRUE
+    `, [dbUser.id]);
+
+    return !!crewMember;
+  } catch (error) {
+    console.error(`Error checking crew membership for clerkId ${clerkId}:`, error);
+    return false;
+  }
+}
+

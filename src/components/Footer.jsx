@@ -1,10 +1,15 @@
 "use client";
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { BookOpen, Send, Loader2 } from 'lucide-react';
 import EasterEgg from './EasterEgg';
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/round-table')) {
+    return null;
+  }
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
