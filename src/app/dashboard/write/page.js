@@ -24,29 +24,33 @@ export default async function WritePage({ searchParams }) {
     redirect('/dashboard');
   }
 
-  // Get active story prompt
+  // Get active story prompt (within 7 days)
   const storyPrompt = await Database.queryOne(`
     SELECT prompt_text as "promptText", id
     FROM prompts
     WHERE prompt_type = 'story'
+      AND active_date <= CURRENT_DATE
+      AND active_date >= CURRENT_DATE - INTERVAL '7 days'
     ORDER BY active_date DESC, created_at DESC
     LIMIT 1
   `);
 
-  // Get active poem prompt
+  // Get active poem prompt (within 7 days)
   const poemPrompt = await Database.queryOne(`
     SELECT prompt_text as "promptText", id
     FROM prompts
     WHERE prompt_type = 'poem'
+      AND active_date <= CURRENT_DATE
+      AND active_date >= CURRENT_DATE - INTERVAL '7 days'
     ORDER BY active_date DESC, created_at DESC
     LIMIT 1
   `);
 
   return (
     <WriteClient
-      storyPrompt={storyPrompt ? storyPrompt.promptText : "Write a short scene about discovering an ancient, dust-covered book in an unexpected place."}
+      storyPrompt={storyPrompt ? storyPrompt.promptText : "Write freely about any theme or subject that inspires you today."}
       storyPromptId={storyPrompt ? storyPrompt.id : null}
-      poemPrompt={poemPrompt ? poemPrompt.promptText : "Write a poem about the quiet chaos of a rainy afternoon in a bookstore."}
+      poemPrompt={poemPrompt ? poemPrompt.promptText : "Write freely about any theme or subject that inspires you today."}
       poemPromptId={poemPrompt ? poemPrompt.id : null}
     />
   );

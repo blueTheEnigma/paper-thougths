@@ -9,6 +9,22 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+const formatDate = (dateVal) => {
+  if (!dateVal) return 'N/A';
+  if (typeof dateVal === 'string') {
+    const cleanDate = dateVal.split('T')[0];
+    if (cleanDate.split('-').length === 3) {
+      return cleanDate;
+    }
+  }
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return 'N/A';
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function AdminClient({ 
   initialMembers, 
   initialSubmissions, 
@@ -897,7 +913,7 @@ export default function AdminClient({
                                   {pr.promptType === 'poem' ? 'Poetry' : 'Story'}
                                 </span>
                               </div>
-                              <span>Active Date: {pr.activeDate ? new Date(pr.activeDate).toLocaleDateString() : 'N/A'}</span>
+                              <span>Active Date: {formatDate(pr.activeDate)}</span>
                             </div>
                             <p className="text-xs text-ink leading-relaxed whitespace-pre-wrap">{pr.promptText}</p>
                           </div>

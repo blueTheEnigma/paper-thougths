@@ -12,10 +12,12 @@ export async function GET(request) {
     const getLatest = searchParams.get('latest') !== 'false'; // default to true
 
     if (getLatest) {
-      // Get the most recent prompt
+      // Get the most recent prompt (within 7 days)
       const prompt = await Database.queryOne(`
         SELECT id, prompt_text as "promptText", active_date as "activeDate", prompt_type as "promptType", created_at as "createdAt"
         FROM prompts
+        WHERE active_date <= CURRENT_DATE
+          AND active_date >= CURRENT_DATE - INTERVAL '7 days'
         ORDER BY active_date DESC, created_at DESC
         LIMIT 1
       `);
@@ -83,7 +85,10 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       message: 'New Weekly Prompt successfully added.',
-      prompt: newPrompt
+      prompt: {
+        ...newPrompt,
+        activeDate: newPrompt.activeDate ? (newPrompt.activeDate instanceof Date ? newPrompt.activeDate.toISOString().split('T')[0] : String(newPrompt.activeDate)) : null
+      }
     });
   } catch (error) {
     console.error('Failed to create prompt:', error);

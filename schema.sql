@@ -216,4 +216,32 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS vat_applied NUMERIC(10,2) DEFAULT 0.
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS net_amount NUMERIC(10,2) DEFAULT 0.00;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS leaves_spent INT DEFAULT 0;
 
+-- 14. Book of the Month Suggestions Table
+CREATE TABLE IF NOT EXISTS botm_suggestions (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_of_the_month_id INT NOT NULL REFERENCES book_of_the_month(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(255) NOT NULL,
+    teaser TEXT NOT NULL,
+    chapter_id INT REFERENCES chapters(id) ON DELETE SET NULL,
+    month_year VARCHAR(20) NOT NULL, -- Format: 'YYYY-MM'
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(user_id, book_of_the_month_id)
+);
+
+-- 15. Book of the Month Votes Table
+CREATE TABLE IF NOT EXISTS botm_votes (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    suggestion_id INT NOT NULL REFERENCES botm_suggestions(id) ON DELETE CASCADE,
+    month_year VARCHAR(20) NOT NULL, -- Format: 'YYYY-MM'
+    chapter_id INT REFERENCES chapters(id) ON DELETE SET NULL, -- Cache stream chapter_id for indexing/constraints
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Unique indexes to prevent double voting within the same stream and month
+CREATE UNIQUE INDEX IF NOT EXISTS unique_user_vote_general ON botm_votes(user_id, month_year) WHERE chapter_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS unique_user_vote_chapter ON botm_votes(user_id, month_year, chapter_id) WHERE chapter_id IS NOT NULL;
+
 

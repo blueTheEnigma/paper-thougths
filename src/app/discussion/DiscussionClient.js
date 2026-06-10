@@ -44,6 +44,20 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
   const [reviewError, setReviewError] = useState(null);
   const [reviewSuccess, setReviewSuccess] = useState(null);
 
+  // Suggestions & Voting states
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [userVotedSuggestionId, setUserVotedSuggestionId] = useState(null);
+  const [isVotingOpen, setIsVotingOpen] = useState(false);
+  const [votingMonthYear, setVotingMonthYear] = useState('');
+  const [suggestTitle, setSuggestTitle] = useState("");
+  const [suggestAuthor, setSuggestAuthor] = useState("");
+  const [suggestTeaser, setSuggestTeaser] = useState("");
+  const [submittingSuggestion, setSubmittingSuggestion] = useState(false);
+  const [suggestSuccess, setSuggestSuccess] = useState(null);
+  const [suggestError, setSuggestError] = useState(null);
+  const [submittingVote, setSubmittingVote] = useState(false);
+
   // Comments / Replies states (nested under reviews)
   const [expandedComments, setExpandedComments] = useState({}); // reviewId -> boolean
   const [comments, setComments] = useState({}); // reviewId -> Array
@@ -86,9 +100,98 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
     }
   };
 
+  const isVotingPeriodActive = () => {
+    return new Date().getDate() <= 3;
+  };
+
+  // Fetch suggestions for active stream and cycle
+  const fetchSuggestions = async () => {
+    if (!activeBook?.id) return;
+    setSuggestionsLoading(true);
+    try {
+      const chapterParam = activeBook.chapterId !== undefined && activeBook.chapterId !== null ? activeBook.chapterId : 'null';
+      const endpoint = isVotingPeriodActive()
+        ? `/api/book-of-the-month/votes?chapterId=${chapterParam}`
+        : `/api/book-of-the-month/suggestions?chapterId=${chapterParam}`;
+      
+      const res = await fetch(endpoint);
+      const data = await res.json();
+      if (data.success) {
+        setSuggestions(data.suggestions || []);
+        setUserVotedSuggestionId(data.userVotedSuggestionId || null);
+        setIsVotingOpen(!!data.isVotingOpen);
+        setVotingMonthYear(data.targetMonthYear || '');
+      }
+    } catch (err) {
+      console.error("Failed to load suggestions/votes", err);
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
+
+  const handleSuggestBook = async (e) => {
+    e.preventDefault();
+    if (!profile || !activeBook?.id) return;
+    setSubmittingSuggestion(true);
+    setSuggestError(null);
+    setSuggestSuccess(null);
+    try {
+      const res = await fetch('/api/book-of-the-month/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookId: activeBook.id,
+          title: suggestTitle,
+          author: suggestAuthor,
+          teaser: suggestTeaser
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSuggestSuccess(data.message);
+        setSuggestTitle("");
+        setSuggestAuthor("");
+        setSuggestTeaser("");
+        fetchSuggestions();
+      } else {
+        setSuggestError(data.error || 'Failed to submit suggestion.');
+      }
+    } catch (err) {
+      console.error("Suggestion error:", err);
+      setSuggestError("Connection error occurred.");
+    } finally {
+      setSubmittingSuggestion(false);
+    }
+  };
+
+  const handleVote = async (suggestionId) => {
+    if (!profile || submittingVote) return;
+    setSubmittingVote(true);
+    try {
+      const res = await fetch('/api/book-of-the-month/votes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ suggestionId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message);
+        fetchSuggestions();
+      } else {
+        alert(data.error || 'Failed to submit vote.');
+      }
+    } catch (err) {
+      console.error("Voting error:", err);
+      alert("Connection error occurred.");
+    } finally {
+      setSubmittingVote(false);
+    }
+  };
+
   useEffect(() => {
     if (activeBook?.id) {
       fetchReviews(activeBook.id);
+      fetchSuggestions();
     }
   }, [activeBook]);
 
@@ -118,6 +221,7 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
         setIsFinished(false);
         setRating(5);
         fetchReviews(activeBook.id);
+        fetchSuggestions();
         fetchProfile(); // refresh leaves counter in navbar / state
 
         // Award celebration
@@ -436,6 +540,196 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
                     </button>
                   </div>
                 </form>
+              )}
+            </div>
+
+            {/* Book of the Month Suggestions / Voting Card */}
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-sage/20 shadow-sm space-y-4">
+              {isVotingOpen ? (
+                <div className="space-y-4">
+                  <div className="border-b border-sage/10 pb-3">
+                    <h3 className="text-lg font-display font-bold text-burgundy flex items-center gap-1.5">
+                      <span>🗳️ Vote for Next BOTM</span>
+                    </h3>
+                    <p className="text-[10px] text-ink/50 font-serif leading-relaxed mt-1">
+                      Voting is open for the first 3 days of the month. Choose the {votingMonthYear} selection!
+                    </p>
+                  </div>
+
+                  {!profile ? (
+                    <div className="bg-cream/40 p-4 rounded-xl text-center border border-sage/15">
+                      <p className="text-[11px] text-ink/75 font-serif mb-2">
+                        You must be signed in to cast your vote.
+                      </p>
+                      <Link
+                        href="/sign-in?redirect_url=/discussion"
+                        className="bg-burgundy text-cream text-[9px] font-sans font-bold uppercase tracking-widest px-4 py-2.5 rounded-lg inline-block hover:bg-ink hover:text-white transition-colors cursor-pointer"
+                      >
+                        Sign In
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {suggestionsLoading ? (
+                        <div className="flex items-center justify-center py-4 text-xs font-bold text-ink/40">
+                          <Loader2 size={14} className="animate-spin mr-2" /> Loading candidates...
+                        </div>
+                      ) : suggestions.length === 0 ? (
+                        <p className="text-xs text-ink/50 font-serif italic text-center py-4">
+                          No suggestions submitted in the previous cycle.
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {suggestions.map((sug) => {
+                            const hasVotedThis = userVotedSuggestionId === sug.id;
+                            const hasVotedAny = userVotedSuggestionId !== null;
+                            return (
+                              <div key={sug.id} className={`p-4 rounded-2xl border transition-all ${
+                                hasVotedThis ? 'bg-primary/5 border-primary/25 shadow-inner' : 'bg-cream/10 border-sage/15'
+                              }`}>
+                                <div className="flex justify-between items-start gap-2">
+                                  <div className="space-y-1 flex-1">
+                                    <h4 className="font-sans font-bold text-xs text-ink leading-tight">{sug.title}</h4>
+                                    <p className="text-[10px] text-burgundy font-sans italic">by {sug.author}</p>
+                                    <p className="text-[10px] text-ink/65 font-serif line-clamp-2 mt-1">{sug.teaser}</p>
+                                    <div className="text-[9px] text-ink/40 font-sans mt-1">
+                                      Suggested by {sug.suggestedBy}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex flex-col items-end gap-2">
+                                    <span className="text-[10px] font-bold text-burgundy bg-burgundy/5 px-2 py-0.5 rounded border border-burgundy/10 shrink-0">
+                                      {sug.votesCount} {sug.votesCount === 1 ? 'vote' : 'votes'}
+                                    </span>
+                                    {hasVotedThis ? (
+                                      <span className="bg-emerald-500 text-cream font-bold text-[8px] px-2 py-1 rounded uppercase tracking-wider shadow-sm">
+                                        My Pick ✓
+                                      </span>
+                                    ) : (
+                                      <button
+                                        disabled={hasVotedAny || submittingVote}
+                                        onClick={() => handleVote(sug.id)}
+                                        className="bg-burgundy hover:bg-ink text-cream disabled:opacity-50 text-[8px] font-bold uppercase tracking-wider px-3 py-1 rounded transition-colors cursor-pointer"
+                                      >
+                                        Vote
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="border-b border-sage/10 pb-3">
+                    <h3 className="text-lg font-display font-bold text-burgundy flex items-center gap-1.5">
+                      <span>💡 Suggest Next Book</span>
+                    </h3>
+                    <p className="text-[10px] text-ink/50 font-serif leading-relaxed mt-1">
+                      Submit your candidate for the next monthly showcase! Only active reviewers can suggest a book.
+                    </p>
+                  </div>
+
+                  {!profile ? (
+                    <div className="bg-cream/40 p-4 rounded-xl text-center border border-sage/15">
+                      <p className="text-[11px] text-ink/75 font-serif mb-2">
+                        You must be signed in to suggest a book.
+                      </p>
+                      <Link
+                        href="/sign-in?redirect_url=/discussion"
+                        className="bg-burgundy text-cream text-[9px] font-sans font-bold uppercase tracking-widest px-4 py-2.5 rounded-lg inline-block hover:bg-ink hover:text-white transition-colors cursor-pointer"
+                      >
+                        Sign In
+                      </Link>
+                    </div>
+                  ) : !reviews.some(r => r.reviewerName === profile.name) ? (
+                    <div className="bg-[#FAF6F0] p-4 rounded-xl text-center border border-sage/15">
+                      <p className="text-xs text-ink/60 font-serif leading-relaxed">
+                        You have not reviewed this Book of the Month yet. Submit your critique above to unlock candidate suggestions.
+                      </p>
+                    </div>
+                  ) : suggestions.some(sug => sug.suggestedBy === profile.name) ? (
+                    <div className="bg-emerald-55 border border-emerald-200/50 p-4 rounded-2xl flex items-start gap-2.5 text-emerald-800">
+                      <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <span className="text-xs font-sans font-bold block uppercase tracking-wider">Candidate Suggested</span>
+                        <p className="text-[11px] text-emerald-700/80 font-serif leading-relaxed">
+                          You have successfully submitted your book suggestion. Voting for next month's selection starts on the first day of the month!
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSuggestBook} className="space-y-3">
+                      {suggestError && (
+                        <div className="bg-red-50 border border-red-200 p-2.5 rounded-xl text-red-650 text-xs font-sans font-semibold">
+                          {suggestError}
+                        </div>
+                      )}
+                      {suggestSuccess && (
+                        <div className="bg-emerald-50 border border-emerald-250 p-2.5 rounded-xl text-emerald-750 text-xs font-sans font-semibold">
+                          {suggestSuccess}
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold uppercase tracking-wider text-ink/40">Book Title</label>
+                          <input
+                            type="text"
+                            required
+                            value={suggestTitle}
+                            onChange={(e) => setSuggestTitle(e.target.value)}
+                            placeholder="e.g. Skin of the Sea"
+                            className="w-full bg-cream/40 border border-sage/20 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-burgundy text-ink font-medium"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold uppercase tracking-wider text-ink/40">Author</label>
+                          <input
+                            type="text"
+                            required
+                            value={suggestAuthor}
+                            onChange={(e) => setSuggestAuthor(e.target.value)}
+                            placeholder="e.g. Natasha Bowen"
+                            className="w-full bg-cream/40 border border-sage/20 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-burgundy text-ink font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold uppercase tracking-wider text-ink/40">Teaser / Description</label>
+                        <textarea
+                          required
+                          rows={3}
+                          value={suggestTeaser}
+                          onChange={(e) => setSuggestTeaser(e.target.value)}
+                          placeholder="Brief description explaining why the clubhouse should read this book next..."
+                          className="w-full bg-cream/40 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy text-ink resize-none leading-relaxed font-serif"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={submittingSuggestion}
+                        className="w-full bg-burgundy hover:bg-ink text-cream hover:text-white py-2.5 rounded-xl text-[9px] font-sans font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
+                      >
+                        {submittingSuggestion ? (
+                          <>
+                            <Loader2 size={11} className="animate-spin" />
+                            <span>Submitting...</span>
+                          </>
+                        ) : (
+                          <span>Submit Suggestion</span>
+                        )}
+                      </button>
+                    </form>
+                  )}
+                </div>
               )}
             </div>
 

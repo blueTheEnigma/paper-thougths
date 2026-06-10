@@ -89,11 +89,17 @@ export default async function AdminPage() {
   `);
 
   // 6. Fetch Weekly Prompts
-  const prompts = await Database.query(`
+  const promptsRaw = await Database.query(`
     SELECT id, prompt_text as "promptText", prompt_type as "promptType", active_date as "activeDate", created_at as "date"
     FROM prompts
     ORDER BY active_date DESC, created_at DESC
   `);
+
+  const prompts = promptsRaw.map(p => ({
+    ...p,
+    activeDate: p.activeDate ? (p.activeDate instanceof Date ? p.activeDate.toISOString().split('T')[0] : String(p.activeDate)) : null,
+    date: p.date ? (p.date instanceof Date ? p.date.toISOString() : String(p.date)) : null
+  }));
 
   // 7. Fetch Active Books of the Month
   const currentBotm = await Database.query(`
