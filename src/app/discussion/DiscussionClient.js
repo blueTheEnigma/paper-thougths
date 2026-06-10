@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, ArrowRight, Star, BookOpen, MessageSquare, Loader2, 
@@ -85,7 +85,7 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
   }, []);
 
   // Fetch reviews for active book
-  const fetchReviews = async (bookId) => {
+  const fetchReviews = useCallback(async (bookId) => {
     setReviewsLoading(true);
     try {
       const res = await fetch(`/api/book-of-the-month/reviews?bookId=${bookId}`);
@@ -98,14 +98,14 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
     } finally {
       setReviewsLoading(false);
     }
-  };
+  }, []);
 
   const isVotingPeriodActive = () => {
     return new Date().getDate() <= 3;
   };
 
   // Fetch suggestions for active stream and cycle
-  const fetchSuggestions = async () => {
+  const fetchSuggestions = useCallback(async () => {
     if (!activeBook?.id) return;
     setSuggestionsLoading(true);
     try {
@@ -127,7 +127,7 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
     } finally {
       setSuggestionsLoading(false);
     }
-  };
+  }, [activeBook]);
 
   const handleSuggestBook = async (e) => {
     e.preventDefault();
@@ -193,7 +193,7 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
       fetchReviews(activeBook.id);
       fetchSuggestions();
     }
-  }, [activeBook]);
+  }, [activeBook, fetchReviews, fetchSuggestions]);
 
   // Submit review for BOTM
   const handleSubmitReview = async (e) => {
