@@ -1,9 +1,33 @@
 "use client";
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, Calendar, Clock, MapPin } from 'lucide-react';
 
 export default function Events({ initialEvents = [] }) {
-  const displayEvents = initialEvents.length > 0 ? initialEvents : [];
+  const [events, setEvents] = useState(initialEvents);
+  const [loading, setLoading] = useState(initialEvents.length === 0);
+
+  useEffect(() => {
+    let active = true;
+    async function loadEvents() {
+      try {
+        const res = await fetch('/api/events');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        if (active && data.success) {
+          setEvents(data.events || []);
+        }
+      } catch (err) {
+        console.error("Failed to load events:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    loadEvents();
+    return () => { active = false; };
+  }, []);
+
+  const displayEvents = events;
 
   return (
     <section id="events" className="w-full px-4 sm:px-6 pb-16 md:pb-24 bg-cream min-h-[70vh] overflow-x-hidden">
@@ -21,7 +45,27 @@ export default function Events({ initialEvents = [] }) {
 
         {/* Events grid */}
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-          {displayEvents.length > 0 ? (
+          {loading ? (
+            [...Array(4)].map((_, index) => (
+              <div
+                key={index}
+                className="bg-white/85 rounded-2xl sm:rounded-[24px] border border-sage/20 p-4 sm:p-6 flex flex-col animate-pulse"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-16 h-3 bg-sage/25 rounded"></div>
+                  <span className="text-ink/15 text-[8px]">•</span>
+                  <div className="w-16 h-3 bg-sage/25 rounded"></div>
+                </div>
+                <div className="w-3/4 h-6 bg-burgundy/15 rounded mb-2"></div>
+                <div className="w-1/2 h-3.5 bg-ink/10 rounded mb-4"></div>
+                <div className="flex-1 space-y-2 mb-6">
+                  <div className="w-full h-3 bg-ink/5 rounded"></div>
+                  <div className="w-5/6 h-3 bg-ink/5 rounded"></div>
+                </div>
+                <div className="w-full h-11 bg-sage/10 rounded-xl"></div>
+              </div>
+            ))
+          ) : displayEvents.length > 0 ? (
             displayEvents.map((event, index) => (
               <motion.div
                 key={index}

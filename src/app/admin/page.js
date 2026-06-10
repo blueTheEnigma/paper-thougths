@@ -90,7 +90,7 @@ export default async function AdminPage() {
 
   // 6. Fetch Weekly Prompts
   const prompts = await Database.query(`
-    SELECT id, prompt_text as "promptText", active_date as "activeDate", created_at as "date"
+    SELECT id, prompt_text as "promptText", prompt_type as "promptType", active_date as "activeDate", created_at as "date"
     FROM prompts
     ORDER BY active_date DESC, created_at DESC
   `);

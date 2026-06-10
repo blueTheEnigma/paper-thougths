@@ -2,6 +2,8 @@ const CACHE_NAME = 'paper-thoughts-pwa-v1';
 const ASSETS_TO_CACHE = [
   '/dashboard',
   '/dashboard/write',
+  '/events',
+  '/village',
   '/manifest.json',
   '/globals.css'
 ];
@@ -58,6 +60,35 @@ self.addEventListener('fetch', (event) => {
               JSON.stringify({ 
                 success: true, 
                 prompt: { promptText: "Write offline: Compose your latest draft here. (Could not load prompt from server)" } 
+              }),
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+          });
+        })
+    );
+    return;
+  }
+
+  // Network-first strategy for events API to cache upcoming gatherings for offline viewing
+  if (url.pathname === '/api/events') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.status === 200) {
+            const clonedResponse = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, clonedResponse);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) return cachedResponse;
+            return new Response(
+              JSON.stringify({ 
+                success: true, 
+                events: [] 
               }),
               { headers: { 'Content-Type': 'application/json' } }
             );

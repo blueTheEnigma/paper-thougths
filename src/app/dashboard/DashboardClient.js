@@ -259,7 +259,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
 
   // Birthday banner dismissal
   const [bdayDismissed, setBdayDismissed] = useState(true);
-  const [showPortal, setShowPortal] = useState(true);
+  const [showPortal, setShowPortal] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [mounted, setMounted] = useState(false);
 

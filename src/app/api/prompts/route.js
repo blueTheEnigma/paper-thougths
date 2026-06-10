@@ -14,7 +14,7 @@ export async function GET(request) {
     if (getLatest) {
       // Get the most recent prompt
       const prompt = await Database.queryOne(`
-        SELECT id, prompt_text as "promptText", active_date as "activeDate", created_at as "createdAt"
+        SELECT id, prompt_text as "promptText", active_date as "activeDate", prompt_type as "promptType", created_at as "createdAt"
         FROM prompts
         ORDER BY active_date DESC, created_at DESC
         LIMIT 1
@@ -37,7 +37,7 @@ export async function GET(request) {
     }
 
     const prompts = await Database.query(`
-      SELECT id, prompt_text as "promptText", active_date as "activeDate", created_at as "createdAt"
+      SELECT id, prompt_text as "promptText", active_date as "activeDate", prompt_type as "promptType", created_at as "createdAt"
       FROM prompts
       ORDER BY active_date DESC, created_at DESC
     `);
@@ -66,7 +66,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { promptText, activeDate } = body;
+    const { promptText, activeDate, promptType } = body;
 
     if (!promptText) {
       return NextResponse.json({ success: false, error: 'Prompt text is required' }, { status: 400 });
@@ -75,10 +75,10 @@ export async function POST(request) {
     const dateVal = activeDate ? new Date(activeDate) : new Date();
 
     const newPrompt = await Database.queryOne(`
-      INSERT INTO prompts (prompt_text, active_date)
-      VALUES ($1, $2)
-      RETURNING id, prompt_text as "promptText", active_date as "activeDate"
-    `, [promptText, dateVal]);
+      INSERT INTO prompts (prompt_text, active_date, prompt_type)
+      VALUES ($1, $2, $3)
+      RETURNING id, prompt_text as "promptText", active_date as "activeDate", prompt_type as "promptType"
+    `, [promptText, dateVal, promptType || 'story']);
 
     return NextResponse.json({
       success: true,

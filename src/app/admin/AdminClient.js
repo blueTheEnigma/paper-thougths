@@ -42,6 +42,7 @@ export default function AdminClient({
   // Prompt states
   const [newPromptText, setNewPromptText] = useState('');
   const [newPromptDate, setNewPromptDate] = useState('');
+  const [newPromptType, setNewPromptType] = useState('story');
   const [isSubmittingPrompt, setIsSubmittingPrompt] = useState(false);
 
   // Loading indicator for action button
@@ -247,7 +248,8 @@ export default function AdminClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           promptText: newPromptText, 
-          activeDate: newPromptDate || undefined 
+          activeDate: newPromptDate || undefined,
+          promptType: newPromptType
         })
       });
       const data = await res.json();
@@ -255,6 +257,7 @@ export default function AdminClient({
         setPrompts(prev => [data.prompt, ...prev]);
         setNewPromptText('');
         setNewPromptDate('');
+        setNewPromptType('story');
       } else {
         setErrorMessage(data.error || 'Failed to create weekly prompt.');
       }
@@ -827,6 +830,18 @@ export default function AdminClient({
                     
                     <form onSubmit={handleCreatePrompt} className="space-y-4">
                       <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Prompt Type</label>
+                        <select
+                          value={newPromptType}
+                          onChange={(e) => setNewPromptType(e.target.value)}
+                          className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink font-bold"
+                        >
+                          <option value="story">Story Prompt</option>
+                          <option value="poem">Poetry Prompt</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
                         <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Prompt Text</label>
                         <textarea
                           required
@@ -872,7 +887,16 @@ export default function AdminClient({
                         {prompts.map((pr) => (
                           <div key={pr.id} className="bg-cream/10 border border-sage/10 p-5 rounded-2xl space-y-2 hover:bg-cream/20 transition-all">
                             <div className="flex justify-between items-center text-[10px] text-ink/40 font-mono">
-                              <span className="bg-burgundy/10 text-burgundy font-bold px-2 py-0.5 rounded">Prompt #{pr.id}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="bg-burgundy/10 text-burgundy font-bold px-2 py-0.5 rounded">Prompt #{pr.id}</span>
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                                  pr.promptType === 'poem' 
+                                    ? 'bg-accent/15 text-burgundy border border-accent/20' 
+                                    : 'bg-sage/15 text-sage-800 border border-sage/20'
+                                }`}>
+                                  {pr.promptType === 'poem' ? 'Poetry' : 'Story'}
+                                </span>
+                              </div>
                               <span>Active Date: {pr.activeDate ? new Date(pr.activeDate).toLocaleDateString() : 'N/A'}</span>
                             </div>
                             <p className="text-xs text-ink leading-relaxed whitespace-pre-wrap">{pr.promptText}</p>

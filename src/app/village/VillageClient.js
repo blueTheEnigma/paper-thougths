@@ -293,7 +293,7 @@ const itemVariants = {
 // ─── Main VillageClient ───────────────────────────────────────────────────────
 
 export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSignedIn: serverIsSignedIn, isRegistered: serverIsRegistered }) {
-  const [showEntrance, setShowEntrance] = useState(true);
+  const [showEntrance, setShowEntrance] = useState(false);
   const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -307,11 +307,18 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
   const userName = clientUser ? (clientUser.firstName || clientUser.fullName || userStats?.name || 'Writer') : (userStats?.name || 'Writer');
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
+    const timer = setTimeout(() => {
+      setMounted(true);
+      if (typeof window !== 'undefined') {
+        const seen = sessionStorage.getItem('seen_village_portal') === 'true';
+        setShowEntrance(!seen);
+      }
+    }, 0);
     return () => clearTimeout(timer);
   }, []);
 
   const handleEnter = () => {
+    sessionStorage.setItem('seen_village_portal', 'true');
     setShowEntrance(false);
     if (redirectUrl) {
       router.push(redirectUrl);
