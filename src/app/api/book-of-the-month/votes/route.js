@@ -58,12 +58,19 @@ export async function GET(request) {
         }
       }
     }
+    
+    const cycle = await Database.queryOne(`
+      SELECT voting_open 
+      FROM botm_cycles 
+      WHERE month_year = $1
+    `, [targetMonthYear]);
+    const isVotingOpen = cycle ? cycle.voting_open : false;
 
     return NextResponse.json({
       success: true,
       suggestions,
       userVotedSuggestionId,
-      isVotingOpen: isVotingPeriod(),
+      isVotingOpen,
       targetMonthYear
     });
   } catch (error) {
@@ -85,8 +92,17 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'User sync failed' }, { status: 500 });
     }
 
-    if (!isVotingPeriod()) {
-      return NextResponse.json({ success: false, error: 'Voting is only open during the first 3 days of the month.' }, { status: 403 });
+    const currentVotingCycle = getVotingMonthYear();
+
+    const cycle = await Database.queryOne(`
+      SELECT voting_open 
+      FROM botm_cycles 
+      WHERE month_year = $1
+    `, [currentVotingCycle]);
+    const isVotingOpen = cycle ? cycle.voting_open : false;
+
+    if (!isVotingOpen) {
+      return NextResponse.json({ success: false, error: 'Voting is not currently open for this cycle.' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -108,7 +124,6 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Book suggestion not found.' }, { status: 404 });
     }
 
-    const currentVotingCycle = getVotingMonthYear();
     if (suggestion.monthYear !== currentVotingCycle) {
       return NextResponse.json({ success: false, error: 'This suggestion is not part of the current voting cycle.' }, { status: 400 });
     }

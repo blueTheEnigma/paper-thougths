@@ -59,6 +59,7 @@ export default function AdminClient({
   const [newPromptText, setNewPromptText] = useState('');
   const [newPromptDate, setNewPromptDate] = useState('');
   const [newPromptType, setNewPromptType] = useState('story');
+  const [isPromptBank, setIsPromptBank] = useState(false);
   const [isSubmittingPrompt, setIsSubmittingPrompt] = useState(false);
 
   // Loading indicator for action button
@@ -264,8 +265,9 @@ export default function AdminClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           promptText: newPromptText, 
-          activeDate: newPromptDate || undefined,
-          promptType: newPromptType
+          activeDate: isPromptBank ? undefined : (newPromptDate || undefined),
+          promptType: newPromptType,
+          isBank: isPromptBank
         })
       });
       const data = await res.json();
@@ -274,6 +276,7 @@ export default function AdminClient({
         setNewPromptText('');
         setNewPromptDate('');
         setNewPromptType('story');
+        setIsPromptBank(false);
       } else {
         setErrorMessage(data.error || 'Failed to create weekly prompt.');
       }
@@ -869,15 +872,31 @@ export default function AdminClient({
                         />
                       </div>
                       
+                      <div className="flex items-center space-x-2 py-1">
+                        <input
+                          type="checkbox"
+                          id="isPromptBank"
+                          checked={isPromptBank}
+                          onChange={(e) => setIsPromptBank(e.target.checked)}
+                          className="rounded border-sage/25 text-burgundy focus:ring-burgundy w-4 h-4 cursor-pointer"
+                        />
+                        <label htmlFor="isPromptBank" className="text-[10px] font-bold uppercase tracking-wider text-ink/50 cursor-pointer select-none">
+                          Save to Prompt Bank (Unpublished)
+                        </label>
+                      </div>
+                      
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Active Date (Optional)</label>
                         <input
                           type="date"
                           value={newPromptDate}
+                          disabled={isPromptBank}
                           onChange={(e) => setNewPromptDate(e.target.value)}
-                          className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-burgundy"
+                          className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-burgundy disabled:opacity-50"
                         />
-                        <p className="text-[9px] text-ink/40 mt-1">Leave empty to activate immediately.</p>
+                        <p className="text-[9px] text-ink/40 mt-1">
+                          {isPromptBank ? 'Scheduled automatically by Saturday rotation.' : 'Leave empty to activate immediately.'}
+                        </p>
                       </div>
 
                       <button

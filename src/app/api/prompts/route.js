@@ -68,13 +68,13 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { promptText, activeDate, promptType } = body;
+    const { promptText, activeDate, promptType, isBank } = body;
 
     if (!promptText) {
       return NextResponse.json({ success: false, error: 'Prompt text is required' }, { status: 400 });
     }
 
-    const dateVal = activeDate ? new Date(activeDate) : new Date();
+    const dateVal = isBank ? null : (activeDate ? new Date(activeDate) : new Date());
 
     const newPrompt = await Database.queryOne(`
       INSERT INTO prompts (prompt_text, active_date, prompt_type)

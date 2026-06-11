@@ -1,0 +1,32 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/batch-transition",
+      "schedule": "59 22 * * 5"
+    },
+    {
+      "path": "/api/cron/friday-recap",
+      "schedule": "4 23 * * 5"
+    },
+    {
+      "path": "/api/cron/ai-synthesis",
+      "schedule": "10 23 * * 5"
+    },
+    {
+      "path": "/api/cron/prompt-rotation",
+      "schedule": "0 23 * * 5"
+    },
+    {
+      "path": "/api/cron/open-voting",
+      "schedule": "0 0 1 * *"
+    },
+    {
+      "path": "/api/cron/close-voting",
+      "schedule": "0 0 4 * *"
+    },
+    {
+      "path": "/api/cron/monthly-honors",
+      "schedule": "5 0 4 * *"
+    }
+  ]
+}

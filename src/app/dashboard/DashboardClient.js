@@ -489,27 +489,33 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
     // 4. Panguin Evolution Celebration check
     if (profile?.lifetimeLeaves >= 0) {
       const currentStageObj = getAvatarStage(profile.lifetimeLeaves);
-      const storageKey = `panguin_stage_${profile.id}`;
-      const savedStage = localStorage.getItem(storageKey);
+      const dbStage = profile.panguinStage || 0;
+      const sessionSuppressionKey = `panguin_celebrated_${profile.id}_${currentStageObj.stageIndex}`;
       
-      if (savedStage && savedStage !== currentStageObj.name) {
-        // Find if they moved up
-        const isLevelUp = currentStageObj.stageIndex > parseInt(localStorage.getItem(`${storageKey}_idx`) || -1);
-        if (isLevelUp) {
-          setTimeout(() => {
-            setEvolvedStage(currentStageObj);
-            setShowEvolutionModal(true);
-            confetti({
-              particleCount: 150,
-              spread: 80,
-              origin: { y: 0.6 },
-              colors: ['#F2A98A', '#5C1A2E', '#8F9B82']
-            });
-          }, 2000);
-        }
+      // If user's actual stage is higher than what was celebrated in the DB
+      // and we haven't already shown/processed it in this browser session
+      if (currentStageObj.stageIndex > dbStage && !sessionStorage.getItem(sessionSuppressionKey)) {
+        sessionStorage.setItem(sessionSuppressionKey, 'true');
+        
+        setTimeout(() => {
+          setEvolvedStage(currentStageObj);
+          setShowEvolutionModal(true);
+          confetti({
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.6 },
+            colors: ['#F2A98A', '#5C1A2E', '#8F9B82']
+          });
+          
+          // Write the corrected stage back to the DB immediately
+          fetch('/api/me/panguin-stage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stage: currentStageObj.stageIndex })
+          }).catch(err => console.error('Failed to sync panguin stage with database:', err));
+          
+        }, 2000);
       }
-      localStorage.setItem(storageKey, currentStageObj.name);
-      localStorage.setItem(`${storageKey}_idx`, currentStageObj.stageIndex);
     }
   }, [profile, bookVouchersGifted, isBday]);
 

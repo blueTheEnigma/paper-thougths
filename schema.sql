@@ -245,3 +245,48 @@ CREATE UNIQUE INDEX IF NOT EXISTS unique_user_vote_general ON botm_votes(user_id
 CREATE UNIQUE INDEX IF NOT EXISTS unique_user_vote_chapter ON botm_votes(user_id, month_year, chapter_id) WHERE chapter_id IS NOT NULL;
 
 
+-- Migration: Add panguin_stage column to users table if it does not exist
+ALTER TABLE users ADD COLUMN IF NOT EXISTS panguin_stage INT DEFAULT 0;
+
+-- Migration: Add streak_audited_week column to users table if it does not exist
+ALTER TABLE users ADD COLUMN IF NOT EXISTS streak_audited_week DATE;
+
+-- Migration: Create botm_cycles config table if it does not exist
+CREATE TABLE IF NOT EXISTS botm_cycles (
+    id SERIAL PRIMARY KEY,
+    month_year VARCHAR(20) UNIQUE NOT NULL,
+    voting_open BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Migration: Add poetry award columns to monthly_leaderboard table if they do not exist
+ALTER TABLE monthly_leaderboard ADD COLUMN IF NOT EXISTS poet_of_the_month_user_id INT REFERENCES users(id);
+ALTER TABLE monthly_leaderboard ADD COLUMN IF NOT EXISTS poet_of_the_month_text TEXT;
+ALTER TABLE monthly_leaderboard ADD COLUMN IF NOT EXISTS most_improved_poet_user_id INT REFERENCES users(id);
+ALTER TABLE monthly_leaderboard ADD COLUMN IF NOT EXISTS most_improved_poet_text TEXT;
+
+-- Migration: Seed 8 weeks of story prompts in the bank
+INSERT INTO prompts (prompt_text, prompt_type, active_date) VALUES 
+('A writer discovers that the character they killed off in their last chapter is now standing on their doorstep.', 'story', NULL),
+('Write a scene in a train station where two strangers accidentally swap identical leather notebooks.', 'story', NULL),
+('A glassblower creates a sphere that shows the last memory of whoever touches it.', 'story', NULL),
+('Describe a clockmaker''s shop where one clock runs backward, and anyone near it grows younger.', 'story', NULL),
+('A botanist discovers a species of flower that only blooms when secrets are spoken near it.', 'story', NULL),
+('Write about a mapmaker who realizes the geographical changes they draw on paper become real.', 'story', NULL),
+('An antique mirror is purchased, but the reflection shows the room as it was exactly fifty years ago.', 'story', NULL),
+('A chef creates a recipe that brings back a specific lost memory to anyone who tastes it.', 'story', NULL)
+ON CONFLICT DO NOTHING;
+
+-- Migration: Seed 8 weeks of poetry prompts in the bank
+INSERT INTO prompts (prompt_text, prompt_type, active_date) VALUES 
+('Write a poem centering on the smell of rain on dry soil (petrichor) and a forgotten promise.', 'poem', NULL),
+('A poem exploring the silence that sits between two people at a coffee table.', 'poem', NULL),
+('Write a poem using shadows as a metaphor for things left unsaid.', 'poem', NULL),
+('A poem about the architecture of old libraries and the souls of books.', 'poem', NULL),
+('Write a poem structured around the rhythm of a train track click-clacking in the night.', 'poem', NULL),
+('A poem dedicated to the first winter leaf that refuses to fall from the branch.', 'poem', NULL),
+('Write a poem about the quiet, slow decay of a deserted amusement park.', 'poem', NULL),
+('A poem exploring the colors of a city skyline at 3:00 AM.', 'poem', NULL)
+ON CONFLICT DO NOTHING;
+
+

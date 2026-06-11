@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
-import { synthesizeWeeklyReviews } from '@/services/reviewSynthesizer';
 
 // Clean text for exact quote comparison
 function cleanText(text) {
@@ -40,6 +39,16 @@ function calculateQuoteDensity(reviews, bodyText) {
   return validQuoteCount;
 }
 
+function getFridayOfCurrentCycle() {
+  const now = new Date();
+  const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const diff = day >= 5 ? day - 5 : day + 2; // distance to the most recent Friday
+  const friday = new Date(now);
+  friday.setDate(now.getDate() - diff);
+  friday.setHours(0, 0, 0, 0);
+  return friday;
+}
+
 export async function POST(request) {
   try {
     const isDev = process.env.NODE_ENV === 'development';
@@ -51,27 +60,26 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Running Friday Recap cron (Synthesis, Laurel, Streaks)...');
+    console.log('Running Friday Recap cron (Laurel, Streaks)...');
 
-    // 1. Fetch all active submissions
+    // Calculate current batch cycle range (past 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    // 1. Fetch newly archived submissions (transitioned by batch-transition at 11:59PM)
     const activeSubmissions = await Database.query(`
       SELECT id, title, genre, logline, body_text 
       FROM submissions 
-      WHERE batch_status = 'active_batch'
-    `);
+      WHERE batch_status = 'archived' AND created_at >= $1
+    `, [sevenDaysAgo]);
 
-    console.log(`Found ${activeSubmissions.length} active submissions to process.`);
+    console.log(`Found ${activeSubmissions.length} newly archived submissions to process for Laurel.`);
 
-    const synthesisResults = [];
     const laurelCandidates = [];
 
-    // 2. Synthesize each active submission and compute quote density for Laurel
+    // 2. Compute quote density for Laurel
     for (const sub of activeSubmissions) {
       try {
-        // Run synthesis (saves to DB and sets status to 'archived')
-        const summary = await synthesizeWeeklyReviews(sub.id);
-        synthesisResults.push({ id: sub.id, success: !!summary });
-        
         // Fetch human reviews for quote density calculation
         const reviews = await Database.query(`
           SELECT highwater_response FROM peer_reviews WHERE submission_id = $1
@@ -80,8 +88,7 @@ export async function POST(request) {
         const quoteCount = calculateQuoteDensity(reviews, sub.body_text);
         laurelCandidates.push({ id: sub.id, quoteCount });
       } catch (err) {
-        console.error(`Error in synthesis for submission ${sub.id}:`, err);
-        synthesisResults.push({ id: sub.id, success: false, error: err.message });
+        console.error(`Error in Laurel computation for submission ${sub.id}:`, err);
       }
     }
 
@@ -104,16 +111,21 @@ export async function POST(request) {
       }
     }
 
-    // 4. Audit Streaks (Saturday 12:00 AM to Friday 12:00 PM)
-    console.log('Auditing member active streaks...');
-    const allUsers = await Database.query(`SELECT id, writing_streak FROM users`);
+    // 4. Audit Streaks
+    console.log('Auditing member active streaks with idempotency check...');
+    const currentCycleFriday = getFridayOfCurrentCycle().toISOString().split('T')[0];
+    
+    const allUsers = await Database.query(`SELECT id, writing_streak, streak_audited_week FROM users`);
     const streakUpdates = [];
 
-    // Calculate current batch cycle range (past 7 days)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
     for (const u of allUsers) {
+      // Idempotency check: skip if already audited this cycle week
+      const lastAuditedWeek = u.streak_audited_week ? new Date(u.streak_audited_week).toISOString().split('T')[0] : null;
+      if (lastAuditedWeek === currentCycleFriday) {
+        console.log(`User ${u.id} already audited for week ${currentCycleFriday}. Skipping.`);
+        continue;
+      }
+
       // Check if user submitted writing in the past week
       const subCheck = await Database.queryOne(`
         SELECT 1 FROM submissions 
@@ -145,23 +157,26 @@ export async function POST(request) {
           await Database.query(`
             UPDATE users 
             SET milestone_tokens = milestone_tokens + 2.5,
-                writing_streak = $1
-            WHERE id = $2
-          `, [newStreak, u.id]);
+                writing_streak = $1,
+                streak_audited_week = $2
+            WHERE id = $3
+          `, [newStreak, currentCycleFriday, u.id]);
         } else {
           await Database.query(`
             UPDATE users 
-            SET writing_streak = $1
-            WHERE id = $2
-          `, [newStreak, u.id]);
+            SET writing_streak = $1,
+                streak_audited_week = $2
+            WHERE id = $3
+          `, [newStreak, currentCycleFriday, u.id]);
         }
       } else {
         // Reset streak if inactive
         await Database.query(`
           UPDATE users 
-          SET writing_streak = 0
-          WHERE id = $1
-        `, [u.id]);
+          SET writing_streak = 0,
+              streak_audited_week = $1
+          WHERE id = $2
+        `, [currentCycleFriday, u.id]);
       }
 
       streakUpdates.push({
@@ -175,8 +190,6 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       crownedLaurelId,
-      synthesisCount: synthesisResults.length,
-      synthesisResults,
       streakUpdatesCount: streakUpdates.length,
       streakUpdates
     });

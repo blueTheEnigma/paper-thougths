@@ -28,18 +28,22 @@ export async function POST(request) {
 
     console.log('Running Friday AI Review Synthesis batch cycle...');
 
-    // 1. Fetch active submissions that have at least one peer review (joined with user for emails)
+    // 1. Fetch archived submissions that have at least one peer review but no AI report yet (joined with user for emails)
     const activeSubmissions = await Database.query(`
       SELECT DISTINCT s.id, s.title, s.genre, s.logline, s.body_text,
              u.email as "authorEmail", u.full_name as "authorName"
       FROM submissions s
       JOIN peer_reviews r ON r.submission_id = s.id
       JOIN users u ON s.author_id = u.id
-      WHERE s.batch_status = 'active_batch'
+      WHERE s.batch_status = 'archived'
+        AND NOT EXISTS (
+          SELECT 1 FROM submission_ai_reports rep 
+          WHERE rep.submission_id = s.id
+        )
     `);
 
     if (activeSubmissions.length === 0) {
-      console.log('No active submissions with reviews found for synthesis.');
+      console.log('No archived submissions with reviews found for synthesis.');
       return NextResponse.json({ success: true, message: 'No submissions found with reviews to synthesize.' });
     }
 

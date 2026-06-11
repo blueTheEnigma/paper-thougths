@@ -79,6 +79,7 @@ async function getLocalArchiveData(clerkUser) {
       milestoneTokens: parseFloat(profileRow.milestone_tokens || 0.0),
       spendableLeaves: parseInt(profileRow.spendable_leaves || 0),
       lifetimeLeaves: parseInt(profileRow.lifetime_leaves || 0),
+      panguinStage: profileRow.panguin_stage !== null && profileRow.panguin_stage !== undefined ? parseInt(profileRow.panguin_stage) : 0,
       bookVouchersGifted: parseInt(profileRow.book_vouchers_gifted || 0),
       streak: parseInt(profileRow.writing_streak || 0),
       lastSubmissionDate: profileRow.last_submission_date ? new Date(profileRow.last_submission_date).toISOString().split('T')[0] : null,
