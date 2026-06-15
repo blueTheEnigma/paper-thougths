@@ -1,6 +1,7 @@
 import { Database } from './db';
 import { isCrewMember } from './permissions';
 import { redirect } from 'next/navigation';
+import { sendEmail } from './email';
 
 export const DEPARTMENTS = [
   { name: 'Marketing', color: '#F59E0B', icon: 'megaphone' },
@@ -96,6 +97,53 @@ export async function createNotification(recipientId, type, title, body, link) {
       INSERT INTO crew_notifications (recipient_id, type, title, body, link)
       VALUES ($1, $2, $3, $4, $5)
     `, [recipientId, type, title, body, link]);
+
+    // Dispatch email notification for high-priority events
+    if (type === 'task_assigned' || type === 'review_requested') {
+      const recipient = await Database.queryOne(`
+        SELECT u.email, u.full_name 
+        FROM crew_members cm
+        JOIN users u ON u.id = cm.user_id
+        WHERE cm.id = $1
+      `, [recipientId]);
+
+      if (recipient && recipient.email) {
+        const subject = type === 'task_assigned' 
+          ? `[The Round Table] Task Assigned: ${title}`
+          : `[The Round Table] Review Requested: ${title}`;
+          
+        const introText = type === 'task_assigned'
+          ? `You have been assigned a new task on the Crew Kanban board:`
+          : `Your review has been requested for a task on the Crew Kanban board:`;
+
+        await sendEmail({
+          to: recipient.email,
+          subject: subject,
+          html: `
+            <div style="font-family: sans-serif; color: #2C1A0E; background-color: #FAF7F2; padding: 32px; max-width: 600px; margin: 0 auto; border: 1px solid rgba(44,26,14,0.12); border-radius: 16px;">
+              <h2 style="color: #5C1A2E; font-family: serif; margin-bottom: 16px;">Hello, ${recipient.full_name || 'Crew Member'}</h2>
+              <p style="font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+                ${introText}
+              </p>
+              <div style="background-color: #FAF7F2; border-left: 4px solid #5C1A2E; padding: 12px 16px; margin: 20px 0; font-style: italic;">
+                <strong>${title}</strong><br/>
+                ${body || 'No description provided.'}
+              </div>
+              <div style="margin: 32px 0; text-align: center;">
+                <a href="https://paperthoughts.org${link || '/round-table/tasks'}" style="background-color: #5C1A2E; color: #FAF7F2; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(92,26,46,0.25);">
+                  View Task on Kanban Board
+                </a>
+              </div>
+              <hr style="border: 0; border-top: 1px solid rgba(44,26,14,0.08); margin: 28px 0;" />
+              <p style="font-size: 10px; color: rgba(44,26,14,0.5); font-style: italic; line-height: 1.4; text-align: center;">
+                This notification was dispatched automatically by The Round Table CRM.
+              </p>
+            </div>
+          `
+        }).catch(err => console.error('Failed to dispatch crew email notification:', err));
+      }
+    }
+
     return true;
   } catch (error) {
     console.error("Error creating notification:", error);

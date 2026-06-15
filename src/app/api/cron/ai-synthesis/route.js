@@ -14,6 +14,20 @@ const SYSTEM_PROMPT = `You are a master literary editor. Combine the attached ra
 }
 Do not wrap the JSON output in markdown formatting code blocks (such as \`\`\`json) or include any conversational intro/outro text. Return only the raw stringified JSON.`;
 
+// Saturday 12:00 AM batch cycle start calculator (UTC aligned)
+function getLastSaturdayStart() {
+  const now = new Date();
+  const currentDay = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  let daysSinceSaturday = currentDay - 6;
+  if (daysSinceSaturday < 0) {
+    daysSinceSaturday += 7;
+  }
+  const lastSaturday = new Date(now);
+  lastSaturday.setUTCDate(now.getUTCDate() - daysSinceSaturday);
+  lastSaturday.setUTCHours(0, 0, 0, 0);
+  return lastSaturday;
+}
+
 // Map-Reduce AI Synthesis Cron
 export async function POST(request) {
   try {
@@ -27,6 +41,20 @@ export async function POST(request) {
     }
 
     console.log('Running Friday AI Review Synthesis batch cycle...');
+
+    // Self-healing guard: Archive any active_batch submissions that should have been archived (created_at before last Saturday)
+    const lastSaturday = getLastSaturdayStart();
+    const selfHealRes = await Database.query(`
+      UPDATE submissions
+      SET batch_status = 'archived'
+      WHERE batch_status = 'active_batch'
+        AND created_at < $1
+      RETURNING id
+    `, [lastSaturday]);
+
+    if (selfHealRes.length > 0) {
+      console.log(`Self-healing: Archived ${selfHealRes.length} submissions from the previous cycle inline:`, selfHealRes.map(r => r.id));
+    }
 
     // 1. Fetch archived submissions that have at least one peer review but no AI report yet (joined with user for emails)
     const activeSubmissions = await Database.query(`

@@ -9,16 +9,17 @@ export const metadata = {
   description: "Enter the creative heart of the clubhouse. Draft your manuscripts or critique peers in the anonymous double-blind pool.",
 };
 
+// Saturday 12:00 AM batch cycle start calculator (UTC aligned)
 function getLastSaturdayStart() {
   const now = new Date();
-  const currentDay = now.getDay();
+  const currentDay = now.getUTCDay();
   let daysSinceSaturday = currentDay - 6;
   if (daysSinceSaturday < 0) {
     daysSinceSaturday += 7;
   }
   const lastSaturday = new Date(now);
-  lastSaturday.setDate(now.getDate() - daysSinceSaturday);
-  lastSaturday.setHours(0, 0, 0, 0);
+  lastSaturday.setUTCDate(now.getUTCDate() - daysSinceSaturday);
+  lastSaturday.setUTCHours(0, 0, 0, 0);
   return lastSaturday;
 }
 

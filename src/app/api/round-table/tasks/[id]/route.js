@@ -124,6 +124,8 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ success: false, error: 'Task not found' }, { status: 404 });
     }
 
+    let newAssigneesToNotify = [];
+
     await Database.transaction(async (client) => {
       // 1. Build update query dynamically
       const updates = [];
@@ -181,9 +183,15 @@ export async function PATCH(req, { params }) {
 
       // 2. Update assignees if provided
       if (assigneeIds !== undefined) {
+        const oldAssigneesRes = await client.query('SELECT crew_member_id FROM crew_task_assignees WHERE task_id = $1', [id]);
+        const oldAssigneeIds = oldAssigneesRes.rows.map(r => r.crew_member_id);
+
         await client.query('DELETE FROM crew_task_assignees WHERE task_id = $1', [id]);
         for (const assId of assigneeIds) {
           await client.query('INSERT INTO crew_task_assignees (task_id, crew_member_id) VALUES ($1, $2)', [id, assId]);
+          if (!oldAssigneeIds.includes(assId) && assId !== caller.id) {
+            newAssigneesToNotify.push(assId);
+          }
         }
       }
 
@@ -197,6 +205,19 @@ export async function PATCH(req, { params }) {
     });
 
     const currentTitle = title || oldTask.title;
+
+    // Send notifications to newly assigned crew members
+    if (newAssigneesToNotify.length > 0) {
+      for (const assigneeId of newAssigneesToNotify) {
+        await createNotification(
+          assigneeId,
+          'task_assigned',
+          'New Task Assigned',
+          `You have been assigned the task: "${currentTitle}"`,
+          `/round-table/tasks?task=${id}`
+        );
+      }
+    }
 
     // Log status change
     if (status && status !== oldTask.status) {

@@ -9,10 +9,10 @@ function countWords(str) {
   return str.trim().split(/\s+/).filter(Boolean).length;
 }
 
-// Saturday 12:00 AM batch cycle start calculator
+// Saturday 12:00 AM batch cycle start calculator (UTC aligned)
 function getLastSaturdayStart() {
   const now = new Date();
-  const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const currentDay = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   
   let daysSinceSaturday = currentDay - 6;
   if (daysSinceSaturday < 0) {
@@ -20,8 +20,8 @@ function getLastSaturdayStart() {
   }
   
   const lastSaturday = new Date(now);
-  lastSaturday.setDate(now.getDate() - daysSinceSaturday);
-  lastSaturday.setHours(0, 0, 0, 0);
+  lastSaturday.setUTCDate(now.getUTCDate() - daysSinceSaturday);
+  lastSaturday.setUTCHours(0, 0, 0, 0);
   return lastSaturday;
 }
 

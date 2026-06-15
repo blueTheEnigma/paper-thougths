@@ -39,13 +39,28 @@ function calculateQuoteDensity(reviews, bodyText) {
   return validQuoteCount;
 }
 
+// Saturday 12:00 AM batch cycle start calculator (UTC aligned)
+function getLastSaturdayStart() {
+  const now = new Date();
+  const currentDay = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  let daysSinceSaturday = currentDay - 6;
+  if (daysSinceSaturday < 0) {
+    daysSinceSaturday += 7;
+  }
+  const lastSaturday = new Date(now);
+  lastSaturday.setUTCDate(now.getUTCDate() - daysSinceSaturday);
+  lastSaturday.setUTCHours(0, 0, 0, 0);
+  return lastSaturday;
+}
+
+// Friday of current batch cycle start calculator (UTC aligned)
 function getFridayOfCurrentCycle() {
   const now = new Date();
-  const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const day = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   const diff = day >= 5 ? day - 5 : day + 2; // distance to the most recent Friday
   const friday = new Date(now);
-  friday.setDate(now.getDate() - diff);
-  friday.setHours(0, 0, 0, 0);
+  friday.setUTCDate(now.getUTCDate() - diff);
+  friday.setUTCHours(0, 0, 0, 0);
   return friday;
 }
 
@@ -62,16 +77,31 @@ export async function POST(request) {
 
     console.log('Running Friday Recap cron (Laurel, Streaks)...');
 
-    // Calculate current batch cycle range (past 7 days)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Self-healing guard: Archive any active_batch submissions that should have been archived (created_at before last Saturday)
+    const lastSaturday = getLastSaturdayStart();
+    const selfHealRes = await Database.query(`
+      UPDATE submissions
+      SET batch_status = 'archived'
+      WHERE batch_status = 'active_batch'
+        AND created_at < $1
+      RETURNING id
+    `, [lastSaturday]);
 
-    // 1. Fetch newly archived submissions (transitioned by batch-transition at 11:59PM)
+    if (selfHealRes.length > 0) {
+      console.log(`Self-healing: Archived ${selfHealRes.length} submissions from the previous cycle inline:`, selfHealRes.map(r => r.id));
+    }
+
+    // Calculate current batch cycle range (submissions active this week were created after lastSaturday - 7 days)
+    const cycleThreshold = new Date(lastSaturday.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 7);
+
+    // 1. Fetch newly archived submissions (transitioned by batch-transition or self-healing)
     const activeSubmissions = await Database.query(`
       SELECT id, title, genre, logline, body_text 
       FROM submissions 
       WHERE batch_status = 'archived' AND created_at >= $1
-    `, [sevenDaysAgo]);
+    `, [cycleThreshold]);
 
     console.log(`Found ${activeSubmissions.length} newly archived submissions to process for Laurel.`);
 
