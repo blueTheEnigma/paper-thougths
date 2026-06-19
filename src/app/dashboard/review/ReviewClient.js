@@ -29,6 +29,8 @@ export default function ReviewClient() {
   const [mirrorResponse, setMirrorResponse] = useState('');
   const [highwaterResponse, setHighwaterResponse] = useState('');
   const [pivotResponse, setPivotResponse] = useState('');
+  const [tipAmount, setTipAmount] = useState(0);
+  const [profile, setProfile] = useState(null);
   
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewResult, setReviewResult] = useState(null);
@@ -64,8 +66,21 @@ export default function ReviewClient() {
     }
   };
 
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch('/api/me');
+      const data = await res.json();
+      if (data.success) {
+        setProfile(data.profile);
+      }
+    } catch (err) {
+      console.error("Failed to fetch reviewer profile:", err);
+    }
+  };
+
   useEffect(() => {
     fetchQueue();
+    fetchProfile();
   }, []);
 
   // Handle Card Click (Opens Click Survey Intercept Modal)
@@ -123,17 +138,39 @@ export default function ReviewClient() {
   const highwaterWordCount = countWords(highwaterResponse);
   const pivotWordCount = countWords(pivotResponse);
 
-  const isValid = 
-    pacingRating && 
-    strengthsArray.length > 0 && 
-    mirrorWordCount >= 30 && 
-    highwaterWordCount >= 30 && 
-    pivotWordCount >= 30;
-
   // Submit completed Peer Review
   const handleSubmitReview = async (e) => {
     e.preventDefault();
-    if (!isValid) return;
+    
+    // Explicit Validation Warnings for Users
+    if (!pacingRating) {
+      setError("Please select a Narrative Pacing rating.");
+      return;
+    }
+    if (strengthsArray.length === 0) {
+      setError("Please select at least one Standout Element.");
+      return;
+    }
+    if (mirrorWordCount < 30) {
+      setError(`Perception (Theme) analysis is too short (${mirrorWordCount}/30 words). Please elaborate.`);
+      return;
+    }
+    if (highwaterWordCount < 30) {
+      setError(`Climax (Standout Moment) analysis is too short (${highwaterWordCount}/30 words). Please elaborate.`);
+      return;
+    }
+    if (pivotWordCount < 30) {
+      setError(`Constructive Feedback analysis is too short (${pivotWordCount}/30 words). Please elaborate.`);
+      return;
+    }
+    if (profile && tipAmount > profile.spendableLeaves) {
+      setError(`Insufficient leaves: You tried to tip ${tipAmount} leaves, but only have ${profile.spendableLeaves} spendable leaves.`);
+      return;
+    }
+    if (tipAmount % 5 !== 0) {
+      setError("Tip amount must be a multiple of 5.");
+      return;
+    }
 
     setSubmittingReview(true);
     setError(null);
@@ -148,7 +185,8 @@ export default function ReviewClient() {
           strengthsArray,
           mirrorResponse,
           highwaterResponse,
-          pivotResponse
+          pivotResponse,
+          tipAmount
         })
       });
 
@@ -178,8 +216,10 @@ export default function ReviewClient() {
     setMirrorResponse('');
     setHighwaterResponse('');
     setPivotResponse('');
+    setTipAmount(0);
     setReviewResult(null);
     fetchQueue();
+    fetchProfile();
   };
 
   // 1. Success Screen
@@ -408,6 +448,56 @@ export default function ReviewClient() {
                   />
                 </div>
 
+                {/* 6. Support the Author with Leaves (Tipping) */}
+                {profile && profile.spendableLeaves > 0 && (
+                  <div className="bg-[#FAF6F0] border border-sage/20 rounded-2xl p-5 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-bold text-ink uppercase tracking-wider block">
+                        Support the Author (Optional Tip)
+                      </label>
+                      <span className="text-[10px] font-sans font-bold text-ink/50 uppercase tracking-widest">
+                        Balance: {profile.spendableLeaves} 🍃
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-ink/50 leading-relaxed italic">
+                      Author identity is completely anonymous, but you can tip them leaves if you loved their work!
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {[0, 5, 10, 20, 50].map((amount) => (
+                        <button
+                          key={amount}
+                          type="button"
+                          onClick={() => setTipAmount(amount)}
+                          className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                            tipAmount === amount
+                              ? 'bg-burgundy border-burgundy text-cream shadow-sm'
+                              : 'bg-white border-sage/15 text-ink/75 hover:bg-sage/10'
+                          }`}
+                        >
+                          {amount === 0 ? 'No Tip' : `${amount} 🍃`}
+                        </button>
+                      ))}
+                      
+                      {/* Custom tip input */}
+                      <div className="relative flex items-center max-w-[100px]">
+                        <input
+                          type="number"
+                          min="0"
+                          max={profile.spendableLeaves}
+                          value={tipAmount}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10) || 0;
+                            setTipAmount(Math.min(profile.spendableLeaves, Math.max(0, val)));
+                          }}
+                          placeholder="Custom"
+                          className="w-full bg-white border border-sage/15 rounded-xl px-2 py-2 text-xs text-center focus:outline-none focus:border-burgundy font-bold text-ink"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {error && (
                   <div className="bg-burgundy/5 border border-burgundy/15 p-3.5 rounded-xl flex items-center gap-2 text-xs text-burgundy font-medium">
                     <AlertCircle size={16} />
@@ -417,8 +507,8 @@ export default function ReviewClient() {
 
                 <button
                   type="submit"
-                  disabled={submittingReview || !isValid}
-                  className="w-full bg-burgundy hover:bg-ink text-cream py-4 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed uppercase tracking-wider text-xs"
+                  disabled={submittingReview}
+                  className="w-full bg-burgundy hover:bg-ink text-cream py-4 rounded-xl font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed uppercase tracking-wider text-xs cursor-pointer"
                 >
                   {submittingReview ? 'Submitting Critique...' : 'Submit Critique'}
                 </button>

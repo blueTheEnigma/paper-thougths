@@ -80,6 +80,7 @@ export async function GET() {
       }
       profile.onboarded = dbUser.onboarded || false;
       profile.isCrewMember = await isCrewMember(user.id);
+      profile.avatarUrl = dbUser.avatar_url || null;
     }
 
     return NextResponse.json({ success: true, profile });

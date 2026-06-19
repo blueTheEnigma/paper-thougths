@@ -137,7 +137,7 @@ export default function Navigation() {
               </Link>
               <div className="flex items-center gap-2 bg-white/40 p-1 rounded-full border border-sage/10">
                 {profile && (
-                  <PanguinAvatar lifetimeLeaves={profile.lifetimeLeaves || 0} variant="icon" />
+                  <PanguinAvatar lifetimeLeaves={profile.lifetimeLeaves || 0} avatarUrl={profile.avatarUrl} variant="icon" />
                 )}
                 <UserButton afterSignOutUrl="/" />
               </div>

@@ -6,14 +6,28 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
   ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
-  BookOpen, MessageSquare, Gift, Coins, Settings, X 
+  BookOpen, MessageSquare, Gift, Coins, Settings, X, Check 
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import FeedbackDashboard from '@/components/FeedbackDashboard';
 import PanguinAvatar from '@/components/PanguinAvatar';
 import OnboardingSequence from '@/components/OnboardingSequence';
 import { getAvatarStage } from '@/lib/avatar';
+
+const GENRES = [
+  'Fiction',
+  'Non-Fiction',
+  'Poetry',
+  'Drama',
+  'Sci-Fi',
+  'Fantasy',
+  'Mystery',
+  'Memoir',
+  'Other'
+];
+
 
 // ─── Cinematic Archive Entrance Portal ────────────────────────────────────────
 
@@ -231,7 +245,169 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview'); // Tab state: 'overview', 'workspaces', 'ledger', 'honors'
+  const [activeTab, setActiveTab] = useState('overview'); // Tab state: 'overview', 'workspaces', 'ledger', 'honors', 'settings'
+  
+  // Profile Form States
+  const [fullName, setFullName] = useState(profile?.name || '');
+  const [whatsapp, setWhatsapp] = useState(profile?.whatsapp || '');
+  const [instagram, setInstagram] = useState(profile?.instagram || '');
+  const [chapter, setChapter] = useState(profile?.chapter || 'Other');
+  const [birthday, setBirthday] = useState(profile?.birthday || '');
+  const [selectedGenres, setSelectedGenres] = useState(profile?.preferredGenres || []);
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || null);
+
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState(null);
+  const [profileError, setProfileError] = useState(null);
+
+  // Avatar Upload States
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [chaptersList, setChaptersList] = useState([]);
+
+  useEffect(() => {
+    async function fetchChapters() {
+      try {
+        const res = await fetch('/api/chapters');
+        const data = await res.json();
+        if (data.success) {
+          setChaptersList(data.chapters);
+        }
+      } catch (err) {
+        console.error("Failed to load chapters:", err);
+      }
+    }
+    fetchChapters();
+  }, []);
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    setProfileSuccess(null);
+    setProfileError(null);
+
+    try {
+      const res = await fetch('/api/me/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName,
+          whatsapp,
+          instagram,
+          chapter,
+          birthday,
+          preferredGenres: selectedGenres
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setProfileSuccess(data.message);
+        profile.name = fullName;
+        profile.whatsapp = whatsapp;
+        profile.instagram = instagram;
+        profile.chapter = chapter;
+        profile.birthday = birthday;
+        profile.preferredGenres = selectedGenres;
+      } else {
+        setProfileError(data.error || 'Failed to update profile.');
+      }
+    } catch (err) {
+      console.error(err);
+      setProfileError('A connection error occurred while saving.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    setProfileError(null);
+    setProfileSuccess(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/me/avatar', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAvatarUrl(data.avatarUrl);
+        profile.avatarUrl = data.avatarUrl;
+        setProfileSuccess("Avatar uploaded successfully!");
+      } else {
+        setProfileError(data.error || "Failed to upload avatar.");
+      }
+    } catch (err) {
+      console.error(err);
+      setProfileError("Connection error during avatar upload.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handlePresetSelect = async (presetPath) => {
+    setUploadingAvatar(true);
+    setProfileError(null);
+    setProfileSuccess(null);
+
+    try {
+      const res = await fetch('/api/me/avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ presetUrl: presetPath })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAvatarUrl(presetPath);
+        profile.avatarUrl = presetPath;
+        setProfileSuccess("Preset avatar applied successfully!");
+      } else {
+        setProfileError(data.error || "Failed to set preset avatar.");
+      }
+    } catch (err) {
+      console.error(err);
+      setProfileError("Connection error during avatar update.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setUploadingAvatar(true);
+    setProfileError(null);
+    setProfileSuccess(null);
+
+    try {
+      const res = await fetch('/api/me/avatar', {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAvatarUrl(null);
+        profile.avatarUrl = null;
+        setProfileSuccess("Avatar removed. Evolving Panguin restored.");
+      }
+    } catch (err) {
+      console.error(err);
+      setProfileError("Failed to remove avatar.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const toggleGenre = (genre) => {
+    setSelectedGenres(prev => 
+      prev.includes(genre) 
+        ? prev.filter(g => g !== genre) 
+        : [...prev, genre]
+    );
+  };
   
   // Local States for Bi-token economy
   const [spendableLeaves, setSpendableLeaves] = useState(profile?.spendableLeaves || 0);
@@ -784,7 +960,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         {/* Header */}
         <motion.div variants={itemVariants} className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 md:gap-8 pb-4 md:pb-8 border-b border-sage/10">
           <div className="w-full lg:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-8">
-            <PanguinAvatar lifetimeLeaves={lifetimeLeaves} variant="full" />
+            <PanguinAvatar lifetimeLeaves={lifetimeLeaves} avatarUrl={avatarUrl} variant="full" />
             <div>
               <h1 className="text-2xl sm:text-4xl md:text-5xl font-display text-burgundy leading-none tracking-tight font-extrabold mb-2 md:mb-3">
                 Welcome back, <br className="sm:hidden" />
@@ -901,6 +1077,20 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                 <Award size={16} className={activeTab === 'honors' ? 'text-burgundy' : 'text-ink/40'} />
                 Clubhouse Honors
                 {activeTab === 'honors' && (
+                  <motion.div layoutId="dashboard-tab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('settings')}
+                className={`pb-3 text-xs sm:text-sm font-sans font-bold uppercase tracking-wider relative transition-colors cursor-pointer flex-shrink-0 flex items-center gap-1.5 ${
+                  activeTab === 'settings' ? 'text-burgundy' : 'text-ink/40 hover:text-ink/75'
+                }`}
+              >
+                <Settings size={16} className={activeTab === 'settings' ? 'text-burgundy' : 'text-ink/40'} />
+                Settings
+                {activeTab === 'settings' && (
                   <motion.div layoutId="dashboard-tab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
                 )}
               </button>
@@ -1672,6 +1862,236 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                 )}
               </motion.div>
             )}
+
+            {activeTab === 'settings' && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-start max-w-6xl mx-auto"
+              >
+                {/* LEFT/MIDDLE: Profile Details Form */}
+                <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+                  <div className="bg-white border border-sage/15 p-6 sm:p-8 rounded-[32px] shadow-sm space-y-6">
+                    <div className="border-b border-sage/10 pb-4">
+                      <h3 className="text-xl font-display font-extrabold text-burgundy">Profile Details</h3>
+                      <p className="text-xs text-ink/60 font-serif mt-1">Update your public profile and preferences.</p>
+                    </div>
+
+                    <form onSubmit={handleSaveProfile} className="space-y-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Full Name</label>
+                          <input
+                            type="text"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            required
+                            placeholder="John Doe"
+                            className="w-full bg-cream/20 border border-sage/25 rounded-xl py-2.5 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Chapter</label>
+                          <select
+                            value={chapter}
+                            onChange={(e) => setChapter(e.target.value)}
+                            className="w-full bg-white border border-sage/25 rounded-xl py-2.5 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-burgundy"
+                          >
+                            <option value="Other">Other / None</option>
+                            {chaptersList.map((chap) => (
+                              <option key={chap} value={chap}>{chap}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">WhatsApp Number</label>
+                          <input
+                            type="text"
+                            value={whatsapp}
+                            onChange={(e) => setWhatsapp(e.target.value)}
+                            placeholder="+234..."
+                            className="w-full bg-cream/20 border border-sage/25 rounded-xl py-2.5 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Instagram Handle</label>
+                          <input
+                            type="text"
+                            value={instagram}
+                            onChange={(e) => setInstagram(e.target.value)}
+                            placeholder="@username"
+                            className="w-full bg-cream/20 border border-sage/25 rounded-xl py-2.5 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Birthday</label>
+                        <input
+                          type="date"
+                          value={birthday}
+                          onChange={(e) => setBirthday(e.target.value)}
+                          className="w-full bg-cream/20 border border-sage/25 rounded-xl py-2.5 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink"
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50 block">Preferred Genres</label>
+                        <div className="flex flex-wrap gap-2">
+                          {GENRES.map((genreItem) => {
+                            const isSelected = selectedGenres.includes(genreItem);
+                            return (
+                              <button
+                                type="button"
+                                key={genreItem}
+                                onClick={() => toggleGenre(genreItem)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                                  isSelected
+                                    ? 'bg-burgundy text-cream border-burgundy shadow-sm'
+                                    : 'bg-white text-ink/60 border-sage/20 hover:border-sage/45'
+                                }`}
+                              >
+                                {genreItem}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {profileSuccess && (
+                        <div className="p-3 bg-green-500/10 border border-green-500/20 text-green-700 text-xs font-bold rounded-xl flex items-center gap-2">
+                          <CheckCircle2 size={16} />
+                          <span>{profileSuccess}</span>
+                        </div>
+                      )}
+
+                      {profileError && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-700 text-xs font-bold rounded-xl flex items-center gap-2">
+                          <X size={16} className="bg-red-700 text-white rounded-full p-0.5" />
+                          <span>{profileError}</span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end pt-2">
+                        <button
+                          type="submit"
+                          disabled={savingProfile}
+                          className="bg-burgundy hover:bg-ink text-cream font-bold text-xs py-3 px-8 rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+                        >
+                          {savingProfile ? 'Saving Details...' : 'Save Profile Changes'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                {/* RIGHT: Profile Picture Form */}
+                <div className="space-y-6 sm:space-y-8">
+                  {/* Current Avatar State */}
+                  <div className="bg-white border border-sage/15 p-6 sm:p-8 rounded-[32px] shadow-sm space-y-6 text-center">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-burgundy">Your Avatar</h3>
+                    
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      {/* Avatar preview */}
+                      <PanguinAvatar 
+                        lifetimeLeaves={lifetimeLeaves} 
+                        avatarUrl={avatarUrl} 
+                        variant="full" 
+                        className="justify-center text-center" 
+                      />
+
+                      {/* Custom Upload Button */}
+                      <div className="w-full pt-4 border-t border-sage/10 space-y-3">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-ink/50 text-left">Upload Custom Picture</label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarUpload}
+                            disabled={uploadingAvatar}
+                            className="hidden"
+                            id="avatar-file-upload"
+                          />
+                          <label
+                            htmlFor="avatar-file-upload"
+                            className="flex-1 bg-sage/5 hover:bg-sage/15 text-ink/70 border border-dashed border-sage/30 hover:border-sage/50 rounded-xl py-2.5 px-3 text-center text-xs font-bold uppercase tracking-wider cursor-pointer transition-all"
+                          >
+                            {uploadingAvatar ? 'Uploading...' : 'Choose Image'}
+                          </label>
+                          
+                          {avatarUrl && (
+                            <button
+                              type="button"
+                              onClick={handleRemoveAvatar}
+                              disabled={uploadingAvatar}
+                              className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/50 rounded-xl py-2.5 px-4 text-xs font-bold uppercase tracking-wider transition-all"
+                              title="Restore default evolving panguin avatar"
+                            >
+                              Reset
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-ink/40 text-left font-serif leading-normal italic">
+                          Custom file upload will override the preset avatar. Limit 5MB.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preset Avatars Selection */}
+                  <div className="bg-white border border-sage/15 p-6 sm:p-8 rounded-[32px] shadow-sm space-y-4">
+                    <div>
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-burgundy">Preset Avatars</h3>
+                      <p className="text-[10px] text-ink/50 font-serif mt-0.5">Select a design stage to set as your preset avatar.</p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { name: "Seedling", image: "/images/panguin/seedling.png" },
+                        { name: "Page Turner", image: "/images/panguin/page_turner.png" },
+                        { name: "Inkwell", image: "/images/panguin/inkwell.png" },
+                        { name: "Chronicler", image: "/images/panguin/chronicler.png" },
+                        { name: "Archivist", image: "/images/panguin/archivist.png" },
+                        { name: "Lore Keeper", image: "/images/panguin/lore_keeper.png" }
+                      ].map((stage) => {
+                        const isSelected = avatarUrl === stage.image;
+                        return (
+                          <button
+                            key={stage.name}
+                            type="button"
+                            onClick={() => handlePresetSelect(stage.image)}
+                            disabled={uploadingAvatar}
+                            className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer relative ${
+                              isSelected
+                                ? 'bg-burgundy/5 border-burgundy shadow-sm scale-105'
+                                : 'bg-white border-sage/15 hover:border-sage/40 hover:scale-102'
+                            }`}
+                          >
+                            <div className="w-10 h-10 rounded-full overflow-hidden border border-sage/10 bg-cream flex items-center justify-center">
+                              <img src={stage.image} alt={stage.name} className="w-full h-full object-cover" />
+                            </div>
+                            <span className="text-[8px] font-sans font-bold text-ink/70 text-center uppercase tracking-wide truncate max-w-full">
+                              {stage.name}
+                            </span>
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-burgundy rounded-full flex items-center justify-center border border-white">
+                                <Check size={6} className="text-white" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
           </div>
         )}
       </motion.div>

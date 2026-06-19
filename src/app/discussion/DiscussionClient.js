@@ -770,7 +770,7 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
                       {/* Review Card Header */}
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-3">
-                          <PanguinAvatar lifetimeLeaves={rev.lifetimeLeaves || 0} variant="compact" />
+                          <PanguinAvatar lifetimeLeaves={rev.lifetimeLeaves || 0} avatarUrl={rev.avatarUrl} variant="compact" />
                           <div>
                             <span className="font-sans font-bold text-sm text-ink block">{rev.reviewerName}</span>
                             <span className="text-[10px] font-sans font-semibold text-ink/45 uppercase tracking-wider">

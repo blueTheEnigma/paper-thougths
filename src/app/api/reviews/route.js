@@ -38,11 +38,28 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { submissionId, pacingRating, strengthsArray, mirrorResponse, highwaterResponse, pivotResponse } = body;
+    const { submissionId, pacingRating, strengthsArray, mirrorResponse, highwaterResponse, pivotResponse, tipAmount = 0 } = body;
 
     // Validate fields
     if (!submissionId || !pacingRating || !strengthsArray || !mirrorResponse || !highwaterResponse || !pivotResponse) {
       return NextResponse.json({ success: false, error: 'All review fields are required.' }, { status: 400 });
+    }
+
+    const parsedTipAmount = parseInt(tipAmount, 10) || 0;
+    if (parsedTipAmount < 0) {
+      return NextResponse.json({ success: false, error: 'Tip amount cannot be negative.' }, { status: 400 });
+    }
+    if (parsedTipAmount % 5 !== 0) {
+      return NextResponse.json({ success: false, error: 'Tip amount must be a multiple of 5.' }, { status: 400 });
+    }
+
+    // Verify reviewer has enough spendable leaves if tipping
+    if (parsedTipAmount > 0) {
+      const reviewerStats = await Database.queryOne('SELECT spendable_leaves FROM users WHERE id = $1', [dbUser.id]);
+      const reviewerSpendable = parseInt(reviewerStats?.spendable_leaves || 0);
+      if (reviewerSpendable < parsedTipAmount) {
+        return NextResponse.json({ success: false, error: `Insufficient leaves: You only have ${reviewerSpendable} leaves, but tried to tip ${parsedTipAmount}.` }, { status: 400 });
+      }
     }
 
     // Enforce 30-word limit on open-ended text fields
@@ -93,15 +110,57 @@ export async function POST(request) {
     const result = await Database.transaction(async (client) => {
       // 1. Insert review record
       const reviewRes = await client.query(`
-        INSERT INTO peer_reviews (submission_id, reviewer_id, pacing_rating, strengths_array, mirror_response, highwater_response, pivot_response, is_early_bird)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id, is_early_bird, created_at
-      `, [submissionId, dbUser.id, pacingRating, strengthsArray, mirrorResponse, highwaterResponse, pivotResponse, isEarlyBird]);
+        INSERT INTO peer_reviews (submission_id, reviewer_id, pacing_rating, strengths_array, mirror_response, highwater_response, pivot_response, is_early_bird, tip_amount)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING id, is_early_bird, created_at, tip_amount
+      `, [submissionId, dbUser.id, pacingRating, strengthsArray, mirrorResponse, highwaterResponse, pivotResponse, isEarlyBird, parsedTipAmount]);
       const newReview = reviewRes.rows[0];
 
       let tokensRewarded = 0.0;
       let leavesRewarded = 0;
       let milestoneTriggered = false;
+
+      // Handle Tipping Deductions/Additions
+      if (parsedTipAmount > 0) {
+        // A: Deduct leaves from reviewer
+        await client.query(`
+          UPDATE users 
+          SET spendable_leaves = spendable_leaves - $1
+          WHERE id = $2
+        `, [parsedTipAmount, dbUser.id]);
+
+        // B: Log sent tip transaction for reviewer
+        await client.query(`
+          INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
+          VALUES ($1, -$2, 'tip_sent', $3)
+        `, [dbUser.id, parsedTipAmount, `Sent tip of ${parsedTipAmount} leaves to author of submission #${submissionId}`]);
+
+        // C: Add leaves to author
+        await client.query(`
+          UPDATE users
+          SET spendable_leaves = spendable_leaves + $1,
+              lifetime_leaves = lifetime_leaves + $1
+          WHERE id = $2
+        `, [parsedTipAmount, submission.author_id]);
+
+        // D: Log received tip transaction for author
+        await client.query(`
+          INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
+          VALUES ($1, $2, 'tip_received', $3)
+        `, [submission.author_id, parsedTipAmount, `Received tip of ${parsedTipAmount} leaves from a reviewer for submission #${submissionId}`]);
+
+        // E: Verify if author hit milestone rewards (lifetime leaves / 500)
+        const authorStatsRes = await client.query(`
+          SELECT lifetime_leaves, book_vouchers_gifted FROM users WHERE id = $1
+        `, [submission.author_id]);
+        const authorStats = authorStatsRes.rows[0];
+        const totalMilestones = Math.floor(parseInt(authorStats.lifetime_leaves || 0) / 500);
+        if (totalMilestones > (authorStats.book_vouchers_gifted || 0)) {
+          await client.query(`
+            UPDATE users SET book_vouchers_gifted = $1 WHERE id = $2
+          `, [totalMilestones, submission.author_id]);
+        }
+      }
 
       if (isRewarded) {
         // Calculate reward payouts
@@ -124,7 +183,7 @@ export async function POST(request) {
           milestoneTriggered = true;
         }
 
-        // Update rewards inside database
+        // Update rewards inside database (accounting for tips already deducted if any)
         await client.query(`
           UPDATE users 
           SET milestone_tokens = milestone_tokens + $1,

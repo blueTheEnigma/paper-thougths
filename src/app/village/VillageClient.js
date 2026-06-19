@@ -389,7 +389,7 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
               <div className="text-2xl sm:text-3xl font-display text-burgundy font-extrabold">📚 {userStats.weeklyReviews}/3</div>
             </div>
             <div className="text-center space-y-1 p-2 border-l border-sage/15 flex flex-col items-center justify-center">
-              <PanguinAvatar lifetimeLeaves={userStats.lifetimeLeaves || 0} variant="compact" />
+              <PanguinAvatar lifetimeLeaves={userStats.lifetimeLeaves || 0} avatarUrl={userStats.avatarUrl} variant="compact" />
             </div>
           </motion.div>
 

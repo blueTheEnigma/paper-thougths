@@ -72,7 +72,8 @@ export default async function VillagePage() {
       milestoneTokens: parseFloat(dbUser.milestone_tokens || 0.0),
       weeklyReviews: parseInt(reviewsCount?.count || 0),
       lkId: dbUser.lk_id || 'Guest',
-      name: dbUser.full_name || 'Writer'
+      name: dbUser.full_name || 'Writer',
+      avatarUrl: dbUser.avatar_url || null
     };
   }
 
