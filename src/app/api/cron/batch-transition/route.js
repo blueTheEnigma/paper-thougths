@@ -14,28 +14,57 @@ export async function POST(request) {
 
     console.log('Running Saturday Batch Drop lifecycle transitions...');
 
+    // Count the queued submissions
+    const queuedCountRes = await Database.queryOne(`
+      SELECT COUNT(*) as count 
+      FROM submissions 
+      WHERE batch_status = 'queued'
+    `);
+    const queuedCount = parseInt(queuedCountRes?.count || 0, 10);
+
     const result = await Database.transaction(async (client) => {
-      // 1. Archive any remaining active_batch submissions
+      // 1. Archive active submissions that have reached the threshold of >= 3 critiques
       const archiveRes = await client.query(`
         UPDATE submissions 
         SET batch_status = 'archived' 
         WHERE batch_status = 'active_batch'
+          AND id IN (
+            SELECT submission_id 
+            FROM peer_reviews 
+            GROUP BY submission_id 
+            HAVING COUNT(*) >= 3
+          )
         RETURNING id
       `);
+      const archivedIds = archiveRes.rows.map(r => r.id);
 
-      // 2. Activate the queued submissions for the new week
-      const activateRes = await client.query(`
-        UPDATE submissions 
-        SET batch_status = 'active_batch' 
-        WHERE batch_status = 'queued'
-        RETURNING id
+      // 2. Identify remaining active submissions that are rolling over (excluding completed ones)
+      const rolloverRes = await client.query(`
+        SELECT id 
+        FROM submissions 
+        WHERE batch_status = 'active_batch'
       `);
+      const rolloverIds = rolloverRes.rows.map(r => r.id);
+
+      // 3. Activate the queued submissions for the new week (if any are queued)
+      let activatedIds = [];
+      if (queuedCount > 0) {
+        const activateRes = await client.query(`
+          UPDATE submissions 
+          SET batch_status = 'active_batch' 
+          WHERE batch_status = 'queued'
+          RETURNING id
+        `);
+        activatedIds = activateRes.rows.map(r => r.id);
+      }
 
       return {
-        archivedCount: archiveRes.rowCount,
-        archivedIds: archiveRes.rows.map(r => r.id),
-        activatedCount: activateRes.rowCount,
-        activatedIds: activateRes.rows.map(r => r.id)
+        archivedCount: archivedIds.length,
+        archivedIds,
+        activatedCount: activatedIds.length,
+        activatedIds,
+        rolloverCount: rolloverIds.length,
+        rolloverIds
       };
     });
 
