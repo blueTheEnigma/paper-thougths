@@ -26,7 +26,7 @@ export async function GET(request) {
 
     // 1. Fetch submission details to ensure this user is the author
     const submission = await Database.queryOne(`
-      SELECT id, author_id, title 
+      SELECT id, author_id, title, is_revised as "isRevised" 
       FROM submissions 
       WHERE id = $1
     `, [submissionId]);
@@ -60,7 +60,8 @@ export async function GET(request) {
       report,
       submission: {
         id: submission.id,
-        title: submission.title
+        title: submission.title,
+        isRevised: submission.isRevised
       }
     });
 

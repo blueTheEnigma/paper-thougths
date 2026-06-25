@@ -171,6 +171,14 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
           </p>
         </div>
       </div>
+      {submission?.isRevised && (
+        <div className="bg-amber-500/10 border border-amber-500/25 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-800 font-bold font-sans">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">⚠️</span>
+            <span>Note: You have revised this manuscript since this feedback report was compiled. The critiques below correspond to a previous version of the text.</span>
+          </div>
+        </div>
+      )}
 
       {/* Visual Aggregates Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

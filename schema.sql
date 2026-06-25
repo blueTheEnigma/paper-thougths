@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS submissions (
     selection_reason_counts JSONB DEFAULT '{"title":0, "genre":0, "logline":0, "outside_comfort":0}'::jsonb,
     llm_editorial_summary JSONB DEFAULT NULL,
     has_laurel BOOLEAN DEFAULT FALSE,
+    is_revised BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW()
 );
 

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
   ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
-  BookOpen, MessageSquare, Gift, Coins, Settings, X, Check 
+  BookOpen, MessageSquare, Gift, Coins, Settings, X, Check, Book 
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -260,6 +260,19 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const [profileSuccess, setProfileSuccess] = useState(null);
   const [profileError, setProfileError] = useState(null);
 
+  // Library / Past Works States
+  const [librarySubmissions, setLibrarySubmissions] = useState(submissions || []);
+  const [selectedSubForRead, setSelectedSubForRead] = useState(null);
+  const [selectedSubForEdit, setSelectedSubForEdit] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editGenre, setEditGenre] = useState('Fiction');
+  const [editLogline, setEditLogline] = useState('');
+  const [editBodyText, setEditBodyText] = useState('');
+  const [editSaveMode, setEditSaveMode] = useState('update'); // 'update' or 'revision'
+  const [savingLibrarySub, setSavingLibrarySub] = useState(false);
+  const [librarySuccess, setLibrarySuccess] = useState(null);
+  const [libraryError, setLibraryError] = useState(null);
+
   // Avatar Upload States
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [chaptersList, setChaptersList] = useState([]);
@@ -407,6 +420,104 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         ? prev.filter(g => g !== genre) 
         : [...prev, genre]
     );
+  };
+
+  const handleSaveLibrarySub = async (e) => {
+    e.preventDefault();
+    if (!selectedSubForEdit) return;
+
+    setSavingLibrarySub(true);
+    setLibrarySuccess(null);
+    setLibraryError(null);
+
+    // Validation
+    const wordCount = editBodyText.trim() === '' ? 0 : editBodyText.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount < 30) {
+      setLibraryError(`Critique rejected: Manuscripts must contain at least 30 words. Your text currently has ${wordCount} words.`);
+      setSavingLibrarySub(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/submissions', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedSubForEdit.id,
+          title: editTitle,
+          genre: editGenre,
+          logline: editLogline,
+          bodyText: editBodyText,
+          saveMode: editSaveMode
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setLibrarySuccess(data.message);
+        
+        // Refresh local dashboard copy list
+        if (selectedSubForEdit.batchStatus === 'archived' && editSaveMode === 'revision') {
+          // If we created a new copy, add it to the list
+          const newSub = {
+            id: data.submission.id,
+            title: data.submission.title,
+            genre: data.submission.genre,
+            logline: editLogline,
+            bodyText: editBodyText,
+            batchStatus: data.submission.batchStatus,
+            isRevised: false,
+            createdAt: new Date().toISOString(),
+            hasReport: false,
+            reviewCount: 0
+          };
+          setLibrarySubmissions(prev => [newSub, ...prev]);
+
+          // Trigger confetti if they got rewarded for their first weekly submission
+          if (data.rewarded) {
+            confetti({
+              particleCount: 100,
+              spread: 60,
+              origin: { y: 0.6 }
+            });
+            // Update profile stats if they earned leaves
+            setSpendableLeaves(prev => prev + (data.leavesEarned || 0));
+            setLifetimeLeaves(prev => prev + (data.leavesEarned || 0));
+            setMilestoneTokens(prev => prev + (data.tokensEarned || 0));
+          }
+        } else {
+          // Inline edit update, update properties in-place
+          setLibrarySubmissions(prev => 
+            prev.map(sub => 
+              sub.id === selectedSubForEdit.id 
+                ? { 
+                    ...sub, 
+                    title: editTitle, 
+                    genre: editGenre, 
+                    logline: editLogline, 
+                    bodyText: editBodyText,
+                    isRevised: data.submission.isRevised || sub.isRevised 
+                  }
+                : sub
+            )
+          );
+        }
+
+        // Close editor modal after short delay to let success state display
+        setTimeout(() => {
+          setSelectedSubForEdit(null);
+          setLibrarySuccess(null);
+        }, 1200);
+
+      } else {
+        setLibraryError(data.error || 'Failed to save changes.');
+      }
+    } catch (err) {
+      console.error(err);
+      setLibraryError('Connection error occurred while saving.');
+    } finally {
+      setSavingLibrarySub(false);
+    }
   };
   
   // Local States for Bi-token economy
@@ -1077,6 +1188,19 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                 <Award size={16} className={activeTab === 'honors' ? 'text-burgundy' : 'text-ink/40'} />
                 Clubhouse Honors
                 {activeTab === 'honors' && (
+                  <motion.div layoutId="dashboard-tab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('library')}
+                className={`pb-3 text-xs sm:text-sm font-sans font-bold uppercase tracking-wider relative transition-colors cursor-pointer flex-shrink-0 flex items-center gap-1.5 ${
+                  activeTab === 'library' ? 'text-burgundy' : 'text-ink/40 hover:text-ink/75'
+                }`}
+              >
+                <Book size={16} className={activeTab === 'library' ? 'text-burgundy' : 'text-ink/40'} />
+                My Library
+                {activeTab === 'library' && (
                   <motion.div layoutId="dashboard-tab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
                 )}
               </button>
@@ -1863,6 +1987,123 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
               </motion.div>
             )}
 
+            {activeTab === 'library' && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6 sm:space-y-8 max-w-6xl mx-auto"
+              >
+                {/* Header info */}
+                <div className="parchment-card p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h3 className="text-xl font-display font-extrabold text-burgundy">My Library</h3>
+                    <p className="text-xs text-ink/60 font-serif mt-1">Review and manage your past submissions, edits, and critiques.</p>
+                  </div>
+                  <Link href="/dashboard/write" className="bg-burgundy hover:bg-ink text-cream font-bold text-xs py-3 px-6 rounded-xl transition-all shadow-md">
+                    + Write New Submission
+                  </Link>
+                </div>
+
+                {librarySubmissions && librarySubmissions.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {librarySubmissions.map((sub) => {
+                      let statusText = "Draft";
+                      let statusClass = "bg-ink/5 text-ink/60 border border-ink/10";
+                      if (sub.batchStatus === 'queued') {
+                        statusText = "Queued";
+                        statusClass = "bg-amber-500/10 text-amber-700 border border-amber-500/20";
+                      } else if (sub.batchStatus === 'active_batch') {
+                        statusText = "In Critique";
+                        statusClass = "bg-blue-500/10 text-blue-700 border border-blue-500/20 animate-pulse";
+                      } else if (sub.batchStatus === 'archived') {
+                        statusText = "Completed";
+                        statusClass = "bg-green-500/10 text-green-700 border border-green-500/20";
+                      }
+
+                      return (
+                        <div key={sub.id} className="bg-white border border-sage/15 p-5 sm:p-6 rounded-[28px] shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow relative overflow-hidden">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center gap-2">
+                              <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${statusClass}`}>
+                                {statusText}
+                              </span>
+                              <span className="text-[10px] text-ink/30 font-mono">
+                                {sub.createdAt ? new Date(sub.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}
+                              </span>
+                            </div>
+                            
+                            <h4 className="text-base font-display font-bold text-burgundy line-clamp-1">{sub.title}</h4>
+                            <p className="text-[11px] text-ink/50 font-serif uppercase tracking-wider font-semibold">{sub.genre}</p>
+                            <p className="text-xs text-ink/70 font-serif leading-relaxed line-clamp-3 italic">"{sub.logline}"</p>
+                          </div>
+
+                          <div className="border-t border-sage/10 pt-4 space-y-2">
+                            <div className="flex justify-between items-center text-[10px] text-ink/40 font-sans font-bold">
+                              <span>Critiques Received: {sub.reviewCount || 0}</span>
+                              {sub.isRevised && (
+                                <span className="text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Revised 📝</span>
+                              )}
+                            </div>
+
+                            <div className="flex gap-2 pt-1.5">
+                              <button
+                                onClick={() => setSelectedSubForRead(sub)}
+                                className="flex-1 bg-sage/5 hover:bg-sage/15 text-ink/70 border border-sage/20 rounded-xl py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                              >
+                                Read
+                              </button>
+                              
+                              {sub.batchStatus !== 'active_batch' ? (
+                                <button
+                                  onClick={() => {
+                                    setSelectedSubForEdit(sub);
+                                    setEditTitle(sub.title);
+                                    setEditGenre(sub.genre);
+                                    setEditLogline(sub.logline);
+                                    setEditBodyText(sub.bodyText || '');
+                                    setEditSaveMode(sub.batchStatus === 'archived' ? 'revision' : 'update');
+                                    setLibraryError(null);
+                                    setLibrarySuccess(null);
+                                  }}
+                                  className="flex-1 bg-burgundy/5 hover:bg-burgundy text-burgundy hover:text-cream border border-burgundy/10 rounded-xl py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                                >
+                                  Edit
+                                </button>
+                              ) : (
+                                <button
+                                  disabled
+                                  className="flex-1 bg-sage/5 text-ink/20 border border-sage/10 rounded-xl py-2 text-center text-[10px] font-bold uppercase tracking-wider cursor-not-allowed"
+                                  title="Cannot edit while active in the critique batch."
+                                >
+                                  Locked
+                                </button>
+                              )}
+
+                              {sub.hasReport && (
+                                <button
+                                  onClick={() => setSelectedReportId(sub.id)}
+                                  className="bg-green-500/5 hover:bg-green-600 text-green-700 hover:text-white border border-green-600/10 rounded-xl p-2 flex items-center justify-center transition-all cursor-pointer"
+                                  title="View Synthesis Feedback"
+                                >
+                                  <MessageSquare size={13} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-20 text-center bg-white/40 border border-dashed border-sage/30 rounded-[32px] max-w-xl mx-auto">
+                    <Book className="opacity-20 mx-auto mb-4 text-burgundy" size={48} />
+                    <p className="text-ink/60 font-serif italic">Your library is currently empty.</p>
+                    <p className="text-xs text-ink/40 mt-1 max-w-xs mx-auto leading-relaxed">Submit your first manuscript to the Weekly prompt workspace to start building your portfolio!</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             {activeTab === 'settings' && (
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
@@ -2190,6 +2431,230 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                 >
                   Cancel
                 </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Read Manuscript Modal */}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {selectedSubForRead && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 font-sans">
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-ink/75 backdrop-blur-sm"
+                onClick={() => setSelectedSubForRead(null)}
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 30 }} 
+                animate={{ opacity: 1, scale: 1, y: 0 }} 
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-3xl bg-cream rounded-3xl p-6 sm:p-8 border border-sage/20 shadow-2xl z-10 max-h-[90vh] overflow-y-auto flex flex-col justify-between text-ink"
+              >
+                <button 
+                  onClick={() => setSelectedSubForRead(null)} 
+                  className="absolute top-4 right-4 bg-white/50 backdrop-blur rounded-full p-2 hover:bg-white transition-colors z-20 cursor-pointer"
+                >
+                  <X size={20} className="text-ink" />
+                </button>
+
+                <div className="space-y-4">
+                  <div className="border-b-2 border-dashed border-sage/20 pb-4">
+                    <span className="bg-burgundy/10 text-burgundy text-[9px] font-bold px-3 py-1 rounded-full border border-burgundy/20 uppercase tracking-widest inline-block mb-2">
+                      {selectedSubForRead.genre}
+                    </span>
+                    <h3 className="text-2xl sm:text-3xl font-display text-burgundy font-bold">{selectedSubForRead.title}</h3>
+                    <p className="text-xs text-ink/50 leading-relaxed font-serif mt-1.5 italic">"{selectedSubForRead.logline}"</p>
+                  </div>
+
+                  <div className="bg-[#FAF7F0] border border-[#EADFC9] rounded-2xl p-6 sm:p-8 overflow-y-auto max-h-[50vh] relative min-h-[250px]">
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:100%_2rem] pointer-events-none rounded-2xl"></div>
+                    <p className="text-sm sm:text-base leading-8 text-ink font-serif whitespace-pre-wrap relative z-10">{selectedSubForRead.bodyText}</p>
+                  </div>
+                </div>
+
+                <div className="border-t border-sage/15 pt-4 mt-6 flex justify-end">
+                  <button 
+                    onClick={() => setSelectedSubForRead(null)}
+                    className="bg-white hover:bg-sage/10 text-ink border border-sage/30 px-6 py-2.5 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
+                  >
+                    Close Reader
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Edit Manuscript Modal */}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {selectedSubForEdit && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 font-sans text-ink">
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-ink/75 backdrop-blur-sm"
+                onClick={() => !savingLibrarySub && setSelectedSubForEdit(null)}
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 30 }} 
+                animate={{ opacity: 1, scale: 1, y: 0 }} 
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-3xl bg-cream rounded-3xl p-6 sm:p-8 border border-sage/20 shadow-2xl z-10 max-h-[90vh] overflow-y-auto flex flex-col justify-between"
+              >
+                <button 
+                  onClick={() => !savingLibrarySub && setSelectedSubForEdit(null)} 
+                  disabled={savingLibrarySub}
+                  className="absolute top-4 right-4 bg-white/50 backdrop-blur rounded-full p-2 hover:bg-white transition-colors z-20 disabled:opacity-30 cursor-pointer"
+                >
+                  <X size={20} className="text-ink" />
+                </button>
+
+                <form onSubmit={handleSaveLibrarySub} className="space-y-4">
+                  <div className="border-b border-sage/15 pb-3 text-left">
+                    <h3 className="text-xl font-display font-extrabold text-burgundy">Edit Manuscript</h3>
+                    <p className="text-xs text-ink/50 font-serif mt-0.5">
+                      {selectedSubForEdit.batchStatus === 'archived' 
+                        ? 'This manuscript is archived. You can choose to update it inline or submit it as a new revision copy.'
+                        : 'Modify your queued manuscript before it enters the weekly critique batch.'}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Title</label>
+                      <input 
+                        type="text"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        required
+                        disabled={savingLibrarySub}
+                        className="w-full bg-white border border-sage/25 rounded-xl py-2 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Genre</label>
+                      <select
+                        value={editGenre}
+                        onChange={(e) => setEditGenre(e.target.value)}
+                        disabled={savingLibrarySub}
+                        className="w-full bg-white border border-sage/25 rounded-xl py-2 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-burgundy"
+                      >
+                        {GENRES.map((g) => (
+                          <option key={g} value={g}>{g}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 text-left">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Teaser</label>
+                      <span className="text-[9px] font-bold text-ink/40">{editLogline.length} / 200 chars</span>
+                    </div>
+                    <textarea 
+                      value={editLogline}
+                      maxLength={200}
+                      onChange={(e) => setEditLogline(e.target.value)}
+                      required
+                      rows={2}
+                      disabled={savingLibrarySub}
+                      className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 text-left">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Manuscript Body</label>
+                      <span className="text-[9px] font-bold text-[#8B7355] bg-[#EADFC9]/40 py-0.5 px-2 rounded-full">
+                        {editBodyText.trim() === '' ? 0 : editBodyText.trim().split(/\s+/).filter(Boolean).length} words
+                      </span>
+                    </div>
+                    <textarea
+                      value={editBodyText}
+                      onChange={(e) => setEditBodyText(e.target.value)}
+                      required
+                      rows={10}
+                      disabled={savingLibrarySub}
+                      className="w-full bg-white border border-sage/25 rounded-xl p-4 focus:outline-none focus:border-burgundy text-xs font-serif leading-relaxed text-ink resize-none max-h-[30vh]"
+                    />
+                  </div>
+
+                  {selectedSubForEdit.batchStatus === 'archived' && (
+                    <div className="bg-[#FAF6F0] border border-sage/20 rounded-2xl p-4 space-y-3 text-left">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink/60 block">Revision Mode</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setEditSaveMode('update')}
+                          className={`p-3 rounded-xl border flex flex-col items-start gap-1 transition-all text-left cursor-pointer ${
+                            editSaveMode === 'update'
+                              ? 'bg-burgundy/5 border-burgundy shadow-sm'
+                              : 'bg-white border-sage/15 hover:border-sage/40'
+                          }`}
+                        >
+                          <span className="text-[10px] font-bold text-burgundy uppercase tracking-wider">Update Original</span>
+                          <span className="text-[9px] text-ink/50 leading-normal font-serif">Saves edits directly in-place. Critiques display a 'Revised' warning badge.</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setEditSaveMode('revision')}
+                          className={`p-3 rounded-xl border flex flex-col items-start gap-1 transition-all text-left cursor-pointer ${
+                            editSaveMode === 'revision'
+                              ? 'bg-burgundy/5 border-burgundy shadow-sm'
+                              : 'bg-white border-sage/15 hover:border-sage/40'
+                          }`}
+                        >
+                          <span className="text-[10px] font-bold text-burgundy uppercase tracking-wider">Submit as New Copy</span>
+                          <span className="text-[9px] text-ink/50 leading-normal font-serif">Creates a fresh queued submission for the next Saturday drop to get new feedback.</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {librarySuccess && (
+                    <div className="p-3 bg-green-500/10 border border-green-500/20 text-green-700 text-xs font-bold rounded-xl flex items-center gap-2">
+                      <CheckCircle2 size={16} />
+                      <span>{librarySuccess}</span>
+                    </div>
+                  )}
+
+                  {libraryError && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-700 text-xs font-bold rounded-xl flex items-center gap-2">
+                      <X size={16} className="bg-red-700 text-white rounded-full p-0.5" />
+                      <span>{libraryError}</span>
+                    </div>
+                  )}
+
+                  <div className="border-t border-sage/15 pt-4 mt-6 flex justify-end gap-3">
+                    <button 
+                      type="button"
+                      disabled={savingLibrarySub}
+                      onClick={() => setSelectedSubForEdit(null)}
+                      className="bg-white hover:bg-sage/10 text-ink border border-sage/30 px-6 py-2.5 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit"
+                      disabled={savingLibrarySub}
+                      className="bg-burgundy hover:bg-ink text-cream border border-burgundy/15 px-6 py-2.5 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer disabled:opacity-50"
+                    >
+                      {savingLibrarySub ? 'Saving...' : 'Save Manuscript'}
+                    </button>
+                  </div>
+                </form>
               </motion.div>
             </div>
           )}
