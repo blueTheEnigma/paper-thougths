@@ -330,7 +330,7 @@ export default function ReviewClient() {
                 className="text-ink/90 text-base sm:text-lg leading-relaxed whitespace-pre-wrap font-serif tracking-normal max-h-[60vh] overflow-y-auto pr-3 scrollbar-thin"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
-                {selectedSubmission.body_text}
+                {selectedSubmission.bodyText}
               </div>
             </div>
 
