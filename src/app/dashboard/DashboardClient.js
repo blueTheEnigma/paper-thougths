@@ -433,7 +433,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
     // Validation
     const wordCount = editBodyText.trim() === '' ? 0 : editBodyText.trim().split(/\s+/).filter(Boolean).length;
     if (wordCount < 30) {
-      setLibraryError(`Critique rejected: Manuscripts must contain at least 30 words. Your text currently has ${wordCount} words.`);
+      setLibraryError(`Manuscript rejected: Manuscripts must contain at least 30 words. Your text currently has ${wordCount} words.`);
       setSavingLibrarySub(false);
       return;
     }

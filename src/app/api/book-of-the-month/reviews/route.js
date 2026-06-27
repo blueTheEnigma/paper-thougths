@@ -3,12 +3,6 @@ import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser } from '@/lib/permissions';
 
-// Word counter helper
-function countWords(str) {
-  if (!str) return 0;
-  return str.trim().split(/\s+/).filter(Boolean).length;
-}
-
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -63,14 +57,6 @@ export async function POST(request) {
 
     if (parsedRating < 1 || parsedRating > 5) {
       return NextResponse.json({ success: false, error: 'Rating must be between 1 and 5.' }, { status: 400 });
-    }
-
-    const wordCount = countWords(reviewText);
-    if (wordCount < 30) {
-      return NextResponse.json({
-        success: false,
-        error: `Review rejected: Your review must contain at least 30 words. (Currently: ${wordCount} words)`
-      }, { status: 400 });
     }
 
     // 1. Fetch book of the month details to verify stream chapter

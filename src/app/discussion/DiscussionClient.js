@@ -465,7 +465,7 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
                 <form onSubmit={handleSubmitReview} className="space-y-4">
                   <h3 className="text-lg font-display font-bold text-burgundy">Submit Your Review</h3>
                   <p className="text-[10px] text-ink/50 font-serif leading-relaxed">
-                    Write a review of at least 30 words to earn **+10 Leaves** and **+1.0 Milestone Token**. If you are the first to finish, you get crowned Bookie and get **+50 Leaves**!
+                    Write a review to earn **+10 Leaves** and **+1.0 Milestone Token**. If you are the first to finish, you get crowned Bookie and get **+50 Leaves**!
                   </p>
                   
                   {reviewError && (
@@ -507,7 +507,7 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
                       rows={4}
                       value={reviewText}
                       onChange={(e) => setReviewText(e.target.value)}
-                      placeholder="Share your thoughts on the narrative pacing, tropes, character defiances, and general impressions... (Min 30 words)"
+                      placeholder="Share your thoughts on the narrative pacing, tropes, character defiances, and general impressions..."
                       className="w-full bg-cream/40 border border-sage/20 rounded-2xl p-4 text-xs font-serif focus:outline-none focus:border-burgundy text-ink placeholder-ink/35 transition-all resize-none font-medium"
                     />
                   </div>

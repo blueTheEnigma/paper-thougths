@@ -151,16 +151,16 @@ export default function ReviewClient() {
       setError("Please select at least one Standout Element.");
       return;
     }
-    if (mirrorWordCount < 30) {
-      setError(`Perception (Theme) analysis is too short (${mirrorWordCount}/30 words). Please elaborate.`);
+    if (!mirrorResponse.trim()) {
+      setError("Please provide a Perception (Theme) analysis.");
       return;
     }
-    if (highwaterWordCount < 30) {
-      setError(`Climax (Standout Moment) analysis is too short (${highwaterWordCount}/30 words). Please elaborate.`);
+    if (!highwaterResponse.trim()) {
+      setError("Please provide a Climax (Standout Moment) analysis.");
       return;
     }
-    if (pivotWordCount < 30) {
-      setError(`Constructive Feedback analysis is too short (${pivotWordCount}/30 words). Please elaborate.`);
+    if (!pivotResponse.trim()) {
+      setError("Please provide Constructive Feedback.");
       return;
     }
     if (profile && tipAmount > profile.spendableLeaves) {
@@ -392,8 +392,8 @@ export default function ReviewClient() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-baseline">
                     <label className="text-xs font-bold text-ink uppercase tracking-wider">3. Perception (Theme)</label>
-                    <span className={`text-[10px] font-mono font-bold ${mirrorWordCount >= 30 ? 'text-green-700' : 'text-burgundy'}`}>
-                      {mirrorWordCount} / 30 words
+                    <span className="text-[10px] font-mono font-bold text-ink/40">
+                      {mirrorWordCount} words
                     </span>
                   </div>
                   <p className="text-[10px] text-ink/50 leading-relaxed italic">
@@ -412,8 +412,8 @@ export default function ReviewClient() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-baseline">
                     <label className="text-xs font-bold text-ink uppercase tracking-wider">4. Climax (Standout Moment)</label>
-                    <span className={`text-[10px] font-mono font-bold ${highwaterWordCount >= 30 ? 'text-green-700' : 'text-burgundy'}`}>
-                      {highwaterWordCount} / 30 words
+                    <span className="text-[10px] font-mono font-bold text-ink/40">
+                      {highwaterWordCount} words
                     </span>
                   </div>
                   <p className="text-[10px] text-ink/50 leading-relaxed italic">
@@ -432,8 +432,8 @@ export default function ReviewClient() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-baseline">
                     <label className="text-xs font-bold text-ink uppercase tracking-wider">5. Constructive Feedback</label>
-                    <span className={`text-[10px] font-mono font-bold ${pivotWordCount >= 30 ? 'text-green-700' : 'text-burgundy'}`}>
-                      {pivotWordCount} / 30 words
+                    <span className="text-[10px] font-mono font-bold text-ink/40">
+                      {pivotWordCount} words
                     </span>
                   </div>
                   <p className="text-[10px] text-ink/50 leading-relaxed italic">

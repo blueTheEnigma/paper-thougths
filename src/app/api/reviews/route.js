@@ -3,12 +3,6 @@ import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser } from '@/lib/permissions';
 
-// Word counter helper
-function countWords(str) {
-  if (!str) return 0;
-  return str.trim().split(/\s+/).filter(Boolean).length;
-}
-
 // Saturday 12:00 AM batch cycle start calculator (UTC aligned)
 function getLastSaturdayStart() {
   const now = new Date();
@@ -60,18 +54,6 @@ export async function POST(request) {
       if (reviewerSpendable < parsedTipAmount) {
         return NextResponse.json({ success: false, error: `Insufficient leaves: You only have ${reviewerSpendable} leaves, but tried to tip ${parsedTipAmount}.` }, { status: 400 });
       }
-    }
-
-    // Enforce 30-word limit on open-ended text fields
-    const mirrorWordCount = countWords(mirrorResponse);
-    const highwaterWordCount = countWords(highwaterResponse);
-    const pivotWordCount = countWords(pivotResponse);
-
-    if (mirrorWordCount < 30 || highwaterWordCount < 30 || pivotWordCount < 30) {
-      return NextResponse.json({ 
-        success: false, 
-        error: `Critique rejected: All open-ended fields must contain at least 30 words. (Perception: ${mirrorWordCount} words, Climax: ${highwaterWordCount} words, Constructive Feedback: ${pivotWordCount} words)` 
-      }, { status: 400 });
     }
 
     // Ensure the submission exists and is currently in the active batch
