@@ -2,9 +2,11 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
+import authConfig from "./auth.config";
 import { Database } from "./lib/db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID,
@@ -67,6 +69,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
+    // Keep base authorized callback from authConfig
+    ...authConfig.callbacks,
+    
     async signIn({ user, account }) {
       if (account.provider === "google") {
         if (!user.email) return false;
@@ -145,9 +150,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     }
   },
-  pages: {
-    signIn: "/sign-in",
-    error: "/sign-in",
-  },
-  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || "fallback-secret-key-for-development-purposes-only-change-in-env",
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
 });
