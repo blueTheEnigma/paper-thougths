@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@clerk/nextjs/server": ["./src/lib/clerk-shims/server.js"],
+      "@clerk/nextjs": ["./src/lib/clerk-shims/client.js"]
     }
   }
 }

@@ -12,14 +12,24 @@ export const DEPARTMENTS = [
   { name: 'Operations', color: '#6B7280', icon: 'settings' }
 ];
 
-export async function getCrewMember(clerkId) {
-  if (!clerkId) return null;
+function resolveUserIdFilter(identifier) {
+  const parsed = parseInt(identifier, 10);
+  if (!isNaN(parsed) && String(parsed) === String(identifier).trim()) {
+    return { field: 'id', value: parsed };
+  }
+  return { field: 'clerk_id', value: identifier };
+}
+
+export async function getCrewMember(userIdentifier) {
+  if (!userIdentifier) return null;
+  
+  const { field, value } = resolveUserIdFilter(userIdentifier);
   
   try {
     // 1. Get user details from users table
     const dbUser = await Database.queryOne(`
-      SELECT id, email, full_name, lk_id FROM users WHERE clerk_id = $1
-    `, [clerkId]);
+      SELECT id, email, full_name, lk_id FROM users WHERE ${field} = $1
+    `, [value]);
 
     if (!dbUser) return null;
 
@@ -70,8 +80,8 @@ export async function getCrewMember(clerkId) {
   }
 }
 
-export async function requireCrewAccess(clerkId) {
-  const isMember = await isCrewMember(clerkId);
+export async function requireCrewAccess(userIdentifier) {
+  const isMember = await isCrewMember(userIdentifier);
   if (!isMember) {
     redirect('/dashboard');
   }

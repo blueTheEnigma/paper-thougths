@@ -1,6 +1,6 @@
 import { Playfair_Display, DM_Sans, Lora } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
-import { ClerkProvider } from '@clerk/nextjs'
+import { SessionProvider } from 'next-auth/react';
 import "./globals.css";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
@@ -64,7 +64,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider>
+    <SessionProvider>
       <html lang="en">
         <body
           suppressHydrationWarning
@@ -79,7 +79,7 @@ export default function RootLayout({ children }) {
           <Analytics />
         </body>
       </html>
-    </ClerkProvider>
+    </SessionProvider>
   );
 }
 

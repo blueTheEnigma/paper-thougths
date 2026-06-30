@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
   ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
-  BookOpen, MessageSquare, Gift, Coins, Settings, X, Check, Book 
+  BookOpen, MessageSquare, Gift, Coins, Settings, X, Check, Book,
+  Download
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -276,6 +277,257 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   // Avatar Upload States
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [chaptersList, setChaptersList] = useState([]);
+
+  // Download / Export helper functions
+  const handleDownloadJPEG = (sub) => {
+    const canvas = document.createElement('canvas');
+    const width = 1080;
+    const height = 1350;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    
+    // Create soft textured gradient background
+    const bgGrad = ctx.createRadialGradient(width/2, height/2, 10, width/2, height/2, Math.max(width, height));
+    bgGrad.addColorStop(0, '#FAF7F2'); // Brighter cream center
+    bgGrad.addColorStop(1, '#F3EAE0'); // Slightly darker/warmer cream edges
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+    
+    // Outer burgundy border (inset 24px, thickness 4px)
+    ctx.strokeStyle = '#5E1914';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(24, 24, width - 48, height - 48);
+    
+    // Inner antique gold border (inset 34px, thickness 1px)
+    ctx.strokeStyle = '#C5A059';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(34, 34, width - 68, height - 68);
+    
+    // Gold corner accents
+    ctx.strokeStyle = '#C5A059';
+    ctx.lineWidth = 3;
+    const offset = 34;
+    const len = 15;
+    
+    // Top-Left corner
+    ctx.beginPath();
+    ctx.moveTo(offset, offset + len);
+    ctx.lineTo(offset, offset);
+    ctx.lineTo(offset + len, offset);
+    ctx.stroke();
+    
+    // Top-Right corner
+    ctx.beginPath();
+    ctx.moveTo(width - offset, offset + len);
+    ctx.lineTo(width - offset, offset);
+    ctx.lineTo(width - offset - len, offset);
+    ctx.stroke();
+    
+    // Bottom-Left corner
+    ctx.beginPath();
+    ctx.moveTo(offset, height - offset - len);
+    ctx.lineTo(offset, height - offset);
+    ctx.lineTo(offset + len, height - offset);
+    ctx.stroke();
+    
+    // Bottom-Right corner
+    ctx.beginPath();
+    ctx.moveTo(width - offset, height - offset - len);
+    ctx.lineTo(width - offset, height - offset);
+    ctx.lineTo(width - offset - len, height - offset);
+    ctx.stroke();
+
+    // Brand Header
+    ctx.fillStyle = '#5E1914';
+    ctx.font = 'bold 20px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('P A P E R   T H O U G H T S', width / 2, 85);
+    
+    // Star ornament
+    ctx.fillStyle = '#C5A059';
+    ctx.font = '18px Georgia, serif';
+    ctx.fillText('❖   ✦   ❖', width / 2, 125);
+    
+    // Poem Title
+    ctx.fillStyle = '#5E1914';
+    ctx.font = 'italic bold 44px Georgia, serif';
+    ctx.fillText(sub.title || 'Untitled', width / 2, 185);
+    
+    // Logline/Teaser
+    ctx.fillStyle = '#6B5E4F';
+    ctx.font = 'italic 18px Georgia, serif';
+    ctx.fillText(sub.logline ? `"${sub.logline}"` : '', width / 2, 235);
+    
+    // Divider line
+    ctx.strokeStyle = 'rgba(197, 160, 89, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(250, 270);
+    ctx.lineTo(width - 250, 270);
+    ctx.stroke();
+    
+    // Body Text Formatting
+    const rawLines = (sub.bodyText || '').split('\n');
+    ctx.font = '22px Georgia, serif';
+    const maxTextW = 860; // Margin boundary
+    
+    // Helper to wrap lines safely
+    const wrapText = (text, context, maxW) => {
+      const words = text.split(' ');
+      if (words.length <= 1) return [text];
+      const lines = [];
+      let current = words[0];
+      for (let i = 1; i < words.length; i++) {
+        const w = words[i];
+        if (context.measureText(current + ' ' + w).width < maxW) {
+          current += ' ' + w;
+        } else {
+          lines.push(current);
+          current = w;
+        }
+      }
+      lines.push(current);
+      return lines;
+    };
+    
+    // Flatten wrapped lines
+    const finalLines = [];
+    for (let line of rawLines) {
+      if (line.trim() === '') {
+        finalLines.push('');
+      } else {
+        const wrapped = wrapText(line, ctx, maxTextW);
+        finalLines.push(...wrapped);
+      }
+    }
+    
+    // Dynamically adjust font size if poem is extremely long
+    let fontSize = 22;
+    let lineHeight = fontSize * 1.65;
+    let totalHeight = finalLines.length * lineHeight;
+    const maxAvailableH = 800; // Y = 320 to Y = 1120
+    
+    if (totalHeight > maxAvailableH) {
+      fontSize = Math.max(13, Math.floor(maxAvailableH / (finalLines.length * 1.65)));
+      lineHeight = fontSize * 1.65;
+      totalHeight = finalLines.length * lineHeight;
+    }
+    
+    ctx.fillStyle = '#2C1A0E'; // Ink black
+    ctx.font = `${fontSize}px Georgia, serif`;
+    ctx.textAlign = 'center';
+    
+    const startY = 320 + (maxAvailableH - totalHeight) / 2;
+    for (let i = 0; i < finalLines.length; i++) {
+      if (finalLines[i] !== '') {
+        ctx.fillText(finalLines[i], width / 2, startY + (i * lineHeight));
+      }
+    }
+    
+    // Decorative end leaf/scroll ornament
+    ctx.fillStyle = '#C5A059';
+    ctx.font = '16px Georgia, serif';
+    ctx.fillText('❦', width / 2, 1205);
+    
+    // Footer: Author name
+    ctx.fillStyle = '#5E1914';
+    ctx.font = 'italic bold 24px Georgia, serif';
+    ctx.fillText(`by ${profile?.name || 'Anonymous'}`, width / 2, 1260);
+    
+    // Trigger download
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    const link = document.createElement('a');
+    link.download = `${(sub.title || 'poem').replace(/\s+/g, '_')}_card.jpg`;
+    link.href = dataUrl;
+    link.click();
+  };
+
+  const handleDownloadPDF = async (sub) => {
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 20;
+      const maxLineWidth = pageWidth - (margin * 2);
+
+      // Title
+      doc.setFont('times', 'bold');
+      doc.setFontSize(22);
+      doc.setTextColor(94, 25, 20); // Burgundy
+      doc.text(sub.title || 'Untitled Story', margin, 30);
+
+      // Genre & Teaser/Logline
+      doc.setFont('times', 'italic');
+      doc.setFontSize(10);
+      doc.setTextColor(110, 110, 110);
+      const subTitleStr = `${sub.genre} | "${sub.logline || ''}"`;
+      const splitSubtitle = doc.splitTextToSize(subTitleStr, maxLineWidth);
+      doc.text(splitSubtitle, margin, 37);
+
+      // Divider Line
+      const dividerY = 37 + (splitSubtitle.length * 4);
+      doc.setDrawColor(197, 160, 89); // Antique Gold
+      doc.setLineWidth(0.5);
+      doc.line(margin, dividerY, pageWidth - margin, dividerY);
+
+      // Body text wrapping
+      doc.setFont('times', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(44, 26, 14); // Ink black
+      
+      const textLines = doc.splitTextToSize(sub.bodyText || '', maxLineWidth);
+      let y = dividerY + 8;
+      const lineHeight = 6.5;
+
+      for (let i = 0; i < textLines.length; i++) {
+        if (y > pageHeight - margin) {
+          doc.addPage();
+          y = margin + 10;
+        }
+        doc.text(textLines[i], margin, y);
+        y += lineHeight;
+      }
+
+      // Add Headers & Footers to all pages
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let j = 1; j <= totalPages; j++) {
+        doc.setPage(j);
+        
+        // Faint header
+        doc.setFont('times', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(180, 180, 180);
+        doc.text('PAPER THOUGHTS ARCHIVE', margin, 12);
+        doc.line(margin, 14, pageWidth - margin, 14);
+        
+        // Footer
+        doc.setFont('times', 'italic');
+        doc.text(`by ${profile?.name || 'Anonymous'}`, margin, pageHeight - 10);
+        doc.text(`Page ${j} of ${totalPages}`, pageWidth - margin - 15, pageHeight - 10);
+      }
+
+      doc.save(`${(sub.title || 'story').replace(/\s+/g, '_')}.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("Failed to generate PDF. Please try again.");
+    }
+  };
+
+  const handleDownload = (sub) => {
+    if ((sub.genre || '').toLowerCase() === 'poetry') {
+      handleDownloadJPEG(sub);
+    } else {
+      handleDownloadPDF(sub);
+    }
+  };
 
   useEffect(() => {
     async function fetchChapters() {
@@ -2079,6 +2331,14 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                                 </button>
                               )}
 
+                              <button
+                                onClick={() => handleDownload(sub)}
+                                className="bg-sage/5 hover:bg-burgundy hover:text-cream text-ink/75 border border-sage/20 rounded-xl p-2 flex items-center justify-center transition-all cursor-pointer"
+                                title={(sub.genre || '').toLowerCase() === 'poetry' ? "Download designed poem (JPEG)" : "Download story (PDF)"}
+                              >
+                                <Download size={13} />
+                              </button>
+
                               {sub.hasReport && (
                                 <button
                                   onClick={() => setSelectedReportId(sub.id)}
@@ -2478,7 +2738,15 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                   </div>
                 </div>
 
-                <div className="border-t border-sage/15 pt-4 mt-6 flex justify-end">
+                <div className="border-t border-sage/15 pt-4 mt-6 flex justify-end items-center">
+                  <button
+                    onClick={() => handleDownload(selectedSubForRead)}
+                    className="mr-auto bg-burgundy hover:bg-ink text-cream px-5 py-2.5 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer flex items-center gap-1.5 shadow-sm"
+                  >
+                    <Download size={14} />
+                    {selectedSubForRead.genre.toLowerCase() === 'poetry' ? 'Save Designed Poem (JPEG)' : 'Download Story (PDF)'}
+                  </button>
+
                   <button 
                     onClick={() => setSelectedSubForRead(null)}
                     className="bg-white hover:bg-sage/10 text-ink border border-sage/30 px-6 py-2.5 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
