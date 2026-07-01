@@ -7,7 +7,7 @@ import {
   Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
   ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
   BookOpen, MessageSquare, Gift, Coins, Settings, X, Check, Book,
-  Download
+  Download, Lock
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -2548,41 +2548,54 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                   <div className="bg-white border border-sage/15 p-6 sm:p-8 rounded-[32px] shadow-sm space-y-4">
                     <div>
                       <h3 className="text-sm font-bold uppercase tracking-wider text-burgundy">Preset Avatars</h3>
-                      <p className="text-[10px] text-ink/50 font-serif mt-0.5">Select a design stage to set as your preset avatar.</p>
+                      <p className="text-[10px] text-ink/50 font-serif mt-0.5">Mascots represent your journey. Earn leaves to unlock them.</p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { name: "Seedling", image: "/images/panguin/seedling.png" },
-                        { name: "Page Turner", image: "/images/panguin/page_turner.png" },
-                        { name: "Inkwell", image: "/images/panguin/inkwell.png" },
-                        { name: "Chronicler", image: "/images/panguin/chronicler.png" },
-                        { name: "Archivist", image: "/images/panguin/archivist.png" },
-                        { name: "Lore Keeper", image: "/images/panguin/lore_keeper.png" }
+                        { name: "Seedling", image: "/images/panguin/seedling.png", minLeaves: 0 },
+                        { name: "Page Turner", image: "/images/panguin/page_turner.png", minLeaves: 50 },
+                        { name: "Inkwell", image: "/images/panguin/inkwell.png", minLeaves: 150 },
+                        { name: "Chronicler", image: "/images/panguin/chronicler.png", minLeaves: 500 },
+                        { name: "Archivist", image: "/images/panguin/archivist.png", minLeaves: 1500 },
+                        { name: "Lore Keeper", image: "/images/panguin/lore_keeper.png", minLeaves: 4000 }
                       ].map((stage) => {
+                        const isUnlocked = lifetimeLeaves >= stage.minLeaves;
                         const isSelected = avatarUrl === stage.image;
                         return (
                           <button
                             key={stage.name}
                             type="button"
                             onClick={() => handlePresetSelect(stage.image)}
-                            disabled={uploadingAvatar}
-                            className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer relative ${
-                              isSelected
-                                ? 'bg-burgundy/5 border-burgundy shadow-sm scale-105'
-                                : 'bg-white border-sage/15 hover:border-sage/40 hover:scale-102'
+                            disabled={uploadingAvatar || !isUnlocked}
+                            className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all relative ${
+                              !isUnlocked 
+                                ? 'bg-ink/5 border-sage/10 opacity-50 cursor-not-allowed'
+                                : isSelected
+                                ? 'bg-burgundy/5 border-burgundy shadow-sm scale-105 cursor-pointer'
+                                : 'bg-white border-sage/15 hover:border-sage/40 hover:scale-102 cursor-pointer'
                             }`}
                           >
-                            <div className="w-10 h-10 rounded-full overflow-hidden border border-sage/10 bg-cream flex items-center justify-center">
+                            <div className={`w-10 h-10 rounded-full overflow-hidden border border-sage/10 bg-cream flex items-center justify-center relative ${!isUnlocked ? 'filter grayscale' : ''}`}>
                               <img src={stage.image} alt={stage.name} className="w-full h-full object-cover" />
+                              {!isUnlocked && (
+                                <div className="absolute inset-0 bg-ink/30 flex items-center justify-center text-white">
+                                  <Lock size={12} className="stroke-[2.5px]" />
+                                </div>
+                              )}
                             </div>
                             <span className="text-[8px] font-sans font-bold text-ink/70 text-center uppercase tracking-wide truncate max-w-full">
                               {stage.name}
                             </span>
-                            {isSelected && (
+                            {isUnlocked && isSelected && (
                               <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-burgundy rounded-full flex items-center justify-center border border-white">
                                 <Check size={6} className="text-white" />
                               </div>
+                            )}
+                            {!isUnlocked && (
+                              <span className="text-[7px] font-mono text-burgundy font-bold uppercase tracking-tighter leading-none">
+                                {stage.minLeaves} 🍃
+                              </span>
                             )}
                           </button>
                         );

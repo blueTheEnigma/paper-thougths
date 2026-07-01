@@ -29,6 +29,27 @@ export async function POST(req) {
         return NextResponse.json({ success: false, error: 'Missing presetUrl' }, { status: 400 });
       }
 
+      // Enforce leaf thresholds for preset mascots
+      const PRESET_MASC_LEAVES = {
+        "/images/panguin/seedling.png": 0,
+        "/images/panguin/page_turner.png": 50,
+        "/images/panguin/inkwell.png": 150,
+        "/images/panguin/chronicler.png": 500,
+        "/images/panguin/archivist.png": 1500,
+        "/images/panguin/lore_keeper.png": 4000,
+      };
+
+      if (presetUrl in PRESET_MASC_LEAVES) {
+        const requiredLeaves = PRESET_MASC_LEAVES[presetUrl];
+        const userLeaves = parseInt(dbUser.lifetime_leaves || 0);
+        if (userLeaves < requiredLeaves) {
+          return NextResponse.json({ 
+            success: false, 
+            error: `You need ${requiredLeaves} Lifetime Leaves to unlock this mascot. (Current balance: ${userLeaves})` 
+          }, { status: 403 });
+        }
+      }
+
       await Database.query('UPDATE users SET avatar_url = $1 WHERE id = $2', [presetUrl, dbUser.id]);
       return NextResponse.json({ success: true, avatarUrl: presetUrl });
     } else {
