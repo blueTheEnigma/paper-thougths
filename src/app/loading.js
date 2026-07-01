@@ -23,7 +23,7 @@ export default function GlobalLoading() {
         <div className="relative w-16 h-16 flex items-center justify-center">
           <div className="absolute inset-0 bg-accent/5 rounded-full blur-lg animate-pulse" />
           <svg 
-            className="w-12 h-12 animate-spin text-burgundy relative z-10" 
+            className="w-12 h-12 animate-spin text-burgundy relative z-10 overflow-visible" 
             viewBox="0 0 100 100" 
             fill="none" 
             stroke="currentColor" 

@@ -48,7 +48,7 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.04 }}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-y-auto bg-ink p-4 sm:p-6"
+      className="fixed inset-0 z-[9999] flex flex-col items-center overflow-y-auto bg-ink p-4 sm:p-6"
       style={{ background: 'radial-gradient(ellipse at 50% 60%, #1a0610 0%, #0d0406 60%, #060103 100%)' }}
     >
       {/* Ambient glow layers */}
@@ -108,7 +108,7 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
             }}
           >
             <svg 
-              className="w-10 h-10 animate-spin relative z-10" 
+              className="w-10 h-10 animate-spin relative z-10 overflow-visible" 
               viewBox="0 0 100 100" 
               fill="none" 
               stroke="#F2A98A" 
