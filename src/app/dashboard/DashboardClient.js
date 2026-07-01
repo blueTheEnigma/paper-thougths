@@ -48,7 +48,7 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.04 }}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-[9999] flex flex-col items-center overflow-y-auto bg-ink p-4 sm:p-6"
+      className="fixed top-0 left-0 w-screen h-screen z-[9999] flex flex-col items-center overflow-y-auto bg-ink p-4 sm:p-6"
       style={{ background: 'radial-gradient(ellipse at 50% 60%, #1a0610 0%, #0d0406 60%, #060103 100%)' }}
     >
       {/* Ambient glow layers */}

@@ -16,14 +16,14 @@ export default function GlobalLoading() {
   });
 
   return (
-    <div className="fixed inset-0 bg-[#FFF5EC] z-[9999] flex flex-col items-center justify-center p-6 text-center">
+    <div className="fixed top-0 left-0 w-screen h-screen bg-[#FFF5EC] z-[9999] flex flex-col items-center justify-center p-6 text-center">
       <div className="flex flex-col items-center max-w-md gap-5">
         
         {/* Refined, smaller and more elegant Sailor's Wheel */}
-        <div className="relative w-16 h-16 flex items-center justify-center">
+        <div className="relative w-24 h-24 flex items-center justify-center">
           <div className="absolute inset-0 bg-accent/5 rounded-full blur-lg animate-pulse" />
           <svg 
-            className="w-12 h-12 animate-spin text-burgundy relative z-10 overflow-visible" 
+            className="w-20 h-20 animate-spin text-burgundy relative z-10 overflow-visible" 
             viewBox="0 0 100 100" 
             fill="none" 
             stroke="currentColor" 
