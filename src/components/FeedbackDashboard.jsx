@@ -1,11 +1,13 @@
 "use client";
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, RefreshCw, BarChart2, CheckSquare, Eye, Compass, Star, ChevronRight, FileText } from 'lucide-react';
 
 export default function FeedbackDashboard({ submissionId, onClose }) {
   const [report, setReport] = useState(null);
   const [submission, setSubmission] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [activeSubTab, setActiveSubTab] = useState('summary'); // 'summary' or 'critiques'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -18,6 +20,7 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
       if (data.success) {
         setReport(data.report);
         setSubmission(data.submission);
+        setReviews(data.reviews || []);
       } else {
         setError(data.error || 'Failed to retrieve synthesis report.');
       }
@@ -180,243 +183,389 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
         </div>
       )}
 
-      {/* Visual Aggregates Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Click Intent Bar Chart Card */}
-        <div className="parchment-card p-6 flex flex-col justify-between lg:col-span-2 min-h-[260px]">
-          <div>
-            <div className="flex items-center gap-2 text-burgundy/40 mb-3">
-              <BarChart2 size={16} />
-              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Audience Click-Intent Distribution</span>
-            </div>
-            <h3 className="text-xl font-display font-extrabold text-burgundy leading-snug">What Hooked Your Readers?</h3>
-            <p className="text-xs text-ink/60 leading-relaxed font-serif mt-1">
-              Percentage of reviewers motivated by the Title, core Trope theme, or the Logline.
-            </p>
-          </div>
+      {/* Sub-tabs Navigation */}
+      <div className="flex border-b border-sage/15 gap-6 sm:gap-8 overflow-x-auto pb-px">
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('summary')}
+          className={`pb-3 text-xs sm:text-sm font-sans font-bold uppercase tracking-wider relative transition-colors cursor-pointer flex-shrink-0 ${
+            activeSubTab === 'summary' ? 'text-burgundy' : 'text-ink/40 hover:text-ink/75'
+          }`}
+        >
+          AI Synthesis Summary
+          {activeSubTab === 'summary' && (
+            <motion.div layoutId="feedback-subtab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
+          )}
+        </button>
 
-          {/* SVG Custom Horizontal Bar Chart */}
-          <div className="mt-6 space-y-4">
-            {/* Title Bar */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-sans font-bold">
-                <span className="text-burgundy">Title Hook</span>
-                <span className="text-ink/80">{titleWeight}%</span>
-              </div>
-              <div className="w-full bg-[#E8DFC9] h-3.5 rounded-full overflow-hidden border border-sage/5 relative">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${titleWeight}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                  className="h-full rounded-full"
-                  style={{
-                    background: 'linear-gradient(90deg, #5C1A2E 0%, #C96A42 100%)',
-                    boxShadow: '0 0 10px rgba(92,26,46,0.15)'
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Trope Bar */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-sans font-bold">
-                <span className="text-sage">Trope / Theme Hook</span>
-                <span className="text-ink/80">{tropeWeight}%</span>
-              </div>
-              <div className="w-full bg-[#E8DFC9] h-3.5 rounded-full overflow-hidden border border-sage/5 relative">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${tropeWeight}%` }}
-                  transition={{ duration: 1, ease: "easeOut", delay: 0.15 }}
-                  className="h-full rounded-full"
-                  style={{
-                    background: 'linear-gradient(90deg, #7A9E7E 0%, #F2A98A 100%)',
-                    boxShadow: '0 0 10px rgba(122,158,126,0.15)'
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Logline Bar */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-sans font-bold">
-                <span className="text-accent">Logline Hook</span>
-                <span className="text-ink/80">{loglineWeight}%</span>
-              </div>
-              <div className="w-full bg-[#E8DFC9] h-3.5 rounded-full overflow-hidden border border-sage/5 relative">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${loglineWeight}%` }}
-                  transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-                  className="h-full rounded-full"
-                  style={{
-                    background: 'linear-gradient(90deg, #C96A42 0%, #FAF7F2 100%)',
-                    boxShadow: '0 0 10px rgba(201,106,66,0.15)'
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Structural Score Semicircle Gauges */}
-        <div className="parchment-card p-6 flex flex-col justify-between min-h-[260px]">
-          <div>
-            <div className="flex items-center gap-2 text-burgundy/40 mb-3">
-              <Compass size={16} />
-              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Structural Review Metrics</span>
-            </div>
-            <h3 className="text-xl font-display font-extrabold text-burgundy leading-snug">Structural Scores</h3>
-            <p className="text-xs text-ink/60 leading-relaxed font-serif mt-1">
-              Aggregated technical consensus from active reader critiques.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            {/* Pacing Gauge */}
-            <div className="flex flex-col items-center text-center">
-              <div className="relative w-24 h-14 flex items-end justify-center">
-                <svg className="w-full h-full" viewBox="0 0 80 40">
-                  <path 
-                    d="M 10 35 A 30 30 0 0 1 70 35" 
-                    fill="none" 
-                    stroke="#E8DFC9" 
-                    strokeWidth="5" 
-                    strokeLinecap="round"
-                  />
-                  <motion.path 
-                    d="M 10 35 A 30 30 0 0 1 70 35" 
-                    fill="none" 
-                    stroke="#5C1A2E" 
-                    strokeWidth="5.5" 
-                    strokeLinecap="round"
-                    strokeDasharray={gaugeCircumference}
-                    initial={{ strokeDashoffset: gaugeCircumference }}
-                    animate={{ strokeDashoffset: pacingOffset }}
-                    transition={{ duration: 1.2, ease: "easeOut" }}
-                  />
-                </svg>
-                <div className="absolute bottom-0 text-center">
-                  <span className="text-lg font-display font-black text-burgundy">{pacingScore.toFixed(1)}</span>
-                  <span className="text-[9px] font-sans text-ink/40 font-bold block leading-none">/ 5.0</span>
-                </div>
-              </div>
-              <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-burgundy/80 mt-2">Pacing</span>
-            </div>
-
-            {/* Technical Gauge */}
-            <div className="flex flex-col items-center text-center">
-              <div className="relative w-24 h-14 flex items-end justify-center">
-                <svg className="w-full h-full" viewBox="0 0 80 40">
-                  <path 
-                    d="M 10 35 A 30 30 0 0 1 70 35" 
-                    fill="none" 
-                    stroke="#E8DFC9" 
-                    strokeWidth="5" 
-                    strokeLinecap="round"
-                  />
-                  <motion.path 
-                    d="M 10 35 A 30 30 0 0 1 70 35" 
-                    fill="none" 
-                    stroke="#7A9E7E" 
-                    strokeWidth="5.5" 
-                    strokeLinecap="round"
-                    strokeDasharray={gaugeCircumference}
-                    initial={{ strokeDashoffset: gaugeCircumference }}
-                    animate={{ strokeDashoffset: technicalOffset }}
-                    transition={{ duration: 1.2, ease: "easeOut" }}
-                  />
-                </svg>
-                <div className="absolute bottom-0 text-center">
-                  <span className="text-lg font-display font-black text-sage">{technicalScore.toFixed(1)}</span>
-                  <span className="text-[9px] font-sans text-ink/40 font-bold block leading-none">/ 5.0</span>
-                </div>
-              </div>
-              <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-sage mt-2">Technical Prose</span>
-            </div>
-          </div>
-        </div>
-
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('critiques')}
+          className={`pb-3 text-xs sm:text-sm font-sans font-bold uppercase tracking-wider relative transition-colors cursor-pointer flex-shrink-0 flex items-center gap-1.5 ${
+            activeSubTab === 'critiques' ? 'text-burgundy' : 'text-ink/40 hover:text-ink/75'
+          }`}
+        >
+          <span>Peer Critiques ({reviews.length})</span>
+          {activeSubTab === 'critiques' && (
+            <motion.div layoutId="feedback-subtab-indicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-burgundy" />
+          )}
+        </button>
       </div>
 
-      {/* Synthesis 3-Column Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-        
-        {/* The Mirror */}
-        <div 
-          className="parchment-card p-6 sm:p-8 flex flex-col justify-between"
-          style={{ borderTop: '4px solid #F2A98A' }}
-        >
-          <div>
-            <div className="flex items-center gap-1.5 text-burgundy/40 mb-4">
-              <Eye size={16} className="text-[#F2A98A]" />
-              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em]">The Mirror</span>
-            </div>
-            <h4 className="text-xl font-display font-extrabold text-burgundy mb-4">Audience Theme Perception</h4>
-            <p className="text-xs sm:text-sm text-ink/80 leading-relaxed font-serif">
-              {synthesizedMirror}
-            </p>
-          </div>
-          <div className="border-t border-sage/10 pt-4 mt-6 text-[10px] text-ink/40 font-serif italic">
-            Reflecting what the readers decoded.
-          </div>
-        </div>
-
-        {/* The High-Water Mark */}
-        <div 
-          className="parchment-card p-6 sm:p-8 flex flex-col justify-between"
-          style={{ borderTop: '4px solid #7A9E7E' }}
-        >
-          <div>
-            <div className="flex items-center gap-1.5 text-burgundy/40 mb-4">
-              <Star size={16} className="text-sage" />
-              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em]">High-Water Mark</span>
-            </div>
-            <h4 className="text-xl font-display font-extrabold text-burgundy mb-4">Celebrated Lines & Details</h4>
-            <p className="text-xs sm:text-sm text-ink/80 leading-relaxed font-serif">
-              {synthesizedHighwater}
-            </p>
-          </div>
-          <div className="border-t border-sage/10 pt-4 mt-6 text-[10px] text-ink/40 font-serif italic">
-            Identifying universally praised phrases and strong hooks.
-          </div>
-        </div>
-
-        {/* The Constructive Pivot */}
-        <div 
-          className="bg-ink text-cream p-6 sm:p-8 rounded-[24px] shadow-xl flex flex-col justify-between border border-white/5"
-          style={{ borderTop: '4px solid #C96A42' }}
-        >
-          <div>
-            <div className="flex items-center gap-1.5 text-cream/40 mb-4">
-              <CheckSquare size={16} className="text-[#C96A42]" />
-              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em]">Constructive Pivot</span>
-            </div>
-            <h4 className="text-xl font-display font-extrabold text-cream mb-4">Revision Action Plan</h4>
-            <div className="space-y-4">
-              {pivotSteps.map((step, idx) => (
-                <div key={idx} className="flex gap-3 items-start">
-                  <span 
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-sans flex-shrink-0 mt-0.5"
-                    style={{ backgroundColor: 'rgba(201,106,66,0.2)', border: '1px solid #C96A42', color: '#F2A98A' }}
-                  >
-                    {idx + 1}
-                  </span>
-                  <p className="text-xs sm:text-sm text-cream/80 leading-relaxed font-serif">
-                    {step}
+      <AnimatePresence mode="wait">
+        {activeSubTab === 'summary' ? (
+          <motion.div
+            key="summary-tab"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-8"
+          >
+            {/* Visual Aggregates Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* Click Intent Bar Chart Card */}
+              <div className="parchment-card p-6 flex flex-col justify-between lg:col-span-2 min-h-[260px]">
+                <div>
+                  <div className="flex items-center gap-2 text-burgundy/40 mb-3">
+                    <BarChart2 size={16} />
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Audience Click-Intent Distribution</span>
+                  </div>
+                  <h3 className="text-xl font-display font-extrabold text-burgundy leading-snug">What Hooked Your Readers?</h3>
+                  <p className="text-xs text-ink/60 leading-relaxed font-serif mt-1">
+                    Percentage of reviewers motivated by the Title, core Trope theme, or the Logline.
                   </p>
                 </div>
-              ))}
+
+                {/* SVG Custom Horizontal Bar Chart */}
+                <div className="mt-6 space-y-4">
+                  {/* Title Bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs font-sans font-bold">
+                      <span className="text-burgundy">Title Hook</span>
+                      <span className="text-ink/80">{titleWeight}%</span>
+                    </div>
+                    <div className="w-full bg-[#E8DFC9] h-3.5 rounded-full overflow-hidden border border-sage/5 relative">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${titleWeight}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="h-full rounded-full"
+                        style={{
+                          background: 'linear-gradient(90deg, #5C1A2E 0%, #C96A42 100%)',
+                          boxShadow: '0 0 10px rgba(92,26,46,0.15)'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Trope Bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs font-sans font-bold">
+                      <span className="text-sage">Trope / Theme Hook</span>
+                      <span className="text-ink/80">{tropeWeight}%</span>
+                    </div>
+                    <div className="w-full bg-[#E8DFC9] h-3.5 rounded-full overflow-hidden border border-sage/5 relative">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${tropeWeight}%` }}
+                        transition={{ duration: 1, ease: "easeOut", delay: 0.15 }}
+                        className="h-full rounded-full"
+                        style={{
+                          background: 'linear-gradient(90deg, #7A9E7E 0%, #F2A98A 100%)',
+                          boxShadow: '0 0 10px rgba(122,158,126,0.15)'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Logline Bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs font-sans font-bold">
+                      <span className="text-accent">Logline Hook</span>
+                      <span className="text-ink/80">{loglineWeight}%</span>
+                    </div>
+                    <div className="w-full bg-[#E8DFC9] h-3.5 rounded-full overflow-hidden border border-sage/5 relative">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${loglineWeight}%` }}
+                        transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                        className="h-full rounded-full"
+                        style={{
+                          background: 'linear-gradient(90deg, #C96A42 0%, #FAF7F2 100%)',
+                          boxShadow: '0 0 10px rgba(201,106,66,0.15)'
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Structural Score Semicircle Gauges */}
+              <div className="parchment-card p-6 flex flex-col justify-between min-h-[260px]">
+                <div>
+                  <div className="flex items-center gap-2 text-burgundy/40 mb-3">
+                    <Compass size={16} />
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em]">Structural Review Metrics</span>
+                  </div>
+                  <h3 className="text-xl font-display font-extrabold text-burgundy leading-snug">Structural Scores</h3>
+                  <p className="text-xs text-ink/60 leading-relaxed font-serif mt-1">
+                    Aggregated technical consensus from active reader critiques.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                  {/* Pacing Gauge */}
+                  <div className="flex flex-col items-center text-center">
+                    <div className="relative w-24 h-14 flex items-end justify-center">
+                      <svg className="w-full h-full" viewBox="0 0 80 40">
+                        <path 
+                          d="M 10 35 A 30 30 0 0 1 70 35" 
+                          fill="none" 
+                          stroke="#E8DFC9" 
+                          strokeWidth="5" 
+                          strokeLinecap="round"
+                        />
+                        <motion.path 
+                          d="M 10 35 A 30 30 0 0 1 70 35" 
+                          fill="none" 
+                          stroke="#5C1A2E" 
+                          strokeWidth="5.5" 
+                          strokeLinecap="round"
+                          strokeDasharray={gaugeCircumference}
+                          initial={{ strokeDashoffset: gaugeCircumference }}
+                          animate={{ strokeDashoffset: pacingOffset }}
+                          transition={{ duration: 1.2, ease: "easeOut" }}
+                        />
+                      </svg>
+                      <div className="absolute bottom-0 text-center">
+                        <span className="text-lg font-display font-black text-burgundy">{pacingScore.toFixed(1)}</span>
+                        <span className="text-[9px] font-sans text-ink/40 font-bold block leading-none">/ 5.0</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-burgundy/80 mt-2">Pacing</span>
+                  </div>
+
+                  {/* Technical Gauge */}
+                  <div className="flex flex-col items-center text-center">
+                    <div className="relative w-24 h-14 flex items-end justify-center">
+                      <svg className="w-full h-full" viewBox="0 0 80 40">
+                        <path 
+                          d="M 10 35 A 30 30 0 0 1 70 35" 
+                          fill="none" 
+                          stroke="#E8DFC9" 
+                          strokeWidth="5" 
+                          strokeLinecap="round"
+                        />
+                        <motion.path 
+                          d="M 10 35 A 30 30 0 0 1 70 35" 
+                          fill="none" 
+                          stroke="#7A9E7E" 
+                          strokeWidth="5.5" 
+                          strokeLinecap="round"
+                          strokeDasharray={gaugeCircumference}
+                          initial={{ strokeDashoffset: gaugeCircumference }}
+                          animate={{ strokeDashoffset: technicalOffset }}
+                          transition={{ duration: 1.2, ease: "easeOut" }}
+                        />
+                      </svg>
+                      <div className="absolute bottom-0 text-center">
+                        <span className="text-lg font-display font-black text-sage">{technicalScore.toFixed(1)}</span>
+                        <span className="text-[9px] font-sans text-ink/40 font-bold block leading-none">/ 5.0</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-sage mt-2">Technical Prose</span>
+                  </div>
+                </div>
+              </div>
+
             </div>
-          </div>
-          <div className="border-t border-white/10 pt-4 mt-6 text-[10px] text-cream/40 font-serif italic">
-            Practical roadmap for self-directed polishing.
-          </div>
-        </div>
 
-      </div>
+            {/* Synthesis 3-Column Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+              
+              {/* The Mirror */}
+              <div 
+                className="parchment-card p-6 sm:p-8 flex flex-col justify-between"
+                style={{ borderTop: '4px solid #F2A98A' }}
+              >
+                <div>
+                  <div className="flex items-center gap-1.5 text-burgundy/40 mb-4">
+                    <Eye size={16} className="text-[#F2A98A]" />
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em]">The Mirror</span>
+                  </div>
+                  <h4 className="text-xl font-display font-extrabold text-burgundy mb-4">Audience Theme Perception</h4>
+                  <p className="text-xs sm:text-sm text-ink/80 leading-relaxed font-serif">
+                    {synthesizedMirror}
+                  </p>
+                </div>
+                <div className="border-t border-sage/10 pt-4 mt-6 text-[10px] text-ink/40 font-serif italic">
+                  Reflecting what the readers decoded.
+                </div>
+              </div>
 
+              {/* The High-Water Mark */}
+              <div 
+                className="parchment-card p-6 sm:p-8 flex flex-col justify-between"
+                style={{ borderTop: '4px solid #7A9E7E' }}
+              >
+                <div>
+                  <div className="flex items-center gap-1.5 text-burgundy/40 mb-4">
+                    <Star size={16} className="text-sage" />
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em]">High-Water Mark</span>
+                  </div>
+                  <h4 className="text-xl font-display font-extrabold text-burgundy mb-4">Celebrated Lines & Details</h4>
+                  <p className="text-xs sm:text-sm text-ink/80 leading-relaxed font-serif">
+                    {synthesizedHighwater}
+                  </p>
+                </div>
+                <div className="border-t border-sage/10 pt-4 mt-6 text-[10px] text-ink/40 font-serif italic">
+                  Identifying universally praised phrases and strong hooks.
+                </div>
+              </div>
+
+              {/* The Constructive Pivot */}
+              <div 
+                className="bg-ink text-cream p-6 sm:p-8 rounded-[24px] shadow-xl flex flex-col justify-between border border-white/5"
+                style={{ borderTop: '4px solid #C96A42' }}
+              >
+                <div>
+                  <div className="flex items-center gap-1.5 text-cream/40 mb-4">
+                    <CheckSquare size={16} className="text-[#C96A42]" />
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em]">Constructive Pivot</span>
+                  </div>
+                  <h4 className="text-xl font-display font-extrabold text-cream mb-4">Revision Action Plan</h4>
+                  <div className="space-y-4">
+                    {pivotSteps.map((step, idx) => (
+                      <div key={idx} className="flex gap-3 items-start">
+                        <span 
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-sans flex-shrink-0 mt-0.5"
+                          style={{ backgroundColor: 'rgba(201,106,66,0.2)', border: '1px solid #C96A42', color: '#F2A98A' }}
+                        >
+                          {idx + 1}
+                        </span>
+                        <p className="text-xs sm:text-sm text-cream/80 leading-relaxed font-serif">
+                          {step}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="border-t border-white/10 pt-4 mt-6 text-[10px] text-cream/40 font-serif italic">
+                  Practical roadmap for self-directed polishing.
+                </div>
+              </div>
+
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="critiques-tab"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            {reviews.length === 0 ? (
+              <div className="bg-white border border-sage/15 p-12 rounded-[32px] text-center max-w-md mx-auto shadow-sm">
+                <h3 className="font-display text-lg text-burgundy font-bold mb-2">No Peer Reviews Found</h3>
+                <p className="text-xs text-ink/60 font-serif leading-relaxed">
+                  No peer reviews were recorded in the active queue for this manuscript prior to archiving.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {reviews.map((rev, index) => {
+                  const strengthLabels = {
+                    voice: 'Narrative Voice',
+                    dialogue: 'Dialogue & Rhythm',
+                    world_building: 'World-Building',
+                    pacing: 'Narrative Pacing',
+                    emotional_impact: 'Emotional Impact',
+                    character_dev: 'Character Development',
+                    prose: 'Sentence Prose',
+                    theme: 'Thematic Depth'
+                  };
+
+                  return (
+                    <div 
+                      key={index}
+                      className="bg-white border border-sage/15 p-6 sm:p-8 rounded-[32px] shadow-sm space-y-6"
+                    >
+                      {/* Critique Header */}
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-sage/10">
+                        <div>
+                          <h4 className="font-display text-lg text-burgundy font-bold">Critique #{index + 1}</h4>
+                          <p className="text-[10px] text-ink/40 font-mono">Anonymous Reviewer</p>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="bg-sage/10 border border-sage/20 text-sage font-bold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-lg">
+                            Pacing: {rev.pacingRating}
+                          </span>
+                          {rev.pacingScore && (
+                            <span className="bg-burgundy/5 border border-burgundy/10 text-burgundy font-bold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-lg">
+                              Pacing: {rev.pacingScore}.0/5
+                            </span>
+                          )}
+                          {rev.technicalScore && (
+                            <span className="bg-accent/10 border border-accent/15 text-burgundy font-bold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-lg">
+                              Prose: {rev.technicalScore}.0/5
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Strengths */}
+                      {rev.strengthsArray && rev.strengthsArray.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="text-[9px] font-sans font-bold uppercase tracking-wider text-ink/40">Standout Elements</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {rev.strengthsArray.map(str => (
+                              <span key={str} className="bg-cream border border-sage/15 text-ink/75 font-sans font-medium text-[9px] px-2.5 py-1 rounded-md">
+                                {strengthLabels[str] || str}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Written Sections */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                        {/* The Mirror */}
+                        <div className="space-y-1.5">
+                          <div className="text-[9px] font-sans font-bold uppercase tracking-wider text-[#F2A98A]">The Mirror (Perception)</div>
+                          <p className="text-xs sm:text-sm text-ink/80 leading-relaxed font-serif bg-cream/10 p-4 rounded-2xl border border-sage/5 italic">
+                            &quot;{rev.mirrorResponse}&quot;
+                          </p>
+                        </div>
+                        
+                        {/* Standout Climax */}
+                        <div className="space-y-1.5">
+                          <div className="text-[9px] font-sans font-bold uppercase tracking-wider text-sage">High-Water Mark (Standout)</div>
+                          <p className="text-xs sm:text-sm text-ink/80 leading-relaxed font-serif bg-cream/10 p-4 rounded-2xl border border-sage/5 italic">
+                            &quot;{rev.highwaterResponse}&quot;
+                          </p>
+                        </div>
+
+                        {/* Constructive Pivot */}
+                        <div className="space-y-1.5">
+                          <div className="text-[9px] font-sans font-bold uppercase tracking-wider text-[#C96A42]">Constructive Pivot</div>
+                          <p className="text-xs sm:text-sm text-ink/80 leading-relaxed font-serif bg-cream/10 p-4 rounded-2xl border border-sage/5 italic">
+                            &quot;{rev.pivotResponse}&quot;
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
