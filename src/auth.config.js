@@ -19,7 +19,13 @@ export default {
       const isApiProtectedRoute = nextUrl.pathname.startsWith('/api/') && 
                                   !nextUrl.pathname.startsWith('/api/auth') && 
                                   !nextUrl.pathname.startsWith('/api/cron') &&
-                                  !nextUrl.pathname.startsWith('/api/orders/payment-verify');
+                                  !nextUrl.pathname.startsWith('/api/orders/payment-verify') &&
+                                  !nextUrl.pathname.startsWith('/api/register') &&
+                                  !nextUrl.pathname.startsWith('/api/newsletter/subscribe') &&
+                                  !nextUrl.pathname.startsWith('/api/crossing') &&
+                                  !nextUrl.pathname.startsWith('/api/events') &&
+                                  !nextUrl.pathname.startsWith('/api/lookup') &&
+                                  !nextUrl.pathname.startsWith('/api/image');
       
       if (isProtectedRoute && !isLoggedIn) {
         return false; // Redirects to sign-in page
