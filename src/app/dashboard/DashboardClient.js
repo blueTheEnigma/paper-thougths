@@ -1060,7 +1060,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
 
   const copyRefLink = () => {
     if (!profile) return;
-    const link = `https://paperthoughts.org/join?ref=${profile.lkid}`;
+    const link = `https://paperthoughts.org/crossing?ref=${profile.lkid}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

@@ -119,7 +119,7 @@ function JoinFormContent() {
   };
 
   if (isSuccess) {
-    const refLink = `paperthoughts.org/join?ref=${assignedId}`;
+    const refLink = `paperthoughts.org/crossing?ref=${assignedId}`;
     return (
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
