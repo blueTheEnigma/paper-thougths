@@ -17,8 +17,7 @@ export const CROSSING_CONFIG = {
   x: process.env.NEXT_PUBLIC_CROSSING_X || 'https://x.com/_paper_thoughts',
   linkedin: process.env.NEXT_PUBLIC_CROSSING_LINKEDIN || 'https://www.linkedin.com/company/106589063/',
 
-  // The Final Gate (revealed only if Register is signed)
-  whatsappGroup: process.env.NEXT_PUBLIC_CROSSING_WHATSAPP_GROUP || 'https://chat.whatsapp.com/EPa2bvogYm55jDkncsjLff?s=cl&p=a&ilr=0',
+  whatsappGroup: process.env.NEXT_PUBLIC_CROSSING_WHATSAPP_GROUP || '#',
 };
 
 export const REALMS = {

@@ -28,6 +28,7 @@ function CrossingPageContent() {
   const [accordAgreed, setAccordAgreed] = useState(false);
   const [declCopied, setDeclCopied] = useState(false);
   const [refParam, setRefParam] = useState('');
+  const [whatsappGroupLink, setWhatsappGroupLink] = useState('');
 
   const isLoggedIn = sessionStatus === 'authenticated';
 
@@ -70,6 +71,9 @@ function CrossingPageContent() {
             setDbLkid(data.lkId || '');
             setDbName(data.name || session.user.name || '');
             setDbHasRelic(data.hasRelic || false);
+            if (data.whatsappGroup) {
+              setWhatsappGroupLink(data.whatsappGroup);
+            }
             
             // Merge database progress with local progress
             const dbProgress = data.progress || {};
@@ -139,7 +143,7 @@ function CrossingPageContent() {
     }
   };
 
-  const handleAcceptAccord = () => {
+  const handleAcceptAccord = async () => {
     if (!accordAgreed) return;
     
     const updated = {
@@ -149,14 +153,44 @@ function CrossingPageContent() {
     
     setProgress(updated);
     
+    let activeLink = whatsappGroupLink;
+    
     if (isLoggedIn) {
-      syncProgressToDb(updated);
+      setSyncing(true);
+      try {
+        const res = await fetch('/api/crossing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ progress: updated }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setDbHasRelic(data.hasRelic || false);
+          if (data.hasNewlyUnlockedRelic) {
+            setShowRelicModal(true);
+          }
+          if (data.whatsappGroup) {
+            activeLink = data.whatsappGroup;
+            setWhatsappGroupLink(data.whatsappGroup);
+          }
+          localStorage.removeItem('crossing_progress');
+        }
+      } catch (e) {
+        console.error('Failed to sync progress to DB:', e);
+      } finally {
+        setSyncing(false);
+      }
     } else {
       localStorage.setItem('crossing_progress', JSON.stringify(updated));
     }
     
     setShowAccordOverlay(false);
-    window.open(CROSSING_CONFIG.whatsappGroup, '_blank', 'noopener,noreferrer');
+    
+    if (activeLink) {
+      window.open(activeLink, '_blank', 'noopener,noreferrer');
+    } else {
+      window.open('https://chat.whatsapp.com/EPa2bvogYm55jDkncsjLff?s=cl&p=a&ilr=0', '_blank', 'noopener,noreferrer');
+    }
   };
 
   // Click waypoint link helper
@@ -676,7 +710,7 @@ function CrossingPageContent() {
               </div>
 
               <a
-                href={CROSSING_CONFIG.whatsappGroup}
+                href={whatsappGroupLink || 'https://chat.whatsapp.com/EPa2bvogYm55jDkncsjLff?s=cl&p=a&ilr=0'}
                 target="_blank"
                 rel="noreferrer"
                 className="btn-primary inline-flex items-center gap-2 text-sm shadow-md"

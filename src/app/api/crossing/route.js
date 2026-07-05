@@ -50,13 +50,15 @@ export async function GET(request) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
+    const hasAgreed = dbUser.progress?.agreed_to_accord === true;
     return NextResponse.json({
       success: true,
       isLoggedIn: true,
       progress: dbUser.progress || {},
       hasRelic: dbUser.hasRelic || false,
       lkId: dbUser.lkId,
-      name: dbUser.name
+      name: dbUser.name,
+      whatsappGroup: hasAgreed ? (process.env.CROSSING_WHATSAPP_GROUP || process.env.NEXT_PUBLIC_CROSSING_WHATSAPP_GROUP || 'https://chat.whatsapp.com/EPa2bvogYm55jDkncsjLff?s=cl&p=a&ilr=0') : null
     });
   } catch (error) {
     console.error('Crossing GET API error:', error);
@@ -168,12 +170,14 @@ export async function POST(request) {
       }
     }
 
+    const hasAgreed = mergedProgress.agreed_to_accord === true;
     return NextResponse.json({
       success: true,
       progress: mergedProgress,
       points,
       hasRelic: updateHasRelic,
-      hasNewlyUnlockedRelic
+      hasNewlyUnlockedRelic,
+      whatsappGroup: hasAgreed ? (process.env.CROSSING_WHATSAPP_GROUP || process.env.NEXT_PUBLIC_CROSSING_WHATSAPP_GROUP || 'https://chat.whatsapp.com/EPa2bvogYm55jDkncsjLff?s=cl&p=a&ilr=0') : null
     });
   } catch (error) {
     console.error('Crossing POST API error:', error);
