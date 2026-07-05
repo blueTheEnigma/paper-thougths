@@ -1178,10 +1178,12 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const poolBalance = chapterPool?.current_leaves_balance || 0;
   const poolPercent = Math.min(100, (poolBalance / poolLimit) * 100);
 
-  // Check if admin
-  const superadminEmail = (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase().trim();
-  const isSuperadmin = (userEmail?.toLowerCase().trim() === superadminEmail) || 
-                       (profile?.email?.toLowerCase().trim() === superadminEmail);
+  const superadminEmails = [
+    (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase().trim(),
+    "paperthoughts01@gmail.com"
+  ];
+  const isSuperadmin = superadminEmails.includes(userEmail?.toLowerCase().trim()) || 
+                       (profile?.email && superadminEmails.includes(profile.email.toLowerCase().trim()));
   const isAdmin = (profile.permissions && profile.permissions.length > 0) || isSuperadmin;
 
   // Stagger variants

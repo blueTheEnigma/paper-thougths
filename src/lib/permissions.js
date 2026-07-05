@@ -192,9 +192,12 @@ export async function isCrewMember(userIdentifier) {
 
     if (!dbUser) return false;
 
-    // 2. Check superadmin (from env, fallback to umorgan2001@gmail.com)
-    const superadminEmail = (process.env.SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase();
-    if (dbUser.email && dbUser.email.toLowerCase() === superadminEmail) {
+    // 2. Check superadmin (from env, fallback to umorgan2001@gmail.com / paperthoughts01@gmail.com)
+    const superadminEmails = [
+      (process.env.SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase(),
+      "paperthoughts01@gmail.com"
+    ];
+    if (dbUser.email && superadminEmails.includes(dbUser.email.toLowerCase())) {
       return true;
     }
 

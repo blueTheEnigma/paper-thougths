@@ -34,8 +34,11 @@ export async function getCrewMember(userIdentifier) {
     if (!dbUser) return null;
 
     // 2. Check if user is superadmin
-    const superadminEmail = (process.env.SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase();
-    const isSuper = dbUser.email && dbUser.email.toLowerCase() === superadminEmail;
+    const superadminEmails = [
+      (process.env.SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase(),
+      "paperthoughts01@gmail.com"
+    ];
+    const isSuper = dbUser.email && superadminEmails.includes(dbUser.email.toLowerCase());
 
     // 3. Get crew member record
     let crewMember = await Database.queryOne(`

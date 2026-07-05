@@ -21,9 +21,12 @@ export default function Navigation() {
 
   const [profile, setProfile] = useState(null);
 
-  const email = (user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || "").toLowerCase().trim();
-  const superadminEmail = (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase().trim();
-  const isSuperadmin = (email === superadminEmail) || (profile?.email?.toLowerCase().trim() === superadminEmail);
+  const superadminEmails = [
+    (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase().trim(),
+    "paperthoughts01@gmail.com"
+  ];
+  const isSuperadmin = superadminEmails.includes(email) || 
+                       (profile?.email && superadminEmails.includes(profile.email.toLowerCase().trim()));
   const isAdmin = isSuperadmin || (profile?.permissions && profile.permissions.length > 0);
 
   useEffect(() => {

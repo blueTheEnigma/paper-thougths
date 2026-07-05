@@ -9,7 +9,7 @@ export const metadata = {
   description: "Administrative console for managing literary batches, bookstore ledger, and chapter members.",
 };
 
-const SUPERADMIN_EMAIL = "umorgan2001@gmail.com";
+const SUPERADMIN_EMAILS = ["umorgan2001@gmail.com", "paperthoughts01@gmail.com"];
 
 export default async function AdminPage() {
   const user = await currentUser();
@@ -25,7 +25,7 @@ export default async function AdminPage() {
 
   const permissions = await getUserPermissions(user.id);
   const email = (user.primaryEmailAddress?.emailAddress || user.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
-  const isSuperadmin = email === SUPERADMIN_EMAIL.toLowerCase();
+  const isSuperadmin = SUPERADMIN_EMAILS.includes(email);
 
   // If user has no admin permissions and isn't the superadmin, bounce them back to dashboard
   if (permissions.length === 0 && !isSuperadmin) {
