@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS users (
     last_submission_date DATE,
     preferred_genres TEXT[] DEFAULT '{}',
     onboarded BOOLEAN DEFAULT FALSE,
+    crossing_progress JSONB DEFAULT '{}'::jsonb,
+    has_relic BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW()
 );
 

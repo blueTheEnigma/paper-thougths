@@ -25,7 +25,8 @@ export default function Navigation() {
     (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase().trim(),
     "paperthoughts01@gmail.com"
   ];
-  const isSuperadmin = superadminEmails.includes(email) || 
+  const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase().trim();
+  const isSuperadmin = (userEmail && superadminEmails.includes(userEmail)) || 
                        (profile?.email && superadminEmails.includes(profile.email.toLowerCase().trim()));
   const isAdmin = isSuperadmin || (profile?.permissions && profile.permissions.length > 0);
 

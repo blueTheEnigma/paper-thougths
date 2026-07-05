@@ -5,6 +5,8 @@ import { Mail, Send, Loader2, CheckCircle2, BookOpen, Sparkles } from 'lucide-re
 import Link from 'next/link';
 import { FaInstagram, FaWhatsapp, FaXTwitter, FaTiktok, FaYoutube, FaLinkedin } from "react-icons/fa6";
 
+import { CROSSING_CONFIG } from '@/lib/crossingConfig';
+
 export default function ContactUs() {
   const { isSignedIn, isLoaded } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,23 +72,27 @@ export default function ContactUs() {
               <Mail size={32} className="text-primary group-hover:text-accent transition-colors" />
               <span className="font-bold text-ink text-sm">Email</span>
             </a>
-            <a href="https://whatsapp.com/channel/0029Va7fhJv05MUYW6xOU20S" target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-[#25D366] hover:shadow-lg transition-all hover:-translate-y-1">
+            <a href={CROSSING_CONFIG.whatsappChannel} target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-[#25D366] hover:shadow-lg transition-all hover:-translate-y-1">
               <FaWhatsapp size={32} className="text-primary group-hover:text-[#25D366] transition-colors" />
               <span className="font-bold text-ink text-sm">WhatsApp</span>
             </a>
-            <a href="https://www.linkedin.com/company/thoughts-on-paper/" target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-[#0077b5] hover:shadow-lg transition-all hover:-translate-y-1">
+            <a href={CROSSING_CONFIG.instagram} target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-[#E1306C] hover:shadow-lg transition-all hover:-translate-y-1">
+              <FaInstagram size={32} className="text-primary group-hover:text-[#E1306C] transition-colors" />
+              <span className="font-bold text-ink text-sm">Instagram</span>
+            </a>
+            <a href={CROSSING_CONFIG.linkedin} target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-[#0077b5] hover:shadow-lg transition-all hover:-translate-y-1">
               <FaLinkedin size={32} className="text-primary group-hover:text-[#0077b5] transition-colors" />
               <span className="font-bold text-ink text-sm">LinkedIn</span>
             </a>
-            <a href="https://www.tiktok.com/@paper_thoughts_?_r=1&_t=ZS-95JRlyYwq4m" target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-black hover:shadow-lg transition-all hover:-translate-y-1">
+            <a href={CROSSING_CONFIG.tiktok} target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-black hover:shadow-lg transition-all hover:-translate-y-1">
               <FaTiktok size={32} className="text-primary group-hover:text-black transition-colors" />
               <span className="font-bold text-ink text-sm">TikTok</span>
             </a>
-            <a href="https://x.com/_paper_thoughts" target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-[#1DA1F2] hover:shadow-lg transition-all hover:-translate-y-1">
+            <a href={CROSSING_CONFIG.x} target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-[#1DA1F2] hover:shadow-lg transition-all hover:-translate-y-1">
               <FaXTwitter size={32} className="text-primary group-hover:text-[#1DA1F2] transition-colors" />
               <span className="font-bold text-ink text-sm">X (Twitter)</span>
             </a>
-            <a href="https://youtube.com/@paper_thoughts/community?si=Xj5kO8dt98FXzyD3" target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-[#FF0000] hover:shadow-lg transition-all hover:-translate-y-1">
+            <a href={CROSSING_CONFIG.youtube} target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-[#FF0000] hover:shadow-lg transition-all hover:-translate-y-1">
               <FaYoutube size={32} className="text-primary group-hover:text-[#FF0000] transition-colors" />
               <span className="font-bold text-ink text-sm">YouTube</span>
             </a>

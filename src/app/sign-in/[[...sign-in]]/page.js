@@ -62,8 +62,7 @@ export default function SignInPage() {
         }
         setLoading(false);
       } else {
-        router.push(callbackUrl);
-        router.refresh();
+        window.location.href = callbackUrl;
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");

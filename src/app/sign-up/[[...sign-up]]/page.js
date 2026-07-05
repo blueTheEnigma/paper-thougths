@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,6 +17,8 @@ export default function SignUpPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,18 +56,17 @@ export default function SignUpPage() {
         email: email.trim().toLowerCase(),
         password: password,
         redirect: false,
-        callbackUrl: "/dashboard"
+        callbackUrl
       });
 
       if (loginRes?.error) {
         // If auto login fails, redirect them to sign-in page to log in manually
         setTimeout(() => {
-          router.push("/sign-in");
+          window.location.href = `/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`;
         }, 1500);
       } else {
         setTimeout(() => {
-          router.push("/dashboard");
-          router.refresh();
+          window.location.href = callbackUrl;
         }, 1500);
       }
 
@@ -75,7 +78,7 @@ export default function SignUpPage() {
 
   const handleGoogleSignIn = () => {
     setGoogleLoading(true);
-    signIn("google", { callbackUrl: "/dashboard" });
+    signIn("google", { callbackUrl });
   };
 
   return (
@@ -177,12 +180,26 @@ export default function SignUpPage() {
         {/* Login Prompt */}
         <p className="mt-8 text-center text-xs text-ink/60">
           Already have an account?{" "}
-          <Link href="/sign-in" className="font-semibold text-[#4A0E0E] hover:underline">
+          <Link href={`/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`} className="font-semibold text-[#4A0E0E] hover:underline">
             Log in here
           </Link>
         </p>
 
       </div>
     </main>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-cream flex items-center justify-center px-4 py-16">
+        <div className="text-center p-8 text-ink/60 font-sans">
+          Loading sign-up form...
+        </div>
+      </main>
+    }>
+      <SignUpForm />
+    </Suspense>
   );
 }
