@@ -19,6 +19,7 @@ function SignUpForm() {
   const [success, setSuccess] = useState("");
 
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const refCode = searchParams.get("ref") || "";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,7 +41,7 @@ function SignUpForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, referral: refCode }),
       });
 
       const data = await res.json();

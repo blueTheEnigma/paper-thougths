@@ -5,7 +5,7 @@ import { Database } from '@/lib/db';
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, email, password } = body;
+    const { name, email, password, referral } = body;
 
     if (!name || !email || !password) {
       return NextResponse.json({ success: false, error: 'Name, email, and password are required.' }, { status: 400 });
@@ -30,11 +30,18 @@ export async function POST(request) {
       // User exists but has no password (e.g. from Google login or Clerk migration)
       // We will hash the password and update their profile to support credentials login
       const hashedPassword = await bcrypt.hash(password, 10);
+      
+      let referrerId = null;
+      if (referral) {
+        const refUser = await Database.queryOne('SELECT id FROM users WHERE lk_id = $1', [referral.trim().toUpperCase()]);
+        if (refUser) referrerId = refUser.id;
+      }
+
       await Database.query(`
         UPDATE users 
-        SET password_hash = $1, full_name = COALESCE(full_name, $2)
-        WHERE id = $3
-      `, [hashedPassword, name.trim(), existingUser.id]);
+        SET password_hash = $1, full_name = COALESCE(full_name, $2), referred_by_id = COALESCE(referred_by_id, $3)
+        WHERE id = $4
+      `, [hashedPassword, name.trim(), referrerId, existingUser.id]);
 
       return NextResponse.json({ 
         success: true, 
@@ -47,11 +54,19 @@ export async function POST(request) {
 
     // Create the new user and generate the LK-ID in a single transaction
     const newUser = await Database.transaction(async (client) => {
+      let referrerId = null;
+      if (referral) {
+        const refRes = await client.query('SELECT id FROM users WHERE lk_id = $1', [referral.trim().toUpperCase()]);
+        if (refRes.rows.length > 0) {
+          referrerId = refRes.rows[0].id;
+        }
+      }
+
       const userRes = await client.query(`
-        INSERT INTO users (email, full_name, password_hash, onboarded)
-        VALUES ($1, $2, $3, FALSE)
+        INSERT INTO users (email, full_name, password_hash, onboarded, referred_by_id)
+        VALUES ($1, $2, $3, FALSE, $4)
         RETURNING id
-      `, [cleanEmail, name.trim(), hashedPassword]);
+      `, [cleanEmail, name.trim(), hashedPassword, referrerId]);
       
       const newUserId = userRes.rows[0].id;
       const year = new Date().getFullYear();

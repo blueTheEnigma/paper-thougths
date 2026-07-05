@@ -27,8 +27,25 @@ function CrossingPageContent() {
   const [showAccordOverlay, setShowAccordOverlay] = useState(false);
   const [accordAgreed, setAccordAgreed] = useState(false);
   const [declCopied, setDeclCopied] = useState(false);
+  const [refParam, setRefParam] = useState('');
 
   const isLoggedIn = sessionStatus === 'authenticated';
+
+  // Handle referral capture
+  useEffect(() => {
+    const urlRef = searchParams.get('ref');
+    if (urlRef) {
+      localStorage.setItem('crossing_ref', urlRef);
+      setRefParam(urlRef);
+    } else {
+      const storedRef = localStorage.getItem('crossing_ref');
+      if (storedRef) {
+        setRefParam(storedRef);
+      }
+    }
+  }, [searchParams]);
+
+  const signUpUrl = refParam ? `${CROSSING_CONFIG.signUpUrl}&ref=${refParam}` : CROSSING_CONFIG.signUpUrl;
 
   // Load progress initially
   useEffect(() => {
@@ -104,7 +121,7 @@ function CrossingPageContent() {
   const handleToggleWaypoint = (waypointId, isExternalLink = false) => {
     if (waypointId === 'app_signup') {
       if (isLoggedIn) return; // Cannot toggle signup if logged in
-      router.push(CROSSING_CONFIG.signUpUrl);
+      router.push(signUpUrl);
       return;
     }
 
@@ -453,7 +470,7 @@ function CrossingPageContent() {
                             onClick={() => {
                               if (isRegister) {
                                 if (isLoggedIn) return; // Account registered
-                                router.push(CROSSING_CONFIG.signUpUrl);
+                                router.push(signUpUrl);
                               } else {
                                 handleToggleWaypoint(waypoint.id);
                               }
@@ -482,7 +499,7 @@ function CrossingPageContent() {
                           <button
                             onClick={() => {
                               if (isRegister) {
-                                router.push(CROSSING_CONFIG.signUpUrl);
+                                router.push(signUpUrl);
                               } else {
                                 handleWaypointClick(waypoint);
                               }
@@ -593,7 +610,7 @@ function CrossingPageContent() {
                     We require registration to personalize and issue your unique LK-ID. Sign up now to save your progress and claim your certificate.
                   </p>
                   <button
-                    onClick={() => router.push(CROSSING_CONFIG.signUpUrl)}
+                    onClick={() => router.push(signUpUrl)}
                     className="btn-primary w-full flex items-center justify-center gap-2"
                   >
                     Sign the Register to Claim
@@ -723,7 +740,7 @@ function CrossingPageContent() {
               To cross into the next chapter, you must first register your name in the ledger of the Archives.
             </p>
             <button
-              onClick={() => router.push(CROSSING_CONFIG.signUpUrl)}
+              onClick={() => router.push(signUpUrl)}
               className="btn-ghost inline-flex items-center gap-2 text-xs py-2 px-5"
             >
               Sign the Register
