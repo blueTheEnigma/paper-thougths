@@ -76,7 +76,12 @@ async function runCleanup() {
     const usersRes = await client.query(`
       DELETE FROM users 
       WHERE email != 'umorgan2001@gmail.com' 
-        AND (tier IS NULL OR tier != 'admin')
+        AND id NOT IN (
+          SELECT DISTINCT user_id FROM user_permissions
+        )
+        AND id NOT IN (
+          SELECT DISTINCT user_id FROM crew_members WHERE user_id IS NOT NULL AND (role = 'admin' OR role = 'lead')
+        )
     `);
     console.log(`Deleted ${usersRes.rowCount} users.`);
 
