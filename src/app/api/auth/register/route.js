@@ -78,6 +78,37 @@ export async function POST(request) {
         WHERE id = $2 
         RETURNING *
       `, [lkId, newUserId]);
+
+      // If referrer was found, apply tokens and check referral cap limit (max 5)
+      if (referrerId) {
+        const refsCount = await client.query(`
+          SELECT COUNT(*) as count FROM users WHERE referred_by_id = $1
+        `, [referrerId]);
+        
+        const count = parseInt(refsCount.rows[0].count || 0);
+        
+        // Anti-Influencer cap: Only reward the first 5 referrals
+        if (count <= 5) {
+          await client.query(`
+            UPDATE users 
+            SET milestone_tokens = milestone_tokens + 1.2
+            WHERE id = $1
+          `, [referrerId]);
+          
+          // Verify if referrer hit the 500 lifetime leaves milestone
+          const updatedReferrerRes = await client.query(`
+            SELECT lifetime_leaves, book_vouchers_gifted FROM users WHERE id = $1
+          `, [referrerId]);
+          const updatedReferrer = updatedReferrerRes.rows[0];
+          
+          const totalMilestones = Math.floor(updatedReferrer.lifetime_leaves / 500);
+          if (totalMilestones > (updatedReferrer.book_vouchers_gifted || 0)) {
+            await client.query(`
+              UPDATE users SET book_vouchers_gifted = $1 WHERE id = $2
+            `, [totalMilestones, referrerId]);
+          }
+        }
+      }
       
       return updatedRes.rows[0];
     });
