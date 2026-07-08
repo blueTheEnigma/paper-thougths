@@ -16,6 +16,7 @@ export const CROSSING_CONFIG = {
   // 4. The Archive
   x: process.env.NEXT_PUBLIC_CROSSING_X || 'https://x.com/_paper_thoughts',
   linkedin: process.env.NEXT_PUBLIC_CROSSING_LINKEDIN || 'https://www.linkedin.com/company/106589063/',
+  discord: process.env.NEXT_PUBLIC_CROSSING_DISCORD || 'https://discord.gg/jEpF5frtH',
 
   whatsappGroup: process.env.NEXT_PUBLIC_CROSSING_WHATSAPP_GROUP || '#',
 };
@@ -60,13 +61,14 @@ export const REALMS = {
     pointsPerWaypoint: 10,
     waypoints: [
       { id: 'x', label: 'X', link: CROSSING_CONFIG.x, external: true },
+      { id: 'discord', label: 'Discord', link: CROSSING_CONFIG.discord, external: true },
       { id: 'founder_instagram', label: 'Follow the Founder', link: CROSSING_CONFIG.founderInstagram, external: true },
       { id: 'facebook', label: 'Facebook', link: CROSSING_CONFIG.facebook, external: true }
     ]
   }
 };
 
-export const MAX_POINTS = 120;
+export const MAX_POINTS = 130;
 export const MIN_PASSAGE_POINTS = 30; // Signing Register is exactly 30
 export const GIFT_THRESHOLD_POINTS = 90;
 

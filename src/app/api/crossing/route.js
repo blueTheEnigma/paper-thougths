@@ -15,7 +15,7 @@ function calculatePoints(progress, isLoggedIn) {
   const tenPointWaypoints = [
     'whatsapp_channel', 'whatsapp_tv',
     'instagram', 'founder_instagram', 'tiktok', 'youtube', 'facebook',
-    'x', 'linkedin'
+    'x', 'linkedin', 'discord'
   ];
 
   tenPointWaypoints.forEach(key => {

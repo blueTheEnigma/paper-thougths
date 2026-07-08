@@ -24,7 +24,6 @@ function CrossingPageContent() {
   const [dbHasRelic, setDbHasRelic] = useState(false);
   const [showRelicModal, setShowRelicModal] = useState(false);
   const [pdfGenerating, setPdfGenerating] = useState(false);
-  const [showAccordOverlay, setShowAccordOverlay] = useState(false);
   const [accordAgreed, setAccordAgreed] = useState(false);
   const [declCopied, setDeclCopied] = useState(false);
   const [refParam, setRefParam] = useState('');
@@ -183,8 +182,6 @@ function CrossingPageContent() {
     } else {
       localStorage.setItem('crossing_progress', JSON.stringify(updated));
     }
-    
-    setShowAccordOverlay(false);
     
     if (activeLink) {
       window.open(activeLink, '_blank', 'noopener,noreferrer');
@@ -412,7 +409,7 @@ function CrossingPageContent() {
             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${totalPoints >= 0 ? 'bg-accent border-accent text-white' : 'bg-cream border-ink/20'}`}>
               <div className="w-1.5 h-1.5 rounded-full bg-white" />
             </div>
-            <span className="text-[10px] font-bold mt-2 uppercase tracking-wider text-ink/40">The Edge</span>
+            <span className="text-[8px] sm:text-[10px] font-bold mt-2 uppercase tracking-wider text-ink/40">The Edge</span>
           </div>
 
           {/* 2. Gate of Passage (30 pts) */}
@@ -420,8 +417,9 @@ function CrossingPageContent() {
             <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-500 shadow-sm ${totalPoints >= MIN_PASSAGE_POINTS ? 'bg-burgundy border-burgundy text-primary' : 'bg-[#FAF8F5] border-ink/20 text-ink/30'}`}>
               {totalPoints >= MIN_PASSAGE_POINTS ? <Unlock size={12} /> : <Lock size={12} />}
             </div>
-            <span className="text-[10px] font-bold mt-2 uppercase tracking-wider text-ink/60 text-center">
-              Passage (30)
+            <span className="text-[8px] sm:text-[10px] font-bold mt-2 uppercase tracking-wider text-ink/60 text-center">
+              <span className="hidden sm:inline">Passage (30)</span>
+              <span className="inline sm:hidden">Passage</span>
             </span>
           </div>
 
@@ -434,8 +432,9 @@ function CrossingPageContent() {
             >
               <Gift size={12} />
             </motion.div>
-            <span className="text-[10px] font-bold mt-2 uppercase tracking-wider text-ink/60 text-center">
-              The Relic (90)
+            <span className="text-[8px] sm:text-[10px] font-bold mt-2 uppercase tracking-wider text-ink/60 text-center">
+              <span className="hidden sm:inline">The Relic (90)</span>
+              <span className="inline sm:hidden">Relic</span>
             </span>
           </div>
         </div>
@@ -497,9 +496,9 @@ function CrossingPageContent() {
                     return (
                       <div 
                         key={waypoint.id}
-                        className={`flex items-center justify-between border rounded-2xl p-3.5 transition-all ${checked ? 'bg-[#FAFDF9] border-sage/40' : 'bg-cream/40 border-ink/10 hover:border-burgundy/20'}`}
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between border rounded-2xl p-4 sm:p-3.5 transition-all gap-4 sm:gap-3 ${checked ? 'bg-[#FAFDF9] border-sage/40' : 'bg-cream/40 border-ink/10 hover:border-burgundy/20'}`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-start gap-3">
                           <button
                             onClick={() => {
                               if (isRegister) {
@@ -509,19 +508,19 @@ function CrossingPageContent() {
                                 handleToggleWaypoint(waypoint.id);
                               }
                             }}
-                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${checked ? 'text-sage bg-sage/10 border-sage/30' : 'border-ink/20 hover:border-burgundy'}`}
+                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all shrink-0 mt-0.5 ${checked ? 'text-sage bg-sage/10 border-sage/30' : 'border-ink/20 hover:border-burgundy'}`}
                             disabled={isRegister && isLoggedIn}
                           >
                             {checked ? <CheckCircle2 size={18} className="text-sage" /> : <div className="w-2 h-2 rounded-full bg-transparent border border-ink/20" />}
                           </button>
                           
-                          <div>
-                            <span className={`text-sm font-bold block ${checked ? 'text-ink/60 line-through font-normal' : 'text-ink'}`}>
+                          <div className="space-y-0.5">
+                            <span className={`text-sm font-bold block ${checked ? 'text-ink/60 line-through font-normal' : 'text-ink'} leading-tight`}>
                               {waypoint.label}
                             </span>
                             
                             {isRegister && !isLoggedIn && (
-                              <span className="text-[10px] text-burgundy font-semibold">
+                              <span className="text-[10px] text-burgundy font-semibold block">
                                 Sign up or Log in to pass
                               </span>
                             )}
@@ -529,7 +528,7 @@ function CrossingPageContent() {
                         </div>
 
                         {/* Action buttons */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 pl-9 sm:pl-0">
                           <button
                             onClick={() => {
                               if (isRegister) {
@@ -538,7 +537,7 @@ function CrossingPageContent() {
                                 handleWaypointClick(waypoint);
                               }
                             }}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center gap-1.5 ${checked ? 'bg-cream text-ink/50 border-ink/10' : 'bg-ink text-cream border-ink hover:bg-ink/90'}`}
+                            className={`w-full sm:w-auto px-4 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1.5 ${checked ? 'bg-cream text-ink/50 border-ink/10' : 'bg-ink text-cream border-ink hover:bg-ink/90'}`}
                           >
                             {isRegister ? (
                               isLoggedIn ? 'Registered' : 'Register'
@@ -727,42 +726,83 @@ function CrossingPageContent() {
             </motion.div>
           ) : (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="bg-card border border-burgundy/10 rounded-[32px] p-8 md:p-12 shadow-md relative text-center"
+              className="bg-card border border-burgundy/10 rounded-[32px] p-6 md:p-10 max-w-3xl mx-auto shadow-xl relative text-left"
             >
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent text-[10px] font-bold uppercase tracking-widest mb-6">
-                <Unlock size={10} />
-                Passage Unlocked
-              </span>
-              
-              <h2 className="text-3xl font-display font-bold text-burgundy mb-6">
-                The Accord of the Second Chapter
-              </h2>
-              
-              <p className="text-sm md:text-base text-ink/75 leading-relaxed max-w-2xl mx-auto mb-8 font-quote italic">
-                You have passage. The final gate is open. But before you enter, you must agree to the Accord of the Second Chapter. You can either read the Accord and enter the homeland now, or walk the long road to claim your relic first.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={() => setShowAccordOverlay(true)}
-                  className="btn-primary inline-flex items-center gap-2 text-sm shadow-md"
-                >
-                  Read the Accord & Join
-                  <ArrowRight size={16} />
-                </button>
-                {totalPoints < GIFT_THRESHOLD_POINTS && (
+              <div className="text-center pb-6 border-b border-burgundy/10">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/30 text-accent text-[10px] font-bold uppercase tracking-widest mb-4">
+                  <Unlock size={10} />
+                  Passage Unlocked
+                </span>
+                <h2 className="text-3xl font-display font-bold text-burgundy">
+                  THE ACCORD OF THE SECOND CHAPTER
+                </h2>
+                <div className="w-16 h-0.5 bg-accent mx-auto mt-4" />
+              </div>
+
+              <div className="text-sm text-ink/80 font-quote italic leading-relaxed space-y-3 pt-6">
+                <p>You made it. However far you walked to get here — the Register, the Watchtower, the Gallery, the Archive — you're standing on the other side now. The bridge is behind you. What's ahead is a room. And every room, no matter how good the story that led to it, is only as strong as what the people inside agree to carry.</p>
+                <p>This isn't a list of what you can't do. It's the shape of what we're building, said out loud, so no one has to guess at it.</p>
+                <p>Here is the Accord.</p>
+              </div>
+
+              {/* Scrollable Rules Container */}
+              <div className="max-h-80 overflow-y-auto border border-burgundy/10 rounded-2xl p-4 md:p-6 my-6 bg-cream/30 space-y-6 scrollbar-thin">
+                {ACCORD.map((rule) => (
+                  <div key={rule.num} className="border-b border-ink/5 pb-4 last:border-0">
+                    <div className="flex items-baseline gap-3 mb-2">
+                      <span className="font-display font-bold text-accent text-lg">{rule.num}.</span>
+                      <h4 className="font-display font-bold text-burgundy text-base">{rule.title}</h4>
+                    </div>
+                    <p className="text-sm text-ink/75 leading-relaxed pl-6 font-quote">
+                      {rule.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Accord Footer Prose */}
+              <div className="text-sm text-ink/80 leading-relaxed font-quote italic text-center mb-6">
+                <p>You crossed a bridge for this. Not everyone did. Let's make sure it was worth the crossing — for you, and for the next person standing where you stood.</p>
+                <p className="font-bold text-burgundy mt-2">Welcome to the Second Chapter</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-6 border-t border-burgundy/10 space-y-4">
+                <label className="flex items-start gap-3 cursor-pointer group justify-center">
+                  <input
+                    type="checkbox"
+                    checked={accordAgreed}
+                    onChange={(e) => setAccordAgreed(e.target.checked)}
+                    className="mt-1 accent-burgundy rounded border-ink/10"
+                  />
+                  <span className="text-xs font-bold text-ink/70 group-hover:text-burgundy transition-colors text-left max-w-lg select-none">
+                    I have read the Accord of the Second Chapter and agree to carry it in the room ahead.
+                  </span>
+                </label>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                   <button
-                    onClick={() => {
-                      document.getElementById('realms-section')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="btn-ghost inline-flex items-center gap-2 text-sm"
+                    onClick={handleAcceptAccord}
+                    disabled={!accordAgreed}
+                    className="btn-primary w-full sm:w-auto text-xs py-3 px-8 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                   >
-                    Keep Walking (Claim Relic)
+                    Enter the homeland
+                    <ArrowRight size={14} />
                   </button>
-                )}
+                  {totalPoints < GIFT_THRESHOLD_POINTS && (
+                    <button
+                      onClick={() => {
+                        document.getElementById('realms-section')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="btn-ghost w-full sm:w-auto text-xs py-3 px-8"
+                    >
+                      Keep Walking (Claim Relic)
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           )
@@ -833,90 +873,7 @@ function CrossingPageContent() {
         )}
       </AnimatePresence>
 
-      {/* The Accord Scroll Overlay */}
-      <AnimatePresence>
-        {showAccordOverlay && (
-          <div className="fixed inset-0 bg-ink/90 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card border-2 border-burgundy/25 rounded-[32px] p-6 md:p-10 max-w-3xl w-full my-8 relative shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
-            >
-              {/* Scrollable Container */}
-              <div className="overflow-y-auto flex-1 pr-2 space-y-6 text-left scrollbar-thin">
-                <div className="text-center pb-6 border-b border-burgundy/10">
-                  <span className="text-[10px] font-bold text-burgundy uppercase tracking-[0.2em]">The Pact</span>
-                  <h3 className="text-3xl font-display font-bold text-burgundy mt-2">
-                    THE ACCORD OF THE SECOND CHAPTER
-                  </h3>
-                  <div className="w-16 h-0.5 bg-accent mx-auto mt-4" />
-                </div>
 
-                <div className="text-sm text-ink/80 font-quote italic leading-relaxed space-y-3 pt-4">
-                  <p>You made it. However far you walked to get here — the Register, the Watchtower, the Gallery, the Archive — you're standing on the other side now. The bridge is behind you. What's ahead is a room. And every room, no matter how good the story that led to it, is only as strong as what the people inside agree to carry.</p>
-                  <p>This isn't a list of what you can't do. It's the shape of what we're building, said out loud, so no one has to guess at it.</p>
-                  <p>Here is the Accord.</p>
-                </div>
-
-                {/* 17 Rules */}
-                <div className="space-y-6 pt-6">
-                  {ACCORD.map((rule) => (
-                    <div key={rule.num} className="border-b border-ink/5 pb-4 last:border-0">
-                      <div className="flex items-baseline gap-3 mb-2">
-                        <span className="font-display font-bold text-accent text-lg">{rule.num}.</span>
-                        <h4 className="font-display font-bold text-burgundy text-base">{rule.title}</h4>
-                      </div>
-                      <p className="text-sm text-ink/75 leading-relaxed pl-6 font-quote">
-                        {rule.text}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Accord Footer Prose */}
-                <div className="pt-6 text-sm text-ink/80 leading-relaxed font-quote italic text-center border-t border-burgundy/10">
-                  <p>You crossed a bridge for this. Not everyone did. Let's make sure it was worth the crossing — for you, and for the next person standing where you stood.</p>
-                  <p className="font-bold text-burgundy mt-2">Welcome to the Second Chapter</p>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-6 border-t border-burgundy/10 mt-6 space-y-4">
-                <label className="flex items-start gap-3 cursor-pointer group justify-center">
-                  <input
-                    type="checkbox"
-                    checked={accordAgreed}
-                    onChange={(e) => setAccordAgreed(e.target.checked)}
-                    className="mt-1 accent-burgundy rounded border-ink/10"
-                  />
-                  <span className="text-xs font-bold text-ink/70 group-hover:text-burgundy transition-colors text-left max-w-lg select-none">
-                    I have read the Accord of the Second Chapter and agree to carry it in the room ahead.
-                  </span>
-                </label>
-
-                <div className="flex gap-4 justify-center">
-                  <button
-                    onClick={handleAcceptAccord}
-                    disabled={!accordAgreed}
-                    className="btn-primary text-xs py-3 px-8 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
-                  >
-                    Enter the homeland
-                    <ArrowRight size={14} />
-                  </button>
-                  <button
-                    onClick={() => setShowAccordOverlay(false)}
-                    className="btn-ghost text-xs py-3 px-8"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
     </main>
   );

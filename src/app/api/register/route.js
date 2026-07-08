@@ -84,9 +84,10 @@ export async function POST(request) {
           `, [referrerId]);
           
           // Verify if referrer hit the 500 lifetime leaves milestone
-          const updatedReferrer = await client.queryOne(`
+          const updatedReferrerRes = await client.query(`
             SELECT lifetime_leaves, book_vouchers_gifted FROM users WHERE id = $1
           `, [referrerId]);
+          const updatedReferrer = updatedReferrerRes.rows[0];
           
           const totalMilestones = Math.floor(updatedReferrer.lifetime_leaves / 500);
           if (totalMilestones > (updatedReferrer.book_vouchers_gifted || 0)) {
