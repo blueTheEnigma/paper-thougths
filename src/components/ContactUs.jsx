@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { Mail, Send, Loader2, CheckCircle2, BookOpen, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { FaInstagram, FaWhatsapp, FaXTwitter, FaTiktok, FaYoutube, FaLinkedin } from "react-icons/fa6";
+import { FaInstagram, FaWhatsapp, FaXTwitter, FaTiktok, FaYoutube, FaLinkedin, FaDiscord } from "react-icons/fa6";
 
 import { CROSSING_CONFIG } from '@/lib/crossingConfig';
 
@@ -95,6 +95,10 @@ export default function ContactUs() {
             <a href={CROSSING_CONFIG.youtube} target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-[#FF0000] hover:shadow-lg transition-all hover:-translate-y-1">
               <FaYoutube size={32} className="text-primary group-hover:text-[#FF0000] transition-colors" />
               <span className="font-bold text-ink text-sm">YouTube</span>
+            </a>
+            <a href={CROSSING_CONFIG.discord} target="_blank" className="group flex flex-col items-center justify-center gap-3 bg-white p-6 rounded-2xl border border-sage/20 hover:border-[#5865F2] hover:shadow-lg transition-all hover:-translate-y-1">
+              <FaDiscord size={32} className="text-primary group-hover:text-[#5865F2] transition-colors" />
+              <span className="font-bold text-ink text-sm">Discord</span>
             </a>
           </div>
         </div>

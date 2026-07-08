@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BookOpen, Send, Loader2 } from 'lucide-react';
-import { FaInstagram, FaWhatsapp, FaTiktok, FaYoutube, FaLinkedin } from "react-icons/fa6";
+import { FaInstagram, FaWhatsapp, FaTiktok, FaYoutube, FaLinkedin, FaDiscord } from "react-icons/fa6";
 import { CROSSING_CONFIG } from '@/lib/crossingConfig';
 import EasterEgg from './EasterEgg';
 
@@ -107,6 +107,15 @@ export default function Footer() {
               title="LinkedIn"
             >
               <FaLinkedin size={16} />
+            </a>
+            <a 
+              href={CROSSING_CONFIG.discord} 
+              target="_blank" 
+              rel="noreferrer"
+              className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-cream/70 hover:text-[#5865F2] hover:bg-white/10 transition-all"
+              title="Discord"
+            >
+              <FaDiscord size={16} />
             </a>
           </div>
         </div>
