@@ -4,7 +4,17 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { getAvatarStage } from '@/lib/avatar';
 
-export default function PanguinAvatar({ lifetimeLeaves, avatarUrl, variant = "compact", className = "" }) {
+const ARCHETYPE_NAMES = {
+  mood: 'Mood Reader',
+  marathon: 'Marathon Reader',
+  tsundoku: 'Tsundoku Collector',
+  completist: 'Completist',
+  mourner: 'Book Mourner',
+  annotator: 'Annotator',
+  juggler: 'Juggler'
+};
+
+export default function PanguinAvatar({ lifetimeLeaves, avatarUrl, variant = "compact", className = "", archetype = null }) {
   const stage = getAvatarStage(lifetimeLeaves);
   const [showTooltip, setShowTooltip] = useState(false);
   const displayImage = avatarUrl || stage.image;
@@ -44,6 +54,11 @@ export default function PanguinAvatar({ lifetimeLeaves, avatarUrl, variant = "co
           <span className="text-[9px] font-bold uppercase tracking-wider text-burgundy bg-burgundy/10 px-1.5 py-0.5 rounded-sm inline-block mb-0.5">
             {stage.name}
           </span>
+          {archetype && ARCHETYPE_NAMES[archetype] && (
+            <span className="text-[8px] font-sans font-bold uppercase tracking-[0.05em] text-[#C96A42] bg-[#FFF5EC] border border-[#C96A42]/10 px-1.5 py-0.5 rounded-sm mt-0.5">
+              {ARCHETYPE_NAMES[archetype]}
+            </span>
+          )}
         </div>
         
         {showTooltip && stage.nextStage && (

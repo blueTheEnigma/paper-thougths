@@ -90,6 +90,7 @@ async function getLocalArchiveData(clerkUser) {
       weeklyReviews: 0,
       preferredGenres: profileRow.preferred_genres || [],
       onboarded: profileRow.onboarded || false,
+      archetype: profileRow.reader_archetype || null,
       isCrewMember: await isCrewMember(clerkUser.id)
     };
 

@@ -81,6 +81,7 @@ export async function GET() {
       profile.onboarded = dbUser.onboarded || false;
       profile.isCrewMember = await isCrewMember(user.id);
       profile.avatarUrl = dbUser.avatar_url || null;
+      profile.archetype = dbUser.reader_archetype || null;
     }
 
     return NextResponse.json({ success: true, profile });

@@ -1325,7 +1325,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         {/* Header */}
         <motion.div variants={itemVariants} className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 md:gap-8 pb-4 md:pb-8 border-b border-sage/10">
           <div className="w-full lg:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-8">
-            <PanguinAvatar lifetimeLeaves={lifetimeLeaves} avatarUrl={avatarUrl} variant="full" />
+            <PanguinAvatar lifetimeLeaves={lifetimeLeaves} avatarUrl={avatarUrl} variant="full" archetype={profile.archetype} />
             <div>
               <h1 className="text-2xl sm:text-4xl md:text-5xl font-display text-burgundy leading-none tracking-tight font-extrabold mb-2 md:mb-3">
                 Welcome back, <br className="sm:hidden" />
@@ -1765,6 +1765,14 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                             </div>
                             Rules & Onboarding Guide
                           </button>
+                        </li>
+                        <li>
+                          <Link href="/archetype" className="group text-ink/75 hover:text-accent font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors">
+                            <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
+                              <Award size={16} className="text-sage" />
+                            </div>
+                            {profile?.archetype ? "Retake Archetype Quiz" : "Reader Archetype Quiz"}
+                          </Link>
                         </li>
                       </ul>
                     </div>
@@ -2506,6 +2514,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                         avatarUrl={avatarUrl} 
                         variant="full" 
                         className="justify-center text-center" 
+                        archetype={profile.archetype}
                       />
 
                       {/* Custom Upload Button */}

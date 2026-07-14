@@ -73,7 +73,8 @@ export default async function VillagePage() {
       weeklyReviews: parseInt(reviewsCount?.count || 0),
       lkId: dbUser.lk_id || 'Guest',
       name: dbUser.full_name || 'Writer',
-      avatarUrl: dbUser.avatar_url || null
+      avatarUrl: dbUser.avatar_url || null,
+      archetype: dbUser.reader_archetype || null
     };
   }
 
