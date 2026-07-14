@@ -30,6 +30,13 @@ export default function ArchetypeQuizPage() {
   const [newLeavesBalance, setNewLeavesBalance] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Live profile details from /api/me
+  const [dbProfile, setDbProfile] = useState(null);
+  
+  // Book Club Soulmates State
+  const [soulmates, setSoulmates] = useState([]);
+  const [loadingSoulmates, setLoadingSoulmates] = useState(false);
+
   const canvasRef = useRef(null);
 
   // Trigger confetti burst on reveal
@@ -41,6 +48,36 @@ export default function ArchetypeQuizPage() {
     });
   };
 
+  // 1. Fetch live profile details on load if logged in (resolves static NextAuth "Anonymous" token issues)
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetch('/api/me')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.profile) {
+            setDbProfile(data.profile);
+          }
+        })
+        .catch(err => console.error("Error fetching live profile in quiz:", err));
+    }
+  }, [isLoggedIn]);
+
+  // 2. Fetch Book Club Soulmates when archetype results are loaded
+  useEffect(() => {
+    if (result && result.id) {
+      setLoadingSoulmates(true);
+      fetch(`/api/archetype?archetype=${result.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.soulmates) {
+            setSoulmates(data.soulmates);
+          }
+        })
+        .catch(err => console.error("Error fetching soulmates:", err))
+        .finally(() => setLoadingSoulmates(false));
+    }
+  }, [result]);
+
   const handleStart = () => {
     setStarted(true);
     setCurrentQuestionIndex(0);
@@ -50,6 +87,7 @@ export default function ArchetypeQuizPage() {
     setSaved(false);
     setRewarded(false);
     setErrorMessage("");
+    setSoulmates([]);
   };
 
   const handlePrevQuestion = () => {
@@ -68,7 +106,6 @@ export default function ArchetypeQuizPage() {
         setCurrentQuestionIndex(prev => prev + 1);
       }, 300);
     } else {
-      // Calculate results
       calculateResult(newAnswers);
     }
   };
@@ -133,12 +170,12 @@ export default function ArchetypeQuizPage() {
   };
 
   const getCardSubHeader = () => {
-    if (isLoggedIn && session?.user) {
-      const name = session.user.name || "Member";
-      const lkid = session.user.lkid || "LK-xxxx-xxxx";
-      return `PAPER THOUGHTS • ISSUED TO: ${name.toUpperCase()} (${lkid})`;
+    if (isLoggedIn) {
+      const name = dbProfile?.name || session?.user?.name || "Member";
+      const lkid = dbProfile?.lkid || session?.user?.lkid || "LK-xxxx-xxxx";
+      return `PAPER THOUGHTS • ASSIGNED TO: ${name.toUpperCase()} (${lkid})`;
     }
-    return "PAPER THOUGHTS • ISSUED TO: GUEST (JOIN THE ARCHIVE)";
+    return "PAPER THOUGHTS • ASSIGNED TO: GUEST (JOIN THE ARCHIVE)";
   };
 
   // Generate Image via HTML5 Canvas
@@ -410,29 +447,62 @@ export default function ArchetypeQuizPage() {
     }
     ctx.fillText(line, leftColX, lineY);
 
-    // C. Right Column - SOULMATES
+    // C. Right Column - FICTIONAL SOULMATES
     startY = 360;
     ctx.fillStyle = result.color;
     ctx.font = 'bold 13px sans-serif';
-    ctx.fillText('LITERARY SOULMATES', rightColX, startY);
+    ctx.fillText('FICTIONAL SOULMATES', rightColX, startY);
 
     ctx.fillStyle = 'rgba(44, 26, 14, 0.85)';
     ctx.font = '14px Georgia, serif';
-    result.literarySoulmates.forEach((soul, index) => {
+    result.literarySoulmates.slice(0, 3).forEach((soul, index) => {
       ctx.fillText(`♡  ${soul}`, rightColX, startY + 30 + (index * 25));
     });
 
-    // D. Right Column - AUTHORS
-    startY = 525;
+    // D. Right Column - AUTHORS YOU'LL LOVE
+    startY = 480;
     ctx.fillStyle = result.color;
     ctx.font = 'bold 13px sans-serif';
     ctx.fillText('AUTHORS YOU\'LL LOVE', rightColX, startY);
 
     ctx.fillStyle = 'rgba(44, 26, 14, 0.85)';
     ctx.font = '14px Georgia, serif';
-    result.authors.forEach((author, index) => {
+    result.authors.slice(0, 4).forEach((author, index) => {
       ctx.fillText(`•  ${author}`, rightColX, startY + 30 + (index * 25));
     });
+
+    // E. Right Column - BOOK CLUB SOULMATES
+    startY = 635;
+    ctx.fillStyle = result.color;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText('BOOK CLUB SOULMATES', rightColX, startY);
+
+    if (isLoggedIn) {
+      if (soulmates.length > 0) {
+        ctx.fillStyle = 'rgba(44, 26, 14, 0.85)';
+        ctx.font = 'bold 14px Georgia, serif';
+        soulmates.slice(0, 3).forEach((mate, index) => {
+          const text = `✨ ${mate.name}`;
+          const chapterText = `[${mate.chapter || 'Other'}]`;
+          ctx.fillText(text, rightColX, startY + 30 + (index * 30));
+          ctx.fillStyle = 'rgba(44, 26, 14, 0.4)';
+          ctx.font = '11px sans-serif';
+          ctx.fillText(chapterText, rightColX + 15, startY + 45 + (index * 30));
+          ctx.fillStyle = 'rgba(44, 26, 14, 0.85)';
+          ctx.font = 'bold 14px Georgia, serif';
+        });
+      } else {
+        ctx.fillStyle = 'rgba(44, 26, 14, 0.55)';
+        ctx.font = 'italic 12px Georgia, serif';
+        ctx.fillText('You are the pioneer of this archetype!', rightColX, startY + 30);
+        ctx.fillText('Invite friends to find your soulmates.', rightColX, startY + 50);
+      }
+    } else {
+      ctx.fillStyle = '#C96A42';
+      ctx.font = 'italic 12px Georgia, serif';
+      ctx.fillText('Join the Archive to unlock and connect', rightColX, startY + 30);
+      ctx.fillText('with your Book Club Soulmates!', rightColX, startY + 50);
+    }
 
     // Bottom Editorial Divider
     drawEditorialDivider(840);
@@ -825,16 +895,16 @@ export default function ArchetypeQuizPage() {
                     </p>
                   </div>
 
-                  {/* Details Columns */}
-                  <div className="space-y-5 my-auto text-left relative z-10">
-                    {/* Literary Soulmates */}
-                    <div className="space-y-1.5">
-                      <h4 className="text-[10px] font-sans font-bold uppercase tracking-wider" style={{ color: result.color }}>
-                        Literary Soulmates
+                  {/* Details Sections */}
+                  <div className="space-y-4 my-auto text-left relative z-10">
+                    {/* Fictional Soulmates */}
+                    <div className="space-y-1">
+                      <h4 className="text-[9px] font-sans font-bold uppercase tracking-wider" style={{ color: result.color }}>
+                        Fictional Soulmates
                       </h4>
-                      <ul className="text-[11px] text-ink/80 space-y-1 font-serif leading-relaxed font-semibold">
-                        {result.literarySoulmates.map((soul, i) => (
-                          <li key={i} className="flex items-center gap-1.5">
+                      <ul className="text-[10.5px] text-ink/80 space-y-0.5 font-serif leading-relaxed font-semibold">
+                        {result.literarySoulmates.slice(0, 3).map((soul, i) => (
+                          <li key={i} className="flex items-center gap-1">
                             <span style={{ color: result.color }}>♡</span> {soul}
                           </li>
                         ))}
@@ -842,17 +912,50 @@ export default function ArchetypeQuizPage() {
                     </div>
 
                     {/* Authors You'll Love */}
-                    <div className="space-y-1.5">
-                      <h4 className="text-[10px] font-sans font-bold uppercase tracking-wider" style={{ color: result.color }}>
+                    <div className="space-y-1">
+                      <h4 className="text-[9px] font-sans font-bold uppercase tracking-wider" style={{ color: result.color }}>
                         Authors You'll Love
                       </h4>
-                      <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-ink/80 font-serif leading-relaxed font-semibold">
-                        {result.authors.map((author, i) => (
-                          <div key={i} className="flex items-center gap-1.5">
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10.5px] text-ink/80 font-serif leading-relaxed font-semibold">
+                        {result.authors.slice(0, 4).map((author, i) => (
+                          <div key={i} className="flex items-center gap-1">
                             <span style={{ color: result.color }}>•</span> {author}
                           </div>
                         ))}
                       </div>
+                    </div>
+
+                    {/* Book Club Soulmates */}
+                    <div className="space-y-1">
+                      <h4 className="text-[9px] font-sans font-bold uppercase tracking-wider" style={{ color: result.color }}>
+                        Book Club Soulmates
+                      </h4>
+                      {isLoggedIn ? (
+                        loadingSoulmates ? (
+                          <div className="text-[10px] font-serif text-ink/40 flex items-center gap-1 py-1">
+                            <Loader2 size={10} className="animate-spin" /> Gathering soulmates...
+                          </div>
+                        ) : soulmates.length > 0 ? (
+                          <ul className="text-[10.5px] text-ink/80 space-y-0.5 font-serif leading-relaxed font-semibold">
+                            {soulmates.slice(0, 3).map((mate, i) => (
+                              <li key={i} className="flex items-center gap-1.5 justify-between">
+                                <span>✨ {mate.name}</span>
+                                <span className="text-[9px] font-sans font-bold text-ink/40 uppercase">
+                                  {mate.chapter || 'Other'}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-[10px] font-serif text-ink/50 italic py-0.5">
+                            You are the pioneer of this archetype! Invite friends to find your soulmates.
+                          </p>
+                        )
+                      ) : (
+                        <p className="text-[10px] font-serif text-[#C96A42] italic py-0.5">
+                          Join the Archive to unlock and connect with your Book Club Soulmates!
+                        </p>
+                      )}
                     </div>
                   </div>
 

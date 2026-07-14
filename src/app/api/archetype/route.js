@@ -86,3 +86,38 @@ export async function POST(request) {
     return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
   }
 }
+
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const archetype = searchParams.get('archetype');
+
+    if (!archetype) {
+      return NextResponse.json({ success: false, error: 'Archetype is required' }, { status: 400 });
+    }
+
+    const session = await auth();
+    const userId = session?.user?.id ? parseInt(session.user.id) : null;
+
+    let queryText = `
+      SELECT u.full_name as "name", u.lk_id as "lkid", c.name as "chapter"
+      FROM users u
+      LEFT JOIN chapters c ON c.id = u.chapter_id
+      WHERE u.reader_archetype = $1
+    `;
+    const params = [archetype];
+
+    if (userId) {
+      queryText += ` AND u.id != $2`;
+      params.push(userId);
+    }
+
+    queryText += ` ORDER BY RANDOM() LIMIT 4`;
+    const soulmates = await Database.query(queryText, params);
+
+    return NextResponse.json({ success: true, soulmates });
+  } catch (error) {
+    console.error('Archetype GET API error:', error);
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+  }
+}
