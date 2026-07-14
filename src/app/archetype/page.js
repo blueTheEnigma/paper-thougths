@@ -52,6 +52,12 @@ export default function ArchetypeQuizPage() {
     setErrorMessage("");
   };
 
+  const handlePrevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+    }
+  };
+
   const handleSelectOption = (archetypeId) => {
     const currentQuestion = QUESTIONS[currentQuestionIndex];
     const newAnswers = { ...answers, [currentQuestion.id]: archetypeId };
@@ -126,6 +132,15 @@ export default function ArchetypeQuizPage() {
     }
   };
 
+  const getCardSubHeader = () => {
+    if (isLoggedIn && session?.user) {
+      const name = session.user.name || "Member";
+      const lkid = session.user.lkid || "LK-xxxx-xxxx";
+      return `PAPER THOUGHTS • ISSUED TO: ${name.toUpperCase()} (${lkid})`;
+    }
+    return "PAPER THOUGHTS • ISSUED TO: GUEST (JOIN THE ARCHIVE)";
+  };
+
   // Generate Image via HTML5 Canvas
   const handleDownloadCard = () => {
     if (!result) return;
@@ -139,56 +154,178 @@ export default function ArchetypeQuizPage() {
     canvas.width = width;
     canvas.height = height;
 
-    // Draw background color (light warm cream)
-    ctx.fillStyle = '#FAF7F2';
+    // Draw aged parchment background gradient
+    const grad = ctx.createRadialGradient(width/2, height/2, 100, width/2, height/2, width * 0.9);
+    grad.addColorStop(0, '#FDFBF7');
+    grad.addColorStop(0.7, '#FAF4E8');
+    grad.addColorStop(1, '#EFE6D5');
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
 
     // Double borders
     ctx.strokeStyle = result.color;
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 5;
     ctx.strokeRect(20, 20, width - 40, height - 40);
 
     ctx.strokeStyle = '#C96A42';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(30, 30, width - 60, height - 60);
+    ctx.lineWidth = 1;
+    ctx.strokeRect(28, 28, width - 56, height - 56);
 
-    // Draw Corner Accents
-    ctx.fillStyle = result.color;
-    const drawAccent = (x, y) => {
-      ctx.fillRect(x, y, 12, 12);
+    // Draw Ornate Filigree Corner Accents
+    const drawOrnateCornerBrackets = () => {
+      ctx.strokeStyle = result.color;
+      ctx.lineWidth = 2.5;
+      
+      // Top Left
+      ctx.beginPath();
+      ctx.moveTo(35 + 40, 35);
+      ctx.lineTo(35, 35);
+      ctx.lineTo(35, 35 + 40);
+      ctx.stroke();
+
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(43 + 25, 43);
+      ctx.lineTo(43, 43);
+      ctx.lineTo(43, 43 + 25);
+      ctx.stroke();
+      
+      // Top Right
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(width - 35 - 40, 35);
+      ctx.lineTo(width - 35, 35);
+      ctx.lineTo(width - 35, 35 + 40);
+      ctx.stroke();
+
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(width - 43 - 25, 43);
+      ctx.lineTo(width - 43, 43);
+      ctx.lineTo(width - 43, 43 + 25);
+      ctx.stroke();
+
+      // Bottom Left
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(35 + 40, height - 35);
+      ctx.lineTo(35, height - 35);
+      ctx.lineTo(35, height - 35 - 40);
+      ctx.stroke();
+
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(43 + 25, height - 43);
+      ctx.lineTo(43, height - 43);
+      ctx.lineTo(43, height - 43 - 25);
+      ctx.stroke();
+
+      // Bottom Right
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(width - 35 - 40, height - 35);
+      ctx.lineTo(width - 35, height - 35);
+      ctx.lineTo(width - 35, height - 35 - 40);
+      ctx.stroke();
+
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(width - 43 - 25, height - 43);
+      ctx.lineTo(width - 43, height - 43);
+      ctx.lineTo(width - 43, height - 43 - 25);
+      ctx.stroke();
     };
-    drawAccent(33, 33);
-    drawAccent(width - 45, 33);
-    drawAccent(33, height - 45);
-    drawAccent(width - 45, height - 45);
+    drawOrnateCornerBrackets();
 
-    // Brand Header
-    ctx.fillStyle = 'rgba(44, 26, 14, 0.4)';
+    // Draw Background Watermark Book Icon
+    const drawBackgroundWatermark = () => {
+      ctx.save();
+      ctx.strokeStyle = result.color;
+      ctx.fillStyle = result.color;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.035; // Faint, subtle watermark
+      
+      const x = width / 2;
+      const y = height / 2 - 20;
+      const size = 180;
+      
+      // Draw open book path
+      ctx.beginPath();
+      // Left Page
+      ctx.moveTo(x, y + size/2);
+      ctx.bezierCurveTo(x - size/3, y + size/2 - size/4, x - size*0.8, y + size/2 - size/3, x - size, y + size/3);
+      ctx.lineTo(x - size, y - size/3);
+      ctx.bezierCurveTo(x - size*0.8, y - size/3 - size/3, x - size/3, y - size/3 - size/4, x, y - size/6);
+      // Right Page
+      ctx.bezierCurveTo(x + size/3, y - size/3 - size/4, x + size*0.8, y - size/3 - size/3, x + size, y - size/3);
+      ctx.lineTo(x + size, y + size/3);
+      ctx.bezierCurveTo(x + size*0.8, y + size/2 - size/3, x + size/3, y + size/2 - size/4, x, y + size/2);
+      ctx.stroke();
+
+      // Spine
+      ctx.beginPath();
+      ctx.moveTo(x, y - size/6);
+      ctx.lineTo(x, y + size/2);
+      ctx.stroke();
+
+      // Draw sprouting leaves from center
+      ctx.beginPath();
+      ctx.moveTo(x, y - size/6);
+      ctx.bezierCurveTo(x - 30, y - size/2, x - 50, y - size * 0.7, x - 10, y - size * 0.85);
+      ctx.bezierCurveTo(x - 5, y - size * 0.7, x - 5, y - size/2, x, y - size/6);
+      
+      ctx.moveTo(x, y - size/6);
+      ctx.bezierCurveTo(x + 30, y - size/2, x + 50, y - size * 0.7, x + 10, y - size * 0.85);
+      ctx.bezierCurveTo(x + 5, y - size * 0.7, x + 5, y - size/2, x, y - size/6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    };
+    drawBackgroundWatermark();
+
+    // Dynamic Sub-Header with Name & Lore Keeper ID
+    ctx.fillStyle = 'rgba(44, 26, 14, 0.55)';
     ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('P A P E R   T H O U G H T S   A R C H I V E', width / 2, 80);
+    ctx.fillText(getCardSubHeader(), width / 2, 85);
 
     // Emoji/Icon
     ctx.font = '72px sans-serif';
-    ctx.fillText(result.emoji, width / 2, 180);
+    ctx.fillText(result.emoji, width / 2, 185);
 
     // Archetype Title
     ctx.fillStyle = result.color;
     ctx.font = 'bold 36px Georgia, serif';
-    ctx.fillText(result.name.toUpperCase(), width / 2, 240);
+    ctx.fillText(result.name.toUpperCase(), width / 2, 245);
 
     // Tagline
     ctx.fillStyle = 'rgba(44, 26, 14, 0.7)';
     ctx.font = 'italic 18px Georgia, serif';
-    ctx.fillText(`"${result.tagline}"`, width / 2, 280);
+    ctx.fillText(`"${result.tagline}"`, width / 2, 285);
 
-    // Line Divider
-    ctx.strokeStyle = 'rgba(44, 26, 14, 0.1)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(100, 320);
-    ctx.lineTo(width - 100, 320);
-    ctx.stroke();
+    // Ornate Editorial Divider
+    const drawEditorialDivider = (yOffset) => {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(44, 26, 14, 0.12)';
+      ctx.lineWidth = 1;
+      
+      const x = width / 2;
+      ctx.beginPath();
+      ctx.moveTo(x - 120, yOffset);
+      ctx.lineTo(x - 18, yOffset);
+      ctx.moveTo(x + 18, yOffset);
+      ctx.lineTo(x + 120, yOffset);
+      ctx.stroke();
+      
+      // Draw floron (❦)
+      ctx.fillStyle = result.color;
+      ctx.font = '20px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('❦', x, yOffset + 7);
+      ctx.restore();
+    };
+    drawEditorialDivider(320);
 
     // 2-Column Details
     const colWidth = 280;
@@ -205,11 +342,9 @@ export default function ArchetypeQuizPage() {
     ctx.font = '14px Georgia, serif';
     let startY = 390;
     result.traits.forEach(trait => {
-      // Draw bullet
       ctx.fillStyle = result.color;
       ctx.fillText('•', leftColX, startY);
       
-      // Draw wrapped text
       ctx.fillStyle = 'rgba(44, 26, 14, 0.85)';
       const words = trait.split(' ');
       let line = '';
@@ -236,7 +371,6 @@ export default function ArchetypeQuizPage() {
     ctx.fillStyle = 'rgba(44, 26, 14, 0.85)';
     ctx.font = '14px Georgia, serif';
     
-    // Draw superpower text
     let words = result.superpower.split(' ');
     let line = '';
     let lineY = startY + 25;
@@ -260,7 +394,6 @@ export default function ArchetypeQuizPage() {
     ctx.fillStyle = 'rgba(44, 26, 14, 0.85)';
     ctx.font = '14px Georgia, serif';
 
-    // Draw kryptonite text
     words = result.kryptonite.split(' ');
     line = '';
     lineY = startY + 25;
@@ -301,33 +434,28 @@ export default function ArchetypeQuizPage() {
       ctx.fillText(`•  ${author}`, rightColX, startY + 30 + (index * 25));
     });
 
-    // Separator line
-    ctx.strokeStyle = 'rgba(44, 26, 14, 0.1)';
-    ctx.beginPath();
-    ctx.moveTo(100, 830);
-    ctx.lineTo(width - 100, 830);
-    ctx.stroke();
+    // Bottom Editorial Divider
+    drawEditorialDivider(840);
 
     // Catchphrase & Fun fact footer
     ctx.textAlign = 'center';
     ctx.fillStyle = result.color;
     ctx.font = 'bold 13px sans-serif';
-    ctx.fillText('CATCHPHRASE', width / 2, 880);
+    ctx.fillText('CATCHPHRASE', width / 2, 890);
 
     ctx.fillStyle = 'rgba(44, 26, 14, 0.9)';
     ctx.font = 'italic 18px Georgia, serif';
-    ctx.fillText(`"${result.catchphrase}"`, width / 2, 915);
+    ctx.fillText(`"${result.catchphrase}"`, width / 2, 925);
 
     ctx.fillStyle = 'rgba(44, 26, 14, 0.4)';
     ctx.font = 'bold 11px sans-serif';
-    ctx.fillText('FUN FACT', width / 2, 980);
+    ctx.fillText('FUN FACT', width / 2, 990);
 
-    // Draw fun fact wrapped
     ctx.fillStyle = 'rgba(44, 26, 14, 0.7)';
     ctx.font = '13px Georgia, serif';
     words = result.funFact.split(' ');
     line = '';
-    lineY = 1010;
+    lineY = 1020;
     for(let n = 0; n < words.length; n++) {
       let testLine = line + words[n] + ' ';
       let metrics = ctx.measureText(testLine);
@@ -344,11 +472,11 @@ export default function ArchetypeQuizPage() {
     // Footer decoration
     ctx.fillStyle = result.color;
     ctx.font = '24px Georgia, serif';
-    ctx.fillText('❦', width / 2, 1100);
+    ctx.fillText('❦', width / 2, 1105);
 
     ctx.font = '11px sans-serif';
     ctx.fillStyle = 'rgba(44, 26, 14, 0.3)';
-    ctx.fillText('DISCOVER YOUR ARCHETYPE AT PAPERTHOUGHTS.ORG', width / 2, 1140);
+    ctx.fillText('DISCOVER YOUR ARCHETYPE AT PAPERTHOUGHTS.ORG', width / 2, 1145);
 
     // Trigger download
     const url = canvas.toDataURL('image/jpeg', 0.95);
@@ -359,7 +487,7 @@ export default function ArchetypeQuizPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FDFBF7] selection:bg-primary/20 relative py-20 px-4 md:px-6">
+    <main className="min-h-screen bg-[#FDFBF7] selection:bg-primary/20 relative py-8 md:py-12 px-4 md:px-6">
       
       {/* Background decoration elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -367,7 +495,7 @@ export default function ArchetypeQuizPage() {
         <div className="absolute top-1/2 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-4xl mx-auto relative z-10 pt-10">
+      <div className="max-w-4xl mx-auto relative z-10 pt-2 md:pt-4">
         
         {/* Standalone Canvas (Hidden) for JPEG generation */}
         <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
@@ -416,11 +544,22 @@ export default function ArchetypeQuizPage() {
 
         {/* 2. QUESTION SCREEN */}
         {started && !result && (
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto mt-6">
             {/* Header progress bar */}
             <div className="mb-8 space-y-3">
               <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-ink/40">
-                <span>Scenario {currentQuestionIndex + 1} of {QUESTIONS.length}</span>
+                <div className="flex items-center gap-2.5">
+                  {currentQuestionIndex > 0 && (
+                    <button 
+                      onClick={handlePrevQuestion}
+                      className="hover:text-burgundy flex items-center gap-1 cursor-pointer transition-colors font-sans text-[10px] font-extrabold uppercase bg-sage/5 hover:bg-burgundy/5 border border-sage/15 px-2.5 py-1 rounded"
+                    >
+                      <ArrowLeft size={10} /> Back
+                    </button>
+                  )}
+                  {currentQuestionIndex > 0 && <span className="text-ink/20">|</span>}
+                  <span>Scenario {currentQuestionIndex + 1} of {QUESTIONS.length}</span>
+                </div>
                 <span>{Math.round(((currentQuestionIndex + 1) / QUESTIONS.length) * 100)}% Complete</span>
               </div>
               <div className="w-full h-1 bg-sage/10 rounded-full overflow-hidden border border-sage/5">
@@ -470,7 +609,7 @@ export default function ArchetypeQuizPage() {
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="space-y-10 py-4 max-w-3xl mx-auto"
+            className="space-y-6 py-2 max-w-3xl mx-auto"
           >
             {/* Success Reward notification */}
             {saved && rewarded && (
@@ -491,8 +630,8 @@ export default function ArchetypeQuizPage() {
               </motion.div>
             )}
 
-            {/* Back to dashboard button (only if logged in) */}
-            <div className="flex justify-between items-center max-w-xl mx-auto">
+            {/* Top Navigation Row */}
+            <div className="flex justify-between items-center max-w-xl mx-auto px-4">
               <button 
                 onClick={handleStart}
                 className="text-[10px] font-sans font-bold uppercase tracking-widest text-ink/40 hover:text-burgundy flex items-center gap-1 cursor-pointer"
@@ -517,9 +656,9 @@ export default function ArchetypeQuizPage() {
               )}
             </div>
 
-            {/* Interactive Flip Card Container */}
+            {/* Interactive Breathtaking Card Container */}
             <div 
-              className="relative w-full max-w-md mx-auto h-[680px] perspective-[1200px] cursor-pointer"
+              className="relative w-full max-w-md mx-auto h-[660px] perspective-[1200px] cursor-pointer"
               onClick={() => setIsFlipped(!isFlipped)}
             >
               <motion.div
@@ -530,22 +669,46 @@ export default function ArchetypeQuizPage() {
                 
                 {/* A. FRONT OF CARD (Main Infographic summary) */}
                 <div 
-                  className="absolute inset-0 backface-hidden bg-white rounded-[40px] border-4 p-8 shadow-2xl flex flex-col justify-between"
+                  className="absolute inset-0 backface-hidden bg-[#FAF7F2] rounded-[36px] border-4 p-8 shadow-2xl flex flex-col justify-between overflow-hidden"
                   style={{ 
-                    backgroundImage: result.gradient,
                     borderColor: result.color
                   }}
                 >
-                  {/* Outer Gold border inside */}
-                  <div className="absolute inset-2 border border-[#C96A42]/10 pointer-events-none rounded-[36px]" />
+                  {/* Parchment background overlay gradient */}
+                  <div 
+                    className="absolute inset-0 opacity-95 pointer-events-none"
+                    style={{
+                      background: 'radial-gradient(circle at center, #FDFBF7 0%, #FAF4E8 70%, #EFE6D5 100%)'
+                    }}
+                  />
+
+                  {/* Ornate corner brackets */}
+                  <div className="absolute top-4 left-4 w-10 h-10 border-t-2 border-l-2" style={{ borderColor: result.color }} />
+                  <div className="absolute top-4 right-4 w-10 h-10 border-t-2 border-r-2" style={{ borderColor: result.color }} />
+                  <div className="absolute bottom-4 left-4 w-10 h-10 border-b-2 border-l-2" style={{ borderColor: result.color }} />
+                  <div className="absolute bottom-4 right-4 w-10 h-10 border-b-2 border-r-2" style={{ borderColor: result.color }} />
+
+                  {/* Ornate inner corner bracket lines */}
+                  <div className="absolute top-6 left-6 w-6 h-6 border-t border-l opacity-30" style={{ borderColor: result.color }} />
+                  <div className="absolute top-6 right-6 w-6 h-6 border-t border-r opacity-30" style={{ borderColor: result.color }} />
+                  <div className="absolute bottom-6 left-6 w-6 h-6 border-b border-l opacity-30" style={{ borderColor: result.color }} />
+                  <div className="absolute bottom-6 right-6 w-6 h-6 border-b border-r opacity-30" style={{ borderColor: result.color }} />
+
+                  {/* Background open-book watermark */}
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.035]" viewBox="0 0 100 120" fill="none" stroke="currentColor" style={{ color: result.color }}>
+                    <path d="M50,70 C40,70 25,67 15,60 L15,20 C25,27 40,30 50,30 C60,30 75,27 85,20 L85,60 C75,67 60,70 50,70 Z" strokeWidth="1.5" />
+                    <line x1="50" y1="30" x2="50" y2="70" strokeWidth="1.5" />
+                    <path d="M50,30 C45,22 42,12 38,7 C45,10 48,18 50,30 Z" fill="currentColor" />
+                    <path d="M50,30 C55,22 58,12 62,7 C55,10 52,18 50,30 Z" fill="currentColor" />
+                  </svg>
 
                   {/* Header */}
                   <div className="text-center relative z-10">
-                    <span className="text-[9px] font-sans font-bold tracking-[0.2em] text-ink/40 uppercase block mb-1">
-                      Reader Archetype Card
+                    <span className="text-[8.5px] font-sans font-bold tracking-[0.1em] text-ink/55 uppercase block mb-1">
+                      {getCardSubHeader()}
                     </span>
                     <div className="text-5xl mb-2">{result.emoji}</div>
-                    <h2 className="text-3xl font-display font-extrabold leading-tight tracking-tight uppercase" style={{ color: result.color }}>
+                    <h2 className="text-2xl sm:text-3xl font-display font-extrabold leading-tight tracking-tight uppercase" style={{ color: result.color }}>
                       {result.name}
                     </h2>
                     <p className="text-xs text-ink/65 italic font-serif leading-relaxed mt-1">
@@ -553,11 +716,18 @@ export default function ArchetypeQuizPage() {
                     </p>
                   </div>
 
+                  {/* Editorial Divider */}
+                  <div className="flex items-center justify-center gap-4 my-2 opacity-25 relative z-10">
+                    <div className="h-[1px] w-20 bg-ink/70" />
+                    <span className="text-xs font-serif" style={{ color: result.color }}>❦</span>
+                    <div className="h-[1px] w-20 bg-ink/70" />
+                  </div>
+
                   {/* Body Info Sections */}
                   <div className="space-y-4 my-auto relative z-10 text-left">
                     {/* Traits */}
                     <div className="space-y-1">
-                      <h4 className="text-[10px] font-sans font-bold uppercase tracking-wider opacity-55" style={{ color: result.color }}>
+                      <h4 className="text-[10px] font-sans font-bold uppercase tracking-wider opacity-60" style={{ color: result.color }}>
                         Traits
                       </h4>
                       <ul className="text-[11px] text-ink/80 list-disc pl-4 space-y-0.5 font-serif font-medium leading-relaxed">
@@ -588,8 +758,15 @@ export default function ArchetypeQuizPage() {
                     </div>
                   </div>
 
+                  {/* Editorial Divider Bottom */}
+                  <div className="flex items-center justify-center gap-4 my-2 opacity-25 relative z-10">
+                    <div className="h-[1px] w-20 bg-ink/70" />
+                    <span className="text-xs font-serif" style={{ color: result.color }}>❦</span>
+                    <div className="h-[1px] w-20 bg-ink/70" />
+                  </div>
+
                   {/* Footer (Witty quote block) */}
-                  <div className="text-center relative z-10 pt-4 border-t border-sage/10">
+                  <div className="text-center relative z-10 pb-2">
                     <span className="text-[8px] font-sans font-bold tracking-wider text-ink/40 uppercase block mb-1">
                       Signature Catchphrase
                     </span>
@@ -605,13 +782,37 @@ export default function ArchetypeQuizPage() {
 
                 {/* B. BACK OF CARD (Recommendations, Soulmates, Authors) */}
                 <div 
-                  className="absolute inset-0 backface-hidden bg-white rounded-[40px] border-4 p-8 shadow-2xl flex flex-col justify-between [transform:rotateY(180deg)]"
+                  className="absolute inset-0 backface-hidden bg-[#FAF7F2] rounded-[36px] border-4 p-8 shadow-2xl flex flex-col justify-between [transform:rotateY(180deg)] overflow-hidden"
                   style={{ 
-                    backgroundImage: result.gradient,
                     borderColor: result.color
                   }}
                 >
-                  <div className="absolute inset-2 border border-[#C96A42]/10 pointer-events-none rounded-[36px]" />
+                  <div 
+                    className="absolute inset-0 opacity-95 pointer-events-none"
+                    style={{
+                      background: 'radial-gradient(circle at center, #FDFBF7 0%, #FAF4E8 70%, #EFE6D5 100%)'
+                    }}
+                  />
+
+                  {/* Ornate corner brackets */}
+                  <div className="absolute top-4 left-4 w-10 h-10 border-t-2 border-l-2" style={{ borderColor: result.color }} />
+                  <div className="absolute top-4 right-4 w-10 h-10 border-t-2 border-r-2" style={{ borderColor: result.color }} />
+                  <div className="absolute bottom-4 left-4 w-10 h-10 border-b-2 border-l-2" style={{ borderColor: result.color }} />
+                  <div className="absolute bottom-4 right-4 w-10 h-10 border-b-2 border-r-2" style={{ borderColor: result.color }} />
+
+                  {/* Ornate inner corner bracket lines */}
+                  <div className="absolute top-6 left-6 w-6 h-6 border-t border-l opacity-30" style={{ borderColor: result.color }} />
+                  <div className="absolute top-6 right-6 w-6 h-6 border-t border-r opacity-30" style={{ borderColor: result.color }} />
+                  <div className="absolute bottom-6 left-6 w-6 h-6 border-b border-l opacity-30" style={{ borderColor: result.color }} />
+                  <div className="absolute bottom-6 right-6 w-6 h-6 border-b border-r opacity-30" style={{ borderColor: result.color }} />
+
+                  {/* Background open-book watermark */}
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.035]" viewBox="0 0 100 120" fill="none" stroke="currentColor" style={{ color: result.color }}>
+                    <path d="M50,70 C40,70 25,67 15,60 L15,20 C25,27 40,30 50,30 C60,30 75,27 85,20 L85,60 C75,67 60,70 50,70 Z" strokeWidth="1.5" />
+                    <line x1="50" y1="30" x2="50" y2="70" strokeWidth="1.5" />
+                    <path d="M50,30 C45,22 42,12 38,7 C45,10 48,18 50,30 Z" fill="currentColor" />
+                    <path d="M50,30 C55,22 58,12 62,7 C55,10 52,18 50,30 Z" fill="currentColor" />
+                  </svg>
 
                   {/* Header */}
                   <div className="text-center relative z-10 border-b border-sage/10 pb-3">
