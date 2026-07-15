@@ -1337,6 +1337,13 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                 <span className="flex items-center gap-1.5 text-ink/60 font-bold"><MapPin size={12} className="text-sage"/> {profile.chapter}</span>
                 <span className="text-ink/30">•</span>
                 <button 
+                  onClick={() => setActiveTab('settings')}
+                  className="flex items-center gap-1.5 text-ink/50 hover:text-burgundy font-bold cursor-pointer transition-colors border border-sage/15 bg-white/40 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs"
+                >
+                  <Settings size={12} /> Edit Profile
+                </button>
+                <span className="text-ink/30">•</span>
+                <button 
                   onClick={() => setShowPortal(true)}
                   className="bg-accent/15 hover:bg-accent hover:text-cream text-accent font-bold text-xs px-3.5 py-1.5 rounded-lg border border-accent/30 uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all duration-200"
                 >
@@ -1735,6 +1742,30 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                       </button>
                     </div>
 
+                    {/* WhatsApp Community Invitation */}
+                    <div className="parchment-card p-5 sm:p-8 relative overflow-hidden group flex flex-col justify-between">
+                      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform pointer-events-none">
+                        <MessageSquare size={100} className="text-[#25D366]" />
+                      </div>
+                      <div className="relative z-10 space-y-4">
+                        <span className="text-[9px] font-sans font-bold uppercase tracking-[0.25em] text-[#25D366] bg-[#25D366]/10 px-2.5 py-1 rounded inline-block">
+                          WhatsApp Community
+                        </span>
+                        <h3 className="font-display font-extrabold text-2xl text-burgundy mt-1 leading-tight">Join the Homeland</h3>
+                        <p className="text-xs text-ink/70 leading-relaxed font-serif">
+                          Connect with fellow book lovers in the main clubhouse group chat. Chat about literature, meet members, and stay updated.
+                        </p>
+                        <a 
+                          href="https://chat.whatsapp.com/DGDfnoZCM2mH6xqC8cK6Ez"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white py-3.5 rounded-xl font-bold transition-all shadow-md active:scale-[0.98] text-xs uppercase tracking-wider font-sans cursor-pointer mt-2"
+                        >
+                          <MessageSquare size={14} /> Join WhatsApp Group
+                        </a>
+                      </div>
+                    </div>
+
                     {/* Quick Links */}
                     <div className="parchment-card p-5 sm:p-8">
                       <h3 className="font-bold text-ink mb-6 uppercase tracking-[0.2em] text-[10px] border-b border-sage/10 pb-3">Quick Navigation</h3>
@@ -1773,6 +1804,19 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                             </div>
                             {profile?.archetype ? "Retake Archetype Quiz" : "Reader Archetype Quiz"}
                           </Link>
+                        </li>
+                        <li>
+                          <a 
+                            href="https://chat.whatsapp.com/DGDfnoZCM2mH6xqC8cK6Ez"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group text-ink/75 hover:text-[#25D366] font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors"
+                          >
+                            <div className="p-2 bg-[#25D366]/5 rounded-lg group-hover:bg-[#25D366]/10 transition-colors">
+                              <MessageSquare size={16} className="text-[#25D366]" />
+                            </div>
+                            Join WhatsApp Community
+                          </a>
                         </li>
                       </ul>
                     </div>

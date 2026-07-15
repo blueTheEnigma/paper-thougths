@@ -186,7 +186,7 @@ function CrossingPageContent() {
     if (activeLink) {
       window.open(activeLink, '_blank', 'noopener,noreferrer');
     } else {
-      window.open('https://chat.whatsapp.com/EPa2bvogYm55jDkncsjLff?s=cl&p=a&ilr=0', '_blank', 'noopener,noreferrer');
+      window.open('https://chat.whatsapp.com/DGDfnoZCM2mH6xqC8cK6Ez', '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -709,7 +709,7 @@ function CrossingPageContent() {
               </div>
 
               <a
-                href={whatsappGroupLink || 'https://chat.whatsapp.com/EPa2bvogYm55jDkncsjLff?s=cl&p=a&ilr=0'}
+                href={whatsappGroupLink || 'https://chat.whatsapp.com/DGDfnoZCM2mH6xqC8cK6Ez'}
                 target="_blank"
                 rel="noreferrer"
                 className="btn-primary inline-flex items-center gap-2 text-sm shadow-md"

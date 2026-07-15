@@ -728,20 +728,24 @@ export default function ArchetypeQuizPage() {
 
             {/* Interactive Breathtaking Card Container */}
             <div 
-              className="relative w-full max-w-md mx-auto h-[660px] perspective-[1200px] cursor-pointer"
+              className="relative w-full max-w-md mx-auto h-[660px] cursor-pointer"
+              style={{ perspective: '1200px', WebkitPerspective: '1200px' }}
               onClick={() => setIsFlipped(!isFlipped)}
             >
               <motion.div
-                className="w-full h-full relative preserve-3d"
+                className="w-full h-full relative"
+                style={{ transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d' }}
                 animate={{ rotateY: isFlipped ? 180 : 0 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
               >
                 
                 {/* A. FRONT OF CARD (Main Infographic summary) */}
                 <div 
-                  className="absolute inset-0 backface-hidden bg-[#FAF7F2] rounded-[36px] border-4 p-8 shadow-2xl flex flex-col justify-between overflow-hidden"
+                  className="absolute inset-0 bg-[#FAF7F2] rounded-[36px] border-4 p-8 shadow-2xl flex flex-col justify-between overflow-hidden"
                   style={{ 
-                    borderColor: result.color
+                    borderColor: result.color,
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden'
                   }}
                 >
                   {/* Parchment background overlay gradient */}
@@ -852,9 +856,12 @@ export default function ArchetypeQuizPage() {
 
                 {/* B. BACK OF CARD (Recommendations, Soulmates, Authors) */}
                 <div 
-                  className="absolute inset-0 backface-hidden bg-[#FAF7F2] rounded-[36px] border-4 p-8 shadow-2xl flex flex-col justify-between [transform:rotateY(180deg)] overflow-hidden"
+                  className="absolute inset-0 bg-[#FAF7F2] rounded-[36px] border-4 p-8 shadow-2xl flex flex-col justify-between overflow-hidden"
                   style={{ 
-                    borderColor: result.color
+                    borderColor: result.color,
+                    transform: 'rotateY(180deg)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden'
                   }}
                 >
                   <div 
