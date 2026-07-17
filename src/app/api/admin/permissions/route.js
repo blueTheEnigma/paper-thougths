@@ -3,7 +3,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser } from '@/lib/permissions';
 
-const SUPERADMIN_EMAIL = "umorgan2001@gmail.com";
+const SUPERADMIN_EMAILS = ["umorgan2001@gmail.com", "paperthoughts01@gmail.com"];
 
 export async function POST(request) {
   try {
@@ -19,7 +19,7 @@ export async function POST(request) {
 
     // Only Superadmin is authorized to modify permissions
     const email = (clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
-    const isSuperadmin = email === SUPERADMIN_EMAIL.toLowerCase();
+    const isSuperadmin = SUPERADMIN_EMAILS.includes(email);
     if (!isSuperadmin) {
       return NextResponse.json({ success: false, error: 'Access denied: Superadmin privileges required.' }, { status: 403 });
     }
@@ -32,8 +32,15 @@ export async function POST(request) {
     }
 
     // Sanitize permissions to only allow seeded ones
-    const allowedPermissions = ['moderate_submissions', 'manage_chapter_events', 'view_sales_logs'];
+    const allowedPermissions = ['moderate_submissions', 'manage_chapter_events', 'view_sales_logs', 'community_manager'];
     const sanitizedPermissions = permissions.filter(p => allowedPermissions.includes(p));
+
+    // Ensure the new community_manager permission is seeded in the database
+    await Database.query(`
+      INSERT INTO permissions (permission_key) 
+      VALUES ('community_manager') 
+      ON CONFLICT (permission_key) DO NOTHING
+    `);
 
     // Update inside a transaction
     await Database.transaction(async (client) => {

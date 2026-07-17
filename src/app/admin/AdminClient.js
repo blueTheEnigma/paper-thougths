@@ -1609,6 +1609,12 @@ export default function AdminClient({
                     title: 'Sales Representative',
                     desc: 'Grants access to view bookstore orders, sales ledgers, and metrics.',
                     color: 'border-blue-300'
+                  },
+                  {
+                    key: 'community_manager',
+                    title: 'Community Manager',
+                    desc: 'Grants access to view member directory, upcoming birthdays, and clubhouse activity.',
+                    color: 'border-emerald-300'
                   }
                 ].map((role) => {
                   const checked = selectedRoles.includes(role.key);
