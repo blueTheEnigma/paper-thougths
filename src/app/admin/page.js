@@ -27,8 +27,18 @@ export default async function AdminPage() {
   const email = (user.primaryEmailAddress?.emailAddress || user.emailAddresses?.[0]?.emailAddress || "").toLowerCase();
   const isSuperadmin = SUPERADMIN_EMAILS.includes(email);
 
-  // If user has no admin permissions and isn't the superadmin, bounce them back to dashboard
-  if (permissions.length === 0 && !isSuperadmin) {
+  const communityManagerRes = await Database.queryOne(`
+    SELECT 1 FROM crew_members cm
+    LEFT JOIN crew_member_departments cmd ON cmd.crew_member_id = cm.id
+    LEFT JOIN crew_departments cd ON cd.id = cmd.department_id
+    WHERE cm.user_id = $1 
+      AND cm.is_active = TRUE 
+      AND (cd.name = 'Events & Community' OR cm.role = 'admin')
+  `, [dbUser.id]);
+  const isCommunityManager = !!communityManagerRes || permissions.includes('manage_chapter_events');
+
+  // If user has no admin permissions, isn't the superadmin, and isn't a community manager, bounce them back to dashboard
+  if (permissions.length === 0 && !isSuperadmin && !isCommunityManager) {
     redirect('/dashboard');
   }
 
@@ -148,6 +158,7 @@ export default async function AdminPage() {
       initialBirthdays={upcomingBirthdays}
       userPermissions={permissions}
       isSuperadmin={isSuperadmin}
+      isCommunityManager={isCommunityManager}
     />
   );
 }

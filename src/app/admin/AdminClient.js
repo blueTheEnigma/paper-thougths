@@ -34,9 +34,45 @@ export default function AdminClient({
   initialBotm,
   initialBirthdays = [],
   userPermissions,
-  isSuperadmin
+  isSuperadmin,
+  isCommunityManager
 }) {
-  const [activeTab, setActiveTab] = useState('members');
+  const allTabs = [
+    { id: 'members', label: 'Members Ledger', icon: Users },
+    { id: 'submissions', label: 'Submissions Moderation', icon: BookOpen },
+    { id: 'orders', label: 'Bookstore Orders', icon: ShoppingBag },
+    { id: 'pools', label: 'Chapter Pools', icon: MapPin },
+    { id: 'prompts', label: 'Weekly Prompts', icon: FileText },
+    { id: 'botm', label: 'Book of the Month', icon: Book },
+    { id: 'leaderboard', label: 'Monthly Honors 🏆', icon: Award },
+    { id: 'birthdays', label: 'Birthdays 🎂', icon: Cake },
+  ];
+
+  const visibleTabs = allTabs.filter(tab => {
+    if (isSuperadmin) return true;
+    const permissions = userPermissions || [];
+    switch (tab.id) {
+      case 'members':
+        return permissions.includes('manage_chapter_events') || isCommunityManager;
+      case 'submissions':
+      case 'prompts':
+      case 'botm':
+      case 'leaderboard':
+        return permissions.includes('moderate_submissions');
+      case 'orders':
+        return permissions.includes('view_sales_logs');
+      case 'pools':
+        return permissions.includes('manage_chapter_events');
+      case 'birthdays':
+        return permissions.includes('manage_chapter_events') || isCommunityManager;
+      default:
+        return false;
+    }
+  });
+
+  const [activeTab, setActiveTab] = useState(() => {
+    return visibleTabs.length > 0 ? visibleTabs[0].id : 'members';
+  });
   const [members, setMembers] = useState(initialMembers || []);
   const [submissions, setSubmissions] = useState(initialSubmissions || []);
   const [orders] = useState(initialOrders || []);
@@ -412,16 +448,7 @@ export default function AdminClient({
 
         {/* Tab Selector */}
         <div className="flex border-b border-sage/20 mb-8 overflow-x-auto scrollbar-hide gap-6">
-          {[
-            { id: 'members', label: 'Members Ledger', icon: Users },
-            { id: 'submissions', label: 'Submissions Moderation', icon: BookOpen },
-            { id: 'orders', label: 'Bookstore Orders', icon: ShoppingBag },
-            { id: 'pools', label: 'Chapter Pools', icon: MapPin },
-            { id: 'prompts', label: 'Weekly Prompts', icon: FileText },
-            { id: 'botm', label: 'Book of the Month', icon: Book },
-            { id: 'leaderboard', label: 'Monthly Honors 🏆', icon: Award },
-            { id: 'birthdays', label: 'Birthdays 🎂', icon: Cake },
-          ].map((tab) => {
+          {visibleTabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
             return (
@@ -1427,7 +1454,14 @@ export default function AdminClient({
                       const whatsappText = encodeURIComponent(
                         `Happy Birthday, ${member.name}! 🎂📚 The whole Paper Thoughts family is wishing you an amazing day. Keep reading and keep writing — we're so glad you're one of us!`
                       );
-                      const cleanedPhone = member.whatsapp ? member.whatsapp.replace(/\D/g, '') : '';
+                      let cleanedPhone = member.whatsapp ? member.whatsapp.replace(/\D/g, '') : '';
+                      if (cleanedPhone) {
+                        if (cleanedPhone.startsWith('0') && cleanedPhone.length === 11) {
+                          cleanedPhone = '234' + cleanedPhone.substring(1);
+                        } else if (cleanedPhone.length === 10 && !cleanedPhone.startsWith('234')) {
+                          cleanedPhone = '234' + cleanedPhone;
+                        }
+                      }
                       const whatsappUrl = `https://wa.me/${cleanedPhone}?text=${whatsappText}`;
 
                       return (

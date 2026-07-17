@@ -6,7 +6,8 @@ import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, CheckCircle2, Loader2, Lock, Unlock, 
-  ArrowRight, Gift, Compass, BookOpen, Download, HelpCircle, Copy
+  ArrowRight, Gift, Compass, BookOpen, Download, HelpCircle, Copy,
+  MessageSquare
 } from 'lucide-react';
 import { REALMS, CROSSING_CONFIG, MAX_POINTS, MIN_PASSAGE_POINTS, GIFT_THRESHOLD_POINTS, ACCORD } from '@/lib/crossingConfig';
 
@@ -688,6 +689,31 @@ function CrossingPageContent() {
                 </div>
               )}
 
+              {/* WhatsApp Prominent Entry Card */}
+              <div className="bg-[#E6F8ED] border border-[#25D366]/20 rounded-3xl p-6 sm:p-8 max-w-xl mx-auto mb-8 text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                  <MessageSquare size={100} className="text-[#25D366]" />
+                </div>
+                <div className="relative z-10 space-y-4">
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-[#25D366] bg-[#25D366]/10 px-2.5 py-1 rounded inline-block">
+                    Clubhouse Community
+                  </span>
+                  <h3 className="font-display font-extrabold text-xl text-burgundy mt-1">Enter the Homeland</h3>
+                  <p className="text-xs text-ink/70 leading-relaxed font-serif">
+                    Join the main WhatsApp collective where crossers chat, debate literary themes, and organize chapter meetings.
+                  </p>
+                  <a
+                    href={whatsappGroupLink || 'https://chat.whatsapp.com/DGDfnoZCM2mH6xqC8cK6Ez'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white py-3.5 rounded-xl font-bold transition-all shadow-md active:scale-[0.98] text-xs uppercase tracking-wider font-sans cursor-pointer mt-2"
+                  >
+                    <MessageSquare size={14} /> Join WhatsApp Group
+                    <ArrowRight size={14} />
+                  </a>
+                </div>
+              </div>
+
               {/* Copyable Declaration Card */}
               <div className="bg-[#FFF5EC] border border-burgundy/10 rounded-2xl p-6 max-w-xl mx-auto mb-8 text-left relative overflow-hidden">
                 <span className="text-[10px] font-bold text-burgundy/50 uppercase tracking-widest block mb-2">Declaration of Passage</span>
@@ -707,16 +733,6 @@ function CrossingPageContent() {
                   {declCopied ? 'Declaration Copied!' : 'Copy Declaration to Clipboard'}
                 </button>
               </div>
-
-              <a
-                href={whatsappGroupLink || 'https://chat.whatsapp.com/DGDfnoZCM2mH6xqC8cK6Ez'}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-primary inline-flex items-center gap-2 text-sm shadow-md"
-              >
-                Enter the Homeland (WhatsApp Group)
-                <ArrowRight size={16} />
-              </a>
 
               {totalPoints >= GIFT_THRESHOLD_POINTS && (
                 <p className="text-xs text-sage font-bold uppercase tracking-wider mt-4">
