@@ -35,7 +35,7 @@ export default async function AdminPage() {
       AND cm.is_active = TRUE 
       AND (cd.name = 'Events & Community' OR cm.role = 'admin')
   `, [dbUser.id]);
-  const isCommunityManager = !!communityManagerRes || permissions.includes('manage_chapter_events');
+  const isCommunityManager = !!communityManagerRes || permissions.includes('community_manager') || permissions.includes('manage_chapter_events');
 
   // If user has no admin permissions, isn't the superadmin, and isn't a community manager, bounce them back to dashboard
   if (permissions.length === 0 && !isSuperadmin && !isCommunityManager) {
@@ -131,8 +131,26 @@ export default async function AdminPage() {
   today.setHours(0, 0, 0, 0);
 
   const upcomingBirthdays = allUsersWithBirthdays.map(member => {
-    const bdayDate = new Date(member.birthday);
-    const nextBday = new Date(today.getFullYear(), bdayDate.getMonth(), bdayDate.getDate());
+    let bMonth = 0;
+    let bDay = 1;
+    let birthdayStr = null;
+
+    if (member.birthday) {
+      if (typeof member.birthday === 'string') {
+        birthdayStr = member.birthday.split('T')[0];
+      } else if (member.birthday instanceof Date) {
+        birthdayStr = member.birthday.toISOString().split('T')[0];
+      } else {
+        birthdayStr = String(member.birthday).split('T')[0];
+      }
+      const parts = birthdayStr.split('-').map(Number);
+      if (parts.length === 3 && !isNaN(parts[1]) && !isNaN(parts[2])) {
+        bMonth = parts[1] - 1;
+        bDay = parts[2];
+      }
+    }
+
+    const nextBday = new Date(today.getFullYear(), bMonth, bDay);
     if (nextBday < today) {
       nextBday.setFullYear(today.getFullYear() + 1);
     }
@@ -140,7 +158,7 @@ export default async function AdminPage() {
     const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return {
       ...member,
-      birthday: member.birthday ? new Date(member.birthday).toISOString().split('T')[0] : null,
+      birthday: birthdayStr,
       daysUntil
     };
   })

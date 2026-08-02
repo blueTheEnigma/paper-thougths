@@ -53,7 +53,7 @@ export default function AdminClient({
     const permissions = userPermissions || [];
     switch (tab.id) {
       case 'members':
-        return permissions.includes('manage_chapter_events') || isCommunityManager;
+        return permissions.includes('manage_chapter_events') || permissions.includes('community_manager') || isCommunityManager;
       case 'submissions':
       case 'prompts':
       case 'botm':
@@ -64,7 +64,7 @@ export default function AdminClient({
       case 'pools':
         return permissions.includes('manage_chapter_events');
       case 'birthdays':
-        return permissions.includes('manage_chapter_events') || isCommunityManager;
+        return permissions.includes('manage_chapter_events') || permissions.includes('community_manager') || isCommunityManager;
       default:
         return false;
     }
@@ -1493,7 +1493,18 @@ export default function AdminClient({
                               <div className="flex items-center gap-1.5">
                                 <span className="font-semibold text-ink/80">Birthday:</span>
                                 <span>
-                                  {member.birthday ? new Date(member.birthday).toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : 'N/A'}
+                                  {member.birthday ? (() => {
+                                    const parts = String(member.birthday).split('T')[0].split('-');
+                                    if (parts.length === 3) {
+                                      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                                      const mIdx = parseInt(parts[1], 10) - 1;
+                                      const dNum = parseInt(parts[2], 10);
+                                      if (mIdx >= 0 && mIdx < 12 && !isNaN(dNum)) {
+                                        return `${months[mIdx]} ${dNum}`;
+                                      }
+                                    }
+                                    return new Date(member.birthday).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+                                  })() : 'N/A'}
                                 </span>
                               </div>
                               {member.email && (
