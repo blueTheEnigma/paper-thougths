@@ -250,6 +250,82 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
         </div>
       </section>
 
+      {/* NEW FEATURE BANNER: THE LITERARY ECOSYSTEM */}
+      <section className="py-16 px-6 bg-[#0D0B14] text-amber-50 border-b border-amber-500/20">
+        <div className="max-w-6xl mx-auto space-y-10">
+          <div className="text-center space-y-3">
+            <span className="text-xs font-mono uppercase tracking-widest text-amber-400">
+              ✨ Discover Your Literary Essence
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-amber-100">
+              Who Are You in the Literary Universe?
+            </h2>
+            <p className="text-sm sm:text-base text-amber-200/70 max-w-xl mx-auto italic font-serif">
+              Explore the 3 core pillars of Paper Thoughts identity system.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* CARD 1: BOOK ZODIAC */}
+            <div className="p-6 rounded-3xl bg-slate-900/90 border border-amber-500/30 space-y-4 hover:border-amber-400 transition-all flex flex-col justify-between group">
+              <div className="space-y-3">
+                <span className="text-4xl">🔮</span>
+                <h3 className="text-2xl font-serif font-bold text-amber-100 group-hover:text-amber-300">
+                  The Book Zodiac
+                </h3>
+                <p className="text-xs text-amber-200/70 leading-relaxed font-serif">
+                  A 28-question astrological identity test. Discover your <strong>Sun</strong>, <strong>Moon</strong>, and <strong>Rising</strong> literary signs.
+                </p>
+              </div>
+              <Link
+                href="/zodiac"
+                className="w-full py-3 px-4 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs text-center transition-all shadow-md"
+              >
+                Discover Your Zodiac Chart →
+              </Link>
+            </div>
+
+            {/* CARD 2: READER ARCHETYPES */}
+            <div className="p-6 rounded-3xl bg-slate-900/90 border border-amber-500/30 space-y-4 hover:border-amber-400 transition-all flex flex-col justify-between group">
+              <div className="space-y-3">
+                <span className="text-4xl">🎭</span>
+                <h3 className="text-2xl font-serif font-bold text-amber-100 group-hover:text-amber-300">
+                  Reader Archetypes
+                </h3>
+                <p className="text-xs text-amber-200/70 leading-relaxed font-serif">
+                  Explore 21 celebrated habits and identities—from the <em>Marathon Reader</em> to the <em>DNF Champion</em>.
+                </p>
+              </div>
+              <Link
+                href="/archetype"
+                className="w-full py-3 px-4 rounded-full bg-slate-800 hover:bg-slate-700 text-amber-200 font-bold text-xs text-center transition-all border border-amber-500/30"
+              >
+                Browse 21 Archetypes →
+              </Link>
+            </div>
+
+            {/* CARD 3: LITERARY SOUNDSCAPES */}
+            <div className="p-6 rounded-3xl bg-slate-900/90 border border-amber-500/30 space-y-4 hover:border-amber-400 transition-all flex flex-col justify-between group">
+              <div className="space-y-3">
+                <span className="text-4xl">🎧</span>
+                <h3 className="text-2xl font-serif font-bold text-amber-100 group-hover:text-amber-300">
+                  Literary Soundscapes
+                </h3>
+                <p className="text-xs text-amber-200/70 leading-relaxed font-serif">
+                  9 Spotify reading playlists crafted to match the mood of every page, from <em>The Still Hour</em> to <em>The Forest Cabin</em>.
+                </p>
+              </div>
+              <Link
+                href="/soundscapes"
+                className="w-full py-3 px-4 rounded-full bg-slate-800 hover:bg-slate-700 text-amber-200 font-bold text-xs text-center transition-all border border-amber-500/30"
+              >
+                Press Play on Soundscapes →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 2. Light Theme: The Bookstore Showcase */}
       <section className="py-24 px-6 md:px-8 bg-cream relative border-b border-ink/5">
         <motion.div 

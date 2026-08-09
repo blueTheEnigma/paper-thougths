@@ -1,0 +1,110 @@
+export const SOUNDSCAPES = [
+  {
+    id: 'still_hour',
+    title: 'The Still Hour',
+    emoji: '🌌',
+    description: 'Quiet midnight reflection, soft ambient strings, and deep focus.',
+    spotifyUrl: 'https://open.spotify.com/playlist/5WAlryvwpMAJ3AIvyOjvIe?si=t7TX_-ijQsqfuR_Cf4D34g',
+    embedUrl: 'https://open.spotify.com/embed/playlist/5WAlryvwpMAJ3AIvyOjvIe?utm_source=generator',
+    color: '#1E2A4A',
+    gradient: 'from-[#1E2A4A] to-[#0D1322]',
+    signs: ['Scribe', 'Sage'],
+    vibe: 'Midnight solitude & contemplation'
+  },
+  {
+    id: 'reading_room',
+    title: 'The Reading Room',
+    emoji: '📚',
+    description: 'Cosmic library, focused study beats, and calm intellectual flow.',
+    spotifyUrl: 'https://open.spotify.com/playlist/1N1xGCWfS0fK1zp8Pi8XkV?si=EbFp5mfgQze7nHEde9GlJw',
+    embedUrl: 'https://open.spotify.com/embed/playlist/1N1xGCWfS0fK1zp8Pi8XkV?utm_source=generator',
+    color: '#3B2D26',
+    gradient: 'from-[#3B2D26] to-[#1F1713]',
+    signs: ['Matrix', 'Sage'],
+    vibe: 'Deep study & immersive research'
+  },
+  {
+    id: 'hollow_manor',
+    title: 'The Hollow Manor',
+    emoji: '🦇',
+    description: 'Gothic mystery, dark cello melodies, and eerie atmospheric suspense.',
+    spotifyUrl: 'https://open.spotify.com/playlist/0b8GjISMHcyyvvlu1hyEoF?si=ag4tvJLzQ9eHCYBcVzAuYw',
+    embedUrl: 'https://open.spotify.com/embed/playlist/0b8GjISMHcyyvvlu1hyEoF?utm_source=generator',
+    color: '#2A1B28',
+    gradient: 'from-[#2A1B28] to-[#120A11]',
+    signs: ['Oracle'],
+    vibe: 'Dark fiction, thrillers & mystery'
+  },
+  {
+    id: 'midnight_express',
+    title: 'The Midnight Express',
+    emoji: '🚂',
+    description: 'Rhythmic train tracks, distant rain, and cinematic travel soundscapes.',
+    spotifyUrl: 'https://open.spotify.com/playlist/33wpXOUiWCEXYc9PfPevXw?si=35RgplQaSESP-TENG8ELjw',
+    embedUrl: 'https://open.spotify.com/embed/playlist/33wpXOUiWCEXYc9PfPevXw?utm_source=generator',
+    color: '#2C3A33',
+    gradient: 'from-[#2C3A33] to-[#111A15]',
+    signs: ['Titan'],
+    vibe: 'Epic journeys & adventure'
+  },
+  {
+    id: 'corner_cafe',
+    title: 'The Corner Café',
+    emoji: '☕',
+    description: 'Warm coffee shop background chatter, cozy acoustic guitar, and soft jazz.',
+    spotifyUrl: 'https://open.spotify.com/playlist/2r4RIgA2eKBmLRg2o0cqXF?si=0wFJ7sVDRJO9sCQ9yP-ZuQ',
+    embedUrl: 'https://open.spotify.com/embed/playlist/2r4RIgA2eKBmLRg2o0cqXF?utm_source=generator',
+    color: '#4A3425',
+    gradient: 'from-[#4A3425] to-[#24170F]',
+    signs: ['Haven', 'Votive'],
+    vibe: 'Cozy cafes & light romance'
+  },
+  {
+    id: 'castle_archives',
+    title: 'The Castle Archives',
+    emoji: '🏰',
+    description: 'Ancient stone fortresses, fantasy orchestral themes, and noble lore.',
+    spotifyUrl: 'https://open.spotify.com/playlist/5niuJXkrSc5J5qPyurwn1f?si=JzTXgHwpRRyo2uegvN0gZg',
+    embedUrl: 'https://open.spotify.com/embed/playlist/5niuJXkrSc5J5qPyurwn1f?utm_source=generator',
+    color: '#262D3D',
+    gradient: 'from-[#262D3D] to-[#121621]',
+    signs: ['Titan', 'Matrix'],
+    vibe: 'High fantasy & epic worldbuilding'
+  },
+  {
+    id: 'forest_cabin',
+    title: 'The Forest Cabin',
+    emoji: '🌲',
+    description: 'Rustic wooden shelter, rain on tin roof, crackling hearth fireplace.',
+    spotifyUrl: 'https://open.spotify.com/playlist/7Hi4gicPY44JlT9NHpPTvS?si=ngkTeSk9Rhq-M7dNrw8_dQ',
+    embedUrl: 'https://open.spotify.com/embed/playlist/7Hi4gicPY44JlT9NHpPTvS?utm_source=generator',
+    color: '#253B26',
+    gradient: 'from-[#253B26] to-[#0E1A0E]',
+    signs: ['Haven', 'Votive'],
+    vibe: 'Nature, peace & emotional comfort'
+  },
+  {
+    id: 'old_library',
+    title: 'The Old Library',
+    emoji: '🕯️',
+    description: 'Candlelight flickers, turning parchment pages, vintage organ & piano.',
+    spotifyUrl: 'https://open.spotify.com/playlist/0u3vhQsosXiQBWb3QX2j63?si=ZGuiCrgKTLSur2Usl7xdRw',
+    embedUrl: 'https://open.spotify.com/embed/playlist/0u3vhQsosXiQBWb3QX2j63?utm_source=generator',
+    color: '#3D2F1B',
+    gradient: 'from-[#3D2F1B] to-[#1C140A]',
+    signs: ['Matrix', 'Sage'],
+    vibe: 'Classics, history & old manuscripts'
+  },
+  {
+    id: 'observatory',
+    title: 'The Observatory',
+    emoji: '🔭',
+    description: 'Stargazing telescope under midnight galaxy, cosmic ambient synthesizer.',
+    spotifyUrl: 'https://open.spotify.com/playlist/3P3QWlVUNKdfpjoW9FLoG8?si=Gdjx-SO6Rj6JXFDH88-vqQ',
+    embedUrl: 'https://open.spotify.com/embed/playlist/3P3QWlVUNKdfpjoW9FLoG8?utm_source=generator',
+    color: '#1C2541',
+    gradient: 'from-[#1C2541] to-[#0B1021]',
+    signs: ['Oracle', 'Scribe'],
+    vibe: 'Sci-fi, wonder & universe dreams'
+  }
+];

@@ -1,10 +1,48 @@
 export const ARCHETYPES = {
+  marathon: {
+    id: 'marathon',
+    name: 'The Marathon Reader',
+    tagline: 'Booked and busy.',
+    emoji: '🏃‍♂️',
+    color: '#5C1A2E',
+    image: '/images/archetypes/marathon_reader.jpeg',
+    gradient: 'linear-gradient(135deg, #FAF7F2 0%, #FFF3F5 50%, #FFE5EB 100%)',
+    badgeGradient: 'from-[#5C1A2E]/10 to-[#7A2040]/10',
+    borderStyle: 'border-[#5C1A2E]/20',
+    textStyle: 'text-[#5C1A2E]',
+    bgBadge: 'bg-[#5C1A2E]/10 text-[#5C1A2E]',
+    traits: [
+      'Devours books in record time.',
+      '"One more chapter" always becomes ten.',
+      'Treats reading like a competitive endurance sport.'
+    ],
+    superpower: 'Turns "I\'ll just read one chapter" into "The End" by 4 AM.',
+    kryptonite: 'Waiting months (or years) for the sequel.',
+    literarySoulmates: [
+      'Hermione Granger (Harry Potter)',
+      'Matilda Wormwood (Matilda)',
+      'Ifemelu (Americanah)',
+      'Kambili Achike (Purple Hibiscus)',
+      'Edmond Dantès (The Count of Monte Cristo)'
+    ],
+    authors: [
+      'Chimamanda Ngozi Adichie',
+      'Chigozie Obioma',
+      'Jennifer Nansubuga Makumbi',
+      'Maaza Mengiste',
+      'Fredrik Backman',
+      'Brandon Sanderson'
+    ],
+    catchphrase: 'Wait... you\'re still on Chapter 4?',
+    funFact: 'You\'ve probably finished a book before your friends even decided whether they liked the cover.'
+  },
   mood: {
     id: 'mood',
     name: 'The Mood Reader',
     tagline: 'Talk to my current emotional support novel.',
-    emoji: '🕯️',
+    emoji: '🌦️',
     color: '#C96A42',
+    image: '/images/archetypes/mood_reader.jpeg',
     gradient: 'linear-gradient(135deg, #FAF0E6 0%, #FFF5EC 50%, #FFEBE0 100%)',
     badgeGradient: 'from-[#C96A42]/10 to-[#F2A98A]/10',
     borderStyle: 'border-[#C96A42]/20',
@@ -35,298 +73,459 @@ export const ARCHETYPES = {
     catchphrase: 'My TBR and my emotions aren\'t on speaking terms.',
     funFact: 'You can spend thirty minutes choosing your next book... and still end up rereading an old favorite.'
   },
-  marathon: {
-    id: 'marathon',
-    name: 'The Marathon Reader',
-    tagline: 'Booked and busy.',
-    emoji: '🏃‍♂️',
-    color: '#5C1A2E',
-    gradient: 'linear-gradient(135deg, #FAF7F2 0%, #FFF3F5 50%, #FFE5EB 100%)',
-    badgeGradient: 'from-[#5C1A2E]/10 to-[#7A2040]/10',
-    borderStyle: 'border-[#5C1A2E]/20',
-    textStyle: 'text-[#5C1A2E]',
-    bgBadge: 'bg-[#5C1A2E]/10 text-[#5C1A2E]',
+  serial_starter: {
+    id: 'serial_starter',
+    name: 'The Serial Starter',
+    tagline: 'Beginning is the best part.',
+    emoji: '🦋',
+    color: '#E07A5F',
+    image: '/images/archetypes/serial_starter_.jpeg',
+    gradient: 'linear-gradient(135deg, #FFF8F5 0%, #FDEEE9 100%)',
+    badgeGradient: 'from-[#E07A5F]/10 to-[#F2A98A]/10',
+    borderStyle: 'border-[#E07A5F]/20',
+    textStyle: 'text-[#E07A5F]',
+    bgBadge: 'bg-[#E07A5F]/10 text-[#E07A5F]',
     traits: [
-      'Devours books in record time.',
-      '"One more chapter" always becomes ten.',
-      'Treats reading like a competitive endurance sport.'
+      'Loves the thrill of Chapter 1.',
+      'Has bookmarks in 12 active books.',
+      'Easily seduced by new book releases.'
     ],
-    superpower: 'Turns "I\'ll just read one chapter" into "The End" by 4 AM.',
-    kryptonite: 'Waiting months (or years) for the sequel.',
-    literarySoulmates: [
-      'Hermione Granger (Harry Potter)',
-      'Matilda Wormwood (Matilda)',
-      'Ifemelu (Americanah)',
-      'Kambili Achike (Purple Hibiscus)',
-      'Edmond Dantès (The Count of Monte Cristo)'
-    ],
-    authors: [
-      'Chimamanda Ngozi Adichie',
-      'Chigozie Obioma',
-      'Jennifer Nansubuga Makumbi',
-      'Maaza Mengiste',
-      'Fredrik Backman',
-      'Brandon Sanderson',
-      'Dan Brown'
-    ],
-    catchphrase: 'Wait... you\'re still on Chapter 4?',
-    funFact: 'You\'ve probably finished a book before your friends even decided whether they liked the cover.'
+    superpower: 'Incredible speed at testing and discovering new authors.',
+    kryptonite: 'The slow middle chapters of a 600-page book.',
+    literarySoulmates: ['Peter Pan', 'Alice (Alice in Wonderland)'],
+    authors: ['Neil Gaiman', 'Terry Pratchett', 'Matt Haig'],
+    catchphrase: 'Look, Chapter 1 was calling my name!',
+    funFact: 'You own more bookmarks than finished books.'
   },
-  tsundoku: {
-    id: 'tsundoku',
-    name: 'The Tsundoku Collector',
-    tagline: 'Building a library is a separate hobby.',
-    emoji: '📚',
-    color: '#7A9E7E',
-    gradient: 'linear-gradient(135deg, #FAFDF9 0%, #F3FAF2 50%, #E6F3E5 100%)',
-    badgeGradient: 'from-[#7A9E7E]/10 to-[#5C8A60]/10',
-    borderStyle: 'border-[#7A9E7E]/20',
-    textStyle: 'text-[#5C8A60]',
-    bgBadge: 'bg-[#7A9E7E]/10 text-[#5C8A60]',
+  page_artist: {
+    id: 'page_artist',
+    name: 'The Page Artist',
+    tagline: 'Reading is an interactive canvas.',
+    emoji: '🎨',
+    color: '#9B5DE5',
+    image: '/images/archetypes/page_artist_.jpeg',
+    gradient: 'linear-gradient(135deg, #FBF7FF 0%, #F2E6FF 100%)',
+    badgeGradient: 'from-[#9B5DE5]/10 to-[#C77DFF]/10',
+    borderStyle: 'border-[#9B5DE5]/20',
+    textStyle: 'text-[#9B5DE5]',
+    bgBadge: 'bg-[#9B5DE5]/10 text-[#9B5DE5]',
     traits: [
-      'Owns far more books than they could ever read.',
-      'Views bookshelves as structural home art.',
-      'Finds bookstore shopping highly therapeutic.'
+      'Highlighters and sticky tabs in 6 colors.',
+      'Writes thoughts, reactions, and arrows in margins.',
+      'Views books as living personal art objects.'
     ],
-    superpower: 'Possesses a personal library that could survive an apocalypse.',
-    kryptonite: 'Moving houses and carrying heavy book boxes.',
-    literarySoulmates: [
-      'Belle (Beauty and the Beast)',
-      'Giles (Buffy the Vampire Slayer)',
-      'Kintu Kidda (Kintu)'
-    ],
-    authors: [
-      'Haruki Murakami',
-      'Jorge Luis Borges',
-      'Carlos Ruiz Zafón',
-      'Neil Gaiman',
-      'Teju Cole'
-    ],
-    catchphrase: 'But it has a sprayed edge and embossed cover!',
-    funFact: 'You own multiple editions of the exact same book because they looked pretty next to each other.'
+    superpower: 'Deep thematic analysis on a first pass.',
+    kryptonite: 'Borrowing library books where you can\'t write.',
+    literarySoulmates: ['Hermione Granger', 'Jo March'],
+    authors: ['Virginia Woolf', 'Toni Morrison', 'Zadie Smith'],
+    catchphrase: 'Pass me the pink highlighter!',
+    funFact: 'Your annotated books look like museum exhibits.'
   },
-  completist: {
-    id: 'completist',
-    name: 'The Completist',
-    tagline: 'Finishing is a matter of honour.',
-    emoji: '🛡️',
-    color: '#2E4C5E',
-    gradient: 'linear-gradient(135deg, #F5FAFD 0%, #ECF6FC 50%, #DCEEF7 100%)',
-    badgeGradient: 'from-[#2E4C5E]/10 to-[#1F3542]/10',
-    borderStyle: 'border-[#2E4C5E]/20',
-    textStyle: 'text-[#2E4C5E]',
-    bgBadge: 'bg-[#2E4C5E]/10 text-[#2E4C5E]',
+  book_dragon: {
+    id: 'book_dragon',
+    name: 'The Book Dragon',
+    tagline: 'Hoarding stories on a mountain of gold.',
+    emoji: '🐉',
+    color: '#B5179E',
+    image: '/images/archetypes/book_dragon_.jpeg',
+    gradient: 'linear-gradient(135deg, #FFF5FC 0%, #FDE2F7 100%)',
+    badgeGradient: 'from-[#B5179E]/10 to-[#E056FD]/10',
+    borderStyle: 'border-[#B5179E]/20',
+    textStyle: 'text-[#B5179E]',
+    bgBadge: 'bg-[#B5179E]/10 text-[#B5179E]',
     traits: [
-      'Refuses to DNF (Did Not Finish) under any circumstances.',
-      'Will read a bad book to the end just to write a scathing review.',
-      'Extremely loyal and stubborn reader.'
+      'Protects their personal library fiercely.',
+      'Collects special editions and sprayed edges.',
+      'Refuses to lend books without collateral.'
     ],
-    superpower: 'Unbreakable focus and iron-willed narrative dedication.',
-    kryptonite: 'Open endings, cliffhangers, and abandoned series.',
-    literarySoulmates: [
-      'Sherlock Holmes',
-      'Inspector Javert (Les Misérables)',
-      'Kambili Achike (Purple Hibiscus)'
-    ],
-    authors: [
-      'Leo Tolstoy',
-      'Charles Dickens',
-      'George R.R. Martin',
-      'Chigozie Obioma',
-      'Brandon Sanderson'
-    ],
-    catchphrase: 'I started this book, and by god, I will finish it.',
-    funFact: 'You remember the plot details of books you hated ten years ago better than books you liked last week.'
+    superpower: 'Unmatched library collection that rivals bookstores.',
+    kryptonite: 'Creased book spines and cracked bindings.',
+    literarySoulmates: ['Smaug', 'Belle (Beauty and the Beast)'],
+    authors: ['Brandon Sanderson', 'Samantha Shannon', 'V.E. Schwab'],
+    catchphrase: 'Do not crease the spine or suffer my wrath.',
+    funFact: 'You check people\'s hands for cleanliness before touching your books.'
   },
-  mourner: {
-    id: 'mourner',
-    name: 'The Book Mourner',
+  fiction_insomniac: {
+    id: 'fiction_insomniac',
+    name: 'The Fiction Insomniac',
+    tagline: 'Sleep is temporary, stories are eternal.',
+    emoji: '🌙',
+    color: '#3F37C9',
+    gradient: 'linear-gradient(135deg, #F5F5FF 0%, #E2E2FE 100%)',
+    badgeGradient: 'from-[#3F37C9]/10 to-[#4895EF]/10',
+    borderStyle: 'border-[#3F37C9]/20',
+    textStyle: 'text-[#3F37C9]',
+    bgBadge: 'bg-[#3F37C9]/10 text-[#3F37C9]',
+    traits: [
+      'Reads strictly between 11 PM and 4 AM.',
+      'Claims "just one more page" every night.',
+      'Functions on caffeine and cliffhangers.'
+    ],
+    superpower: 'Night-vision narrative endurance.',
+    kryptonite: 'Sunrise when you have 2 chapters left.',
+    literarySoulmates: ['Dracula', 'Gatsby'],
+    authors: ['Stephen King', 'Gillian Flynn', 'R.F. Kuang'],
+    catchphrase: 'Is that the sun coming up?',
+    funFact: 'You\'ve finished 80% of your favorite books past midnight.'
+  },
+  commuter: {
+    id: 'commuter',
+    name: 'The Commuter',
+    tagline: 'Turning traffic into chapters.',
+    emoji: '🚆',
+    color: '#0077B6',
+    image: '/images/archetypes/commuter.jpeg',
+    gradient: 'linear-gradient(135deg, #F0FAFF 0%, #D8F3DC 100%)',
+    badgeGradient: 'from-[#0077B6]/10 to-[#00B4D8]/10',
+    borderStyle: 'border-[#0077B6]/20',
+    textStyle: 'text-[#0077B6]',
+    bgBadge: 'bg-[#0077B6]/10 text-[#0077B6]',
+    traits: [
+      'Reads on trains, buses, and in traffic.',
+      'Master of one-handed pocket reading.',
+      'Measures distance in chapters, not miles.'
+    ],
+    superpower: 'Can block out noise and chaos anywhere.',
+    kryptonite: 'Missing your train stop because of a plot twist.',
+    literarySoulmates: ['Phileas Fogg', 'Hercule Poirot'],
+    authors: ['Dan Brown', 'Agatha Christie', 'Paula Hawkins'],
+    catchphrase: 'Sorry I missed my stop, the villain was just revealed.',
+    funFact: 'You secretly love long traffic delays because it means extra reading.'
+  },
+  audiobook_addict: {
+    id: 'audiobook_addict',
+    name: 'The Audiobook Addict',
+    tagline: 'I like my books loud enough.',
+    emoji: '🎧',
+    color: '#2A9D8F',
+    image: '/images/archetypes/audiobook_addict.jpeg',
+    gradient: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
+    badgeGradient: 'from-[#2A9D8F]/10 to-[#52B788]/10',
+    borderStyle: 'border-[#2A9D8F]/20',
+    textStyle: 'text-[#2A9D8F]',
+    bgBadge: 'bg-[#2A9D8F]/10 text-[#2A9D8F]',
+    traits: [
+      'Listens at 1.75x speed while doing chores.',
+      'Follows voice narrators like rockstars.',
+      'Folds laundry and cleans house while traveling worlds.'
+    ],
+    superpower: 'Finishes 50 books a year without opening a physical cover.',
+    kryptonite: 'Mispronounced character names in audio production.',
+    literarySoulmates: ['Scheherazade', 'Anansi', 'The Griot'],
+    authors: ['Trevor Noah', 'Tomi Adeyemi', 'Stephen Fry', 'Michelle Obama'],
+    catchphrase: 'I\'m not ignoring you, I\'m in Chapter 17.',
+    funFact: 'You do extra chores just to hear how the book ends.'
+  },
+  comfort_rereader: {
+    id: 'comfort_rereader',
+    name: 'The Comfort Re-reader',
+    tagline: 'Old friends are the best friends.',
+    emoji: '🤎',
+    color: '#8D5B4C',
+    image: '/images/archetypes/comfort_re-reader.jpeg',
+    gradient: 'linear-gradient(135deg, #FAF4F0 0%, #F5E8E0 100%)',
+    badgeGradient: 'from-[#8D5B4C]/10 to-[#A67C6D]/10',
+    borderStyle: 'border-[#8D5B4C]/20',
+    textStyle: 'text-[#8D5B4C]',
+    bgBadge: 'bg-[#8D5B4C]/10 text-[#8D5B4C]',
+    traits: [
+      'Has read the same 3 series five times.',
+      'Seeks warmth and emotional safety in books.',
+      'Knows character dialogue by heart.'
+    ],
+    superpower: 'Zero risk of reading disappointment.',
+    kryptonite: 'Recommendations for "dark, disturbing thrillers".',
+    literarySoulmates: ['Mr. Darcy', 'Samwise Gamgee', 'Atticus Finch'],
+    authors: ['Jane Austen', 'J.R.R. Tolkien', 'L.M. Montgomery'],
+    catchphrase: 'I already know what happens, that\'s why I love it.',
+    funFact: 'Your comfort book pages are worn soft like old velvet.'
+  },
+  researcher: {
+    id: 'researcher',
+    name: 'The Researcher',
+    tagline: 'Down the rabbit hole of truth.',
+    emoji: '🔍',
+    color: '#2B4C7E',
+    image: '/images/archetypes/the_researcher_.jpeg',
+    gradient: 'linear-gradient(135deg, #F0F4F8 0%, #D9E2EC 100%)',
+    badgeGradient: 'from-[#2B4C7E]/10 to-[#4A6B9C]/10',
+    borderStyle: 'border-[#2B4C7E]/20',
+    textStyle: 'text-[#2B4C7E]',
+    bgBadge: 'bg-[#2B4C7E]/10 text-[#2B4C7E]',
+    traits: [
+      'Pauses fiction to Google historical accuracy.',
+      'Reads footnotes, appendices, and bibliographies.',
+      'Loves biographies and deep historical analysis.'
+    ],
+    superpower: 'Walking encyclopedia of literary background facts.',
+    kryptonite: 'Anachronisms and historical inaccuracies.',
+    literarySoulmates: ['Sherlock Holmes', 'Robert Langdon'],
+    authors: ['Yuval Noah Harari', 'Malcolm Gladwell', 'David McCullough'],
+    catchphrase: 'Did you know this was actually based on 14th-century events?',
+    funFact: 'You have 45 Wikipedia tabs open while reading one historical novel.'
+  },
+  tbr_optimist: {
+    id: 'tbr_optimist',
+    name: 'The TBR Optimist',
+    tagline: 'So many books, infinite time.',
+    emoji: '📖',
+    color: '#52796F',
+    image: '/images/archetypes/tbr_optimist_.jpeg',
+    gradient: 'linear-gradient(135deg, #F2F7F5 0%, #D8E2DC 100%)',
+    badgeGradient: 'from-[#52796F]/10 to-[#74968C]/10',
+    borderStyle: 'border-[#52796F]/20',
+    textStyle: 'text-[#52796F]',
+    bgBadge: 'bg-[#52796F]/10 text-[#52796F]',
+    traits: [
+      'Adds 10 books to TBR list every week.',
+      'Believes they will read 100 books this summer.',
+      'Buys books faster than humanly readable.'
+    ],
+    superpower: 'Unshakeable literary hope and joy.',
+    kryptonite: 'Math calculations of reading speed vs lifetime left.',
+    literarySoulmates: ['Jay Gatsby', 'Don Quixote'],
+    authors: ['Haruki Murakami', 'TJ Klune', 'Matt Haig'],
+    catchphrase: 'I will definitely read all of these by next month!',
+    funFact: 'Your TBR list has its own sub-lists and category tags.'
+  },
+  one_genre_wonder: {
+    id: 'one_genre_wonder',
+    name: 'The One-Genre Wonder',
+    tagline: 'Loyal to the core.',
+    emoji: '❤️',
+    color: '#D62828',
+    image: '/images/archetypes/one-gender_wonder.jpeg',
+    gradient: 'linear-gradient(135deg, #FFF5F5 0%, #FED7D7 100%)',
+    badgeGradient: 'from-[#D62828]/10 to-[#E63946]/10',
+    borderStyle: 'border-[#D62828]/20',
+    textStyle: 'text-[#D62828]',
+    bgBadge: 'bg-[#D62828]/10 text-[#D62828]',
+    traits: [
+      'Reads 100% Romance or 100% Sci-Fi exclusively.',
+      'Knows every trope and subgenre in their field.',
+      'Unmatched expertise in their chosen niche.'
+    ],
+    superpower: 'Can spot plot tropes from Chapter 1.',
+    kryptonite: 'Book clubs picking outside your favorite genre.',
+    literarySoulmates: ['Elizabeth Bennet', 'Katniss Everdeen'],
+    authors: ['Colleen Hoover', 'Ali Hazelwood', 'Sarah J. Maas'],
+    catchphrase: 'If it doesn\'t have a happily ever after, keep it.',
+    funFact: 'You could write a masterclass on your favorite genre\'s tropes.'
+  },
+  genre_explorer: {
+    id: 'genre_explorer',
+    name: 'The Genre Explorer',
+    tagline: 'Passport to every literary realm.',
+    emoji: '🌍',
+    color: '#2A9D8F',
+    image: '/images/archetypes/genre_explorer.png',
+    gradient: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
+    badgeGradient: 'from-[#2A9D8F]/10 to-[#52B788]/10',
+    borderStyle: 'border-[#2A9D8F]/20',
+    textStyle: 'text-[#2A9D8F]',
+    bgBadge: 'bg-[#2A9D8F]/10 text-[#2A9D8F]',
+    traits: [
+      'Reads sci-fi, romance, history, and fantasy in the same week.',
+      'Refuses to be put in a genre box.',
+      'Travels through books across cultures.'
+    ],
+    superpower: 'Adaptable imagination—feels at home in any world.',
+    kryptonite: 'People who say "I only read non-fiction."',
+    literarySoulmates: ['Gulliver', 'Phileas Fogg', 'Ifemelu'],
+    authors: ['Haruki Murakami', 'Chimamanda Ngozi Adichie', 'David Mitchell', 'Ursula K. Le Guin'],
+    catchphrase: 'Genre boundaries are just suggestions.',
+    funFact: 'Your bookshelf looks like an international airport terminal.'
+  },
+  social_reader: {
+    id: 'social_reader',
+    name: 'The Social Reader',
+    tagline: 'Reading is better when we talk about it.',
+    emoji: '☕',
+    color: '#D97706',
+    image: '/images/archetypes/social_reader.png',
+    gradient: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+    badgeGradient: 'from-[#D97706]/10 to-[#F59E0B]/10',
+    borderStyle: 'border-[#D97706]/20',
+    textStyle: 'text-[#D97706]',
+    bgBadge: 'bg-[#D97706]/10 text-[#D97706]',
+    traits: [
+      'First to organize buddy reads and discussion groups.',
+      'Has 4 active book clubs.',
+      'Loves sharing insights over coffee.'
+    ],
+    superpower: 'Turns any book into a deep late-night conversation.',
+    kryptonite: 'Reading a plot twist with no one to text.',
+    literarySoulmates: ['Jo March', 'Elizabeth Bennet'],
+    authors: ['Emily Henry', 'Taylor Jenkins Reid', 'Zadie Smith', 'Fredrik Backman'],
+    catchphrase: 'We need to talk about Chapter 14 immediately.',
+    funFact: 'You\'ve joined a book club for a genre you don\'t read just for the tea.'
+  },
+  quote_collector: {
+    id: 'quote_collector',
+    name: 'The Quote Collector',
+    tagline: 'Collecting beautiful sentences like gemstones.',
+    emoji: '💭',
+    color: '#4F46E5',
+    image: '/images/archetypes/quote_collector.png',
+    gradient: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
+    badgeGradient: 'from-[#4F46E5]/10 to-[#6366F1]/10',
+    borderStyle: 'border-[#4F46E5]/20',
+    textStyle: 'text-[#4F46E5]',
+    bgBadge: 'bg-[#4F46E5]/10 text-[#4F46E5]',
+    traits: [
+      'Annotates specifically for language beauty.',
+      'Fills leather journals with book lines.',
+      'Pauses to reread a single sentence 3 times.'
+    ],
+    superpower: 'Remembers the exact phrase that can heal a broken heart.',
+    kryptonite: 'Misquoting famous literature.',
+    literarySoulmates: ['Lord Henry', 'Anne Shirley'],
+    authors: ['Virginia Woolf', 'Toni Morrison', 'Oscar Wilde', 'James Baldwin', 'Ocean Vuong'],
+    catchphrase: 'Listen to how gorgeous this sentence is.',
+    funFact: 'Your camera roll is full of book page photos instead of selfies.'
+  },
+  dnf_champion: {
+    id: 'dnf_champion',
+    name: 'The DNF Champion',
+    tagline: 'Life is too short for bad books.',
+    emoji: '🚪',
+    color: '#EF4444',
+    image: '/images/archetypes/dnf_champion.png',
+    gradient: 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)',
+    badgeGradient: 'from-[#EF4444]/10 to-[#F87171]/10',
+    borderStyle: 'border-[#EF4444]/20',
+    textStyle: 'text-[#EF4444]',
+    bgBadge: 'bg-[#EF4444]/10 text-[#EF4444]',
+    traits: [
+      'Closes a book at page 20 with zero guilt.',
+      'Values reading time fiercely.',
+      'Protects their reading peace.'
+    ],
+    superpower: 'Immune to sunk-cost fallacy and reading slumps.',
+    kryptonite: '800-page slow burns that "get good after chapter 15."',
+    literarySoulmates: ['Holden Caulfield', 'Bartleby'],
+    authors: ['Agatha Christie', 'Stephen King', 'Gillian Flynn'],
+    catchphrase: 'I\'m at 15% and the vibe is off. DNF.',
+    funFact: 'You\'ve DNF\'d a book 10 pages before the ending without remorse.'
+  },
+  slow_savorer: {
+    id: 'slow_savorer',
+    name: 'The Slow Savorer',
+    tagline: 'One page at a time, delicious and slow.',
+    emoji: '🍵',
+    color: '#059669',
+    image: '/images/archetypes/mood_reader.jpeg',
+    gradient: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
+    badgeGradient: 'from-[#059669]/10 to-[#10B981]/10',
+    borderStyle: 'border-[#059669]/20',
+    textStyle: 'text-[#059669]',
+    bgBadge: 'bg-[#059669]/10 text-[#059669]',
+    traits: [
+      'Reads 10 pages a day.',
+      'Lingers over rich atmospheric descriptions.',
+      'Never rushes to finish.'
+    ],
+    superpower: 'Experiences every scene in vivid 8K hyper-realism.',
+    kryptonite: 'Speed-readers asking "Are you still on chapter 2?"',
+    literarySoulmates: ['Bilbo Baggins', 'Marcel Proust'],
+    authors: ['Amor Towles', 'Kazuo Ishiguro', 'Marilynne Robinson', 'Donna Tartt'],
+    catchphrase: 'Why rush a great book? The journey is the point.',
+    funFact: 'A single 300-page novel can comfortably last you three seasons.'
+  },
+  book_wreck: {
+    id: 'book_wreck',
+    name: 'The Book Wreck',
     tagline: 'Currently recovering from fictional trauma.',
-    emoji: '🥀',
-    color: '#6F4E7C',
-    gradient: 'linear-gradient(135deg, #FAF7FC 0%, #F5ECFA 50%, #EFE0F5 100%)',
-    badgeGradient: 'from-[#6F4E7C]/10 to-[#563A61]/10',
-    borderStyle: 'border-[#6F4E7C]/20',
-    textStyle: 'text-[#6F4E7C]',
-    bgBadge: 'bg-[#6F4E7C]/10 text-[#6F4E7C]',
+    emoji: '💔',
+    color: '#7C3AED',
+    image: '/images/archetypes/comfort_re-reader.jpeg',
+    gradient: 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
+    badgeGradient: 'from-[#7C3AED]/10 to-[#8B5CF6]/10',
+    borderStyle: 'border-[#7C3AED]/20',
+    textStyle: 'text-[#7C3AED]',
+    bgBadge: 'bg-[#7C3AED]/10 text-[#7C3AED]',
     traits: [
-      'Suffers from prolonged, devastating book hangovers.',
-      'Treats fictional characters like real childhood friends.',
-      'Stares at the ceiling for hours after reading "The End".'
+      'Suffers severe 2-week book hangovers.',
+      'Cries in public over fictional characters.',
+      'Needs emotional recovery time after endings.'
     ],
-    superpower: 'Deep, profound emotional intelligence and narrative empathy.',
-    kryptonite: 'Tragically killed-off characters and sad endings.',
-    literarySoulmates: [
-      'Catherine Earnshaw (Wuthering Heights)',
-      'Jude St. Francis (A Little Life)',
-      'Darling (We Need New Names)'
-    ],
-    authors: [
-      'Khaled Hosseini',
-      'Hanya Yanagihara',
-      'Madeline Miller',
-      'Akwaeke Emezi',
-      'Tsitsi Dangarembga'
-    ],
-    catchphrase: 'I\'m not okay, and it\'s because of a fictional character.',
-    funFact: 'You have a specific playlist for when a book breaks your heart and you need to cry.'
+    superpower: 'Profound emotional empathy and heartful reading.',
+    kryptonite: 'Authors who kill off fan-favorite characters in epilogues.',
+    literarySoulmates: ['Jude St. Francis', 'Patroclus'],
+    authors: ['Hanya Yanagihara', 'Khaled Hosseini', 'Madeline Miller', 'Akwaeke Emezi'],
+    catchphrase: 'I\'m not okay, and it\'s because of chapter 32.',
+    funFact: 'You have a specific Spotify playlist called "Emotional Recovery After Book 3".'
   },
-  annotator: {
-    id: 'annotator',
-    name: 'The Annotator',
-    tagline: 'Reading is a conversation, not a monologue.',
-    emoji: '✍️',
-    color: '#8B7355',
-    gradient: 'linear-gradient(135deg, #FAF9F6 0%, #F3F1EC 50%, #E6E2D8 100%)',
-    badgeGradient: 'from-[#8B7355]/10 to-[#6E5A42]/10',
-    borderStyle: 'border-[#8B7355]/20',
-    textStyle: 'text-[#6E5A42]',
-    bgBadge: 'bg-[#8B7355]/10 text-[#6E5A42]',
+  cover_lover: {
+    id: 'cover_lover',
+    name: 'The Cover Lover',
+    tagline: 'Yes, I judged it by its cover.',
+    emoji: '🎨',
+    color: '#EC4899',
+    image: '/images/archetypes/book_dragon_.jpeg',
+    gradient: 'linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%)',
+    badgeGradient: 'from-[#EC4899]/10 to-[#F472B6]/10',
+    borderStyle: 'border-[#EC4899]/20',
+    textStyle: 'text-[#EC4899]',
+    bgBadge: 'bg-[#EC4899]/10 text-[#EC4899]',
     traits: [
-      'Highlights and underlines sentences heavily.',
-      'Writes questions, arguments, and theories in the margins.',
-      'Uses color-coded sticky tabs for themes and characters.'
+      'Buys hardcovers with special foil embossing.',
+      'Collects alternate special editions.',
+      'Arranges shelves by color aesthetic.'
     ],
-    superpower: 'Can analyze themes and foreshadowing on a first pass.',
-    kryptonite: 'E-readers that make highlighting feel virtual or laggy.',
-    literarySoulmates: [
-      'Hermione Granger (Harry Potter)',
-      'Jo March (Little Women)',
-      'Tsitsi (Nervous Conditions)'
-    ],
-    authors: [
-      'Virginia Woolf',
-      'Toni Morrison',
-      'Zadie Smith',
-      'Margaret Atwood',
-      'Teju Cole'
-    ],
-    catchphrase: 'Pass the pen, this metaphor is brilliant.',
-    funFact: 'Your friends borrow books from your shelf specifically to read your margin notes.'
+    superpower: 'Can spot a masterpiece graphic design from 50 paces.',
+    kryptonite: 'Movie tie-in stickers printed directly on book covers.',
+    literarySoulmates: ['Dorian Gray', 'Belle'],
+    authors: ['V.E. Schwab', 'Samantha Shannon', 'Erin Morgenstern'],
+    catchphrase: 'I already own this book, but look at the sprayed edges!',
+    funFact: 'You\'ve bought a foreign edition in a language you can\'t read because it was pretty.'
   },
-  juggler: {
-    id: 'juggler',
-    name: 'The Juggler',
-    tagline: 'Why read one when you can read five?',
-    emoji: '🤹',
-    color: '#3A7C8C',
-    gradient: 'linear-gradient(135deg, #F5FCFD 0%, #ECF9FA 50%, #DCF3F5 100%)',
-    badgeGradient: 'from-[#3A7C8C]/10 to-[#2A5C69]/10',
-    borderStyle: 'border-[#3A7C8C]/20',
-    textStyle: 'text-[#2A5C69]',
-    bgBadge: 'bg-[#3A7C8C]/10 text-[#2A5C69]',
+  chaos_reader: {
+    id: 'chaos_reader',
+    name: 'The Chaos Reader',
+    tagline: 'Method to the madness, order in the chaos.',
+    emoji: '🎲',
+    color: '#F59E0B',
+    image: '/images/archetypes/serial_starter_.jpeg',
+    gradient: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+    badgeGradient: 'from-[#F59E0B]/10 to-[#FBBF24]/10',
+    borderStyle: 'border-[#F59E0B]/20',
+    textStyle: 'text-[#F59E0B]',
+    bgBadge: 'bg-[#F59E0B]/10 text-[#F59E0B]',
     traits: [
-      'Has different books for different locations (bed, commute, bag).',
-      'Switches between formats (audio, digital, physical) seamlessly.',
-      'Easily distracted by new releases mid-read.'
+      'Reads 9 books at once across genres.',
+      'Switches from horror to cozy romance in 5 minutes.',
+      'Unpredictable reading habits.'
     ],
-    superpower: 'Can remember 5 complex plots at the exact same time.',
-    kryptonite: 'Forgetting which room you left a specific book in.',
-    literarySoulmates: [
-      'The Mad Hatter (Alice\'s Adventures in Wonderland)',
-      'Yulgo Istifanus (The Marathon Reader)'
+    superpower: 'Never gets bored—always has a book for every 10-minute impulse.',
+    kryptonite: 'Strict reading schedules and rigid reading challenges.',
+    literarySoulmates: ['The Mad Hatter', 'Loki', 'Puck'],
+    authors: ['Neil Gaiman', 'Terry Pratchett', 'China Miéville', 'Italo Calvino'],
+    catchphrase: 'I\'m reading a manga, a history book, and a spicy romance.',
+    funFact: 'You have bookmarks in 6 different rooms in books you haven\'t touched in a month.'
+  },
+  behemoth: {
+    id: 'behemoth',
+    name: 'The Behemoth',
+    tagline: 'Give me doorstops, epics, and 1,000 pages.',
+    emoji: '📚',
+    color: '#1E293B',
+    image: '/images/archetypes/the_researcher_.jpeg',
+    gradient: 'linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%)',
+    badgeGradient: 'from-[#1E293B]/10 to-[#334155]/10',
+    borderStyle: 'border-[#1E293B]/20',
+    textStyle: 'text-[#1E293B]',
+    bgBadge: 'bg-[#1E293B]/10 text-[#1E293B]',
+    traits: [
+      'Laughs at 200-page novellas.',
+      'Loves multi-volume epics and doorstop tomes.',
+      'Measures book weight in kilograms.'
     ],
-    authors: [
-      'Neil Gaiman',
-      'Italo Calvino',
-      'David Mitchell',
-      'Jorge Luis Borges'
-    ],
-    catchphrase: 'I\'m currently in the middle of a few different things.',
-    funFact: 'You have at least three open books on your bed, one in your bag, and one on your phone.'
+    superpower: 'Fearless endurance—tackles massive sagas with ease.',
+    kryptonite: 'Short story collections that end too quickly.',
+    literarySoulmates: ['Edmond Dantès', 'Hermione Granger'],
+    authors: ['Brandon Sanderson', 'George R.R. Martin', 'Leo Tolstoy', 'Hilary Mantel'],
+    catchphrase: 'Under 500 pages? That\'s just a warm-up.',
+    funFact: 'Your wrists have built muscle strength purely from holding 1,200-page hardcovers.'
   }
 };
-
-export const QUESTIONS = [
-  {
-    id: 1,
-    question: "You walk into a bookstore with 'just to browse' intentions. What happens?",
-    options: [
-      { text: "I head straight to the stationery aisle for new highlighters and sticky tabs.", archetype: "annotator" },
-      { text: "I grab a stack of 5 beautiful books I will probably add to my bookshelf pile.", archetype: "tsundoku" },
-      { text: "I wander from shelf to shelf, waiting to see what speaks to my soul today.", archetype: "mood" },
-      { text: "I buy the sequel of a book I barely tolerated just to complete the series.", archetype: "completist" },
-      { text: "I buy the thickest book I can find, planning to start and finish it tonight.", archetype: "marathon" },
-      { text: "I pick up the book, check if it's on Audible, and download both copies.", archetype: "juggler" },
-      { text: "I look at new releases in a daze, still grieving the characters from my last read.", archetype: "mourner" }
-    ]
-  },
-  {
-    id: 2,
-    question: "It's 2:00 AM. You have 50 pages left in a gripping novel. What do you do?",
-    options: [
-      { text: "Sleep is for the weak. I finish the book, turning pages like a madman.", archetype: "marathon" },
-      { text: "I switch to my phone/audiobook at 1.5x speed so I can listen in the dark.", archetype: "juggler" },
-      { text: "If the vibe shifted, I close it and start a cozy book that fits my sleep mood.", archetype: "mood" },
-      { text: "I force myself to push through, even if I hate it, just to cross it off my list.", archetype: "completist" },
-      { text: "I slow down, reading only 2 pages a minute, dreading the end of the journey.", archetype: "mourner" },
-      { text: "I write a paragraph-long margin note analyzing the author's pacing choices.", archetype: "annotator" },
-      { text: "I place a pretty bookmark, put it on my nightstand stack, and sleep.", archetype: "tsundoku" }
-    ]
-  },
-  {
-    id: 3,
-    question: "You read a book that turns out to be absolutely terrible. How do you handle it?",
-    options: [
-      { text: "I drop it instantly. Life is too short for bad books and wrong vibes.", archetype: "mood" },
-      { text: "I read it anyway. I have never DNF'd a book, and I won't start now.", archetype: "completist" },
-      { text: "I write angry margin notes, correcting the author's plot holes.", archetype: "annotator" },
-      { text: "I skim it at hyper-speed so I can mark it as 'Read' on my profile anyway.", archetype: "marathon" },
-      { text: "I close it, buy a pretty new book to comfort myself, and put it on my shelf.", archetype: "tsundoku" },
-      { text: "I switch to one of the other 3 books I currently have active.", archetype: "juggler" },
-      { text: "I mourn the wasted potential of the characters and feel sad for them.", archetype: "mourner" }
-    ]
-  },
-  {
-    id: 4,
-    question: "What does your ideal reading spot look like?",
-    options: [
-      { text: "A cozy armchair with a hot drink, candles, and soft ambient lighting.", archetype: "mood" },
-      { text: "Anywhere. On a train, in a waiting room, or walking with my headphones on.", archetype: "juggler" },
-      { text: "A structured desk with sticky notes, tabs, pencils, and highlighters close by.", archetype: "annotator" },
-      { text: "A comfortable bed where I can lie down for 8 hours of uninterrupted reading.", archetype: "marathon" },
-      { text: "A room lined with floor-to-ceiling bookshelves sorted by color or genre.", archetype: "tsundoku" },
-      { text: "A quiet corner where I can cry and process emotional trauma in peace.", archetype: "mourner" },
-      { text: "My usual spot where I finish every book I start, no distractions allowed.", archetype: "completist" }
-    ]
-  },
-  {
-    id: 5,
-    question: "A friend asks to borrow one of your favorite physical books. What is your reaction?",
-    options: [
-      { text: "I say yes, but warning: it is heavily annotated and highlighted.", archetype: "annotator" },
-      { text: "Absolute panic. I buy them a brand-new copy to keep my stack intact.", archetype: "tsundoku" },
-      { text: "I say yes, but inspect their hands and demand a binding promise of no page-creasing.", archetype: "completist" },
-      { text: "I give it to them, telling them to call me immediately when they reach Chapter 12 to cry.", archetype: "mourner" },
-      { text: "I say yes, but ask them to return it by tomorrow since it only takes a day to read.", archetype: "marathon" },
-      { text: "I tell them I have it in physical, kindle, and audio, and send them the audio link.", archetype: "juggler" },
-      { text: "I check if I am emotionally detached from it enough to let it go.", archetype: "mood" }
-    ]
-  },
-  {
-    id: 6,
-    question: "How do you choose your next read?",
-    options: [
-      { text: "I select whatever genre matches my current emotional wavelength.", archetype: "mood" },
-      { text: "I read whatever is next in the series I am currently completing.", archetype: "completist" },
-      { text: "I select the next book from the massive pile of unread books on my shelf.", archetype: "tsundoku" },
-      { text: "I spin a wheel, or pick 3 books of different genres to read at the same time.", archetype: "juggler" },
-      { text: "I look for a book with deep themes that will look great annotated.", archetype: "annotator" },
-      { text: "I grab a fast-paced thriller that I can finish in a single day.", archetype: "marathon" },
-      { text: "I wait until my book hangover fades before I can even think of picking one.", archetype: "mourner" }
-    ]
-  },
-  {
-    id: 7,
-    question: "You just finished a 5-star masterpiece. What is your immediate next move?",
-    options: [
-      { text: "I stare at the wall in silence, unable to function or process reality.", archetype: "mourner" },
-      { text: "I immediately log it, write a 3-page review, and pick up the next book.", archetype: "marathon" },
-      { text: "I post photos of my annotations and tabs on my social media.", archetype: "annotator" },
-      { text: "I buy a special hardcover edition of it to display on my favorite shelf.", archetype: "tsundoku" },
-      { text: "I write a detailed list of all the books in the same series or author catalog.", archetype: "completist" },
-      { text: "I switch to my other active book of a completely different genre.", archetype: "juggler" },
-      { text: "I wrap myself in a blanket and process the vibes before choosing a mood.", archetype: "mood" }
-    ]
-  }
-];

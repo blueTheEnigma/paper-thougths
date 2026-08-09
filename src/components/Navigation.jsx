@@ -55,6 +55,9 @@ export default function Navigation() {
 
   const navLinks = [
     { name: "Home", href: "/", icon: Compass },
+    { name: "Book Zodiac", href: "/zodiac", icon: Sparkles },
+    { name: "Archetypes", href: "/archetype", icon: User },
+    { name: "Soundscapes", href: "/soundscapes", icon: Feather },
     { name: "Bookstore", href: "/bookstore", icon: ShoppingBag },
     { name: "Events", href: "/events", icon: Sparkles },
     { name: "Village", href: "/village", icon: Feather },
