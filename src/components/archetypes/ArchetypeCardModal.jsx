@@ -5,7 +5,7 @@ export default function ArchetypeCardModal({ archetype, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-amber-500/30 rounded-3xl p-6 max-w-2xl w-full my-8 space-y-6 shadow-2xl relative animate-scale-up">
+      <div className="bg-[#120308] border border-[#F2A98A]/30 rounded-3xl p-6 max-w-2xl w-full my-8 space-y-6 shadow-2xl relative animate-scale-up">
         
         <button
           onClick={onClose}
@@ -25,23 +25,23 @@ export default function ArchetypeCardModal({ archetype, onClose }) {
 
         {/* DETAILS BREAKDOWN */}
         <div className="space-y-4 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#5c1a2e]/30 border border-[#F2A98A]/25 text-[#F2A98A] text-xs font-bold uppercase tracking-wider">
             <span>{archetype.emoji}</span>
             <span>{archetype.name}</span>
           </div>
 
-          <p className="text-base font-serif italic text-amber-200/90">
+          <p className="text-base font-serif italic text-cream/90">
             "{archetype.tagline}"
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left text-xs bg-slate-950 p-4 rounded-xl border border-white/5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left text-xs bg-[#FFF5EC] p-5 rounded-2xl border border-[#2C1A0E]/15 text-[#2C1A0E] shadow-inner">
             <div>
-              <span className="font-bold text-amber-400 block mb-1">⚡ Superpower</span>
-              <p className="text-amber-100/80">{archetype.superpower}</p>
+              <span className="font-bold text-[#5C1A2E] text-xs block mb-1">⚡ Superpower</span>
+              <p className="text-[#2C1A0E]/85 font-serif leading-relaxed">{archetype.superpower}</p>
             </div>
             <div>
-              <span className="font-bold text-rose-400 block mb-1">🥀 Kryptonite</span>
-              <p className="text-amber-100/80">{archetype.kryptonite}</p>
+              <span className="font-bold text-rose-700 text-xs block mb-1">🥀 Kryptonite</span>
+              <p className="text-[#2C1A0E]/85 font-serif leading-relaxed">{archetype.kryptonite}</p>
             </div>
           </div>
         </div>

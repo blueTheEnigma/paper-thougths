@@ -18,7 +18,10 @@ export default function ArchetypesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0D0B14] text-amber-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
+    <div 
+      className="min-h-screen text-cream py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-accent/40"
+      style={{ background: 'radial-gradient(ellipse at 50% 50%, #20070e 0%, #0d0205 70%, #050002 100%)' }}
+    >
       
       {/* Lightbox Modal */}
       {selectedArchetype && (
@@ -32,15 +35,15 @@ export default function ArchetypesPage() {
 
         {/* HEADER */}
         <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#5c1a2e]/30 border border-[#F2A98A]/25 text-[#F2A98A] text-xs font-bold uppercase tracking-wider">
             ✨ Paper Thoughts Original
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-serif font-bold text-amber-100 tracking-tight">
+          <h1 className="text-4xl sm:text-6xl font-serif font-bold text-cream tracking-tight">
             Reader Archetypes
           </h1>
 
-          <p className="text-base sm:text-lg font-serif italic text-amber-200/80">
+          <p className="text-base sm:text-lg font-serif italic text-cream/80">
             Which one are you? Explore the 21 celebrated identities of the reading universe.
           </p>
 
@@ -51,7 +54,7 @@ export default function ArchetypesPage() {
               placeholder="Search by name, habit, or trait..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full max-w-md px-5 py-3 rounded-full bg-slate-900 border border-amber-500/30 text-amber-100 placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400 shadow-inner"
+              className="w-full max-w-md px-5 py-3 rounded-full bg-slate-900 border border-[#F2A98A]/35 text-cream placeholder-slate-500 text-sm focus:outline-none focus:border-[#F2A98A]/60 shadow-inner"
             />
           </div>
         </div>
@@ -63,38 +66,38 @@ export default function ArchetypesPage() {
               key={archetype.id}
               id={archetype.id}
               onClick={() => setSelectedArchetype(archetype)}
-              className="bg-slate-900/80 backdrop-blur-xl rounded-3xl p-6 border border-amber-500/20 hover:border-amber-500/50 shadow-xl space-y-4 cursor-pointer group transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between"
+              className="bg-[#120308]/90 backdrop-blur-xl rounded-3xl p-6 border border-[#F2A98A]/20 hover:border-[#F2A98A]/50 shadow-xl space-y-4 cursor-pointer group transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between"
             >
               <div className="space-y-3">
                 
                 {/* Visual Thumbnail */}
-                <div className="w-full aspect-[2/3] rounded-2xl overflow-hidden bg-black border border-white/10 shadow-md relative group-hover:shadow-amber-500/10">
+                <div className="w-full aspect-[2/3] rounded-2xl overflow-hidden bg-black border border-white/5 shadow-md relative group-hover:shadow-[#F2A98A]/10">
                   <img
                     src={archetype.image}
                     alt={archetype.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-xs font-mono text-amber-300 border border-white/10">
+                  <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-xs font-mono text-[#F2A98A] border border-white/10">
                     {archetype.emoji}
                   </div>
                 </div>
 
-                <h3 className="text-xl font-serif font-bold text-amber-100 group-hover:text-amber-300">
+                <h3 className="text-xl font-serif font-bold text-cream group-hover:text-[#F2A98A] transition-colors">
                   {archetype.name}
                 </h3>
 
-                <p className="text-xs italic text-amber-200/70 font-serif">
+                <p className="text-xs italic text-cream/70 font-serif">
                   "{archetype.tagline}"
                 </p>
 
-                <div className="space-y-1 text-xs text-slate-300 pt-1">
-                  <span className="font-bold text-amber-400/90 font-mono">Superpower:</span>
-                  <p className="line-clamp-2 italic">{archetype.superpower}</p>
+                <div className="space-y-1 text-xs pt-1">
+                  <span className="font-bold text-[#F2A98A] font-mono">Superpower:</span>
+                  <p className="line-clamp-2 italic font-serif text-cream/80 mt-0.5">"{archetype.superpower}"</p>
                 </div>
               </div>
 
               <div className="pt-2">
-                <span className="w-full py-2.5 rounded-xl bg-slate-800 group-hover:bg-amber-500 group-hover:text-slate-950 text-amber-200 font-bold text-xs transition-colors flex items-center justify-center gap-1">
+                <span className="w-full py-2.5 rounded-xl bg-slate-900 group-hover:bg-[#5C1A2E] group-hover:text-cream text-[#F2A98A] border border-[#F2A98A]/10 font-bold text-xs transition-all flex items-center justify-center gap-1">
                   View Full Poster Card 🔍
                 </span>
               </div>
@@ -104,16 +107,16 @@ export default function ArchetypesPage() {
         </div>
 
         {/* BOTTOM CTA */}
-        <div className="text-center py-12 px-6 bg-gradient-to-r from-purple-950/40 via-slate-900 to-indigo-950/40 rounded-3xl border border-amber-500/20 space-y-4">
-          <h3 className="text-2xl font-serif font-bold text-amber-100">
+        <div className="text-center py-12 px-6 bg-gradient-to-r from-[#5c1a2e]/30 via-[#0d0205] to-[#c96a42]/10 rounded-3xl border border-[#F2A98A]/20 space-y-4">
+          <h3 className="text-2xl font-serif font-bold text-cream">
             Want to find your exact match?
           </h3>
-          <p className="text-sm text-amber-200/80 max-w-md mx-auto">
+          <p className="text-sm text-cream/80 max-w-md mx-auto font-serif">
             Take The Book Zodiac quiz to generate your complete Literary Natal Chart and discover your top archetype matches!
           </p>
           <Link
             href="/zodiac"
-            className="inline-block px-8 py-3.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition-all hover:scale-105"
+            className="inline-block px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#5c1a2e] to-[#c96a42] hover:from-[#7a2040] hover:to-[#e07a5f] text-cream font-bold text-sm shadow-lg shadow-amber-500/20 transition-all hover:scale-105"
           >
             Take The Book Zodiac Quiz ✨
           </Link>

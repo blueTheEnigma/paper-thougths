@@ -247,6 +247,20 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const [copiedCode, setCopiedCode] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState(null);
   const [activeTab, setActiveTab] = useState('overview'); // Tab state: 'overview', 'workspaces', 'ledger', 'honors', 'settings'
+  const [zodiacResult, setZodiacResult] = useState(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pt_zodiac_result');
+      if (saved) {
+        try {
+          setZodiacResult(JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to parse saved zodiac", e);
+        }
+      }
+    }
+  }, []);
   
   // Profile Form States
   const [fullName, setFullName] = useState(profile?.name || '');
@@ -1742,6 +1756,53 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                       </button>
                     </div>
 
+                    {/* Book Zodiac Results / Promo Widget */}
+                    {zodiacResult ? (
+                      <div className="parchment-card p-5 sm:p-8 relative overflow-hidden group flex flex-col justify-between" style={{ background: 'radial-gradient(circle at 100% 0%, rgba(92,26,46,0.08) 0%, transparent 60%)' }}>
+                        <div className="absolute top-3 right-3 text-2xl animate-float">✨</div>
+                        <div className="relative z-10 space-y-4">
+                          <span className="text-[9px] font-sans font-bold uppercase tracking-[0.25em] text-burgundy bg-burgundy/10 px-2.5 py-1 rounded inline-block">
+                            Literary Zodiac
+                          </span>
+                          <h3 className="font-display font-extrabold text-2xl text-burgundy mt-1 leading-tight">
+                            The {zodiacResult.sunSign.name}
+                          </h3>
+                          <div className="space-y-1 font-serif text-xs text-ink/80">
+                            <p>☀️ <strong>Sun:</strong> {zodiacResult.sunSign.name} ({zodiacResult.sunSign.title})</p>
+                            <p>🌙 <strong>Moon:</strong> {zodiacResult.moonSign.name}</p>
+                            <p>⬆️ <strong>Rising:</strong> {zodiacResult.risingSign.name}</p>
+                          </div>
+                          <Link 
+                            href="/zodiac"
+                            className="w-full inline-flex items-center justify-center gap-2 bg-burgundy hover:bg-ink text-cream py-3.5 rounded-xl font-bold transition-all shadow-md active:scale-[0.98] text-xs uppercase tracking-wider font-sans cursor-pointer mt-2"
+                          >
+                            <Sparkles size={14} /> View Natal Chart
+                          </Link>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="parchment-card p-5 sm:p-8 relative overflow-hidden group flex flex-col justify-between" style={{ background: 'radial-gradient(circle at 100% 0%, rgba(92,26,46,0.08) 0%, transparent 60%)' }}>
+                        <div className="absolute top-3 right-3 text-2xl animate-float">🔮</div>
+                        <div className="relative z-10 space-y-4">
+                          <span className="text-[9px] font-sans font-bold uppercase tracking-[0.25em] text-burgundy bg-burgundy/10 px-2.5 py-1 rounded inline-block">
+                            Literary Zodiac
+                          </span>
+                          <h3 className="font-display font-extrabold text-2xl text-burgundy mt-1 leading-tight">
+                            Who are you in the literary universe?
+                          </h3>
+                          <p className="text-xs text-ink/70 leading-relaxed font-serif">
+                            Take the 28-question psychological quiz to reveal your official Sun, Moon, and Rising signs.
+                          </p>
+                          <Link 
+                            href="/zodiac"
+                            className="w-full inline-flex items-center justify-center gap-2 bg-burgundy hover:bg-ink text-cream py-3.5 rounded-xl font-bold transition-all shadow-md active:scale-[0.98] text-xs uppercase tracking-wider font-sans cursor-pointer mt-2"
+                          >
+                            <Sparkles size={14} /> Begin Cosmic Journey
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+
                     {/* WhatsApp Community Invitation */}
                     <div className="parchment-card p-5 sm:p-8 relative overflow-hidden group flex flex-col justify-between">
                       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform pointer-events-none">
@@ -1798,11 +1859,11 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                           </button>
                         </li>
                         <li>
-                          <Link href="/archetype" className="group text-ink/75 hover:text-accent font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors">
+                          <Link href="/zodiac" className="group text-ink/75 hover:text-accent font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors">
                             <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
                               <Award size={16} className="text-sage" />
                             </div>
-                            {profile?.archetype ? "Retake Archetype Quiz" : "Reader Archetype Quiz"}
+                            {zodiacResult ? "View Book Zodiac & Chart" : "Book Zodiac Journey"}
                           </Link>
                         </li>
                         <li>
