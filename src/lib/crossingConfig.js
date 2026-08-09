@@ -69,7 +69,7 @@ export const REALMS = {
 };
 
 export const MAX_POINTS = 130;
-export const MIN_PASSAGE_POINTS = 30; // Signing Register is exactly 30
+export const MIN_PASSAGE_POINTS = 40; // Signing Register (30) + Instagram Follow (10)
 export const GIFT_THRESHOLD_POINTS = 90;
 
 export const ACCORD = [

@@ -7,8 +7,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, CheckCircle2, Loader2, Lock, Unlock, 
   ArrowRight, Gift, Compass, BookOpen, Download, HelpCircle, Copy,
-  MessageSquare
+  MessageSquare, ChevronDown, ChevronUp
 } from 'lucide-react';
+import { FaInstagram } from 'react-icons/fa6';
 import { REALMS, CROSSING_CONFIG, MAX_POINTS, MIN_PASSAGE_POINTS, GIFT_THRESHOLD_POINTS, ACCORD } from '@/lib/crossingConfig';
 
 function CrossingPageContent() {
@@ -29,8 +30,18 @@ function CrossingPageContent() {
   const [declCopied, setDeclCopied] = useState(false);
   const [refParam, setRefParam] = useState('');
   const [whatsappGroupLink, setWhatsappGroupLink] = useState('');
+  const [showAccordDetails, setShowAccordDetails] = useState(false);
 
   const isLoggedIn = sessionStatus === 'authenticated';
+  const isInstagramFollowed = progress.instagram === true;
+  const hasPassage = isLoggedIn && isInstagramFollowed;
+
+  const handleFollowInstagram = () => {
+    window.open(CROSSING_CONFIG.instagram, '_blank', 'noopener,noreferrer');
+    if (progress.instagram !== true) {
+      handleToggleWaypoint('instagram', true);
+    }
+  };
 
   // Handle referral capture
   useEffect(() => {
@@ -413,13 +424,13 @@ function CrossingPageContent() {
             <span className="text-[8px] sm:text-[10px] font-bold mt-2 uppercase tracking-wider text-ink/40">The Edge</span>
           </div>
 
-          {/* 2. Gate of Passage (30 pts) */}
-          <div className="absolute left-[25%] top-0 -translate-y-1/3 flex flex-col items-center -translate-x-1/2">
-            <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-500 shadow-sm ${totalPoints >= MIN_PASSAGE_POINTS ? 'bg-burgundy border-burgundy text-primary' : 'bg-[#FAF8F5] border-ink/20 text-ink/30'}`}>
-              {totalPoints >= MIN_PASSAGE_POINTS ? <Unlock size={12} /> : <Lock size={12} />}
+          {/* 2. Gate of Passage (40 pts) */}
+          <div className="absolute left-[30.7%] top-0 -translate-y-1/3 flex flex-col items-center -translate-x-1/2">
+            <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-500 shadow-sm ${hasPassage ? 'bg-burgundy border-burgundy text-primary' : 'bg-[#FAF8F5] border-ink/20 text-ink/30'}`}>
+              {hasPassage ? <Unlock size={12} /> : <Lock size={12} />}
             </div>
             <span className="text-[8px] sm:text-[10px] font-bold mt-2 uppercase tracking-wider text-ink/60 text-center">
-              <span className="hidden sm:inline">Passage (30)</span>
+              <span className="hidden sm:inline">Passage (40)</span>
               <span className="inline sm:hidden">Passage</span>
             </span>
           </div>
@@ -444,6 +455,180 @@ function CrossingPageContent() {
           <div className="absolute bottom-2 right-4 flex items-center gap-1.5 text-xs text-ink/40">
             <Loader2 size={12} className="animate-spin" />
             Saving progress...
+          </div>
+        )}
+      </section>
+
+      {/* Quick Passage Hero Card for Mobile & Fast Access */}
+      <section className="bg-gradient-to-br from-[#FFF9F3] via-card to-[#FDF8F3] border-2 border-burgundy/20 rounded-[32px] p-6 md:p-8 mb-16 shadow-xl max-w-4xl mx-auto relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-burgundy/10 pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-burgundy/10 border border-burgundy/20 flex items-center justify-center text-burgundy shrink-0">
+              <Sparkles size={18} />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-accent block">Fast-Track Mobile Crossing</span>
+              <h2 className="text-xl md:text-2xl font-display font-bold text-burgundy leading-tight">
+                Town Hall Quick Passage
+              </h2>
+            </div>
+          </div>
+          <span className={`self-start sm:self-auto text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${hasPassage ? 'bg-sage/10 text-sage border-sage/30' : 'bg-burgundy/10 text-burgundy border-burgundy/20'}`}>
+            {hasPassage ? 'Passage Unlocked' : '2 Steps Required'}
+          </span>
+        </div>
+
+        <p className="text-xs md:text-sm text-ink/75 mb-6 font-quote italic">
+          Complete both required steps below to unlock immediate access to the Town Hall WhatsApp group.
+        </p>
+
+        {/* 2 Step Checklist Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          {/* Step 1: Sign up */}
+          <div className={`p-4 rounded-2xl border transition-all ${isLoggedIn ? 'bg-[#FAFDF9] border-sage/40' : 'bg-cream/60 border-burgundy/20'}`}>
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isLoggedIn ? 'bg-sage text-white' : 'bg-burgundy/10 text-burgundy border border-burgundy/20'}`}>
+                  {isLoggedIn ? <CheckCircle2 size={16} /> : '1'}
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-ink/60">Step 1</span>
+              </div>
+              <span className="text-[10px] font-bold text-burgundy/60 bg-burgundy/5 px-2 py-0.5 rounded">30 pts</span>
+            </div>
+            <h3 className="text-sm font-bold text-burgundy mb-1">Sign up on the App</h3>
+            <p className="text-xs text-ink/60 mb-3">Register your name in the clubhouse ledger.</p>
+            {isLoggedIn ? (
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-sage">
+                <CheckCircle2 size={14} />
+                <span>Registered</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => router.push(signUpUrl)}
+                className="w-full btn-primary py-2 text-xs flex items-center justify-center gap-1.5"
+              >
+                Sign Up Now
+                <ArrowRight size={12} />
+              </button>
+            )}
+          </div>
+
+          {/* Step 2: Follow Instagram */}
+          <div className={`p-4 rounded-2xl border transition-all ${isInstagramFollowed ? 'bg-[#FAFDF9] border-sage/40' : 'bg-cream/60 border-burgundy/20'}`}>
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isInstagramFollowed ? 'bg-sage text-white' : 'bg-burgundy/10 text-burgundy border border-burgundy/20'}`}>
+                  {isInstagramFollowed ? <CheckCircle2 size={16} /> : '2'}
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-ink/60">Step 2</span>
+              </div>
+              <span className="text-[10px] font-bold text-burgundy/60 bg-burgundy/5 px-2 py-0.5 rounded">10 pts</span>
+            </div>
+            <h3 className="text-sm font-bold text-burgundy mb-1">Follow on Instagram</h3>
+            <p className="text-xs text-ink/60 mb-3">Join our literary community on Instagram.</p>
+            {isInstagramFollowed ? (
+              <div className="flex items-center justify-between">
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-sage">
+                  <CheckCircle2 size={14} />
+                  <span>Followed</span>
+                </div>
+                <button
+                  onClick={handleFollowInstagram}
+                  className="text-[10px] font-bold text-ink/50 hover:text-burgundy underline"
+                >
+                  Visit Profile
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleFollowInstagram}
+                className="w-full bg-[#E1306C] hover:bg-[#c1255b] text-white py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+              >
+                <FaInstagram size={14} />
+                Follow on Instagram
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Town Hall Action Box */}
+        {hasPassage ? (
+          <div className="bg-[#E6F8ED] border border-[#25D366]/30 rounded-2xl p-5 md:p-6 text-center space-y-4">
+            <div className="flex items-center justify-center gap-2 text-[#25D366] font-bold text-xs uppercase tracking-widest">
+              <Unlock size={14} />
+              <span>Town Hall Passage Unlocked</span>
+            </div>
+
+            {!progress.agreed_to_accord ? (
+              <div className="space-y-4 max-w-xl mx-auto text-left">
+                {/* Accord Checkbox */}
+                <label className="flex items-start gap-3 cursor-pointer group bg-white/80 p-3.5 rounded-xl border border-sage/20">
+                  <input
+                    type="checkbox"
+                    checked={accordAgreed}
+                    onChange={(e) => setAccordAgreed(e.target.checked)}
+                    className="mt-0.5 accent-burgundy rounded border-ink/20 w-4 h-4"
+                  />
+                  <span className="text-xs font-bold text-ink/80 group-hover:text-burgundy transition-colors leading-snug select-none">
+                    I agree to hold the Accord of the Second Chapter in the Town Hall room.
+                  </span>
+                </label>
+
+                {/* Expand Accord Rules Toggle */}
+                <div>
+                  <button
+                    onClick={() => setShowAccordDetails(!showAccordDetails)}
+                    className="text-xs font-bold text-burgundy hover:text-accent flex items-center gap-1 transition-colors"
+                  >
+                    {showAccordDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    {showAccordDetails ? 'Hide Accord Rules' : 'View Full Accord Rules (17 Rules)'}
+                  </button>
+
+                  {showAccordDetails && (
+                    <div className="mt-3 max-h-60 overflow-y-auto border border-burgundy/10 rounded-xl p-4 bg-white/90 space-y-4 scrollbar-thin text-xs text-ink/80">
+                      {ACCORD.map((rule) => (
+                        <div key={rule.num} className="border-b border-ink/5 pb-3 last:border-0">
+                          <span className="font-bold text-accent">{rule.num}. {rule.title}: </span>
+                          <span className="font-quote italic">{rule.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleAcceptAccord}
+                  disabled={!accordAgreed}
+                  className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white py-3 rounded-xl font-bold transition-all shadow-md active:scale-[0.98] text-xs uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <MessageSquare size={16} />
+                  Enter Town Hall WhatsApp Group
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-ink/75 font-quote italic">
+                  You have accepted the Accord. The door to the homeland is open.
+                </p>
+                <a
+                  href={whatsappGroupLink || 'https://chat.whatsapp.com/DGDfnoZCM2mH6xqC8cK6Ez'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full max-w-md mx-auto inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white py-3.5 rounded-xl font-bold transition-all shadow-md text-xs uppercase tracking-wider"
+                >
+                  <MessageSquare size={16} />
+                  Join Town Hall WhatsApp Group
+                  <ArrowRight size={16} />
+                </a>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-cream/40 border border-burgundy/10 rounded-2xl p-4 text-center">
+            <p className="text-xs font-semibold text-burgundy/80">
+              🔒 Complete Step 1 (Sign up) and Step 2 (Follow on Instagram) above to reveal the Town Hall group link.
+            </p>
           </div>
         )}
       </section>
@@ -657,9 +842,9 @@ function CrossingPageContent() {
         )}
       </AnimatePresence>
 
-      {/* The Final Gate (revealed only if Register is signed [>= 30 pts]) */}
+      {/* The Final Gate */}
       <section className="mt-16 max-w-4xl mx-auto text-center border-t border-burgundy/10 pt-16 pb-20">
-        {totalPoints >= MIN_PASSAGE_POINTS ? (
+        {hasPassage ? (
           progress.agreed_to_accord === true ? (
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
@@ -827,7 +1012,7 @@ function CrossingPageContent() {
             <Lock size={32} className="mb-4 text-ink/20" />
             <h3 className="font-display text-lg font-bold text-ink/40 mb-2">The Final Gate is Locked</h3>
             <p className="text-xs leading-relaxed mb-6">
-              To cross into the next chapter, you must first register your name in the ledger of the Archives.
+              To cross into the next chapter, you must first sign up on the app and follow on Instagram.
             </p>
             <button
               onClick={() => router.push(signUpUrl)}
