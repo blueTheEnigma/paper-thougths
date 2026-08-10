@@ -296,16 +296,26 @@ export default function NatalChartCard({ chartResult, onRetake }) {
       ctx.font = '16px Georgia, serif';
       ctx.fillText('❖   ✦   ❖', width / 2, 1295);
 
-      // Trigger download link
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-      const link = document.createElement('a');
-      link.download = `paper_thoughts_zodiac_${sunSign.name.toLowerCase()}.jpg`;
-      link.href = dataUrl;
-      link.click();
+      // Trigger blob download link (bulletproof across all browsers & Windows)
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          setIsDownloading(false);
+          alert('Failed to generate image blob. Please try again.');
+          return;
+        }
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `paper_thoughts_zodiac_${sunSign.name.toLowerCase().replace(/\s+/g, '_')}.jpg`;
+        link.href = blobUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        setIsDownloading(false);
+      }, 'image/jpeg', 0.95);
     } catch (err) {
       console.error("Zodiac poster generation failed:", err);
       alert("Failed to download zodiac chart poster. Please try again.");
-    } finally {
       setIsDownloading(false);
     }
   };
