@@ -10,6 +10,7 @@ import {
   Download, Lock
 } from 'lucide-react';
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import FeedbackDashboard from '@/components/FeedbackDashboard';
@@ -1853,7 +1854,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                             className="w-full text-left group text-ink/75 hover:text-accent font-bold text-xs uppercase tracking-wider flex items-center gap-3 transition-colors cursor-pointer bg-transparent border-0 p-0"
                           >
                             <div className="p-2 bg-sage/5 rounded-lg group-hover:bg-accent/10 transition-colors">
-                              <BookOpen size={16} className="text-sage" />
+                              <Logo className="text-sage" size={16} />
                             </div>
                             Rules & Onboarding Guide
                           </button>

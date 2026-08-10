@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Loader2, Copy, CheckCircle2, BookOpen } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 export default function LookupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,7 +53,7 @@ export default function LookupPage() {
         className="max-w-xl w-full bg-white p-8 md:p-12 rounded-[40px] border border-sage/20 shadow-xl relative overflow-hidden"
       >
         <div className="flex items-center gap-3 mb-4">
-          <BookOpen className="text-sage" size={20} />
+          <Logo className="text-sage" size={20} />
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-ink/40">Archive Lookup</span>
         </div>
         

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { Mail, Send, Loader2, CheckCircle2, BookOpen, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import Logo from './Logo';
 import { FaInstagram, FaWhatsapp, FaXTwitter, FaTiktok, FaYoutube, FaLinkedin, FaDiscord } from "react-icons/fa6";
 
 import { CROSSING_CONFIG } from '@/lib/crossingConfig';
@@ -110,7 +111,7 @@ export default function ContactUs() {
           
           <div className="relative z-10 w-full flex flex-col items-center">
             <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-white/20">
-              <BookOpen size={40} className="text-cream" />
+              <Logo className="text-cream" size={40} />
             </div>
             
             {!isLoaded ? (
