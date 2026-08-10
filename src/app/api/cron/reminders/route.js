@@ -46,16 +46,21 @@ async function handleReminderCron(request) {
 
     // 1. Fetch all distinct member emails from users table and newsletter_subscribers table
     const userRows = await Database.query(`
-      SELECT DISTINCT email, name 
+      SELECT DISTINCT email, full_name as name 
       FROM users 
       WHERE email IS NOT NULL AND email != ''
     `);
 
-    const subscriberRows = await Database.query(`
-      SELECT DISTINCT email 
-      FROM newsletter_subscribers 
-      WHERE email IS NOT NULL AND email != ''
-    `);
+    let subscriberRows = [];
+    try {
+      subscriberRows = await Database.query(`
+        SELECT DISTINCT email 
+        FROM newsletter_subscribers 
+        WHERE email IS NOT NULL AND email != ''
+      `);
+    } catch (e) {
+      console.log('newsletter_subscribers table not present, relying on users table.');
+    }
 
     // Deduplicate emails map
     const recipientsMap = new Map();
