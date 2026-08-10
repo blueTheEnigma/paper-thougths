@@ -1,6 +1,22 @@
 {
   "crons": [
     {
+      "path": "/api/cron/reminders?type=monday",
+      "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/cron/reminders?type=wednesday",
+      "schedule": "0 8 * * 3"
+    },
+    {
+      "path": "/api/cron/reminders?type=friday",
+      "schedule": "0 8 * * 5"
+    },
+    {
+      "path": "/api/cron/reminders?type=saturday",
+      "schedule": "0 10 * * 6"
+    },
+    {
       "path": "/api/cron/batch-transition",
       "schedule": "59 22 * * 5"
     },
