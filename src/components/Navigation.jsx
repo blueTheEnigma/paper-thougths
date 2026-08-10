@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Logo from './Logo';
 import { usePathname } from 'next/navigation';
 import { 
   BookOpen, Compass, ShoppingBag, Feather, Sparkles, 
@@ -72,7 +73,7 @@ export default function Navigation() {
       >
         <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
           <div className="bg-burgundy/5 p-2 rounded-xl border border-burgundy/10 group-hover:bg-burgundy/10 transition-colors">
-            <BookOpen className="text-burgundy transition-transform group-hover:scale-105" size={24} />
+            <Logo className="text-burgundy transition-transform group-hover:scale-105" size={24} />
           </div>
           <div className="flex flex-col justify-center">
             <span className="font-display font-bold text-base text-ink tracking-tight uppercase leading-none">Paper Thoughts</span>

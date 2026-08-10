@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import Link from 'next/link';
+import Logo from './Logo';
 import { usePathname } from 'next/navigation';
 import { BookOpen, Send, Loader2 } from 'lucide-react';
 import { FaInstagram, FaWhatsapp, FaTiktok, FaYoutube, FaLinkedin, FaDiscord } from "react-icons/fa6";
@@ -52,7 +53,7 @@ export default function Footer() {
         <div className="lg:col-span-4 space-y-6">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="bg-white/5 p-2 rounded-xl border border-white/10 group-hover:bg-white/10 transition-colors">
-              <BookOpen className="text-primary" size={24} />
+              <Logo className="text-primary" size={24} />
             </div>
             <div className="flex flex-col">
               <span className="font-display font-bold text-base tracking-tight uppercase leading-none text-cream">Paper Thoughts</span>

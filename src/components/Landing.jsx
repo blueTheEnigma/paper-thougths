@@ -187,6 +187,8 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
           {/* Rich Vignette and Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/60 to-ink/20" />
           <div className="absolute inset-0 bg-radial-vignette opacity-60" />
+          {/* Subtle gold ambient glow behind typography */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(242,169,138,0.08)_0%,transparent_50%)]" />
         </div>
         
         {/* Layered Serif Typography and Animated Entrance */}
@@ -251,73 +253,83 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
       </section>
 
       {/* NEW FEATURE BANNER: THE LITERARY ECOSYSTEM */}
-      <section className="py-16 px-6 bg-[#0D0B14] text-amber-50 border-b border-amber-500/20">
-        <div className="max-w-6xl mx-auto space-y-10">
+      <section 
+        className="py-20 px-6 border-b border-white/5 relative overflow-hidden"
+        style={{ background: 'radial-gradient(ellipse at 50% 50%, #20070e 0%, #0d0205 70%, #050002 100%)' }}
+      >
+        {/* Ambient star speck particles */}
+        <div className="absolute top-10 left-10 w-1 h-1 bg-white rounded-full opacity-30 animate-pulse"></div>
+        <div className="absolute bottom-10 right-10 w-1 h-1.5 bg-[#F2A98A] rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+
+        <div className="max-w-6xl mx-auto space-y-12 relative z-10">
           <div className="text-center space-y-3">
-            <span className="text-xs font-mono uppercase tracking-widest text-amber-400">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#F2A98A] font-bold">
               ✨ Discover Your Literary Essence
             </span>
-            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-amber-100">
+            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-cream tracking-tight">
               Who Are You in the Literary Universe?
             </h2>
-            <p className="text-sm sm:text-base text-amber-200/70 max-w-xl mx-auto italic font-serif">
-              Explore the 3 core pillars of Paper Thoughts identity system.
+            <p className="text-sm sm:text-base text-cream/70 max-w-xl mx-auto italic font-serif">
+              Explore the 3 core pillars of the Paper Thoughts identity system.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* CARD 1: BOOK ZODIAC */}
-            <div className="p-6 rounded-3xl bg-slate-900/90 border border-amber-500/30 space-y-4 hover:border-amber-400 transition-all flex flex-col justify-between group">
-              <div className="space-y-3">
-                <span className="text-4xl">🔮</span>
-                <h3 className="text-2xl font-serif font-bold text-amber-100 group-hover:text-amber-300">
+            <div className="p-6 rounded-2xl bg-[#FFF5EC] border border-[#2C1A0E]/15 space-y-5 hover:border-[#5C1A2E]/30 transition-all flex flex-col justify-between group shadow-md relative">
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 h-4.5 bg-[#C5A059]/15 transform rotate-1 border-l border-r border-[#C5A059]/25" />
+              <div className="space-y-3 pt-2">
+                <span className="text-4xl block">🔮</span>
+                <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
                   The Book Zodiac
                 </h3>
-                <p className="text-xs text-amber-200/70 leading-relaxed font-serif">
+                <p className="text-xs text-[#2C1A0E]/80 leading-relaxed font-serif">
                   A 28-question astrological identity test. Discover your <strong>Sun</strong>, <strong>Moon</strong>, and <strong>Rising</strong> literary signs.
                 </p>
               </div>
               <Link
                 href="/zodiac"
-                className="w-full py-3 px-4 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs text-center transition-all shadow-md"
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#5C1A2E] to-[#C96A42] hover:from-[#7A2040] hover:to-[#e07a5f] text-cream font-bold text-xs text-center transition-all shadow-md active:scale-95"
               >
                 Discover Your Zodiac Chart →
               </Link>
             </div>
 
             {/* CARD 2: READER ARCHETYPES */}
-            <div className="p-6 rounded-3xl bg-slate-900/90 border border-amber-500/30 space-y-4 hover:border-amber-400 transition-all flex flex-col justify-between group">
-              <div className="space-y-3">
-                <span className="text-4xl">🎭</span>
-                <h3 className="text-2xl font-serif font-bold text-amber-100 group-hover:text-amber-300">
+            <div className="p-6 rounded-2xl bg-[#FFF5EC] border border-[#2C1A0E]/15 space-y-5 hover:border-[#5C1A2E]/30 transition-all flex flex-col justify-between group shadow-md relative">
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 h-4.5 bg-[#C5A059]/15 transform -rotate-1 border-l border-r border-[#C5A059]/25" />
+              <div className="space-y-3 pt-2">
+                <span className="text-4xl block">🎭</span>
+                <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
                   Reader Archetypes
                 </h3>
-                <p className="text-xs text-amber-200/70 leading-relaxed font-serif">
+                <p className="text-xs text-[#2C1A0E]/80 leading-relaxed font-serif">
                   Explore 21 celebrated habits and identities—from the <em>Marathon Reader</em> to the <em>DNF Champion</em>.
                 </p>
               </div>
               <Link
                 href="/archetype"
-                className="w-full py-3 px-4 rounded-full bg-slate-800 hover:bg-slate-700 text-amber-200 font-bold text-xs text-center transition-all border border-amber-500/30"
+                className="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-[#5C1A2E] text-[#F2A98A] hover:text-cream border border-[#F2A98A]/25 font-bold text-xs text-center transition-all shadow-md active:scale-95"
               >
                 Browse 21 Archetypes →
               </Link>
             </div>
 
             {/* CARD 3: LITERARY SOUNDSCAPES */}
-            <div className="p-6 rounded-3xl bg-slate-900/90 border border-amber-500/30 space-y-4 hover:border-amber-400 transition-all flex flex-col justify-between group">
-              <div className="space-y-3">
-                <span className="text-4xl">🎧</span>
-                <h3 className="text-2xl font-serif font-bold text-amber-100 group-hover:text-amber-300">
+            <div className="p-6 rounded-2xl bg-[#FFF5EC] border border-[#2C1A0E]/15 space-y-5 hover:border-[#5C1A2E]/30 transition-all flex flex-col justify-between group shadow-md relative">
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 h-4.5 bg-[#C5A059]/15 transform rotate-2 border-l border-r border-[#C5A059]/25" />
+              <div className="space-y-3 pt-2">
+                <span className="text-4xl block">🎧</span>
+                <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
                   Literary Soundscapes
                 </h3>
-                <p className="text-xs text-amber-200/70 leading-relaxed font-serif">
+                <p className="text-xs text-[#2C1A0E]/80 leading-relaxed font-serif">
                   9 Spotify reading playlists crafted to match the mood of every page, from <em>The Still Hour</em> to <em>The Forest Cabin</em>.
                 </p>
               </div>
               <Link
                 href="/soundscapes"
-                className="w-full py-3 px-4 rounded-full bg-slate-800 hover:bg-slate-700 text-amber-200 font-bold text-xs text-center transition-all border border-amber-500/30"
+                className="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-[#5C1A2E] text-[#F2A98A] hover:text-cream border border-[#F2A98A]/25 font-bold text-xs text-center transition-all shadow-md active:scale-95"
               >
                 Press Play on Soundscapes →
               </Link>

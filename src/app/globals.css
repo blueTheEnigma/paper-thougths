@@ -16,7 +16,7 @@
 
 @layer base {
   body {
-    background-color: var(--color-cream);
+    background: radial-gradient(circle at 50% 50%, #FAF7F2 0%, #F5EFE0 100%);
     color: var(--color-ink);
   }
   
