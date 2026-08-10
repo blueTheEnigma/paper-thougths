@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Logo from './Logo';
+import NotificationBell from './NotificationBell';
 import { usePathname } from 'next/navigation';
 import { 
   BookOpen, Compass, ShoppingBag, Feather, Sparkles, 
@@ -141,6 +142,7 @@ export default function Navigation() {
               >
                 Dashboard
               </Link>
+              <NotificationBell userId={profile?.id} />
               <div className="flex items-center gap-2 bg-white/40 p-1 rounded-full border border-sage/10">
                 {profile && (
                   <PanguinAvatar lifetimeLeaves={profile.lifetimeLeaves || 0} avatarUrl={profile.avatarUrl} variant="icon" archetype={profile.archetype} />

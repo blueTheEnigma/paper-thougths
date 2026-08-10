@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
+import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { 
   getMondayPromptReleaseEmail, 
   getWednesdayDraftNudgeEmail, 
@@ -26,7 +27,7 @@ async function handleReminderCron(request) {
     const cronSecret = process.env.CRON_SECRET || 'dev_secret';
     const secretQuery = searchParams.get('secret');
     
-    // Authorization check (Vercel cron uses Bearer token or secret parameter)
+    // Authorization check
     if (!isDev && authHeader !== `Bearer ${cronSecret}` && secretQuery !== cronSecret) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
@@ -42,11 +43,11 @@ async function handleReminderCron(request) {
       else type = 'monday'; // fallback default
     }
 
-    console.log(`Executing Automated Reminder Sequence for type: [${type}]`);
+    console.log(`Executing Multi-Channel Automated Reminder Sequence for type: [${type}]`);
 
-    // 1. Fetch all distinct member emails from users table and newsletter_subscribers table
+    // 1. Fetch all distinct member accounts with id, email, name, and whatsapp
     const userRows = await Database.query(`
-      SELECT DISTINCT email, full_name as name 
+      SELECT DISTINCT id, email, full_name as name, whatsapp 
       FROM users 
       WHERE email IS NOT NULL AND email != ''
     `);
@@ -59,24 +60,37 @@ async function handleReminderCron(request) {
         WHERE email IS NOT NULL AND email != ''
       `);
     } catch (e) {
-      console.log('newsletter_subscribers table not present, relying on users table.');
+      // ignore if table doesn't exist
     }
 
     // Deduplicate emails map
     const recipientsMap = new Map();
     userRows.forEach(u => {
-      if (u.email) recipientsMap.set(u.email.toLowerCase().trim(), u.name || '');
-    });
-    subscriberRows.forEach(s => {
-      if (s.email && !recipientsMap.has(s.email.toLowerCase().trim())) {
-        recipientsMap.set(s.email.toLowerCase().trim(), '');
+      if (u.email) {
+        recipientsMap.set(u.email.toLowerCase().trim(), {
+          id: u.id,
+          name: u.name || '',
+          email: u.email.toLowerCase().trim(),
+          whatsapp: u.whatsapp
+        });
       }
     });
 
-    const recipientsList = Array.from(recipientsMap.entries()).map(([email, name]) => ({ email, name }));
+    subscriberRows.forEach(s => {
+      if (s.email && !recipientsMap.has(s.email.toLowerCase().trim())) {
+        recipientsMap.set(s.email.toLowerCase().trim(), {
+          id: null,
+          name: '',
+          email: s.email.toLowerCase().trim(),
+          whatsapp: null
+        });
+      }
+    });
+
+    const recipientsList = Array.from(recipientsMap.values());
 
     if (recipientsList.length === 0) {
-      console.log('No recipients found for email reminders.');
+      console.log('No recipients found for email/notification reminders.');
       return NextResponse.json({ success: true, message: 'No recipients found', sentCount: 0 });
     }
 
@@ -97,7 +111,7 @@ async function handleReminderCron(request) {
     const botmAuthor = botmObj ? botmObj.author : '';
     const botmTeaser = botmObj ? botmObj.teaser : '';
 
-    // 3. Batch dispatch emails to recipients
+    // 3. Batch dispatch Email, In-App Notifications, and WhatsApp DMs
     let sentCount = 0;
     const errors = [];
 
@@ -109,7 +123,7 @@ async function handleReminderCron(request) {
           emailPayload = getMondayPromptReleaseEmail({ userName: recipient.name, storyPrompt, poemPrompt });
           break;
         case 'wednesday':
-          emailPayload = getWednesdayDraftNudgeEmail({ userName: recipient.name, storyPrompt });
+          emailPayload = getWednesdayDraftNudgeEmail({ userName: recipient.name, storyPrompt, poemPrompt });
           break;
         case 'friday':
           emailPayload = getFridayDeadlineReminderEmail({ userName: recipient.name });
@@ -123,6 +137,7 @@ async function handleReminderCron(request) {
       }
 
       if (emailPayload) {
+        // Channel A: Email Dispatch
         const result = await sendEmail({
           to: recipient.email,
           subject: emailPayload.subject,
@@ -134,10 +149,32 @@ async function handleReminderCron(request) {
         } else {
           errors.push(recipient.email);
         }
+
+        // Channel B: In-App Notification insertion
+        if (recipient.id) {
+          await Database.query(`
+            INSERT INTO user_notifications (user_id, type, title, body, link)
+            VALUES ($1, $2, $3, $4, $5)
+          `, [
+            recipient.id,
+            'reminder',
+            emailPayload.subject,
+            `Weekly ${type} drop update in Paper Thoughts.`,
+            type === 'saturday' ? '/discussion' : '/village'
+          ]).catch(err => console.error('Failed to insert in-app notification:', err));
+        }
+
+        // Channel C: WhatsApp Direct DM (if phone number is on record)
+        if (recipient.whatsapp) {
+          const targetUrl = type === 'saturday' ? 'https://www.paperthoughts.org/discussion' : 'https://www.paperthoughts.org/village';
+          const waText = `✨ *Paper Thoughts Update*\n\n${emailPayload.subject}\n\nJoin the discussion & draft here: ${targetUrl}`;
+          sendWhatsAppMessage({ to: recipient.whatsapp, text: waText })
+            .catch(err => console.error('WhatsApp send error:', err));
+        }
       }
     }
 
-    console.log(`Automated Reminder Sequence [${type}] finished. Sent ${sentCount}/${recipientsList.length} emails.`);
+    console.log(`Multi-Channel Automated Reminder Sequence [${type}] finished. Sent ${sentCount}/${recipientsList.length} emails.`);
 
     return NextResponse.json({
       success: true,
