@@ -2,6 +2,14 @@
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.paperthoughts.org';
 
+function getFirstName(userName) {
+  if (!userName || typeof userName !== 'string') return 'Dear Writer';
+  const trimmed = userName.trim();
+  if (!trimmed || trimmed.toLowerCase() === 'anonymous' || trimmed.toLowerCase() === 'user') return 'Dear Writer';
+  const firstWord = trimmed.split(' ')[0];
+  return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
+}
+
 function renderBaseLayout({ title, subtitle, contentHtml, ctaText, ctaUrl }) {
   return `
 <!DOCTYPE html>
@@ -95,20 +103,20 @@ function renderBaseLayout({ title, subtitle, contentHtml, ctaText, ctaUrl }) {
 
 // 1. Monday 08:00 AM: New Prompt Release Call
 export function getMondayPromptReleaseEmail({ userName, storyPrompt, poemPrompt }) {
-  const name = userName ? userName.split(' ')[0] : 'Reader';
+  const firstName = getFirstName(userName);
   const content = `
-    <p style="margin-top: 0;">Good morning, <strong>${name}</strong>,</p>
+    <p style="margin-top: 0;">Good morning, <strong>${firstName}</strong>,</p>
     <p>A new week opens across Zaria, Kaduna, and Abuja, and the gates of <strong>The Writers' Village</strong> are officially thrown wide for a new literary quest.</p>
     <p>Every great story begins with an unexpected knock at the door or a sudden scent in the air. Here are your active prompts for this week’s expedition:</p>
     
     <div style="background-color: #FAF7F2; border-left: 4px solid #C96A42; padding: 16px; border-radius: 8px; margin: 20px 0; border-top: 1px solid rgba(44, 26, 14, 0.08); border-right: 1px solid rgba(44, 26, 14, 0.08); border-bottom: 1px solid rgba(44, 26, 14, 0.08);">
       <div style="font-size: 11px; font-weight: bold; color: #5C1A2E; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">📜 Weekly Story Prompt</div>
-      <div style="font-size: 15px; font-style: italic; color: #2C1A0E; line-height: 1.5;">"${storyPrompt || 'A writer discovers that the character they killed off in their last chapter is now standing on their doorstep.'}"</div>
+      <div style="font-size: 15px; font-style: italic; color: #2C1A0E; line-height: 1.5;">"${storyPrompt || 'A fire at night and a whisper'}"</div>
     </div>
 
     <div style="background-color: #FAF7F2; border-left: 4px solid #5C1A2E; padding: 16px; border-radius: 8px; margin: 20px 0; border-top: 1px solid rgba(44, 26, 14, 0.08); border-right: 1px solid rgba(44, 26, 14, 0.08); border-bottom: 1px solid rgba(44, 26, 14, 0.08);">
       <div style="font-size: 11px; font-weight: bold; color: #5C1A2E; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">✍️ Weekly Poetry Prompt</div>
-      <div style="font-size: 15px; font-style: italic; color: #2C1A0E; line-height: 1.5;">"${poemPrompt || 'Write a poem centering on the smell of rain on dry soil (petrichor) and a forgotten promise.'}"</div>
+      <div style="font-size: 15px; font-style: italic; color: #2C1A0E; line-height: 1.5;">"${poemPrompt || 'When it rains...'}"</div>
     </div>
 
     <p>Step into the Village early. Draft your lines, submit your manuscript to the critique cycle, and claim your milestone tokens for the weekly ledger!</p>
@@ -128,9 +136,9 @@ export function getMondayPromptReleaseEmail({ userName, storyPrompt, poemPrompt 
 
 // 2. Wednesday 08:00 AM: Mid-Week Writing Draft Nudge
 export function getWednesdayDraftNudgeEmail({ userName, storyPrompt, poemPrompt }) {
-  const name = userName ? userName.split(' ')[0] : 'Reader';
+  const firstName = getFirstName(userName);
   const content = `
-    <p style="margin-top: 0;">Hello <strong>${name}</strong>,</p>
+    <p style="margin-top: 0;">Hello <strong>${firstName}</strong>,</p>
     <p>We are officially at the mid-week mark. The ink is drying on desk pages across the chapter towns, and the Writers' Village is alive with early drafts.</p>
     
     <div style="background-color: #FAF7F2; border: 1px dashed rgba(92, 26, 46, 0.3); padding: 18px; border-radius: 12px; margin: 20px 0; text-align: center;">
@@ -140,7 +148,7 @@ export function getWednesdayDraftNudgeEmail({ userName, storyPrompt, poemPrompt 
 
     ${storyPrompt ? `
       <p style="font-size: 13px; color: #2C1A0E; margin-bottom: 4px;"><strong>Active Story Prompt:</strong></p>
-      <p style="font-size: 13px; font-style: italic; color: #5C1A2E; margin-top: 0; padding-left: 10px; border-l: 2px solid #C96A42;">"${storyPrompt}"</p>
+      <p style="font-size: 13px; font-style: italic; color: #5C1A2E; margin-top: 0; padding-left: 10px; border-left: 2px solid #C96A42;">"${storyPrompt}"</p>
     ` : ''}
 
     <p>Don't wait for Friday night pressure. Pop open your draft editor in the Village today and bring your thoughts into the light!</p>
@@ -160,9 +168,9 @@ export function getWednesdayDraftNudgeEmail({ userName, storyPrompt, poemPrompt 
 
 // 3. Friday 08:00 AM: Final Submission Deadline Reminder
 export function getFridayDeadlineReminderEmail({ userName }) {
-  const name = userName ? userName.split(' ')[0] : 'Reader';
+  const firstName = getFirstName(userName);
   const content = `
-    <p style="margin-top: 0;">Happy Friday, <strong>${name}</strong>!</p>
+    <p style="margin-top: 0;">Happy Friday, <strong>${firstName}</strong>!</p>
     <p>The sun is rising on the final day of this week's drop. Tonight at **11:59 PM**, the submission portal in the Writers' Village locks for the weekly cycle.</p>
     
     <div style="background-color: #330A17; color: #FAF7F2; padding: 18px; border-radius: 14px; margin: 20px 0; text-align: center; border: 1px solid rgba(242, 169, 138, 0.3);">
@@ -195,9 +203,9 @@ export function getFridayDeadlineReminderEmail({ userName }) {
 
 // 4. Saturday 10:00 AM: Weekend BOTM Reading & Review Check-In
 export function getSaturdayBotmEmail({ userName, botmTitle, botmAuthor, botmTeaser }) {
-  const name = userName ? userName.split(' ')[0] : 'Reader';
+  const firstName = getFirstName(userName);
   const content = `
-    <p style="margin-top: 0;">Happy weekend, <strong>${name}</strong>!</p>
+    <p style="margin-top: 0;">Happy weekend, <strong>${firstName}</strong>!</p>
     <p>The week’s writing drops are resting, and the weekend reading lounge is officially open across all chapter towns.</p>
     <p>Grab a warm cup of coffee or tea, sink into a quiet corner, and explore what our community is reading right now:</p>
     
