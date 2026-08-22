@@ -5,6 +5,8 @@ import "./globals.css";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
+import SmartInstallPrompt from "../components/onboarding/SmartInstallPrompt";
+import GuidedLoreModal from "../components/onboarding/GuidedLoreModal";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -75,6 +77,8 @@ export default function RootLayout({ children }) {
           <div className="flex-1 w-full pt-20 pb-8 md:pt-32">
             {children}
           </div>
+          <SmartInstallPrompt />
+          <GuidedLoreModal />
           <Footer />
           <Analytics />
         </body>
