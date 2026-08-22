@@ -145,25 +145,25 @@ export const SECTIONS = [
     id: 'element',
     title: 'I. BOOK ELEMENT',
     subtitle: 'What drives your reading?',
-    questionIndices: [0, 1, 2, 3, 4, 5, 6]
+    questionIndices: [0, 1, 2]
   },
   {
     id: 'realm',
     title: 'II. BOOK REALM',
     subtitle: 'Where in the literary universe do you naturally belong?',
-    questionIndices: [7, 8, 9, 10, 11, 12, 13]
+    questionIndices: [3, 4, 5]
   },
   {
     id: 'house',
     title: 'III. STORY HOUSE',
     subtitle: 'What role do stories play in your life?',
-    questionIndices: [14, 15, 16, 17, 18, 19, 20]
+    questionIndices: [6, 7, 8]
   },
   {
     id: 'medium',
     title: 'IV. STORY MEDIUM',
     subtitle: 'How do you naturally experience stories?',
-    questionIndices: [21, 22, 23, 24, 25, 26, 27]
+    questionIndices: [9, 10, 11]
   }
 ];
 
@@ -177,359 +177,155 @@ export const QUESTIONS = [
       { letter: 'A', text: "Take me somewhere that doesn't exist.", category: 'Imagination' },
       { letter: 'B', text: 'Teach me something fascinating.', category: 'Knowledge' },
       { letter: 'C', text: 'Make me feel something unforgettable.', category: 'Emotion' },
-      { letter: 'D', text: 'Throw me into an experience.', category: 'Adventure' },
+      { letter: 'D', text: 'Throw me into a high-stakes adventure.', category: 'Adventure' },
       { letter: 'E', text: 'Leave me staring at the ceiling thinking about life.', category: 'Reflection' }
     ]
   },
   {
     id: 2,
     section: 'element',
-    question: 'Which compliment about your reading would please you most?',
+    question: 'A book has an incredible premise but weak prose. What keeps you reading?',
     options: [
-      { letter: 'A', text: '“You have such an incredible imagination.”', category: 'Imagination' },
-      { letter: 'B', text: '“You know so much.”', category: 'Knowledge' },
-      { letter: 'C', text: '“You really understand what that character was feeling.”', category: 'Emotion' },
-      { letter: 'D', text: '“You\'re always looking for your next adventure.”', category: 'Adventure' },
-      { letter: 'E', text: '“You notice things other readers miss.”', category: 'Reflection' }
+      { letter: 'A', text: 'The rich world and magic it creates.', category: 'Imagination' },
+      { letter: 'B', text: 'The ideas and concepts underneath it.', category: 'Knowledge' },
+      { letter: 'C', text: 'The characters and their emotional vulnerability.', category: 'Emotion' },
+      { letter: 'D', text: 'The pulse-pounding momentum of what happens next.', category: 'Adventure' },
+      { letter: 'E', text: 'The deep philosophical questions it raises.', category: 'Reflection' }
     ]
   },
   {
     id: 3,
     section: 'element',
-    question: 'A book has an incredible premise but weak prose. What keeps you reading?',
-    options: [
-      { letter: 'A', text: 'The world it creates.', category: 'Imagination' },
-      { letter: 'B', text: 'The ideas underneath it.', category: 'Knowledge' },
-      { letter: 'C', text: 'The characters and their emotions.', category: 'Emotion' },
-      { letter: 'D', text: 'What happens next.', category: 'Adventure' },
-      { letter: 'E', text: 'The questions it raises.', category: 'Reflection' }
-    ]
-  },
-  {
-    id: 4,
-    section: 'element',
-    question: 'Which reading experience sounds most satisfying?',
-    options: [
-      { letter: 'A', text: 'Getting completely lost in another reality.', category: 'Imagination' },
-      { letter: 'B', text: 'Discovering a concept that changes how I understand something.', category: 'Knowledge' },
-      { letter: 'C', text: 'Becoming emotionally attached to people who don\'t even exist.', category: 'Emotion' },
-      { letter: 'D', text: 'Feeling like I\'ve gone somewhere without leaving my chair.', category: 'Adventure' },
-      { letter: 'E', text: 'Finishing a book and realizing I now see something differently.', category: 'Reflection' }
-    ]
-  },
-  {
-    id: 5,
-    section: 'element',
-    question: 'You finish a brilliant book. What happens next?',
-    options: [
-      { letter: 'A', text: 'I keep imagining the world beyond the ending.', category: 'Imagination' },
-      { letter: 'B', text: 'I start researching things mentioned in it.', category: 'Knowledge' },
-      { letter: 'C', text: 'I sit with the feelings it left me.', category: 'Emotion' },
-      { letter: 'D', text: 'I immediately want another book with the same energy.', category: 'Adventure' },
-      { letter: 'E', text: 'I start thinking about what it actually meant.', category: 'Reflection' }
-    ]
-  },
-  {
-    id: 6,
-    section: 'element',
-    question: 'Pick the sentence that feels most like your relationship with books.',
-    options: [
-      { letter: 'A', text: '“Books allow me to imagine the impossible.”', category: 'Imagination' },
-      { letter: 'B', text: '“Books give me access to minds and knowledge I couldn\'t otherwise reach.”', category: 'Knowledge' },
-      { letter: 'C', text: '“Books make me feel things I don\'t always know how to say.”', category: 'Emotion' },
-      { letter: 'D', text: '“Books are journeys.”', category: 'Adventure' },
-      { letter: 'E', text: '“Books are questions disguised as stories.”', category: 'Reflection' }
-    ]
-  },
-  {
-    id: 7,
-    section: 'element',
-    question: 'If you could keep only one gift from literature, you\'d choose…',
+    question: 'If you could keep only one permanent gift from literature, you\'d choose…',
     options: [
       { letter: 'A', text: 'The ability to dream beyond reality.', category: 'Imagination' },
-      { letter: 'B', text: 'The ability to understand more.', category: 'Knowledge' },
-      { letter: 'C', text: 'The ability to feel more deeply.', category: 'Emotion' },
-      { letter: 'D', text: 'The courage to explore.', category: 'Adventure' },
-      { letter: 'E', text: 'The ability to question.', category: 'Reflection' }
+      { letter: 'B', text: 'The ability to understand how the world works.', category: 'Knowledge' },
+      { letter: 'C', text: 'The ability to feel human emotions more deeply.', category: 'Emotion' },
+      { letter: 'D', text: 'The courage to explore the unknown.', category: 'Adventure' },
+      { letter: 'E', text: 'The wisdom to question everything you thought you knew.', category: 'Reflection' }
     ]
   },
 
   // SECTION II: BOOK REALM
   {
-    id: 8,
+    id: 4,
     section: 'realm',
-    question: 'You\'re wandering through an enormous library. Which room pulls you in?',
+    question: 'You\'re wandering through an infinite labyrinthian library. Which wing pulls you in first?',
     options: [
-      { letter: 'A', text: 'The room of novels, legends and epic tales.', category: 'Story' },
-      { letter: 'B', text: 'The room of history, science, philosophy and ideas.', category: 'Info' },
-      { letter: 'C', text: 'The room of myths, mysteries, fantasy and the uncanny.', category: 'Veil' },
-      { letter: 'D', text: 'The room filled with plays and dramatic scripts.', category: 'Stage' },
-      { letter: 'E', text: 'The room where poetry fills every shelf.', category: 'Verse' }
+      { letter: 'A', text: 'The wing of grand novels, legends, and epic sagas.', category: 'Story' },
+      { letter: 'B', text: 'The wing of history, science, philosophy, and discovered truths.', category: 'Info' },
+      { letter: 'C', text: 'The wing of myths, magical realism, surreal mysteries, and the uncanny.', category: 'Veil' },
+      { letter: 'D', text: 'The wing of plays, dramatic scripts, and spoken performance.', category: 'Stage' },
+      { letter: 'E', text: 'The wing of poetry where every line cuts directly to the soul.', category: 'Verse' }
     ]
   },
   {
-    id: 9,
+    id: 5,
     section: 'realm',
-    question: 'Which book would you most likely pick up without knowing anything about it?',
+    question: 'What kind of literary landscape feels most like home to you?',
     options: [
-      { letter: 'A', text: 'A sweeping novel about someone\'s life.', category: 'Story' },
-      { letter: 'B', text: 'A fascinating work of nonfiction.', category: 'Info' },
-      { letter: 'C', text: 'A strange book with an unsettling cover.', category: 'Veil' },
-      { letter: 'D', text: 'A play by a writer I\'ve never read.', category: 'Stage' },
-      { letter: 'E', text: 'A slim volume of poetry.', category: 'Verse' }
+      { letter: 'A', text: 'One populated by vivid characters whose lives unfold over time.', category: 'Story' },
+      { letter: 'B', text: 'One constructed from ideas, facts, archives, and systems.', category: 'Info' },
+      { letter: 'C', text: 'One where reality has subtle, beautiful cracks in it.', category: 'Veil' },
+      { letter: 'D', text: 'One designed to leap off the page and come alive through dialogue.', category: 'Stage' },
+      { letter: 'E', text: 'One where a single stanza can hold an entire universe of meaning.', category: 'Verse' }
     ]
   },
   {
-    id: 10,
+    id: 6,
     section: 'realm',
-    question: 'What kind of literary world feels most natural to you?',
+    question: 'Pick your ideal doorway into a new book:',
     options: [
-      { letter: 'A', text: 'One populated by characters whose lives unfold over time.', category: 'Story' },
-      { letter: 'B', text: 'One constructed from facts, arguments and ideas.', category: 'Info' },
-      { letter: 'C', text: 'One where reality has mysterious cracks in it.', category: 'Veil' },
-      { letter: 'D', text: 'One designed to come alive through performance.', category: 'Stage' },
-      { letter: 'E', text: 'One where a few words can contain an entire universe.', category: 'Verse' }
-    ]
-  },
-  {
-    id: 11,
-    section: 'realm',
-    question: 'Someone asks what you normally read. Your answer is closest to:',
-    options: [
-      { letter: 'A', text: '“Stories.”', category: 'Story' },
-      { letter: 'B', text: '“Anything that teaches me something.”', category: 'Info' },
-      { letter: 'C', text: '“Anything weird.”', category: 'Veil' },
-      { letter: 'D', text: '“Drama, scripts, plays…”', category: 'Stage' },
-      { letter: 'E', text: '“Poetry. Especially the devastating kind.”', category: 'Verse' }
-    ]
-  },
-  {
-    id: 12,
-    section: 'realm',
-    question: 'Which literary experience would tempt you most?',
-    options: [
-      { letter: 'A', text: 'Living inside a character\'s story for 600 pages.', category: 'Story' },
-      { letter: 'B', text: 'Spending hours exploring an unfamiliar subject.', category: 'Info' },
-      { letter: 'C', text: 'Trying to decipher a story that refuses to explain itself.', category: 'Veil' },
-      { letter: 'D', text: 'Reading something written to be performed aloud.', category: 'Stage' },
-      { letter: 'E', text: 'Reading one poem repeatedly because it keeps revealing something new.', category: 'Verse' }
-    ]
-  },
-  {
-    id: 13,
-    section: 'realm',
-    question: 'Pick your doorway.',
-    options: [
-      { letter: 'A', text: 'Once upon a time…', category: 'Story' },
-      { letter: 'B', text: 'Let us examine the evidence…', category: 'Info' },
-      { letter: 'C', text: 'Something was not quite right…', category: 'Veil' },
-      { letter: 'D', text: 'Enter. The lights come up.', category: 'Stage' },
-      { letter: 'E', text: 'There are words for things we cannot name.', category: 'Verse' }
-    ]
-  },
-  {
-    id: 14,
-    section: 'realm',
-    question: 'If literature were a city, you\'d spend most of your time…',
-    options: [
-      { letter: 'A', text: 'Wandering through its stories.', category: 'Story' },
-      { letter: 'B', text: 'Exploring its archives.', category: 'Info' },
-      { letter: 'C', text: 'Following its secret passages.', category: 'Veil' },
-      { letter: 'D', text: 'Sitting in its theatres.', category: 'Stage' },
-      { letter: 'E', text: 'Walking its quiet streets looking for poems.', category: 'Verse' }
+      { letter: 'A', text: '“Once upon a time in a world forgotten…”', category: 'Story' },
+      { letter: 'B', text: '“Let us examine the evidence of what really happened…”', category: 'Info' },
+      { letter: 'C', text: '“Something about the house was not quite right…”', category: 'Veil' },
+      { letter: 'D', text: '“Enter. The lights come up on a quiet room.”', category: 'Stage' },
+      { letter: 'E', text: '“There are words for things we cannot yet name.”', category: 'Verse' }
     ]
   },
 
   // SECTION III: STORY HOUSE
   {
-    id: 15,
+    id: 7,
     section: 'house',
-    question: 'When you recognize yourself in a character, your first thought is…',
+    question: 'When life feels heavy or turbulent, you reach for books because…',
     options: [
-      { letter: 'A', text: '“Oh. Someone finally gets it.”', category: 'Mirror' },
-      { letter: 'B', text: '“I needed to meet this version of myself.”', category: 'Haven' },
-      { letter: 'C', text: '“Maybe I can become something different.”', category: 'Horizon' },
-      { letter: 'D', text: '“This makes me want to create something.”', category: 'Muse' },
-      { letter: 'E', text: '“People have been feeling this for centuries.”', category: 'Legacy' },
-      { letter: 'F', text: '“Now I understand someone else\'s experience.”', category: 'Bridge' },
-      { letter: 'G', text: '“What if life could actually be like this?”', category: 'Dream' }
+      { letter: 'A', text: 'They hold up a mirror and help me understand myself.', category: 'Mirror' },
+      { letter: 'B', text: 'They give me a safe, cozy sanctuary to rest and heal.', category: 'Haven' },
+      { letter: 'C', text: 'They remind me that horizons exist far beyond my present situation.', category: 'Horizon' },
+      { letter: 'D', text: 'They spark my creative fire and inspire me to write or make things.', category: 'Muse' },
+      { letter: 'E', text: 'They connect me with humanity\'s timeless memories and ancient lore.', category: 'Legacy' },
+      { letter: 'F', text: 'They build a bridge to empathize with lives completely unlike mine.', category: 'Bridge' },
+      { letter: 'G', text: 'They let me dream of possibilities that should exist.', category: 'Dream' }
     ]
   },
   {
-    id: 16,
+    id: 8,
     section: 'house',
-    question: 'When life gets difficult, you reach for books because…',
+    question: 'What makes a story personally unforgettable to you?',
     options: [
-      { letter: 'A', text: 'They help me understand myself.', category: 'Mirror' },
-      { letter: 'B', text: 'They give me somewhere safe to go.', category: 'Haven' },
-      { letter: 'C', text: 'They remind me that there is more beyond my current situation.', category: 'Horizon' },
-      { letter: 'D', text: 'They give me ideas and inspiration.', category: 'Muse' },
-      { letter: 'E', text: 'They connect me with what came before me.', category: 'Legacy' },
-      { letter: 'F', text: 'They help me understand people and perspectives different from mine.', category: 'Bridge' },
-      { letter: 'G', text: 'They let me imagine another possibility.', category: 'Dream' }
+      { letter: 'A', text: 'It reflected a secret truth inside me I could never articulate.', category: 'Mirror' },
+      { letter: 'B', text: 'It comforted me during a season when I needed comfort most.', category: 'Haven' },
+      { letter: 'C', text: 'It shattered my boundaries and expanded what I thought was possible.', category: 'Horizon' },
+      { letter: 'D', text: 'It filled me with creative energy to produce something of my own.', category: 'Muse' },
+      { letter: 'E', text: 'It felt like an enduring masterpiece built to outlast centuries.', category: 'Legacy' },
+      { letter: 'F', text: 'It helped me deeply understand another human being\'s heart.', category: 'Bridge' },
+      { letter: 'G', text: 'It gave me a world so luminous I never wanted to wake up.', category: 'Dream' }
     ]
   },
   {
-    id: 17,
+    id: 9,
     section: 'house',
-    question: 'What makes a book personally important to you?',
+    question: 'Imagine your bookshelf 50 years from now. What should it proclaim?',
     options: [
-      { letter: 'A', text: 'It reflected something inside me.', category: 'Mirror' },
-      { letter: 'B', text: 'It comforted me when I needed it.', category: 'Haven' },
-      { letter: 'C', text: 'It expanded my sense of what was possible.', category: 'Horizon' },
-      { letter: 'D', text: 'It inspired me to create or act.', category: 'Muse' },
-      { letter: 'E', text: 'It felt like something worth preserving.', category: 'Legacy' },
-      { letter: 'F', text: 'It helped me understand another person or culture.', category: 'Bridge' },
-      { letter: 'G', text: 'It gave me a world I could dream about.', category: 'Dream' }
-    ]
-  },
-  {
-    id: 18,
-    section: 'house',
-    question: 'Imagine your personal library 50 years from now. What would you want it to say about you?',
-    options: [
-      { letter: 'A', text: '“This is who I was.”', category: 'Mirror' },
-      { letter: 'B', text: '“These books gave me a home.”', category: 'Haven' },
-      { letter: 'C', text: '“I was always looking beyond the horizon.”', category: 'Horizon' },
-      { letter: 'D', text: '“These books made me create.”', category: 'Muse' },
-      { letter: 'E', text: '“I kept the things worth remembering.”', category: 'Legacy' },
-      { letter: 'F', text: '“I tried to understand the world and its people.”', category: 'Bridge' },
-      { letter: 'G', text: '“I never stopped dreaming.”', category: 'Dream' }
-    ]
-  },
-  {
-    id: 19,
-    section: 'house',
-    question: 'A book changes your life. You want it to…',
-    options: [
-      { letter: 'A', text: 'Reveal something about yourself.', category: 'Mirror' },
-      { letter: 'B', text: 'Help you through something.', category: 'Haven' },
-      { letter: 'C', text: 'Open a door you hadn\'t considered.', category: 'Horizon' },
-      { letter: 'D', text: 'Give you an idea worth pursuing.', category: 'Muse' },
-      { letter: 'E', text: 'Become part of the story you leave behind.', category: 'Legacy' },
-      { letter: 'F', text: 'Change how you understand someone else.', category: 'Bridge' },
-      { letter: 'G', text: 'Make the impossible feel imaginable.', category: 'Dream' }
-    ]
-  },
-  {
-    id: 20,
-    section: 'house',
-    question: 'If books disappeared tomorrow, what would you mourn most?',
-    options: [
-      { letter: 'A', text: 'Losing a mirror for my inner world.', category: 'Mirror' },
-      { letter: 'B', text: 'Losing a place to retreat to.', category: 'Haven' },
-      { letter: 'C', text: 'Losing all those possible worlds.', category: 'Horizon' },
-      { letter: 'D', text: 'Losing a source of inspiration.', category: 'Muse' },
-      { letter: 'E', text: 'Losing humanity\'s written memory.', category: 'Legacy' },
-      { letter: 'F', text: 'Losing one of humanity\'s greatest ways of connecting minds.', category: 'Bridge' },
-      { letter: 'G', text: 'Losing one of our greatest ways of dreaming.', category: 'Dream' }
-    ]
-  },
-  {
-    id: 21,
-    section: 'house',
-    question: 'Choose the role you think stories have played most strongly in your life.',
-    options: [
-      { letter: 'A', text: 'They have helped me know myself.', category: 'Mirror' },
-      { letter: 'B', text: 'They have helped me survive difficult moments.', category: 'Haven' },
-      { letter: 'C', text: 'They have made my world larger.', category: 'Horizon' },
-      { letter: 'D', text: 'They have made me want to make things.', category: 'Muse' },
-      { letter: 'E', text: 'They have connected me to something bigger than myself.', category: 'Legacy' },
-      { letter: 'F', text: 'They have helped me cross boundaries between people.', category: 'Bridge' },
-      { letter: 'G', text: 'They have given my imagination somewhere to live.', category: 'Dream' }
+      { letter: 'A', text: '“This was the intimate map of my inner soul.”', category: 'Mirror' },
+      { letter: 'B', text: '“These pages gave me a sanctuary and a home.”', category: 'Haven' },
+      { letter: 'C', text: '“I was always looking toward the next great frontier.”', category: 'Horizon' },
+      { letter: 'D', text: '“These stories fueled my imagination and creation.”', category: 'Muse' },
+      { letter: 'E', text: '“I preserved the wisdom and art worth remembering.”', category: 'Legacy' },
+      { letter: 'F', text: '“I sought to understand and love the diverse tapestry of humanity.”', category: 'Bridge' },
+      { letter: 'G', text: '“I never stopped believing in wonder.”', category: 'Dream' }
     ]
   },
 
   // SECTION IV: STORY MEDIUM
   {
-    id: 22,
+    id: 10,
     section: 'medium',
-    question: 'Someone gives you your dream book in six formats. Your hand reaches for…',
+    question: 'Someone offers you your dream book in multiple editions. Your hand reaches for…',
     options: [
-      { letter: 'A', text: 'The beautiful hardcover.', category: 'Legacy Edition' },
-      { letter: 'B', text: 'The comfortable paperback.', category: 'Companion Edition' },
-      { letter: 'C', text: 'The PDF.', category: 'Archive Edition' },
-      { letter: 'D', text: 'The EPUB/e-book.', category: 'Infinite Edition' },
-      { letter: 'E', text: 'The audiobook.', category: 'Living Voice' },
-      { letter: 'F', text: 'Whichever format is most convenient.', category: 'Boundless Edition' }
+      { letter: 'A', text: 'The ornate hardcover keepsake with embossed cloth and ribbon.', category: 'Legacy Edition' },
+      { letter: 'B', text: 'The comfortable paperback that fits in my jacket pocket.', category: 'Companion Edition' },
+      { letter: 'C', text: 'The annotated PDF/digital archive with rich footnotes and research.', category: 'Archive Edition' },
+      { letter: 'D', text: 'The sleek e-reader holding an entire library in my palm.', category: 'Infinite Edition' },
+      { letter: 'E', text: 'The audiobook with a master narrator bringing every voice alive.', category: 'Living Voice' },
+      { letter: 'F', text: 'Whichever format gets the words into my mind fastest—form doesn\'t matter.', category: 'Boundless Edition' }
     ]
   },
   {
-    id: 23,
+    id: 11,
     section: 'medium',
-    question: 'You\'re travelling with only your phone. You have three hours to read. You…',
+    question: 'Your ideal atmosphere for a deeply immersive reading session:',
     options: [
-      { letter: 'A', text: 'Wish you\'d brought the physical copy.', category: 'Legacy Edition' },
-      { letter: 'B', text: 'Find a physical book when possible.', category: 'Companion Edition' },
-      { letter: 'C', text: 'Open the PDF.', category: 'Archive Edition' },
-      { letter: 'D', text: 'Download the e-book.', category: 'Infinite Edition' },
-      { letter: 'E', text: 'Put on headphones and listen.', category: 'Living Voice' },
-      { letter: 'F', text: 'Don\'t care as long as I can read or listen.', category: 'Boundless Edition' }
+      { letter: 'A', text: 'A quiet personal library surrounded by the scent of old paper and bindings.', category: 'Legacy Edition' },
+      { letter: 'B', text: 'A cozy chair in a bustling cafe or sunlit nook with a favorite paperback.', category: 'Companion Edition' },
+      { letter: 'C', text: 'A focused desk setup with searchable cross-references and notes.', category: 'Archive Edition' },
+      { letter: 'D', text: 'Curled up under dark blankets with a backlit e-ink screen in late hours.', category: 'Infinite Edition' },
+      { letter: 'E', text: 'Walking under trees or commuting with headphones in rich auditory flow.', category: 'Living Voice' },
+      { letter: 'F', text: 'Fluidly switching: audio on the go, e-book at lunch, physical by night.', category: 'Boundless Edition' }
     ]
   },
   {
-    id: 24,
+    id: 12,
     section: 'medium',
-    question: 'Which sounds oddly satisfying?',
+    question: 'What makes a story feel most truly and tangibly alive to you?',
     options: [
-      { letter: 'A', text: 'Owning a beautiful edition that will outlive you.', category: 'Legacy Edition' },
-      { letter: 'B', text: 'Carrying a battered book everywhere until it becomes part of you.', category: 'Companion Edition' },
-      { letter: 'C', text: 'Having an entire archive of books at your fingertips.', category: 'Archive Edition' },
-      { letter: 'D', text: 'Carrying hundreds of books inside one device.', category: 'Infinite Edition' },
-      { letter: 'E', text: 'Hearing a great narrator make the words breathe.', category: 'Living Voice' },
-      { letter: 'F', text: 'Switching effortlessly between formats.', category: 'Boundless Edition' }
-    ]
-  },
-  {
-    id: 25,
-    section: 'medium',
-    question: 'Your relationship with a book is closest to…',
-    options: [
-      { letter: 'A', text: 'An heirloom.', category: 'Legacy Edition' },
-      { letter: 'B', text: 'A companion.', category: 'Companion Edition' },
-      { letter: 'C', text: 'An archive.', category: 'Archive Edition' },
-      { letter: 'D', text: 'An infinite library.', category: 'Infinite Edition' },
-      { letter: 'E', text: 'A voice telling me a story.', category: 'Living Voice' },
-      { letter: 'F', text: 'A story that doesn\'t need one particular form.', category: 'Boundless Edition' }
-    ]
-  },
-  {
-    id: 26,
-    section: 'medium',
-    question: 'You\'re offered one of these reading spaces:',
-    options: [
-      { letter: 'A', text: 'An old library with beautiful hardcovers.', category: 'Legacy Edition' },
-      { letter: 'B', text: 'A cosy room with shelves of paperbacks.', category: 'Companion Edition' },
-      { letter: 'C', text: 'A massive digital archive.', category: 'Archive Edition' },
-      { letter: 'D', text: 'A futuristic library where every book is instantly accessible.', category: 'Infinite Edition' },
-      { letter: 'E', text: 'A quiet room with excellent audio equipment.', category: 'Living Voice' },
-      { letter: 'F', text: 'A magical library where books change format according to your mood.', category: 'Boundless Edition' }
-    ]
-  },
-  {
-    id: 27,
-    section: 'medium',
-    question: 'What makes a book feel real to you?',
-    options: [
-      { letter: 'A', text: 'Being able to hold it.', category: 'Legacy Edition' },
-      { letter: 'B', text: 'Having it beside me as a familiar companion.', category: 'Companion Edition' },
-      { letter: 'C', text: 'Being able to preserve and retrieve it.', category: 'Archive Edition' },
-      { letter: 'D', text: 'Being able to access it anywhere.', category: 'Infinite Edition' },
-      { letter: 'E', text: 'Hearing its words spoken.', category: 'Living Voice' },
-      { letter: 'F', text: 'The story itself not the container.', category: 'Boundless Edition' }
-    ]
-  },
-  {
-    id: 28,
-    section: 'medium',
-    question: 'Your reading rule is…',
-    options: [
-      { letter: 'A', text: 'Give me a beautiful physical edition.', category: 'Legacy Edition' },
-      { letter: 'B', text: 'Give me something comfortable and familiar.', category: 'Companion Edition' },
-      { letter: 'C', text: 'Give me searchable access to the text.', category: 'Archive Edition' },
-      { letter: 'D', text: 'Give me my library wherever I go.', category: 'Infinite Edition' },
-      { letter: 'E', text: 'Give me a voice and I\'ll give you my attention.', category: 'Living Voice' },
-      { letter: 'F', text: 'Give me the story. I\'ll figure out the format.', category: 'Boundless Edition' }
+      { letter: 'A', text: 'The tactile weight, craftsmanship, typography, and paper grain.', category: 'Legacy Edition' },
+      { letter: 'B', text: 'The dog-eared corners, highlighted margins, and worn travel creases.', category: 'Companion Edition' },
+      { letter: 'C', text: 'The clarity of structured thought, historical citations, and retrieved facts.', category: 'Archive Edition' },
+      { letter: 'D', text: 'The instantaneous freedom to search, highlight, and carry infinite knowledge.', category: 'Infinite Edition' },
+      { letter: 'E', text: 'The cadence, breath, and emotional intimacy of a human voice speaking.', category: 'Living Voice' },
+      { letter: 'F', text: 'The pure consciousness of the story itself—transcending any physical container.', category: 'Boundless Edition' }
     ]
   }
 ];
@@ -537,57 +333,79 @@ export const QUESTIONS = [
 export function calculateZodiacChart(answers) {
   // Initialize sign totals
   const totals = { Titan: 0, Haven: 0, Matrix: 0, Oracle: 0, Scribe: 0, Votive: 0, Sage: 0 };
-  let primaryElement = 'Imagination';
-  let primaryRealm = 'Story';
-  let primaryHouse = 'Mirror';
-  let primaryMedium = 'Legacy Edition';
+  
+  // Track category counts by section for primary attribution
+  const categoryCounts = {
+    element: {},
+    realm: {},
+    house: {},
+    medium: {}
+  };
 
-  // Process answers
+  // Process answers (supports single index or array of up to 2 indices)
   QUESTIONS.forEach((q, idx) => {
-    const selectedOptionIdx = answers[idx];
-    if (selectedOptionIdx === undefined || selectedOptionIdx === null) return;
-    const option = q.options[selectedOptionIdx];
-    if (!option) return;
+    const rawAnswer = answers[idx];
+    if (rawAnswer === undefined || rawAnswer === null) return;
+    
+    // Normalize to array of indices
+    const selectedIndices = Array.isArray(rawAnswer) ? rawAnswer : [rawAnswer];
+    if (selectedIndices.length === 0) return;
 
     const section = q.section; // 'element' | 'realm' | 'house' | 'medium'
-    const category = option.category;
-
-    // Track chosen categories for Sun/Moon/Rising attribution
-    if (idx === 0) primaryElement = category;
-    if (idx === 7) primaryRealm = category;
-    if (idx === 14) primaryHouse = category;
-    if (idx === 21) primaryMedium = category;
-
-    // Map section name to MATRIX key
     const matrixSectionKey = section.charAt(0).toUpperCase() + section.slice(1);
     const sectionMatrix = MATRIX[matrixSectionKey];
+    
+    // Weight per selection (proportional if multiple choices selected)
+    const weight = 1 / selectedIndices.length;
 
-    if (sectionMatrix && sectionMatrix[category]) {
-      const categoryPoints = sectionMatrix[category];
-      Object.keys(categoryPoints).forEach(sign => {
-        totals[sign] += categoryPoints[sign];
-      });
-    }
+    selectedIndices.forEach(optIdx => {
+      const option = q.options[optIdx];
+      if (!option) return;
+
+      const category = option.category;
+      categoryCounts[section][category] = (categoryCounts[section][category] || 0) + 1;
+
+      if (sectionMatrix && sectionMatrix[category]) {
+        const categoryPoints = sectionMatrix[category];
+        Object.keys(categoryPoints).forEach(sign => {
+          totals[sign] += categoryPoints[sign] * weight;
+        });
+      }
+    });
   });
+
+  // Helper to find dominant category in each section
+  const getDominantCategory = (sectionKey, defaultCat) => {
+    const counts = categoryCounts[sectionKey] || {};
+    const entries = Object.entries(counts);
+    if (entries.length === 0) return defaultCat;
+    entries.sort((a, b) => b[1] - a[1]);
+    return entries[0][0];
+  };
+
+  const primaryElement = getDominantCategory('element', 'Imagination');
+  const primaryRealm = getDominantCategory('realm', 'Story');
+  const primaryHouse = getDominantCategory('house', 'Mirror');
+  const primaryMedium = getDominantCategory('medium', 'Legacy Edition');
 
   // Sort signs by score descending
   const sortedSigns = Object.keys(totals)
-    .map(signKey => ({ signKey, score: totals[signKey] }))
+    .map(signKey => ({ signKey, score: Math.round(totals[signKey] * 10) / 10 }))
     .sort((a, b) => b.score - a.score);
 
-  // Check for ties in 1st place to apply Element tie-breaker
-  let topSignObj = sortedSigns[0];
-  let secondSignObj = sortedSigns[1];
-  let thirdSignObj = sortedSigns[2];
+  // Check for ties in 1st place to detect cusp
+  let topSignObj = sortedSigns[0] || { signKey: 'Oracle', score: 0 };
+  let secondSignObj = sortedSigns[1] || { signKey: 'Scribe', score: 0 };
+  let thirdSignObj = sortedSigns[2] || { signKey: 'Sage', score: 0 };
   let isCusp = false;
 
-  if (topSignObj.score === secondSignObj.score) {
+  if (Math.abs(topSignObj.score - secondSignObj.score) < 0.3) {
     isCusp = true;
   }
 
-  const sunSign = SIGNS[topSignObj.signKey];
-  const moonSign = SIGNS[secondSignObj.signKey];
-  const risingSign = SIGNS[thirdSignObj.signKey];
+  const sunSign = SIGNS[topSignObj.signKey] || SIGNS.Oracle;
+  const moonSign = SIGNS[secondSignObj.signKey] || SIGNS.Scribe;
+  const risingSign = SIGNS[thirdSignObj.signKey] || SIGNS.Sage;
 
   return {
     sunSign,

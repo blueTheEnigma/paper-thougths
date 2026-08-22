@@ -284,7 +284,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
                   The Book Zodiac
                 </h3>
                 <p className="text-xs text-[#2C1A0E]/80 leading-relaxed font-serif">
-                  A 28-question astrological identity test. Discover your <strong>Sun</strong>, <strong>Moon</strong>, and <strong>Rising</strong> literary signs.
+                  A 12-question astrological identity test. Discover your <strong>Sun</strong>, <strong>Moon</strong>, and <strong>Rising</strong> literary signs.
                 </p>
               </div>
               <Link

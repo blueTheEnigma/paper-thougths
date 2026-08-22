@@ -19,18 +19,44 @@ export default function NatalChartCard({ chartResult, onRetake }) {
   const matchingArchetypeKeys = sunSign.archetypeMatches || ['marathon', 'mood'];
   const matchedArchetypes = matchingArchetypeKeys.map(k => ARCHETYPES[k]).filter(Boolean);
 
-  // Helper to load image for canvas
+  // Robust image loader for canvas drawing
   const loadImage = (src) => {
     return new Promise((resolve) => {
+      if (!src) return resolve(null);
       const img = new Image();
-      img.crossOrigin = 'anonymous';
+      if (src.startsWith('http://') || src.startsWith('https://')) {
+        img.crossOrigin = 'anonymous';
+      }
       img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
+      img.onerror = () => {
+        console.warn("Could not load image for canvas:", src);
+        resolve(null);
+      };
       img.src = src;
     });
   };
 
-  // Generate high-resolution brand-aligned poster image with artworks and trigger download
+  // Helper to wrap text on canvas
+  const wrapText = (text, context, maxW) => {
+    if (!text) return [];
+    const words = text.split(' ');
+    if (words.length <= 1) return [text];
+    const lines = [];
+    let current = words[0];
+    for (let i = 1; i < words.length; i++) {
+      const w = words[i];
+      if (context.measureText(current + ' ' + w).width < maxW) {
+        current += ' ' + w;
+      } else {
+        lines.push(current);
+        current = w;
+      }
+    }
+    lines.push(current);
+    return lines;
+  };
+
+  // Generate high-resolution celestial grimoire poster image and trigger download
   const handleDownloadChart = async () => {
     if (isDownloading) return;
     setIsDownloading(true);
@@ -43,258 +69,321 @@ export default function NatalChartCard({ chartResult, onRetake }) {
       canvas.height = height;
       const ctx = canvas.getContext('2d');
 
-      // 1. Draw rich dark burgundy gradient background
-      const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 10, width / 2, height / 2, Math.max(width, height));
-      bgGrad.addColorStop(0, '#20070E');
-      bgGrad.addColorStop(0.7, '#0D0205');
-      bgGrad.addColorStop(1, '#050002');
+      // 1. Background: Deep rich Burgundy-to-Midnight radial gradient
+      const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, 900);
+      bgGrad.addColorStop(0, '#240810');
+      bgGrad.addColorStop(0.65, '#0E0206');
+      bgGrad.addColorStop(1, '#040002');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, width, height);
 
-      // 2. Draw ambient starry sky speck particles
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      // 2. Celestial Gold Dust Particles
       const stars = [
-        { x: 100, y: 150, r: 1.5 },
-        { x: 300, y: 80, r: 1 },
-        { x: 800, y: 120, r: 2 },
-        { x: 950, y: 220, r: 1 },
-        { x: 150, y: 1100, r: 1.5 },
-        { x: 920, y: 1150, r: 2 },
-        { x: 500, y: 1380, r: 1 }
+        { x: 90, y: 110, r: 1.5, a: 0.7 },
+        { x: 260, y: 70, r: 1, a: 0.5 },
+        { x: 820, y: 90, r: 2, a: 0.8 },
+        { x: 980, y: 180, r: 1.2, a: 0.6 },
+        { x: 120, y: 920, r: 1.5, a: 0.5 },
+        { x: 960, y: 940, r: 2, a: 0.7 },
+        { x: 540, y: 1390, r: 1.5, a: 0.9 },
+        { x: 300, y: 1370, r: 1.2, a: 0.6 },
+        { x: 780, y: 1360, r: 1.4, a: 0.6 }
       ];
-      stars.forEach(star => {
+      stars.forEach(s => {
+        ctx.fillStyle = `rgba(242, 169, 138, ${s.a})`;
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx.fill();
       });
 
-      // 3. Draw outer gold border (inset 24px, thickness 3px)
+      // 3. Ornate Double Gold Borders
+      // Outer Gold border
       ctx.strokeStyle = '#FAF7F2';
       ctx.lineWidth = 3;
-      ctx.strokeRect(24, 24, width - 48, height - 48);
+      ctx.strokeRect(28, 28, width - 56, height - 56);
 
-      // 4. Draw inner gold border (inset 34px, thickness 1px)
-      ctx.strokeStyle = '#C96A42';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(34, 34, width - 68, height - 68);
+      // Inner Gold filigree border
+      ctx.strokeStyle = '#C5A059';
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(38, 38, width - 76, height - 76);
 
-      // 5. Draw brand header
-      ctx.fillStyle = '#C96A42';
-      ctx.font = 'bold 18px Georgia, serif';
+      // Corner flourishes
+      const drawCorner = (cx, cy, flipX, flipY) => {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+        ctx.strokeStyle = '#C5A059';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 18);
+        ctx.lineTo(0, 0);
+        ctx.lineTo(18, 0);
+        ctx.stroke();
+        ctx.restore();
+      };
+      drawCorner(44, 44, false, false);
+      drawCorner(width - 44, 44, true, false);
+      drawCorner(44, height - 44, false, true);
+      drawCorner(width - 44, height - 44, true, true);
+
+      // 4. Header Section
+      ctx.fillStyle = '#C5A059';
+      ctx.font = 'bold 16px Georgia, serif';
       ctx.textAlign = 'center';
-      ctx.fillText('P A P E R   T H O U G H T S', width / 2, 85);
+      ctx.fillText('P A P E R   T H O U G H T S', width / 2, 75);
 
-      // 6. Draw Title: LITERARY NATAL CHART
       ctx.fillStyle = '#FAF7F2';
       ctx.font = 'bold 36px Georgia, serif';
-      ctx.fillText('LITERARY NATAL CHART', width / 2, 135);
+      ctx.fillText('LITERARY NATAL CHART', width / 2, 120);
 
-      // Draw main sign name
       ctx.fillStyle = '#F2A98A';
-      ctx.font = 'italic bold 42px Georgia, serif';
-      ctx.fillText(isCusp ? cuspSignName : `The ${sunSign.name}`, width / 2, 190);
+      ctx.font = 'italic bold 38px Georgia, serif';
+      ctx.fillText(isCusp ? cuspSignName : `The ${sunSign.name}`, width / 2, 168);
 
-      // Tagline
-      ctx.fillStyle = 'rgba(250, 247, 242, 0.8)';
+      ctx.fillStyle = 'rgba(250, 247, 242, 0.85)';
       ctx.font = 'italic 16px Georgia, serif';
-      ctx.fillText(`"${sunSign.tagline}"`, width / 2, 225);
+      ctx.fillText(`“${sunSign.tagline}”`, width / 2, 202);
 
-      // Helper to wrap text
-      const wrapText = (text, context, maxW) => {
-        if (!text) return [];
-        const words = text.split(' ');
-        if (words.length <= 1) return [text];
-        const lines = [];
-        let current = words[0];
-        for (let i = 1; i < words.length; i++) {
-          const w = words[i];
-          if (context.measureText(current + ' ' + w).width < maxW) {
-            current += ' ' + w;
-          } else {
-            lines.push(current);
-            current = w;
-          }
-        }
-        lines.push(current);
-        return lines;
-      };
-
-      // Load images for Sun, Moon, Rising
+      // 5. Preload artworks
       const [sunImg, moonImg, risingImg] = await Promise.all([
         loadImage(sunSign.image),
         loadImage(moonSign.image),
         loadImage(risingSign.image)
       ]);
 
-      // 7. Draw Astrological Triad Cards
-      const cards = [
+      // 6. Astrological Triad Cards
+      const triadCards = [
         {
-          title: '☀️ BOOK SUN',
+          badge: '☀️ BOOK SUN',
           name: `The ${sunSign.name}`,
+          tag: 'Primary Essence',
           desc: sunSign.description,
-          context: 'Primary Essence: Your core reading taste and official literary identity.',
+          sub: `Official Identity • ${sunSign.emoji}`,
           img: sunImg,
-          x: 75,
+          x: 52,
+          isPrimary: true
         },
         {
-          title: '🌙 BOOK MOON',
+          badge: '🌙 BOOK MOON',
           name: `The ${moonSign.name}`,
+          tag: 'Inner Driver',
           desc: moonSign.description,
-          context: `Inner Driver: What emotionally drives your connection to books (${chosenElement}).`,
+          sub: `Emotional Reader • ${chosenElement}`,
           img: moonImg,
-          x: 395,
+          x: 388,
+          isPrimary: false
         },
         {
-          title: '⬆️ BOOK RISING',
+          badge: '⬆️ BOOK RISING',
           name: `The ${risingSign.name}`,
+          tag: 'Reading Persona',
           desc: risingSign.description,
-          context: `Reading Persona: How you navigate literary realms (${chosenRealm}).`,
+          sub: `Outward Style • ${chosenRealm}`,
           img: risingImg,
-          x: 715,
+          x: 724,
+          isPrimary: false
         }
       ];
 
-      const cardW = 290;
-      const cardH = 750;
-      const cardY = 265;
+      const cardW = 304;
+      const cardH = 635;
+      const cardY = 228;
 
-      cards.forEach(card => {
-        // Background card
+      triadCards.forEach((card) => {
+        // Card Background (Parchment)
         ctx.fillStyle = '#FFF5EC';
         ctx.beginPath();
-        ctx.roundRect(card.x, cardY, cardW, cardH, 18);
+        ctx.roundRect(card.x, cardY, cardW, cardH, 20);
         ctx.fill();
 
-        // Border card
-        ctx.strokeStyle = 'rgba(44, 26, 14, 0.2)';
-        ctx.lineWidth = 1.5;
+        // Card Border
+        ctx.strokeStyle = card.isPrimary ? '#C5A059' : 'rgba(44, 26, 14, 0.2)';
+        ctx.lineWidth = card.isPrimary ? 2.5 : 1.5;
         ctx.stroke();
 
-        // Draw Artwork Image
+        // Card Header Banner
+        ctx.fillStyle = card.isPrimary ? '#5C1A2E' : '#2C1A0E';
+        ctx.beginPath();
+        ctx.roundRect(card.x, cardY, cardW, 46, [20, 20, 0, 0]);
+        ctx.fill();
+
+        ctx.fillStyle = card.isPrimary ? '#F2A98A' : '#FAF7F2';
+        ctx.font = 'bold 14px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(card.badge, card.x + cardW / 2, cardY + 28);
+
+        // Artwork Image or Fallback Astrological Seal
+        const imgX = card.x + 16;
+        const imgY = cardY + 58;
+        const imgW = cardW - 32;
+        const imgH = 200;
+
         if (card.img) {
           ctx.save();
-          const imgW = cardW - 32;
-          const imgH = 220;
-          const imgX = card.x + 16;
-          const imgY = cardY + 16;
           ctx.beginPath();
           ctx.roundRect(imgX, imgY, imgW, imgH, 12);
           ctx.clip();
           ctx.drawImage(card.img, imgX, imgY, imgW, imgH);
           ctx.restore();
-        }
 
-        // Card Header
-        const headerY = cardY + 265;
-        ctx.fillStyle = '#5C1A2E';
-        ctx.font = 'bold 15px Arial, sans-serif';
-        ctx.fillText(card.title, card.x + cardW / 2, headerY);
+          // Image inner border
+          ctx.strokeStyle = 'rgba(44, 26, 14, 0.15)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(imgX, imgY, imgW, imgH, 12);
+          ctx.stroke();
+        } else {
+          // Fallback Seal
+          ctx.fillStyle = '#1A060E';
+          ctx.beginPath();
+          ctx.roundRect(imgX, imgY, imgW, imgH, 12);
+          ctx.fill();
+
+          ctx.fillStyle = '#F2A98A';
+          ctx.font = 'bold 36px Georgia, serif';
+          ctx.fillText('✦', card.x + cardW / 2, imgY + 110);
+        }
 
         // Sign Name
         ctx.fillStyle = '#5C1A2E';
-        ctx.font = 'bold 24px Georgia, serif';
-        ctx.fillText(card.name, card.x + cardW / 2, headerY + 35);
+        ctx.font = 'bold 22px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(card.name, card.x + cardW / 2, cardY + 295);
 
-        // Description lines wrapping
+        // Role Subtitle
+        ctx.fillStyle = '#C96A42';
+        ctx.font = 'bold 11px Arial, sans-serif';
+        ctx.fillText(card.tag.toUpperCase(), card.x + cardW / 2, cardY + 316);
+
+        // Description Paragraph
         ctx.fillStyle = '#2C1A0E';
         ctx.font = '13px Georgia, serif';
-        const descLines = wrapText(card.desc, ctx, cardW - 40);
-        let descY = headerY + 70;
+        const descLines = wrapText(card.desc, ctx, cardW - 36);
+        let textY = cardY + 348;
         descLines.slice(0, 8).forEach(line => {
-          ctx.fillText(line, card.x + cardW / 2, descY);
-          descY += 19;
+          ctx.fillText(line, card.x + cardW / 2, textY);
+          textY += 19;
         });
 
-        // Draw dividing line
-        ctx.strokeStyle = 'rgba(197, 160, 89, 0.4)';
-        ctx.lineWidth = 1;
+        // Bottom Talisman Badge Inside Card
+        const badgeY = cardY + cardH - 52;
+        ctx.fillStyle = 'rgba(92, 26, 46, 0.08)';
         ctx.beginPath();
-        ctx.moveTo(card.x + 30, cardY + 640);
-        ctx.lineTo(card.x + cardW - 30, cardY + 640);
+        ctx.roundRect(card.x + 16, badgeY, cardW - 32, 34, 10);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(201, 106, 66, 0.3)';
+        ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Context Explanation
-        ctx.fillStyle = '#C96A42';
+        ctx.fillStyle = '#5C1A2E';
         ctx.font = 'italic bold 11px Georgia, serif';
-        const contextLines = wrapText(card.context, ctx, cardW - 40);
-        let contextY = cardY + 665;
-        contextLines.forEach(line => {
-          ctx.fillText(line, card.x + cardW / 2, contextY);
-          contextY += 16;
-        });
+        ctx.fillText(card.sub, card.x + cardW / 2, badgeY + 22);
       });
 
-      // 8. Draw Details breakdown grid (Element, Realm, House, Medium)
-      ctx.fillStyle = 'rgba(255, 245, 236, 0.08)';
-      ctx.beginPath();
-      ctx.roundRect(75, 1045, 930, 60, 12);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(242, 169, 138, 0.2)';
-      ctx.stroke();
+      // 7. Middle Celestial Talisman Badges (Element, Realm, House, Medium)
+      const talismanY = 885;
+      const talismans = [
+        { label: 'ELEMENT', val: chosenElement },
+        { label: 'REALM', val: chosenRealm },
+        { label: 'HOUSE', val: chosenHouse },
+        { label: 'MEDIUM', val: chosenMedium }
+      ];
 
-      ctx.fillStyle = '#FAF7F2';
-      ctx.font = 'bold 12px Arial, sans-serif';
-      ctx.fillText(`ELEMENT: ${chosenElement?.toUpperCase()}`, 190, 1081);
-      ctx.fillText(`REALM: ${chosenRealm?.toUpperCase()}`, 430, 1081);
-      ctx.fillText(`HOUSE: ${chosenHouse?.toUpperCase()}`, 670, 1081);
-      ctx.fillText(`MEDIUM: ${chosenMedium?.toUpperCase()}`, 900, 1081);
+      const talW = 226;
+      const talH = 58;
+      const talGap = 16;
+      const talStartX = 52;
 
-      // 9. Draw Superpower & Kryptonite
-      // Superpower
+      talismans.forEach((t, i) => {
+        const tx = talStartX + i * (talW + talGap);
+
+        ctx.fillStyle = 'rgba(255, 245, 236, 0.08)';
+        ctx.beginPath();
+        ctx.roundRect(tx, talismanY, talW, talH, 12);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(242, 169, 138, 0.25)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(250, 247, 242, 0.65)';
+        ctx.font = 'bold 11px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(t.label, tx + talW / 2, talismanY + 23);
+
+        ctx.fillStyle = '#F2A98A';
+        ctx.font = 'bold 13px Georgia, serif';
+        const displayVal = t.val.length > 20 ? t.val.substring(0, 18) + '…' : t.val;
+        ctx.fillText(displayVal, tx + talW / 2, talismanY + 44);
+      });
+
+      // 8. Superpower & Kryptonite Dual Parchment Cards
+      const superY = 965;
+      const superW = 472;
+      const superH = 115;
+
+      // Superpower Card
       ctx.fillStyle = '#FFF5EC';
       ctx.beginPath();
-      ctx.roundRect(75, 1130, 450, 125, 16);
+      ctx.roundRect(52, superY, superW, superH, 16);
       ctx.fill();
       ctx.strokeStyle = 'rgba(44, 26, 14, 0.15)';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
       ctx.fillStyle = '#047857';
       ctx.font = 'bold 12px Arial, sans-serif';
-      ctx.fillText('⚡ LITERARY SUPERPOWER', 75 + 225, 1160);
+      ctx.textAlign = 'center';
+      ctx.fillText('⚡ LITERARY SUPERPOWER', 52 + superW / 2, superY + 28);
+
       ctx.fillStyle = '#2C1A0E';
       ctx.font = 'italic 13px Georgia, serif';
-      const superpowerLines = wrapText(`"${sunSign.superpower}"`, ctx, 410);
-      let spY = 1190;
-      superpowerLines.slice(0, 2).forEach(line => {
-        ctx.fillText(line, 75 + 225, spY);
-        spY += 20;
+      const spLines = wrapText(`“${sunSign.superpower}”`, ctx, superW - 40);
+      let spy = superY + 56;
+      spLines.slice(0, 2).forEach(line => {
+        ctx.fillText(line, 52 + superW / 2, spy);
+        spy += 20;
       });
 
-      // Kryptonite
+      // Kryptonite Card
       ctx.fillStyle = '#FFF5EC';
       ctx.beginPath();
-      ctx.roundRect(555, 1130, 450, 125, 16);
+      ctx.roundRect(556, superY, superW, superH, 16);
       ctx.fill();
       ctx.strokeStyle = 'rgba(44, 26, 14, 0.15)';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
       ctx.fillStyle = '#BE123C';
       ctx.font = 'bold 12px Arial, sans-serif';
-      ctx.fillText('🥀 LITERARY KRYPTONITE', 555 + 225, 1160);
+      ctx.textAlign = 'center';
+      ctx.fillText('🥀 LITERARY KRYPTONITE', 556 + superW / 2, superY + 28);
+
       ctx.fillStyle = '#2C1A0E';
       ctx.font = 'italic 13px Georgia, serif';
-      const kryptoniteLines = wrapText(`"${sunSign.kryptonite}"`, ctx, 410);
-      let krY = 1190;
-      kryptoniteLines.slice(0, 2).forEach(line => {
-        ctx.fillText(line, 555 + 225, krY);
-        krY += 20;
+      const krLines = wrapText(`“${sunSign.kryptonite}”`, ctx, superW - 40);
+      let kry = superY + 56;
+      krLines.slice(0, 2).forEach(line => {
+        ctx.fillText(line, 556 + superW / 2, kry);
+        kry += 20;
       });
 
-      // 10. Draw Footer brand details
-      ctx.fillStyle = 'rgba(250, 247, 242, 0.7)';
-      ctx.font = 'bold 13px Arial, sans-serif';
-      ctx.fillText('DISCOVER YOUR LITERARY ZODIAC CHART AT PAPERTHOUGHTS.ORG', width / 2, 1340);
-
-      // Gold stars decoration
+      // 9. Footer Brand & Celestial Seals
       ctx.fillStyle = '#C5A059';
       ctx.font = '16px Georgia, serif';
-      ctx.fillText('❖   ✦   ❖', width / 2, 1375);
+      ctx.textAlign = 'center';
+      ctx.fillText('❖   ✦   ❖', width / 2, 1370);
 
-      // Trigger download
+      ctx.fillStyle = 'rgba(250, 247, 242, 0.75)';
+      ctx.font = 'bold 12px Arial, sans-serif';
+      ctx.fillText('DISCOVER YOUR LITERARY ZODIAC CHART AT PAPERTHOUGHTS.ORG', width / 2, 1400);
+
+      // 10. Output blob and download
       canvas.toBlob((blob) => {
         if (!blob) {
           setIsDownloading(false);
-          alert('Failed to generate image blob. Please try again.');
+          alert('Failed to generate image. Please try again.');
           return;
         }
         const blobUrl = URL.createObjectURL(blob);
@@ -307,9 +396,10 @@ export default function NatalChartCard({ chartResult, onRetake }) {
         setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
         setIsDownloading(false);
       }, 'image/jpeg', 0.95);
+
     } catch (err) {
       console.error("Zodiac poster generation failed:", err);
-      alert("Failed to download zodiac chart poster. Please try again.");
+      alert("Failed to download chart poster. Please try again.");
       setIsDownloading(false);
     }
   };
@@ -324,7 +414,7 @@ export default function NatalChartCard({ chartResult, onRetake }) {
 
       {/* MAIN NATAL CHART CARD */}
       <div 
-        className="bg-gradient-to-b from-[#18050c] via-[#100206] to-[#080103] rounded-3xl p-6 sm:p-10 border-2 border-[#F2A98A]/35 shadow-2xl space-y-10 relative overflow-hidden"
+        className="bg-gradient-to-b from-[#1c060e] via-[#100206] to-[#080103] rounded-3xl p-6 sm:p-10 border-2 border-[#F2A98A]/35 shadow-2xl space-y-10 relative overflow-hidden"
       >
         
         {/* Top Decorative Celestial Glow */}
@@ -332,7 +422,7 @@ export default function NatalChartCard({ chartResult, onRetake }) {
 
         {/* Header */}
         <div className="text-center space-y-4 relative">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#5c1a2e]/30 border border-[#F2A98A]/25 text-[#F2A98A] text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#5c1a2e]/40 border border-[#F2A98A]/25 text-[#F2A98A] text-xs font-bold uppercase tracking-wider">
             ✨ Official Literary Natal Chart
           </div>
 
@@ -345,7 +435,7 @@ export default function NatalChartCard({ chartResult, onRetake }) {
           </p>
         </div>
 
-        {/* ASTROLOGICAL TRIAD (Sun, Moon, Rising) - Showcasing Artwork */}
+        {/* ASTROLOGICAL TRIAD (Sun, Moon, Rising) - Tight, Gorgeous Tarot Proportions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
           
           {/* SUN SIGN (Primary Essence) */}
@@ -368,16 +458,23 @@ export default function NatalChartCard({ chartResult, onRetake }) {
               </div>
             )}
             
-            <div className="p-6 space-y-3 flex-grow">
-              <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
-                The {sunSign.name}
-              </h3>
-              <p className="text-[11px] text-[#2C1A0E]/60 font-mono font-bold uppercase tracking-wider">
-                Primary Essence • Score Peak
-              </p>
-              <p className="text-sm text-[#2C1A0E]/85 leading-relaxed font-serif pt-1">
-                {sunSign.description}
-              </p>
+            <div className="p-6 space-y-3 flex-grow flex flex-col justify-between">
+              <div className="space-y-2">
+                <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
+                  The {sunSign.name}
+                </h3>
+                <p className="text-[11px] text-[#2C1A0E]/60 font-mono font-bold uppercase tracking-wider">
+                  Primary Essence • Official Identity
+                </p>
+                <p className="text-sm text-[#2C1A0E]/85 leading-relaxed font-serif pt-1">
+                  {sunSign.description}
+                </p>
+              </div>
+
+              <div className="pt-4 mt-2 border-t border-[#2C1A0E]/10 flex items-center justify-between text-xs font-mono text-[#5C1A2E]">
+                <span className="font-bold">✨ Core Power:</span>
+                <span className="italic font-serif truncate max-w-[170px]">{sunSign.superpower}</span>
+              </div>
             </div>
           </div>
 
@@ -401,20 +498,27 @@ export default function NatalChartCard({ chartResult, onRetake }) {
               </div>
             )}
             
-            <div className="p-6 space-y-3 flex-grow">
-              <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
-                The {moonSign.name}
-              </h3>
-              <p className="text-[11px] text-[#2C1A0E]/60 font-mono font-bold uppercase tracking-wider">
-                Inner Reader • {chosenElement} Driven
-              </p>
-              <p className="text-sm text-[#2C1A0E]/85 leading-relaxed font-serif pt-1">
-                {moonSign.description}
-              </p>
+            <div className="p-6 space-y-3 flex-grow flex flex-col justify-between">
+              <div className="space-y-2">
+                <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
+                  The {moonSign.name}
+                </h3>
+                <p className="text-[11px] text-[#2C1A0E]/60 font-mono font-bold uppercase tracking-wider">
+                  Inner Driver • {chosenElement} Driven
+                </p>
+                <p className="text-sm text-[#2C1A0E]/85 leading-relaxed font-serif pt-1">
+                  {moonSign.description}
+                </p>
+              </div>
+
+              <div className="pt-4 mt-2 border-t border-[#2C1A0E]/10 flex items-center justify-between text-xs font-mono text-[#2C1A0E]/70">
+                <span className="font-bold">Element:</span>
+                <span className="font-serif italic font-bold text-[#C96A42]">{chosenElement}</span>
+              </div>
             </div>
           </div>
 
-          {/* RISING SIGN (Outward Persona) */}
+          {/* RISING SIGN (Reading Persona) */}
           <div className="bg-[#FFF5EC] rounded-2xl border border-[#2C1A0E]/15 text-[#2C1A0E] overflow-hidden shadow-xl flex flex-col justify-between">
             <div className="p-4 bg-[#2C1A0E] text-cream flex items-center justify-between">
               <span className="text-xs font-mono font-extrabold uppercase tracking-wider text-[#F2A98A]">
@@ -434,37 +538,44 @@ export default function NatalChartCard({ chartResult, onRetake }) {
               </div>
             )}
             
-            <div className="p-6 space-y-3 flex-grow">
-              <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
-                The {risingSign.name}
-              </h3>
-              <p className="text-[11px] text-[#2C1A0E]/60 font-mono font-bold uppercase tracking-wider">
-                Reading Persona • Inhabits {chosenRealm}
-              </p>
-              <p className="text-sm text-[#2C1A0E]/85 leading-relaxed font-serif pt-1">
-                {risingSign.description}
-              </p>
+            <div className="p-6 space-y-3 flex-grow flex flex-col justify-between">
+              <div className="space-y-2">
+                <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
+                  The {risingSign.name}
+                </h3>
+                <p className="text-[11px] text-[#2C1A0E]/60 font-mono font-bold uppercase tracking-wider">
+                  Reading Persona • Inhabits {chosenRealm}
+                </p>
+                <p className="text-sm text-[#2C1A0E]/85 leading-relaxed font-serif pt-1">
+                  {risingSign.description}
+                </p>
+              </div>
+
+              <div className="pt-4 mt-2 border-t border-[#2C1A0E]/10 flex items-center justify-between text-xs font-mono text-[#2C1A0E]/70">
+                <span className="font-bold">Realm:</span>
+                <span className="font-serif italic font-bold text-[#C96A42]">{chosenRealm}</span>
+              </div>
             </div>
           </div>
 
         </div>
 
-        {/* CHART DETAILS BREAKDOWN GRID */}
+        {/* CHART DETAILS TALISMAN BADGES */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 bg-black/40 rounded-2xl border border-[#F2A98A]/20 text-center text-xs font-mono">
-          <div className="space-y-1">
-            <span className="text-cream/55 uppercase tracking-wider text-[11px]">Book Element</span>
+          <div className="space-y-1 p-2 rounded-xl bg-white/5 border border-white/5">
+            <span className="text-cream/55 uppercase tracking-wider text-[10px] block">Book Element</span>
             <p className="text-sm font-bold text-[#F2A98A]">{chosenElement}</p>
           </div>
-          <div className="space-y-1">
-            <span className="text-cream/55 uppercase tracking-wider text-[11px]">Book Realm</span>
+          <div className="space-y-1 p-2 rounded-xl bg-white/5 border border-white/5">
+            <span className="text-cream/55 uppercase tracking-wider text-[10px] block">Book Realm</span>
             <p className="text-sm font-bold text-[#F2A98A]">{chosenRealm}</p>
           </div>
-          <div className="space-y-1">
-            <span className="text-cream/55 uppercase tracking-wider text-[11px]">Story House</span>
+          <div className="space-y-1 p-2 rounded-xl bg-white/5 border border-white/5">
+            <span className="text-cream/55 uppercase tracking-wider text-[10px] block">Story House</span>
             <p className="text-sm font-bold text-[#F2A98A]">{chosenHouse}</p>
           </div>
-          <div className="space-y-1">
-            <span className="text-cream/55 uppercase tracking-wider text-[11px]">Story Medium</span>
+          <div className="space-y-1 p-2 rounded-xl bg-white/5 border border-white/5">
+            <span className="text-cream/55 uppercase tracking-wider text-[10px] block">Story Medium</span>
             <p className="text-sm font-bold text-[#F2A98A]">{chosenMedium}</p>
           </div>
         </div>
@@ -511,7 +622,7 @@ export default function NatalChartCard({ chartResult, onRetake }) {
           </Link>
         </div>
 
-        {/* MATCHING ARCHETYPES (With New Artwork Thumbnails) */}
+        {/* MATCHING ARCHETYPES */}
         {matchedArchetypes.length > 0 && (
           <div className="space-y-4">
             <h4 className="text-xs font-mono font-bold text-[#F2A98A] uppercase tracking-wider">
@@ -552,6 +663,7 @@ export default function NatalChartCard({ chartResult, onRetake }) {
         {/* ACTION BUTTONS */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 border-t border-white/10">
           <button
+            type="button"
             onClick={handleDownloadChart}
             disabled={isDownloading}
             className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#5c1a2e] to-[#c96a42] hover:from-[#7a2040] hover:to-[#e07a5f] text-cream font-bold text-base shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
@@ -561,6 +673,7 @@ export default function NatalChartCard({ chartResult, onRetake }) {
           </button>
 
           <button
+            type="button"
             onClick={() => setIsShareModalOpen(true)}
             className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-slate-900 border border-white/10 hover:bg-slate-800 text-cream/90 hover:text-cream text-base font-semibold transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
           >
@@ -569,6 +682,7 @@ export default function NatalChartCard({ chartResult, onRetake }) {
           </button>
 
           <button
+            type="button"
             onClick={onRetake}
             className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-slate-950 border border-white/10 hover:bg-slate-900 text-cream/70 hover:text-cream text-sm font-semibold transition-all cursor-pointer"
           >

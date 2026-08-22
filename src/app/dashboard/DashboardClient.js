@@ -1792,7 +1792,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                             Who are you in the literary universe?
                           </h3>
                           <p className="text-xs text-ink/70 leading-relaxed font-serif">
-                            Take the 28-question psychological quiz to reveal your official Sun, Moon, and Rising signs.
+                            Take the 12-question psychological quiz to reveal your official Sun, Moon, and Rising signs.
                           </p>
                           <Link 
                             href="/zodiac"

@@ -8,8 +8,8 @@ import { ARCHETYPES } from '../../lib/archetypesData';
 import Link from 'next/link';
 
 export default function BookZodiacHub() {
-  const [currentStep, setCurrentStep] = useState(0); // 0 to 27
-  const [answers, setAnswers] = useState({}); // { 0: optionIdx, 1: optionIdx, ... }
+  const [currentStep, setCurrentStep] = useState(0); // 0 to 11
+  const [answers, setAnswers] = useState({}); // { 0: [idx], 1: [idx1, idx2], ... }
   const [quizState, setQuizState] = useState('intro'); // 'intro' | 'active' | 'generating' | 'result'
   const [activeTab, setActiveTab] = useState('quiz'); // 'quiz' | 'codex'
   const [selectedCodexSign, setSelectedCodexSign] = useState(null);
@@ -23,6 +23,13 @@ export default function BookZodiacHub() {
   // Determine current section metadata
   const currentSection = SECTIONS.find(s => s.questionIndices.includes(currentStep)) || SECTIONS[0];
   const signsList = Object.values(SIGNS);
+
+  // Helper to scroll smoothly to top
+  const scrollToTop = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   // 1. Mount & Load persisted states
   useEffect(() => {
@@ -46,7 +53,12 @@ export default function BookZodiacHub() {
         try {
           const { answers: savedAns, currentStep: savedSt } = JSON.parse(savedProgress);
           if (savedAns && Object.keys(savedAns).length > 0) {
-            setAnswers(savedAns);
+            // Normalize old single answers to arrays if needed
+            const normalizedAns = {};
+            Object.keys(savedAns).forEach(k => {
+              normalizedAns[k] = Array.isArray(savedAns[k]) ? savedAns[k] : [savedAns[k]];
+            });
+            setAnswers(normalizedAns);
             setCurrentStep(savedSt || 0);
             setHasSavedProgress(true);
           }
@@ -64,15 +76,38 @@ export default function BookZodiacHub() {
     }
   }, [answers, currentStep, quizState, mounted]);
 
-  const handleOptionSelect = (optionIdx) => {
-    setAnswers(prev => ({ ...prev, [currentStep]: optionIdx }));
+  // Multi-select toggle handler (max 2 choices)
+  const handleToggleOption = (optionIdx) => {
+    setAnswers(prev => {
+      const currentList = prev[currentStep] ? [...prev[currentStep]] : [];
+      const existingIdx = currentList.indexOf(optionIdx);
+
+      if (existingIdx >= 0) {
+        // Deselect
+        currentList.splice(existingIdx, 1);
+      } else {
+        // Select (cap at 2; if already 2, cycle oldest)
+        if (currentList.length < 2) {
+          currentList.push(optionIdx);
+        } else {
+          currentList.shift();
+          currentList.push(optionIdx);
+        }
+      }
+
+      return {
+        ...prev,
+        [currentStep]: currentList
+      };
+    });
   };
 
   const handleNextStep = () => {
+    scrollToTop();
     if (currentStep < totalQuestions - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
-      // Finished all 28 questions!
+      // Finished all 12 questions!
       setQuizState('generating');
       localStorage.removeItem('pt_zodiac_progress'); // Clear active progress
 
@@ -81,11 +116,13 @@ export default function BookZodiacHub() {
         setChartResult(result);
         localStorage.setItem('pt_zodiac_result', JSON.stringify(result)); // Persist final result
         setQuizState('result');
-      }, 2000);
+        scrollToTop();
+      }, 1800);
     }
   };
 
   const handlePrevStep = () => {
+    scrollToTop();
     if (currentStep > 0) {
       setCurrentStep(prev => prev - 1);
     }
@@ -93,14 +130,17 @@ export default function BookZodiacHub() {
 
   const handleStartFresh = () => {
     localStorage.removeItem('pt_zodiac_progress');
+    localStorage.removeItem('pt_zodiac_result');
     setAnswers({});
     setCurrentStep(0);
     setHasSavedProgress(false);
     setQuizState('active');
+    scrollToTop();
   };
 
   const handleResume = () => {
     setQuizState('active');
+    scrollToTop();
   };
 
   const handleRetake = () => {
@@ -112,15 +152,19 @@ export default function BookZodiacHub() {
     setChartResult(null);
     setQuizState('intro');
     setActiveTab('quiz');
+    scrollToTop();
   };
 
   if (!mounted) {
     return (
       <div className="min-h-screen bg-[#0d0205] text-cream flex items-center justify-center">
-        <div className="text-amber-300 animate-pulse text-lg font-mono">Loading Celestial Spheres...</div>
+        <div className="text-[#F2A98A] animate-pulse text-lg font-mono">Aligning Celestial Spheres...</div>
       </div>
     );
   }
+
+  const currentStepSelections = answers[currentStep] || [];
+  const hasSelectedCurrent = currentStepSelections.length > 0;
 
   return (
     <div 
@@ -130,9 +174,9 @@ export default function BookZodiacHub() {
       {/* Ambient Speck Particles */}
       <div className="absolute inset-0 pointer-events-none opacity-40 overflow-hidden">
         <div className="absolute top-10 left-1/4 w-1 h-1 bg-white rounded-full animate-pulse"></div>
-        <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-amber-200 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-[#F2A98A] rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
         <div className="absolute bottom-20 left-1/3 w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '2.5s' }}></div>
-        <div className="absolute top-1/2 left-20 w-1.5 h-1.5 bg-primary rounded-full animate-pulse" style={{ animationDelay: '1.5s' }}></div>
+        <div className="absolute top-1/2 left-20 w-1.5 h-1.5 bg-[#5C1A2E] rounded-full animate-pulse" style={{ animationDelay: '1.5s' }}></div>
       </div>
 
       <div className="max-w-5xl mx-auto relative z-10 space-y-8">
@@ -191,14 +235,14 @@ export default function BookZodiacHub() {
               <div className="bg-gradient-to-b from-[#18050c] to-[#080103] p-8 rounded-3xl border border-[#F2A98A]/20 shadow-2xl space-y-6 text-center animate-fade-in">
                 <div className="p-6 bg-black/40 rounded-2xl border border-white/5 max-w-2xl mx-auto text-left text-cream/80 text-sm leading-relaxed space-y-3 font-serif">
                   <p>
-                    The Book Zodiac is a symbolic identity system inspired by astrology, built entirely around books, reading, and human emotion.
+                    The Book Zodiac is an evocative identity system inspired by astrology, built entirely around books, reading, and human emotion.
                   </p>
                   <p>
-                    Through <strong>28 intuitive questions</strong> across 4 sections (<em>Element, Realm, House, Medium</em>), discover your <strong>Literary Natal Chart</strong>:
+                    Through <strong>12 intuitive questions</strong> across 4 celestial pillars (<em>Element, Realm, House, Medium</em>) with multi-select flexibility, unlock your <strong>Literary Natal Chart</strong>:
                   </p>
                   <ul className="list-disc list-inside space-y-1 text-[#F2A98A] font-sans font-bold text-xs sm:text-sm">
                     <li>☀️ Book Sun — Your Official Literary Essence & Core Identity</li>
-                    <li>🌙 Book Moon — Your Instinctive Emotional Reader</li>
+                    <li>🌙 Book Moon — Your Instinctive Emotional Driver</li>
                     <li>⬆️ Book Rising — Your Outward Reading Persona</li>
                   </ul>
                 </div>
@@ -395,13 +439,14 @@ export default function BookZodiacHub() {
             {/* Question Card */}
             <ZodiacQuizQuestion
               questionData={currentQuestion}
-              selectedOptionIdx={answers[currentStep]}
-              onSelectOption={handleOptionSelect}
+              selectedIndices={answers[currentStep]}
+              onToggleOption={handleToggleOption}
             />
 
             {/* Navigation Controls */}
             <div className="flex items-center justify-between pt-4">
               <button
+                type="button"
                 onClick={handlePrevStep}
                 disabled={currentStep === 0}
                 className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
@@ -414,10 +459,11 @@ export default function BookZodiacHub() {
               </button>
 
               <button
+                type="button"
                 onClick={handleNextStep}
-                disabled={answers[currentStep] === undefined}
+                disabled={!hasSelectedCurrent}
                 className={`px-8 py-3 rounded-xl text-sm font-bold shadow-lg transition-all ${
-                  answers[currentStep] === undefined
+                  !hasSelectedCurrent
                     ? 'bg-slate-900 opacity-55 text-slate-500 border border-white/5 cursor-not-allowed'
                     : 'bg-gradient-to-r from-[#5c1a2e] to-[#c96a42] text-cream shadow-[#5c1a2e]/20 hover:scale-105 active:scale-95 cursor-pointer'
                 }`}

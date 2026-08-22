@@ -52,7 +52,7 @@ export function UserButton({ afterSignOutUrl }) {
   return (
     <button
       onClick={handleSignOut}
-      className="text-xs font-bold font-sans uppercase tracking-wider text-ink/75 hover:text-burgundy px-3 py-1.5 rounded-lg border border-sage/20 bg-white/60 hover:bg-cream/40 transition-colors"
+      className="text-xs font-bold font-sans uppercase tracking-wider text-ink/75 hover:text-burgundy px-3 py-1.5 rounded-xl border border-sage/20 bg-white/80 hover:bg-cream transition-all shadow-sm cursor-pointer whitespace-nowrap"
       title="Click to sign out"
     >
       Sign Out
@@ -81,7 +81,7 @@ export function SignOutButton({ children, afterSignOutUrl }) {
   return (
     <button
       onClick={handleSignOut}
-      className="text-xs font-bold font-sans uppercase tracking-wider text-ink/75 hover:text-burgundy px-3 py-1.5 rounded-lg border border-sage/20 bg-white/60 hover:bg-cream/40 transition-colors"
+      className="text-xs font-bold font-sans uppercase tracking-wider text-ink/75 hover:text-burgundy px-3 py-1.5 rounded-xl border border-sage/20 bg-white/80 hover:bg-cream transition-all shadow-sm cursor-pointer whitespace-nowrap"
     >
       Sign Out
     </button>

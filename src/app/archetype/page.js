@@ -349,7 +349,7 @@ export default function ArchetypesPage() {
             Ready to discover your exact Literary Natal Chart?
           </h3>
           <p className="text-sm sm:text-base text-cream/80 max-w-xl mx-auto font-serif leading-relaxed">
-            Take the 28-question Book Zodiac assessment to unlock your Sun, Moon, and Rising signs, along with your top matching Reader Archetypes.
+            Take the 12-question Book Zodiac assessment to unlock your Sun, Moon, and Rising signs, along with your top matching Reader Archetypes.
           </p>
           <div className="pt-2">
             <Link

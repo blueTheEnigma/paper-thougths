@@ -22,6 +22,8 @@ export default function Navigation() {
   const isLoaded = authLoaded && userLoaded;
 
   const [profile, setProfile] = useState(null);
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   const superadminEmails = [
     (process.env.NEXT_PUBLIC_SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase().trim(),
@@ -49,6 +51,26 @@ export default function Navigation() {
     }
   }, [isSignedIn]);
 
+  // Scroll detection to auto-hide navbar on scroll down and reveal on scroll up
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY < 40) {
+        setIsNavVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        // Scrolling down -> hide navbar
+        setIsNavVisible(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up -> show navbar
+        setIsNavVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
   // Check if a link is active
   const isActive = (path) => {
     if (path === '/' && pathname !== '/') return false;
@@ -56,20 +78,23 @@ export default function Navigation() {
   };
 
   const navLinks = [
-    { name: "Home", href: "/", icon: Compass },
-    { name: "Book Zodiac", href: "/zodiac", icon: Sparkles },
-    { name: "Bookstore", href: "/bookstore", icon: ShoppingBag },
-    { name: "Events", href: "/events", icon: Sparkles },
-    { name: "Village", href: "/village", icon: Feather },
+    { name: "Home", href: "/", icon: Compass, mobileLabel: "Home" },
+    { name: "Book Zodiac", href: "/zodiac", icon: Sparkles, mobileLabel: "Zodiac" },
+    { name: "Bookstore", href: "/bookstore", icon: ShoppingBag, mobileLabel: "Books" },
+    { name: "Events", href: "/events", icon: Sparkles, mobileLabel: "Events" },
+    { name: "Village", href: "/village", icon: Feather, mobileLabel: "Village" },
   ];
 
   return (
     <>
-      {/* 1. Desktop Floating Glassmorphic Top Nav */}
+      {/* 1. Desktop Floating Glassmorphic Top Nav (With Smart Auto-Hide) */}
       <motion.nav 
         initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        animate={{ 
+          y: isNavVisible ? 0 : -100, 
+          opacity: isNavVisible ? 1 : 0 
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
         className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-6xl bg-cream/95 backdrop-blur-lg border border-sage/15 py-3 px-6 rounded-2xl flex items-center justify-between shadow-lg"
       >
         <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
@@ -143,9 +168,12 @@ export default function Navigation() {
                 Dashboard
               </Link>
               <NotificationBell userId={profile?.id} />
-              <div className="flex items-center gap-2 bg-white/40 p-1 rounded-full border border-sage/10">
+              
+              <div className="flex items-center gap-2">
                 {profile && (
-                  <PanguinAvatar lifetimeLeaves={profile.lifetimeLeaves || 0} avatarUrl={profile.avatarUrl} variant="icon" archetype={profile.archetype} />
+                  <div className="p-0.5 rounded-full border border-sage/20 bg-white/60 shadow-sm flex items-center justify-center">
+                    <PanguinAvatar lifetimeLeaves={profile.lifetimeLeaves || 0} avatarUrl={profile.avatarUrl} variant="icon" archetype={profile.archetype} />
+                  </div>
                 )}
                 <UserButton afterSignOutUrl="/" />
               </div>
@@ -159,7 +187,7 @@ export default function Navigation() {
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-cream/95 backdrop-blur-lg border border-sage/15 rounded-2xl shadow-2xl py-2 px-3 flex justify-around items-center lg:hidden"
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-lg bg-cream/95 backdrop-blur-lg border border-sage/15 rounded-2xl shadow-2xl py-1.5 px-2 flex justify-between items-center lg:hidden"
       >
         {navLinks.map((link) => {
           const active = isActive(link.href);
@@ -167,57 +195,59 @@ export default function Navigation() {
             <Link 
               key={link.name} 
               href={link.href} 
-              className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
-                active ? "text-burgundy scale-105" : "text-ink/50"
+              className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all ${
+                active ? "text-burgundy scale-105 font-extrabold" : "text-ink/50"
               }`}
             >
-              <link.icon size={20} className={active ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
-              <span className="text-[9px] font-sans font-bold mt-1 tracking-wide">{link.name}</span>
+              <link.icon size={18} className={active ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
+              <span className="text-[9px] font-sans font-bold mt-0.5 tracking-tight truncate max-w-full text-center">
+                {link.mobileLabel || link.name}
+              </span>
             </Link>
           );
         })}
         {isLoaded && isSignedIn && profile?.isCrewMember && (
           <Link 
             href="/round-table" 
-            className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
-              isActive('/round-table') ? "text-burgundy scale-105" : "text-sage"
+            className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all ${
+              isActive('/round-table') ? "text-burgundy scale-105 font-extrabold" : "text-sage"
             }`}
           >
-            <BookOpen size={20} className={isActive('/round-table') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
-            <span className="text-[9px] font-sans font-bold mt-1 tracking-wide">CRM</span>
+            <BookOpen size={18} className={isActive('/round-table') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
+            <span className="text-[9px] font-sans font-bold mt-0.5 tracking-tight truncate max-w-full text-center">CRM</span>
           </Link>
         )}
         {isLoaded && isSignedIn && isAdmin && (
           <Link 
             href="/admin" 
-            className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
-              isActive('/admin') ? "text-burgundy scale-105" : "text-accent"
+            className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all ${
+              isActive('/admin') ? "text-burgundy scale-105 font-extrabold" : "text-accent"
             }`}
           >
-            <ShieldCheck size={20} className={isActive('/admin') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
-            <span className="text-[9px] font-sans font-bold mt-1 tracking-wide">Admin</span>
+            <ShieldCheck size={18} className={isActive('/admin') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
+            <span className="text-[9px] font-sans font-bold mt-0.5 tracking-tight truncate max-w-full text-center">Admin</span>
           </Link>
         )}
         {isLoaded && isSignedIn && (
           <Link 
             href="/dashboard" 
-            className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
-              isActive('/dashboard') ? "text-burgundy scale-105" : "text-ink/50"
+            className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all ${
+              isActive('/dashboard') ? "text-burgundy scale-105 font-extrabold" : "text-ink/50"
             }`}
           >
-            <User size={20} className={isActive('/dashboard') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
-            <span className="text-[9px] font-sans font-bold mt-1 tracking-wide">Account</span>
+            <User size={18} className={isActive('/dashboard') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
+            <span className="text-[9px] font-sans font-bold mt-0.5 tracking-tight truncate max-w-full text-center">Account</span>
           </Link>
         )}
         {isLoaded && !isSignedIn && (
           <Link 
             href="/sign-in?redirect_url=/dashboard" 
-            className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
-              isActive('/sign-in') ? "text-burgundy scale-105" : "text-ink/50"
+            className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all ${
+              isActive('/sign-in') ? "text-burgundy scale-105 font-extrabold" : "text-ink/50"
             }`}
           >
-            <User size={20} className={isActive('/sign-in') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
-            <span className="text-[9px] font-sans font-bold mt-1 tracking-wide">Sign In</span>
+            <User size={18} className={isActive('/sign-in') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
+            <span className="text-[9px] font-sans font-bold mt-0.5 tracking-tight truncate max-w-full text-center">Sign In</span>
           </Link>
         )}
       </motion.div>
