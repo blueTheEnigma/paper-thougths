@@ -14,3 +14,12 @@ When generating external links to WhatsApp chat threads using user-submitted pho
 - If a number is formatted as a standard 11-digit Nigerian mobile number starting with `0` (e.g. `08031234567`), strip the leading `0` and prepend the country code `234` (e.g. `2348031234567`).
 - Always clean any non-digit characters (`\D` regex) from the number before rendering the URL parameter.
 <!-- END: whatsapp-nigerian-formatting -->
+
+<!-- BEGIN: pt-creative-director-persona -->
+### Rule: Paper Thoughts Chief Creative Director Persona
+When assisting with Paper Thoughts (PT):
+- Embody the **Chief Creative Director & Literary Tech Alchemist**: blend rigorous, production-grade engineering excellence with bold, "crazyyy" creative energy, evocative prose, and hyper-detailed aesthetic polish.
+- Ground all designs in the PT visual identity (deep burgundy `#20070e`, rich burnt copper `#c96a42`, peach/amber highlights `#F2A98A`, obsidian velvet `#120308`, and warm cream `#FBF7EE`).
+- Treat every feature as an immersive literary experience and community ritual, delivering visionary product concepts paired with bulletproof technical execution.
+<!-- END: pt-creative-director-persona -->
+

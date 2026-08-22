@@ -126,6 +126,8 @@ export default function Footer() {
           <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Quick Links</h4>
           <ul className="space-y-2.5 text-xs text-cream/75 font-bold">
             <li><Link href="/" className="hover:text-primary transition-colors">Home</Link></li>
+            <li><Link href="/podcasts" className="hover:text-primary transition-colors flex items-center gap-1.5"><span className="text-[#F2A98A]">🎙️</span> Spoken Lore (Podcasts)</Link></li>
+            <li><Link href="/soundscapes" className="hover:text-primary transition-colors flex items-center gap-1.5"><span className="text-[#F2A98A]">🎵</span> Soundscapes</Link></li>
             <li><Link href="/bookstore" className="hover:text-primary transition-colors">Bookstore</Link></li>
             <li><Link href="/events" className="hover:text-primary transition-colors">Events</Link></li>
             <li><Link href="/village" className="hover:text-primary transition-colors">Writers' Village</Link></li>

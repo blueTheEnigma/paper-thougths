@@ -270,11 +270,11 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
               Who Are You in the Literary Universe?
             </h2>
             <p className="text-sm sm:text-base text-cream/70 max-w-xl mx-auto italic font-serif">
-              Explore the 3 core pillars of the Paper Thoughts identity system.
+              Explore the core pillars of the Paper Thoughts sensory and identity universe.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* CARD 1: BOOK ZODIAC */}
             <div className="p-6 rounded-2xl bg-[#FFF5EC] border border-[#2C1A0E]/15 space-y-5 hover:border-[#5C1A2E]/30 transition-all flex flex-col justify-between group shadow-md relative">
               <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 h-4.5 bg-[#C5A059]/15 transform rotate-1 border-l border-r border-[#C5A059]/25" />
@@ -291,7 +291,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
                 href="/zodiac"
                 className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#5C1A2E] to-[#C96A42] hover:from-[#7A2040] hover:to-[#e07a5f] text-cream font-bold text-xs text-center transition-all shadow-md active:scale-95"
               >
-                Discover Your Zodiac Chart →
+                Discover Zodiac →
               </Link>
             </div>
 
@@ -311,7 +311,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
                 href="/archetype"
                 className="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-[#5C1A2E] text-[#F2A98A] hover:text-cream border border-[#F2A98A]/25 font-bold text-xs text-center transition-all shadow-md active:scale-95"
               >
-                Browse 21 Archetypes →
+                Browse 21 Signs →
               </Link>
             </div>
 
@@ -321,7 +321,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
               <div className="space-y-3 pt-2">
                 <span className="text-4xl block">🎧</span>
                 <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
-                  Literary Soundscapes
+                  Soundscapes
                 </h3>
                 <p className="text-xs text-[#2C1A0E]/80 leading-relaxed font-serif">
                   9 Spotify reading playlists crafted to match the mood of every page, from <em>The Still Hour</em> to <em>The Forest Cabin</em>.
@@ -331,7 +331,27 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
                 href="/soundscapes"
                 className="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-[#5C1A2E] text-[#F2A98A] hover:text-cream border border-[#F2A98A]/25 font-bold text-xs text-center transition-all shadow-md active:scale-95"
               >
-                Press Play on Soundscapes →
+                Listen to Playlists →
+              </Link>
+            </div>
+
+            {/* CARD 4: SPOKEN LORE & PODCASTS */}
+            <div className="p-6 rounded-2xl bg-[#FFF5EC] border border-[#2C1A0E]/15 space-y-5 hover:border-[#5C1A2E]/30 transition-all flex flex-col justify-between group shadow-md relative">
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 h-4.5 bg-[#C5A059]/15 transform -rotate-2 border-l border-r border-[#C5A059]/25" />
+              <div className="space-y-3 pt-2">
+                <span className="text-4xl block">🎙️</span>
+                <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
+                  Spoken Lore
+                </h3>
+                <p className="text-xs text-[#2C1A0E]/80 leading-relaxed font-serif">
+                  Curated literary audio and short stories, featuring <strong>LIFELORE</strong> by Debbie Doowuese Ajom.
+                </p>
+              </div>
+              <Link
+                href="/podcasts"
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#5C1A2E] to-[#C96A42] hover:from-[#7A2040] hover:to-[#e07a5f] text-cream font-bold text-xs text-center transition-all shadow-md active:scale-95"
+              >
+                Enter Audio Lore →
               </Link>
             </div>
           </div>
