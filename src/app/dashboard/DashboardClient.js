@@ -16,7 +16,6 @@ import confetti from 'canvas-confetti';
 import FeedbackDashboard from '@/components/FeedbackDashboard';
 import PanguinAvatar from '@/components/PanguinAvatar';
 import OnboardingSequence from '@/components/OnboardingSequence';
-import QuoteStudioModal from '@/components/quotes/QuoteStudioModal';
 import { getAvatarStage } from '@/lib/avatar';
 
 const GENRES = [
@@ -290,22 +289,25 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const [librarySuccess, setLibrarySuccess] = useState(null);
   const [libraryError, setLibraryError] = useState(null);
 
-  // Quote Studio States
-  const [quoteStudioOpen, setQuoteStudioOpen] = useState(false);
-  const [quoteStudioData, setQuoteStudioData] = useState({
-    quote: '',
-    author: '',
-    context: ''
-  });
+  // 1-Click Copy Manuscript Quote / Logline
+  const [copiedSubId, setCopiedSubId] = useState(null);
 
-  const handleOpenQuoteStudio = (sub) => {
-    const quoteCandidate = sub.logline || (sub.bodyText ? sub.bodyText.slice(0, 180) : '') || sub.title;
-    setQuoteStudioData({
-      quote: quoteCandidate,
-      author: profile?.name || 'Paper Thoughts Writer',
-      context: `Writers’ Village • ${sub.genre || 'Literature'}`
+  const handleCopySubmissionQuote = (sub) => {
+    const quoteText = sub.logline || (sub.bodyText ? sub.bodyText.slice(0, 200).trim() + '...' : sub.title);
+    const author = profile?.name || 'Paper Thoughts Writer';
+    const textToCopy = `“${quoteText.replace(/^["“]|["”]$/g, '').trim()}”\n\n— ${author}\nFrom '${sub.title}' (${sub.genre || 'Literature'})\n\nPaper Thoughts • We live in the lines: paperthoughts.org`;
+    
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedSubId(sub.id);
+    
+    confetti({
+      particleCount: 45,
+      spread: 60,
+      origin: { y: 0.75 },
+      colors: ['#F2A98A', '#5C1A2E', '#C96A42']
     });
-    setQuoteStudioOpen(true);
+
+    setTimeout(() => setCopiedSubId(null), 2200);
   };
 
   // Avatar Upload States
@@ -2467,11 +2469,15 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                               )}
 
                               <button
-                                onClick={() => handleOpenQuoteStudio(sub)}
-                                className="bg-accent/10 hover:bg-accent hover:text-cream text-accent border border-accent/20 rounded-xl p-2 flex items-center justify-center transition-all cursor-pointer"
-                                title="Create Shareable Quote Card"
+                                onClick={() => handleCopySubmissionQuote(sub)}
+                                className={`border rounded-xl p-2 flex items-center justify-center transition-all cursor-pointer ${
+                                  copiedSubId === sub.id
+                                    ? 'bg-green-500/20 text-green-700 border-green-500/30'
+                                    : 'bg-accent/10 hover:bg-accent hover:text-cream text-accent border border-accent/20'
+                                }`}
+                                title="Copy Quote / Logline"
                               >
-                                <Quote size={13} />
+                                {copiedSubId === sub.id ? <Check size={13} /> : <Quote size={13} />}
                               </button>
 
                               <button
@@ -3086,15 +3092,6 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         </AnimatePresence>,
         document.body
       )}
-
-      {/* Social Quote Studio Modal */}
-      <QuoteStudioModal
-        isOpen={quoteStudioOpen}
-        onClose={() => setQuoteStudioOpen(false)}
-        initialQuote={quoteStudioData.quote}
-        initialAuthor={quoteStudioData.author}
-        initialContext={quoteStudioData.context}
-      />
     </main>
   );
 }

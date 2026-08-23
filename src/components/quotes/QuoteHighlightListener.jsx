@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Quote, Sparkles } from 'lucide-react';
-import QuoteStudioModal from './QuoteStudioModal';
+import { Sparkles, Copy, Check, Heart } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 export default function QuoteHighlightListener() {
   const [selectedText, setSelectedText] = useState('');
   const [coords, setCoords] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -19,12 +19,11 @@ export default function QuoteHighlightListener() {
       }
 
       const text = selection.toString().trim();
-      // Only trigger for meaningful sentences (e.g. between 10 and 350 chars)
-      if (text.length >= 10 && text.length <= 350) {
+      // Trigger for clean sentence excerpts
+      if (text.length >= 12 && text.length <= 320) {
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
         
-        // Position tooltip above the selection
         setCoords({
           top: rect.top + window.scrollY - 44,
           left: rect.left + window.scrollX + (rect.width / 2)
@@ -36,7 +35,6 @@ export default function QuoteHighlightListener() {
     };
 
     const handleMouseDown = (e) => {
-      // If clicking inside the tooltip button, don't clear
       if (e.target.closest('#pt-quote-tooltip')) return;
       setCoords(null);
     };
@@ -50,45 +48,60 @@ export default function QuoteHighlightListener() {
     };
   }, []);
 
-  return (
-    <>
-      <AnimatePresence>
-        {coords && (
-          <motion.div
-            id="pt-quote-tooltip"
-            initial={{ opacity: 0, y: 8, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.9 }}
-            transition={{ duration: 0.15 }}
-            style={{
-              position: 'absolute',
-              top: `${coords.top}px`,
-              left: `${coords.left}px`,
-              transform: 'translateX(-50%)',
-              zIndex: 999
-            }}
-          >
-            <button
-              onClick={() => {
-                setIsModalOpen(true);
-                setCoords(null);
-              }}
-              className="px-3 py-1.5 rounded-full bg-[#120308] border border-[#F2A98A]/50 text-[#F2A98A] text-[11px] font-mono font-bold uppercase tracking-wider shadow-2xl backdrop-blur-md flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-[#c96a42]/30"
-            >
-              <Sparkles size={12} className="text-[#F2A98A] animate-pulse" />
-              <span>Quote Card</span>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+  const handleCopy = () => {
+    if (!selectedText) return;
+    const cleanText = `“${selectedText.replace(/^["“]|["”]$/g, '').trim()}”\n\n— Paper Thoughts • We live in the lines`;
+    navigator.clipboard.writeText(cleanText);
+    setCopied(true);
 
-      <QuoteStudioModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        initialQuote={selectedText}
-        initialAuthor="Paper Thoughts Member"
-        initialContext="Writers’ Village"
-      />
-    </>
+    confetti({
+      particleCount: 35,
+      spread: 50,
+      origin: { y: 0.7 },
+      colors: ['#F2A98A', '#5C1A2E', '#C96A42']
+    });
+
+    setTimeout(() => {
+      setCopied(false);
+      setCoords(null);
+    }, 1800);
+  };
+
+  return (
+    <AnimatePresence>
+      {coords && (
+        <motion.div
+          id="pt-quote-tooltip"
+          initial={{ opacity: 0, y: 8, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.9 }}
+          transition={{ duration: 0.15 }}
+          style={{
+            position: 'absolute',
+            top: `${coords.top}px`,
+            left: `${coords.left}px`,
+            transform: 'translateX(-50%)',
+            zIndex: 999
+          }}
+        >
+          <button
+            onClick={handleCopy}
+            className="px-3.5 py-1.5 rounded-full bg-[#120308] border border-[#F2A98A]/50 text-[#F2A98A] text-[11px] font-mono font-bold uppercase tracking-wider shadow-2xl backdrop-blur-md flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-[#c96a42]/30"
+          >
+            {copied ? (
+              <>
+                <Check size={12} className="text-green-400" />
+                <span className="text-green-300">Spark Saved!</span>
+              </>
+            ) : (
+              <>
+                <Sparkles size={12} className="text-[#F2A98A] animate-pulse" />
+                <span>Save Spark</span>
+              </>
+            )}
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

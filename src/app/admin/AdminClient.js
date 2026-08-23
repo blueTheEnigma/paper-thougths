@@ -5,9 +5,10 @@ import {
   Users, BookOpen, ShoppingBag, MapPin, Search, ShieldAlert, 
   CheckCircle, ArrowLeft, RefreshCw, Star, Gift, Flame, AlertCircle, 
   TrendingUp, Settings, ExternalLink, Archive, FileText, Shield, X, Loader2,
-  Book, Cake, MessageCircle, Award
+  Book, Cake, MessageCircle, Award, Quote
 } from 'lucide-react';
 import Link from 'next/link';
+import AdminQuotesTab from '@/components/admin/AdminQuotesTab';
 
 const formatDate = (dateVal) => {
   if (!dateVal) return 'N/A';
@@ -40,6 +41,7 @@ export default function AdminClient({
   const allTabs = [
     { id: 'members', label: 'Members Ledger', icon: Users },
     { id: 'submissions', label: 'Submissions Moderation', icon: BookOpen },
+    { id: 'quotes', label: 'Quotes & Sparks ✨', icon: Quote },
     { id: 'orders', label: 'Bookstore Orders', icon: ShoppingBag },
     { id: 'pools', label: 'Chapter Pools', icon: MapPin },
     { id: 'prompts', label: 'Weekly Prompts', icon: FileText },
@@ -55,10 +57,11 @@ export default function AdminClient({
       case 'members':
         return permissions.includes('manage_chapter_events') || permissions.includes('community_manager') || isCommunityManager;
       case 'submissions':
+      case 'quotes':
       case 'prompts':
       case 'botm':
       case 'leaderboard':
-        return permissions.includes('moderate_submissions');
+        return permissions.includes('moderate_submissions') || permissions.includes('community_manager') || isCommunityManager;
       case 'orders':
         return permissions.includes('view_sales_logs');
       case 'pools':
@@ -736,6 +739,18 @@ export default function AdminClient({
                     </tbody>
                   </table>
                 </div>
+              </motion.div>
+            )}
+
+            {/* SOCIAL QUOTES & SPARKS VAULT */}
+            {activeTab === 'quotes' && (
+              <motion.div 
+                key="quotes"
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+              >
+                <AdminQuotesTab submissions={submissions} />
               </motion.div>
             )}
 

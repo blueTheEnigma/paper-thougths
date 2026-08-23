@@ -69,12 +69,14 @@ export default async function AdminPage() {
     streak: parseInt(m.streak || 0)
   }));
 
-  // 3. Fetch Submissions (For Batch Moderation)
+  // 3. Fetch Submissions (For Batch Moderation & Social Quotes Vault)
   const submissions = await Database.query(`
-    SELECT s.id, s.title, s.genre, s.logline, s.batch_status as status, 
-           u.full_name as author, s.has_laurel as laurel, s.created_at as date
+    SELECT s.id, s.title, s.genre, s.logline, s.body_text as "bodyText", s.batch_status as status, 
+           u.full_name as author, u.instagram as "authorInstagram", u.email as "authorEmail",
+           c.name as chapter, s.has_laurel as laurel, s.created_at as date
     FROM submissions s
     JOIN users u ON u.id = s.author_id
+    LEFT JOIN chapters c ON c.id = u.chapter_id
     ORDER BY s.created_at DESC
   `);
 
