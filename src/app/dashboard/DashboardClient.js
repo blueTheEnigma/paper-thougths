@@ -7,7 +7,7 @@ import {
   Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
   ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
   BookOpen, MessageSquare, Gift, Coins, Settings, X, Check, Book,
-  Download, Lock
+  Download, Lock, Quote
 } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
@@ -16,6 +16,7 @@ import confetti from 'canvas-confetti';
 import FeedbackDashboard from '@/components/FeedbackDashboard';
 import PanguinAvatar from '@/components/PanguinAvatar';
 import OnboardingSequence from '@/components/OnboardingSequence';
+import QuoteStudioModal from '@/components/quotes/QuoteStudioModal';
 import { getAvatarStage } from '@/lib/avatar';
 
 const GENRES = [
@@ -288,6 +289,24 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const [savingLibrarySub, setSavingLibrarySub] = useState(false);
   const [librarySuccess, setLibrarySuccess] = useState(null);
   const [libraryError, setLibraryError] = useState(null);
+
+  // Quote Studio States
+  const [quoteStudioOpen, setQuoteStudioOpen] = useState(false);
+  const [quoteStudioData, setQuoteStudioData] = useState({
+    quote: '',
+    author: '',
+    context: ''
+  });
+
+  const handleOpenQuoteStudio = (sub) => {
+    const quoteCandidate = sub.logline || (sub.bodyText ? sub.bodyText.slice(0, 180) : '') || sub.title;
+    setQuoteStudioData({
+      quote: quoteCandidate,
+      author: profile?.name || 'Paper Thoughts Writer',
+      context: `Writers’ Village • ${sub.genre || 'Literature'}`
+    });
+    setQuoteStudioOpen(true);
+  };
 
   // Avatar Upload States
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -2448,6 +2467,14 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                               )}
 
                               <button
+                                onClick={() => handleOpenQuoteStudio(sub)}
+                                className="bg-accent/10 hover:bg-accent hover:text-cream text-accent border border-accent/20 rounded-xl p-2 flex items-center justify-center transition-all cursor-pointer"
+                                title="Create Shareable Quote Card"
+                              >
+                                <Quote size={13} />
+                              </button>
+
+                              <button
                                 onClick={() => handleDownload(sub)}
                                 className="bg-sage/5 hover:bg-burgundy hover:text-cream text-ink/75 border border-sage/20 rounded-xl p-2 flex items-center justify-center transition-all cursor-pointer"
                                 title={(sub.genre || '').toLowerCase() === 'poetry' ? "Download designed poem (JPEG)" : "Download story (PDF)"}
@@ -3059,6 +3086,15 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         </AnimatePresence>,
         document.body
       )}
+
+      {/* Social Quote Studio Modal */}
+      <QuoteStudioModal
+        isOpen={quoteStudioOpen}
+        onClose={() => setQuoteStudioOpen(false)}
+        initialQuote={quoteStudioData.quote}
+        initialAuthor={quoteStudioData.author}
+        initialContext={quoteStudioData.context}
+      />
     </main>
   );
 }

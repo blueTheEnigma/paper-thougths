@@ -7,6 +7,7 @@ import Footer from "../components/Footer";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 import SmartInstallPrompt from "../components/onboarding/SmartInstallPrompt";
 import GuidedLoreModal from "../components/onboarding/GuidedLoreModal";
+import QuoteHighlightListener from "../components/quotes/QuoteHighlightListener";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -79,6 +80,7 @@ export default function RootLayout({ children }) {
           </div>
           <SmartInstallPrompt />
           <GuidedLoreModal />
+          <QuoteHighlightListener />
           <Footer />
           <Analytics />
         </body>

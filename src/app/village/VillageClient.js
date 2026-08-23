@@ -4,12 +4,13 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, PenTool, Feather, Award, ArrowRight,
-  Sparkles, Clock, Compass, DoorOpen
+  Sparkles, Clock, Compass, DoorOpen, Quote
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import PanguinAvatar from '@/components/PanguinAvatar';
+import QuoteStudioModal from '@/components/quotes/QuoteStudioModal';
 
 // ─── Cinematic Entrance Portal ──────────────────────────────────────────────
 
@@ -295,6 +296,7 @@ const itemVariants = {
 export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSignedIn: serverIsSignedIn, isRegistered: serverIsRegistered }) {
   const [showEntrance, setShowEntrance] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [quoteStudioOpen, setQuoteStudioOpen] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const redirectUrl = searchParams ? searchParams.get('redirect') : null;
@@ -491,8 +493,44 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
             </motion.div>
 
           </div>
+
+          {/* Social Media Quote Studio Banner */}
+          <motion.div
+            variants={itemVariants}
+            className="bg-gradient-to-r from-[#20070e] via-[#120308] to-[#2c0b15] border border-[#F2A98A]/30 rounded-[28px] p-6 sm:p-8 text-cream flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl max-w-6xl mx-auto relative overflow-hidden"
+          >
+            <div className="space-y-1.5 text-center md:text-left relative z-10">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#F2A98A] font-bold">
+                ✨ Social Media Quote Studio
+              </span>
+              <h3 className="text-xl sm:text-2xl font-serif font-bold text-cream">
+                Turn Your Words Into Shareable Art
+              </h3>
+              <p className="text-xs text-cream/70 max-w-lg font-serif">
+                Select your favorite line from any story, poem, or critique, and export a high-res graphic designed in Paper Thoughts Figma templates for Instagram & WhatsApp.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setQuoteStudioOpen(true)}
+              className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#5c1a2e] to-[#c96a42] hover:from-[#7a2040] hover:to-[#e07a5f] text-cream font-bold text-xs uppercase tracking-wider transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2 relative z-10 flex-shrink-0"
+            >
+              <Quote size={14} />
+              <span>Launch Quote Studio</span>
+            </button>
+          </motion.div>
+
         </motion.div>
       </main>
+
+      {/* Quote Studio Modal */}
+      <QuoteStudioModal
+        isOpen={quoteStudioOpen}
+        onClose={() => setQuoteStudioOpen(false)}
+        initialQuote="We loved with a love that was more than love, and lived in the lines left behind."
+        initialAuthor={userName}
+        initialContext="Writers’ Village • Paper Thoughts"
+      />
     </>
   );
 }
