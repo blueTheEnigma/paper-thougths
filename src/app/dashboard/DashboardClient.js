@@ -281,6 +281,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const [selectedSubForRead, setSelectedSubForRead] = useState(null);
   const [selectedSubForEdit, setSelectedSubForEdit] = useState(null);
   const [editTitle, setEditTitle] = useState('');
+  const [editPenName, setEditPenName] = useState('');
   const [editGenre, setEditGenre] = useState('Fiction');
   const [editLogline, setEditLogline] = useState('');
   const [editBodyText, setEditBodyText] = useState('');
@@ -379,29 +380,29 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
     ctx.font = 'bold 20px Georgia, serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('P A P E R   T H O U G H T S', width / 2, 85);
+    ctx.fillText('P A P E R   T H O U G H T S', width / 2, 80);
     
     // Star ornament
     ctx.fillStyle = '#C5A059';
     ctx.font = '18px Georgia, serif';
-    ctx.fillText('❖   ✦   ❖', width / 2, 125);
+    ctx.fillText('❖   ✦   ❖', width / 2, 118);
     
     // Poem Title
     ctx.fillStyle = '#5E1914';
     ctx.font = 'italic bold 44px Georgia, serif';
-    ctx.fillText(sub.title || 'Untitled', width / 2, 185);
+    ctx.fillText(sub.title || 'Untitled', width / 2, 175);
     
-    // Logline/Teaser
+    // Logline/Teaser (Epigraph)
     ctx.fillStyle = '#6B5E4F';
     ctx.font = 'italic 18px Georgia, serif';
-    ctx.fillText(sub.logline ? `"${sub.logline}"` : '', width / 2, 235);
+    ctx.fillText(sub.logline ? `"${sub.logline}"` : '', width / 2, 224);
     
-    // Divider line
+    // Top Divider line with breathing room
     ctx.strokeStyle = 'rgba(197, 160, 89, 0.4)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(250, 270);
-    ctx.lineTo(width - 250, 270);
+    ctx.moveTo(250, 285);
+    ctx.lineTo(width - 250, 285);
     ctx.stroke();
     
     // Body Text Formatting
@@ -443,7 +444,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
     let fontSize = 22;
     let lineHeight = fontSize * 1.65;
     let totalHeight = finalLines.length * lineHeight;
-    const maxAvailableH = 800; // Y = 320 to Y = 1120
+    const maxAvailableH = 780; // Y = 335 to Y = 1115
     
     if (totalHeight > maxAvailableH) {
       fontSize = Math.max(13, Math.floor(maxAvailableH / (finalLines.length * 1.65)));
@@ -455,22 +456,48 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
     ctx.font = `${fontSize}px Georgia, serif`;
     ctx.textAlign = 'center';
     
-    const startY = 320 + (maxAvailableH - totalHeight) / 2;
+    const startY = 335 + (maxAvailableH - totalHeight) / 2;
     for (let i = 0; i < finalLines.length; i++) {
       if (finalLines[i] !== '') {
         ctx.fillText(finalLines[i], width / 2, startY + (i * lineHeight));
       }
     }
     
-    // Decorative end leaf/scroll ornament
-    ctx.fillStyle = '#C5A059';
-    ctx.font = '16px Georgia, serif';
-    ctx.fillText('❦', width / 2, 1205);
+    // Winged Colophon Close (Flourish with twin hairline rules)
+    const closeY = 1175;
+    ctx.strokeStyle = 'rgba(197, 160, 89, 0.45)';
+    ctx.lineWidth = 1;
     
-    // Footer: Author name
+    // Left hairline wing
+    ctx.beginPath();
+    ctx.moveTo(width / 2 - 120, closeY);
+    ctx.lineTo(width / 2 - 30, closeY);
+    ctx.stroke();
+    
+    // Centered Colophon Ornament
+    ctx.fillStyle = '#C5A059';
+    ctx.font = '22px Georgia, serif';
+    ctx.fillText('❦', width / 2, closeY + 2);
+    
+    // Right hairline wing
+    ctx.beginPath();
+    ctx.moveTo(width / 2 + 30, closeY);
+    ctx.lineTo(width / 2 + 120, closeY);
+    ctx.stroke();
+
+    // Matching Bottom Divider Line
+    ctx.strokeStyle = 'rgba(197, 160, 89, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(250, 1220);
+    ctx.lineTo(width - 250, 1220);
+    ctx.stroke();
+    
+    // Footer: Author or Pen name
+    const authorName = sub.penName || sub.pen_name || profile?.name || 'Anonymous';
     ctx.fillStyle = '#5E1914';
     ctx.font = 'italic bold 24px Georgia, serif';
-    ctx.fillText(`by ${profile?.name || 'Anonymous'}`, width / 2, 1260);
+    ctx.fillText(`by ${authorName}`, width / 2, 1268);
     
     // Trigger download
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
@@ -546,7 +573,8 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         
         // Footer
         doc.setFont('times', 'italic');
-        doc.text(`by ${profile?.name || 'Anonymous'}`, margin, pageHeight - 10);
+        const pdfAuthor = sub.penName || sub.pen_name || profile?.name || 'Anonymous';
+        doc.text(`by ${pdfAuthor}`, margin, pageHeight - 10);
         doc.text(`Page ${j} of ${totalPages}`, pageWidth - margin - 15, pageHeight - 10);
       }
 
@@ -733,6 +761,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         body: JSON.stringify({
           id: selectedSubForEdit.id,
           title: editTitle,
+          penName: editPenName.trim(),
           genre: editGenre,
           logline: editLogline,
           bodyText: editBodyText,
@@ -750,6 +779,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
           const newSub = {
             id: data.submission.id,
             title: data.submission.title,
+            penName: data.submission.penName || editPenName.trim() || null,
             genre: data.submission.genre,
             logline: editLogline,
             bodyText: editBodyText,
@@ -2447,6 +2477,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                                   onClick={() => {
                                     setSelectedSubForEdit(sub);
                                     setEditTitle(sub.title);
+                                    setEditPenName(sub.penName || '');
                                     setEditGenre(sub.genre);
                                     setEditLogline(sub.logline);
                                     setEditBodyText(sub.bodyText || '');
@@ -2960,7 +2991,7 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Title</label>
                       <input 
@@ -2968,6 +2999,18 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
                         required
+                        disabled={savingLibrarySub}
+                        className="w-full bg-white border border-sage/25 rounded-xl py-2 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Pen Name (Optional)</label>
+                      <input 
+                        type="text"
+                        value={editPenName}
+                        onChange={(e) => setEditPenName(e.target.value)}
+                        placeholder="Defaults to profile name"
                         disabled={savingLibrarySub}
                         className="w-full bg-white border border-sage/25 rounded-xl py-2 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink"
                       />

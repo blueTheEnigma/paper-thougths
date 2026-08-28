@@ -80,11 +80,31 @@ CREATE TABLE IF NOT EXISTS submissions (
     genre VARCHAR(100) NOT NULL,
     logline TEXT NOT NULL,
     body_text TEXT NOT NULL,
+    pen_name VARCHAR(255) DEFAULT NULL,
     batch_status VARCHAR(30) DEFAULT 'draft', -- 'draft', 'queued', 'active_batch', 'archived'
     selection_reason_counts JSONB DEFAULT '{"title":0, "genre":0, "logline":0, "outside_comfort":0}'::jsonb,
     llm_editorial_summary JSONB DEFAULT NULL,
     has_laurel BOOLEAN DEFAULT FALSE,
     is_revised BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 5b. Submission Likes Table (The Living Salon)
+CREATE TABLE IF NOT EXISTS submission_likes (
+    id SERIAL PRIMARY KEY,
+    submission_id INT NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(submission_id, user_id)
+);
+
+-- 5c. Submission Comments Table (The Living Salon)
+CREATE TABLE IF NOT EXISTS submission_comments (
+    id SERIAL PRIMARY KEY,
+    submission_id INT NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+    user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    pen_name VARCHAR(255),
+    content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );
 

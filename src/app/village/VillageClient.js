@@ -393,42 +393,87 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
             </div>
           </motion.div>
 
-          {/* Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-6xl mx-auto">
+          {/* Three Village Pillars */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
 
-            {/* Writing Workspace card */}
+            {/* 1. The Living Salon (Reading Gallery) */}
             <motion.div
               variants={itemVariants}
               whileHover={{ y: -4 }}
-              className="parchment-card p-6 sm:p-8 flex flex-col justify-between space-y-6 sm:space-y-8 group"
+              className="parchment-card p-6 sm:p-7 flex flex-col justify-between space-y-6 group border border-accent/20"
+              style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(242,169,138,0.12) 0%, rgba(250,247,242,1) 85%)' }}
             >
-              <div className="absolute top-0 right-0 w-40 h-40 bg-burgundy/5 rounded-full blur-2xl group-hover:scale-125 transition-transform" />
-
-              <div className="space-y-4 sm:space-y-6 relative z-10">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-burgundy/5 border border-burgundy/10 rounded-2xl flex items-center justify-center text-burgundy">
-                  <PenTool size={24} />
+              <div className="space-y-4 relative z-10">
+                <div className="w-12 h-12 bg-accent/10 border border-accent/20 rounded-2xl flex items-center justify-center text-accent">
+                  <Sparkles size={22} />
                 </div>
                 <div className="space-y-1">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-extrabold text-burgundy">Writing Workspace</h2>
-                  <p className="text-xs text-ink/50 uppercase tracking-wider font-bold">Draft &amp; Sync Manuscripts Offline</p>
+                  <span className="text-[9px] font-sans font-bold uppercase tracking-widest text-accent">Open Sanctuary</span>
+                  <h2 className="text-xl sm:text-2xl font-display font-extrabold text-burgundy">The Living Salon</h2>
+                  <p className="text-xs text-ink/50 uppercase tracking-wider font-bold">Read &amp; Connect Freely</p>
                 </div>
-                <p className="text-xs sm:text-sm text-ink/75 leading-relaxed font-medium">
-                  Bring your ideas to life using our offline-first manuscript editor. Save progress automatically to your local browser storage and sync seamlessly with the Clubhouse database once you go online.
+                <p className="text-xs text-ink/75 leading-relaxed font-medium">
+                  Browse weekly prompt manuscripts and poetry from across the clubhouse. No review walls—simply read, tap to leave a leaf (🍃), share notes with authors, and download broadsheet cards.
                 </p>
 
-                <div className="border-t border-sage/10 pt-4 sm:pt-6 space-y-3 sm:space-y-4 bg-cream/35 -mx-6 sm:-mx-8 px-6 sm:px-8 pb-2">
-                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-ink/40 uppercase tracking-widest">
+                <div className="border-t border-sage/10 pt-4 space-y-2 bg-cream/35 -mx-6 sm:-mx-7 px-6 sm:px-7 pb-2 text-[11px] font-serif text-ink/75">
+                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-ink/40 uppercase tracking-widest font-sans">
+                    <BookOpen size={12} />
+                    <span>Salon Highlights</span>
+                  </div>
+                  <ul className="space-y-1.5 list-disc pl-4">
+                    <li>Read poems &amp; prose with zero friction.</li>
+                    <li>Discover authors by their artistic <strong>Pen Names</strong>.</li>
+                    <li>1-click broadsheet card exports for WhatsApp &amp; Instagram.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="relative z-10 pt-2">
+                <Link
+                  href="/village/gallery"
+                  className="w-full bg-accent hover:bg-burgundy text-burgundy hover:text-cream font-bold text-xs py-3.5 px-5 rounded-2xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group-hover:gap-3"
+                >
+                  <span>Enter Reading Salon</span>
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* 2. Writing Workspace card */}
+            <motion.div
+              variants={itemVariants}
+              whileHover={{ y: -4 }}
+              className="parchment-card p-6 sm:p-7 flex flex-col justify-between space-y-6 group"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-burgundy/5 rounded-full blur-2xl group-hover:scale-125 transition-transform" />
+
+              <div className="space-y-4 relative z-10">
+                <div className="w-12 h-12 bg-burgundy/5 border border-burgundy/10 rounded-2xl flex items-center justify-center text-burgundy">
+                  <PenTool size={22} />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[9px] font-sans font-bold uppercase tracking-widest text-burgundy">Creative Forge</span>
+                  <h2 className="text-xl sm:text-2xl font-display font-extrabold text-burgundy">Writing Workspace</h2>
+                  <p className="text-xs text-ink/50 uppercase tracking-wider font-bold">Draft &amp; Sync Offline</p>
+                </div>
+                <p className="text-xs text-ink/75 leading-relaxed font-medium">
+                  Bring your ideas to life under weekly prompts. Now with support for distinct author <strong>Pen Names</strong> and automatic local browser sync.
+                </p>
+
+                <div className="border-t border-sage/10 pt-4 space-y-2 bg-cream/35 -mx-6 sm:-mx-7 px-6 sm:px-7 pb-2">
+                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-ink/40 uppercase tracking-widest font-sans">
                     <Clock size={12} />
                     <span>Active Weekly Prompts</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="p-3 sm:p-3.5 bg-white border border-sage/10 rounded-xl space-y-1.5 shadow-sm">
-                      <span className="text-[9px] font-bold text-burgundy bg-burgundy/5 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Story Prompt</span>
-                      <p className="text-[11px] text-ink/85 font-serif line-clamp-2 italic leading-relaxed">&ldquo;{storyPrompt}&rdquo;</p>
+                  <div className="space-y-2">
+                    <div className="p-2.5 bg-white border border-sage/10 rounded-xl space-y-1 shadow-sm">
+                      <span className="text-[8px] font-bold text-burgundy bg-burgundy/5 px-2 py-0.5 rounded-full uppercase tracking-wider">Story Prompt</span>
+                      <p className="text-[10px] text-ink/85 font-serif line-clamp-2 italic leading-relaxed">&ldquo;{storyPrompt}&rdquo;</p>
                     </div>
-                    <div className="p-3 sm:p-3.5 bg-white border border-sage/10 rounded-xl space-y-1.5 shadow-sm">
-                      <span className="text-[9px] font-bold text-accent bg-accent/5 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Poetry Prompt</span>
-                      <p className="text-[11px] text-ink/85 font-serif line-clamp-2 italic leading-relaxed">&ldquo;{poemPrompt}&rdquo;</p>
+                    <div className="p-2.5 bg-white border border-sage/10 rounded-xl space-y-1 shadow-sm">
+                      <span className="text-[8px] font-bold text-accent bg-accent/5 px-2 py-0.5 rounded-full uppercase tracking-wider">Poetry Prompt</span>
+                      <p className="text-[10px] text-ink/85 font-serif line-clamp-2 italic leading-relaxed">&ldquo;{poemPrompt}&rdquo;</p>
                     </div>
                   </div>
                 </div>
@@ -437,44 +482,44 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
               <div className="relative z-10 pt-2">
                 <Link
                   href="/dashboard/write"
-                  className="w-full bg-burgundy hover:bg-ink text-cream font-bold text-xs py-4 px-6 rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group-hover:gap-3"
+                  className="w-full bg-burgundy hover:bg-ink text-cream font-bold text-xs py-3.5 px-5 rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group-hover:gap-3"
                 >
-                  <span>Enter Writing Workspace</span>
+                  <span>Enter Workspace</span>
                   <ArrowRight size={14} />
                 </Link>
               </div>
             </motion.div>
 
-            {/* Critique Queue card */}
+            {/* 3. Critique Queue card */}
             <motion.div
               variants={itemVariants}
               whileHover={{ y: -4 }}
-              className="parchment-card p-6 sm:p-8 flex flex-col justify-between space-y-6 sm:space-y-8 group"
+              className="parchment-card p-6 sm:p-7 flex flex-col justify-between space-y-6 group"
             >
-              <div className="absolute top-0 right-0 w-40 h-40 bg-sage/10 rounded-full blur-2xl group-hover:scale-125 transition-transform" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-sage/10 rounded-full blur-2xl group-hover:scale-125 transition-transform" />
 
-              <div className="space-y-4 sm:space-y-6 relative z-10">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-sage/10 border border-sage/20 rounded-2xl flex items-center justify-center text-sage">
-                  <BookOpen size={24} />
+              <div className="space-y-4 relative z-10">
+                <div className="w-12 h-12 bg-sage/10 border border-sage/20 rounded-2xl flex items-center justify-center text-sage">
+                  <BookOpen size={22} />
                 </div>
                 <div className="space-y-1">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-extrabold text-burgundy">Critique Queue</h2>
-                  <p className="text-xs text-ink/50 uppercase tracking-wider font-bold">Review Anonymously &amp; Earn Tokens</p>
+                  <span className="text-[9px] font-sans font-bold uppercase tracking-widest text-sage">Craft Crucible</span>
+                  <h2 className="text-xl sm:text-2xl font-display font-extrabold text-burgundy">Critique Queue</h2>
+                  <p className="text-xs text-ink/50 uppercase tracking-wider font-bold">Review &amp; Earn Tokens</p>
                 </div>
-                <p className="text-xs sm:text-sm text-ink/75 leading-relaxed font-medium">
-                  Step into the double-blind review pool. Read manuscripts submitted anonymously by other Clubhouse members, write structured feedback, and help decide which works get featured.
+                <p className="text-xs text-ink/75 leading-relaxed font-medium">
+                  Step into the double-blind review pool. Read manuscripts anonymously, write structured craft feedback, and earn spendable Leaves and Milestone Tokens.
                 </p>
 
-                <div className="border-t border-sage/10 pt-4 sm:pt-6 space-y-3 sm:space-y-4 bg-cream/35 -mx-6 sm:-mx-8 px-6 sm:px-8 pb-2">
-                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-ink/40 uppercase tracking-widest">
+                <div className="border-t border-sage/10 pt-4 space-y-2 bg-cream/35 -mx-6 sm:-mx-7 px-6 sm:px-7 pb-2 text-[11px] font-serif text-ink/75">
+                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-ink/40 uppercase tracking-widest font-sans">
                     <Compass size={12} />
-                    <span>Critique Rules &amp; Rewards</span>
+                    <span>Critique Rewards</span>
                   </div>
-                  <ul className="text-[11px] text-ink/75 space-y-2 sm:space-y-2.5 font-serif list-disc pl-5 leading-relaxed font-medium">
-                    <li>Earn <strong>1.0 Milestone Token</strong> per completed critique.</li>
-                    <li>Early-bird critiques (within 24 hrs of batch drop) reward <strong>1.5 Tokens</strong>.</li>
-                    <li>Earn spendable <strong>Leaves</strong> to gift book vouchers to your chapter pool.</li>
-                    <li>Double-blind active: Authors and reviewers remain fully anonymous.</li>
+                  <ul className="space-y-1.5 list-disc pl-4 font-medium">
+                    <li>Earn <strong>+1.0 Token</strong> per critique.</li>
+                    <li>Early-birds (weekend) reward <strong>+1.5 Tokens &amp; +15 Leaves</strong>.</li>
+                    <li>Double-blind active for pure editorial craft.</li>
                   </ul>
                 </div>
               </div>
@@ -482,7 +527,7 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
               <div className="relative z-10 pt-2">
                 <Link
                   href="/dashboard/review"
-                  className="w-full bg-sage hover:bg-ink hover:text-cream text-ink font-bold text-xs py-4 px-6 rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group-hover:gap-3"
+                  className="w-full bg-sage hover:bg-ink hover:text-cream text-ink font-bold text-xs py-3.5 px-5 rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group-hover:gap-3"
                 >
                   <span>Enter Critique Queue</span>
                   <ArrowRight size={14} />

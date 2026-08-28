@@ -119,7 +119,7 @@ async function getLocalArchiveData(clerkUser) {
 
     // 5. Fetch user submissions
     const submissionsRaw = await Database.query(`
-      SELECT s.id, s.title, s.genre, s.logline, s.body_text as "bodyText", s.batch_status as "batchStatus", 
+      SELECT s.id, s.title, s.genre, s.logline, s.body_text as "bodyText", s.pen_name as "penName", s.batch_status as "batchStatus", 
              s.is_revised as "isRevised", s.created_at as "createdAt",
              (SELECT COUNT(*) FROM submission_ai_reports r WHERE r.submission_id = s.id) > 0 as "hasReport",
              (SELECT COUNT(*) FROM peer_reviews r WHERE r.submission_id = s.id) as "reviewCount"
@@ -134,6 +134,7 @@ async function getLocalArchiveData(clerkUser) {
       genre: s.genre,
       logline: s.logline,
       bodyText: s.bodyText,
+      penName: s.penName || null,
       batchStatus: s.batchStatus,
       isRevised: s.isRevised || false,
       createdAt: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString(),

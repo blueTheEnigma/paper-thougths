@@ -33,7 +33,8 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { title, genre, logline, bodyText } = body;
+    const { title, genre, logline, bodyText, penName } = body;
+    const cleanPenName = penName && typeof penName === 'string' && penName.trim() ? penName.trim() : null;
 
     if (!title || !genre || !logline || !bodyText) {
       return NextResponse.json({ success: false, error: 'All fields (title, genre, teaser, body) are required.' }, { status: 400 });
@@ -60,10 +61,10 @@ export async function POST(request) {
     const result = await Database.transaction(async (client) => {
       // 1. Create submission
       const subRes = await client.query(`
-        INSERT INTO submissions (author_id, title, genre, logline, body_text, batch_status)
-        VALUES ($1, $2, $3, $4, $5, 'queued')
-        RETURNING id, title, genre, batch_status
-      `, [dbUser.id, title, genre, logline, bodyText]);
+        INSERT INTO submissions (author_id, title, genre, logline, body_text, pen_name, batch_status)
+        VALUES ($1, $2, $3, $4, $5, $6, 'queued')
+        RETURNING id, title, genre, pen_name as "penName", batch_status
+      `, [dbUser.id, title, genre, logline, bodyText, cleanPenName]);
       const newSubmission = subRes.rows[0];
 
       // 2. Update user's last_submission_date
@@ -168,7 +169,7 @@ export async function GET(request) {
 
     if (subId) {
       const submissionRaw = await Database.queryOne(`
-        SELECT id, author_id, title, genre, logline, body_text, batch_status, is_revised
+        SELECT id, author_id, title, genre, logline, body_text, pen_name, batch_status, is_revised
         FROM submissions
         WHERE id = $1
       `, [subId]);
@@ -187,6 +188,7 @@ export async function GET(request) {
             genre: submissionRaw.genre,
             logline: submissionRaw.logline,
             bodyText: submissionRaw.body_text,
+            penName: submissionRaw.pen_name || null,
             batchStatus: submissionRaw.batch_status,
             isRevised: submissionRaw.is_revised
           } 
@@ -293,7 +295,8 @@ export async function PUT(request) {
     }
 
     const body = await request.json();
-    const { id, title, genre, logline, bodyText, saveMode = 'update' } = body;
+    const { id, title, genre, logline, bodyText, penName, saveMode = 'update' } = body;
+    const cleanPenName = penName && typeof penName === 'string' && penName.trim() ? penName.trim() : null;
 
     if (!id || !title || !genre || !logline || !bodyText) {
       return NextResponse.json({ success: false, error: 'All fields are required.' }, { status: 400 });
@@ -321,14 +324,14 @@ export async function PUT(request) {
       // Queued submissions can only be updated in-place (inline)
       await Database.query(`
         UPDATE submissions 
-        SET title = $1, genre = $2, logline = $3, body_text = $4 
-        WHERE id = $5
-      `, [title, genre, logline, bodyText, id]);
+        SET title = $1, genre = $2, logline = $3, body_text = $4, pen_name = $5 
+        WHERE id = $6
+      `, [title, genre, logline, bodyText, cleanPenName, id]);
 
       return NextResponse.json({ 
         success: true, 
         message: 'Manuscript updated inline successfully.',
-        submission: { id, title, genre, batchStatus: 'queued' }
+        submission: { id, title, genre, penName: cleanPenName, batchStatus: 'queued' }
       });
     }
 
@@ -341,10 +344,10 @@ export async function PUT(request) {
         const result = await Database.transaction(async (client) => {
           // A: Create new submission
           const subRes = await client.query(`
-            INSERT INTO submissions (author_id, title, genre, logline, body_text, batch_status)
-            VALUES ($1, $2, $3, $4, $5, 'queued')
-            RETURNING id, title, genre, batch_status
-          `, [dbUser.id, title, genre, logline, bodyText]);
+            INSERT INTO submissions (author_id, title, genre, logline, body_text, pen_name, batch_status)
+            VALUES ($1, $2, $3, $4, $5, $6, 'queued')
+            RETURNING id, title, genre, pen_name as "penName", batch_status
+          `, [dbUser.id, title, genre, logline, bodyText, cleanPenName]);
           const newSubmission = subRes.rows[0];
 
           // B: Update user's last_submission_date
@@ -425,14 +428,14 @@ export async function PUT(request) {
         // Save inline: Update existing archived work directly and mark it is_revised = true
         await Database.query(`
           UPDATE submissions 
-          SET title = $1, genre = $2, logline = $3, body_text = $4, is_revised = true 
-          WHERE id = $5
-        `, [title, genre, logline, bodyText, id]);
+          SET title = $1, genre = $2, logline = $3, body_text = $4, pen_name = $5, is_revised = true 
+          WHERE id = $6
+        `, [title, genre, logline, bodyText, cleanPenName, id]);
 
         return NextResponse.json({ 
           success: true, 
           message: 'Archived manuscript updated inline successfully. Critiques will show a revision badge.',
-          submission: { id, title, genre, batchStatus: 'archived', isRevised: true }
+          submission: { id, title, genre, penName: cleanPenName, batchStatus: 'archived', isRevised: true }
         });
       }
     }

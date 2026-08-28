@@ -92,6 +92,7 @@ async function deleteDraftFromDB(mode) {
 export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, poemPromptId }) {
   const [writingMode, setWritingMode] = useState('story'); // 'story' or 'poem'
   const [title, setTitle] = useState('');
+  const [penName, setPenName] = useState('');
   const [genre, setGenre] = useState('Fiction');
   const [logline, setLogline] = useState('');
   const [bodyText, setBodyText] = useState('');
@@ -154,6 +155,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
       if (active) {
         if (draft) {
           setTitle(draft.title || '');
+          setPenName(draft.penName || '');
           setGenre(draft.genre || (writingMode === 'poem' ? 'Poetry' : 'Fiction'));
           setLogline(draft.logline || '');
           setBodyText(draft.bodyText || '');
@@ -165,6 +167,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
         } else {
           // Reset form fields for new draft
           setTitle('');
+          setPenName('');
           setGenre(writingMode === 'poem' ? 'Poetry' : 'Fiction');
           setLogline('');
           setBodyText('');
@@ -184,7 +187,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
   useEffect(() => {
     // Skip saving if all fields are empty (e.g. during mode toggle or initial load)
     const defaultGenre = writingMode === 'poem' ? 'Poetry' : 'Fiction';
-    if (!title && !logline && !bodyText && genre === defaultGenre) return;
+    if (!title && !penName && !logline && !bodyText && genre === defaultGenre) return;
 
     setSaveStatus('Saving draft locally...');
     
@@ -193,7 +196,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
     }
 
     saveTimeoutRef.current = setTimeout(() => {
-      const draftData = { title, genre, logline, bodyText, pendingSync: isPendingSync };
+      const draftData = { title, penName, genre, logline, bodyText, pendingSync: isPendingSync };
       saveDraftToDB(writingMode, draftData).then(() => {
         const now = new Date();
         setLastSaved(now);
@@ -206,7 +209,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [title, genre, logline, bodyText, isPendingSync, writingMode]);
+  }, [title, penName, genre, logline, bodyText, isPendingSync, writingMode]);
 
   // 6. Submission Handler
   const handleSyncDraft = useCallback(async () => {
@@ -219,7 +222,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
       return;
     }
 
-    const submissionData = { title, genre, logline, bodyText };
+    const submissionData = { title, penName: penName.trim(), genre, logline, bodyText };
 
     // If user is currently offline, queue the draft to be synced automatically later
     if (!navigator.onLine) {
@@ -249,6 +252,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
         await deleteDraftFromDB(writingMode);
         setIsPendingSync(false);
         setTitle('');
+        setPenName('');
         setGenre(writingMode === 'poem' ? 'Poetry' : 'Fiction');
         setLogline('');
         setBodyText('');
@@ -263,7 +267,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
     } finally {
       setIsSyncing(false);
     }
-  }, [title, genre, logline, bodyText, writingMode]);
+  }, [title, penName, genre, logline, bodyText, writingMode]);
 
   // 5. Automatic sync dispatcher when network goes back online
   useEffect(() => {
@@ -278,6 +282,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
     if (window.confirm('Are you sure you want to delete your current local draft? This action cannot be undone.')) {
       await deleteDraftFromDB(writingMode);
       setTitle('');
+      setPenName('');
       setGenre(writingMode === 'poem' ? 'Poetry' : 'Fiction');
       setLogline('');
       setBodyText('');
@@ -397,6 +402,21 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder={writingMode === 'poem' ? "The Sound of Rain..." : "The Name of the Wind..."}
+                  className="w-full bg-cream/20 border border-sage/25 rounded-xl py-2.5 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink placeholder-ink/30"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">
+                    Pen Name / Byline <span className="text-ink/35 font-normal lowercase">(optional)</span>
+                  </label>
+                </div>
+                <input 
+                  type="text"
+                  value={penName}
+                  onChange={(e) => setPenName(e.target.value)}
+                  placeholder="e.g. Nadir (defaults to your profile name)"
                   className="w-full bg-cream/20 border border-sage/25 rounded-xl py-2.5 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink placeholder-ink/30"
                 />
               </div>
