@@ -39,9 +39,7 @@ export async function GET(request) {
       FROM submissions s
       JOIN users u ON u.id = s.author_id
       WHERE (
-        s.batch_status = 'archived'
-        OR (s.batch_status = 'active_batch' AND s.created_at <= NOW() - INTERVAL '48 hours')
-        OR s.author_id = $1
+        s.batch_status IN ('active_batch', 'archived')
       )
     `;
 

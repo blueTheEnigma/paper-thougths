@@ -62,7 +62,7 @@ export async function POST(request) {
       // 1. Create submission
       const subRes = await client.query(`
         INSERT INTO submissions (author_id, title, genre, logline, body_text, pen_name, batch_status)
-        VALUES ($1, $2, $3, $4, $5, $6, 'queued')
+        VALUES ($1, $2, $3, $4, $5, $6, 'active_batch')
         RETURNING id, title, genre, pen_name as "penName", batch_status
       `, [dbUser.id, title, genre, logline, bodyText, cleanPenName]);
       const newSubmission = subRes.rows[0];
@@ -345,7 +345,7 @@ export async function PUT(request) {
           // A: Create new submission
           const subRes = await client.query(`
             INSERT INTO submissions (author_id, title, genre, logline, body_text, pen_name, batch_status)
-            VALUES ($1, $2, $3, $4, $5, $6, 'queued')
+            VALUES ($1, $2, $3, $4, $5, $6, 'active_batch')
             RETURNING id, title, genre, pen_name as "penName", batch_status
           `, [dbUser.id, title, genre, logline, bodyText, cleanPenName]);
           const newSubmission = subRes.rows[0];
