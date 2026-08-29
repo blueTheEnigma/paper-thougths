@@ -40,6 +40,17 @@ export default function GalleryClient({ currentUser }) {
   // Local like state overrides
   const [likeOverrides, setLikeOverrides] = useState({});
 
+  // Lock Body Scroll when Modal is open
+  useEffect(() => {
+    if (selectedPiece) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [selectedPiece]);
+
   // Fetch Gallery Submissions
   const fetchGallery = useCallback(async () => {
     setLoading(true);
@@ -127,7 +138,6 @@ export default function GalleryClient({ currentUser }) {
       }
     } catch (err) {
       console.error('Like toggle failed:', err);
-      // Revert on error
       setLikeOverrides(prev => ({
         ...prev,
         [piece.id]: { userLiked: currentLiked, likeCount: currentCount }
@@ -161,7 +171,6 @@ export default function GalleryClient({ currentUser }) {
       if (data.success) {
         setComments(prev => [...prev, data.comment]);
         setNewCommentText('');
-        // Update comment count in local list
         setSubmissions(prev => prev.map(s => 
           s.id === selectedPiece.id ? { ...s, commentCount: data.commentCount } : s
         ));
@@ -206,25 +215,24 @@ export default function GalleryClient({ currentUser }) {
     const offset = 34;
     const len = 15;
     
-    // Top-Left
     ctx.beginPath();
     ctx.moveTo(offset, offset + len);
     ctx.lineTo(offset, offset);
     ctx.lineTo(offset + len, offset);
     ctx.stroke();
-    // Top-Right
+
     ctx.beginPath();
     ctx.moveTo(width - offset, offset + len);
     ctx.lineTo(width - offset, offset);
     ctx.lineTo(width - offset - len, offset);
     ctx.stroke();
-    // Bottom-Left
+
     ctx.beginPath();
     ctx.moveTo(offset, height - offset - len);
     ctx.lineTo(offset, height - offset);
     ctx.lineTo(offset + len, height - offset);
     ctx.stroke();
-    // Bottom-Right
+
     ctx.beginPath();
     ctx.moveTo(width - offset, height - offset - len);
     ctx.lineTo(width - offset, height - offset);
@@ -356,15 +364,15 @@ export default function GalleryClient({ currentUser }) {
   };
 
   return (
-    <main className="min-h-screen bg-cream pt-20 sm:pt-24 pb-24 px-4 sm:px-6 md:px-8 relative overflow-hidden">
+    <main className="min-h-screen bg-cream pt-20 sm:pt-24 pb-12 sm:pb-16 px-4 sm:px-6 md:px-8 relative overflow-hidden">
       {/* Background Ambience */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-burgundy/5 rounded-full blur-[120px] pointer-events-none -z-10" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-sage/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-burgundy/5 rounded-full blur-[100px] pointer-events-none -z-10" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-sage/10 rounded-full blur-[100px] pointer-events-none -z-10" />
 
-      <div className="max-w-6xl mx-auto space-y-8 sm:space-y-10">
+      <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
         
         {/* Navigation & Header */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <Link 
             href="/village" 
             className="inline-flex items-center gap-1.5 text-xs font-bold text-burgundy uppercase tracking-widest hover:text-accent transition-colors"
@@ -372,71 +380,70 @@ export default function GalleryClient({ currentUser }) {
             <ArrowLeft size={16} /> Back to Writers&rsquo; Village
           </Link>
 
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-sage/15 pb-6">
-            <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-burgundy/5 border border-burgundy/10 text-xs font-bold text-burgundy uppercase tracking-widest">
-                <Sparkles size={13} className="text-accent" />
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 border-b border-sage/15 pb-4">
+            <div className="space-y-1.5 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-burgundy/5 border border-burgundy/10 text-[10px] font-bold text-burgundy uppercase tracking-widest">
+                <Sparkles size={12} className="text-accent" />
                 <span>The Living Salon</span>
               </div>
-              <h1 className="text-3xl sm:text-5xl font-display font-extrabold text-burgundy tracking-tight">
+              <h1 className="text-2xl sm:text-4xl font-display font-extrabold text-burgundy tracking-tight">
                 Reading Gallery
               </h1>
               <p className="text-xs sm:text-sm text-ink/70 font-serif leading-relaxed">
-                Step into the open salon. Read poems, stories, and reflections from clubhouse authors—leave a leaf, share a note, or export high-res broadsheet cards to your status.
+                Step into the open salon. Read poems, stories, and reflections from clubhouse authors—leave a leaf, share a note, or export broadsheet cards.
               </p>
             </div>
 
-            {/* Quick stats or CTA */}
             <div className="flex items-center gap-3">
               <Link
                 href="/dashboard/write"
-                className="bg-burgundy hover:bg-ink text-cream px-5 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                className="bg-burgundy hover:bg-ink text-cream px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-2 cursor-pointer"
               >
-                <Feather size={14} />
-                <span>Write a Manuscript</span>
+                <Feather size={13} />
+                <span>Write Manuscript</span>
               </Link>
             </div>
           </div>
         </div>
 
         {/* Filter Controls: Search & Genre Pills */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by title, pen name, or theme..."
-                className="w-full bg-white border border-sage/20 rounded-2xl py-2.5 pl-10 pr-4 text-xs font-medium text-ink placeholder-ink/35 focus:outline-none focus:border-burgundy shadow-sm"
+                className="w-full bg-white border border-sage/20 rounded-xl py-2 pl-9 pr-4 text-xs font-medium text-ink placeholder-ink/35 focus:outline-none focus:border-burgundy shadow-sm"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink"
                 >
-                  <X size={14} />
+                  <X size={13} />
                 </button>
               )}
             </div>
 
             {/* Quick Count Badge */}
-            <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-ink/50 bg-white/70 border border-sage/15 px-3 py-2.5 rounded-2xl">
+            <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono text-ink/50 bg-white/70 border border-sage/15 px-3 py-2 rounded-xl">
               <span>{submissions.length} Works Unlocked</span>
             </div>
           </div>
 
           {/* Genre Scrollable Filter Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none">
             {GENRES.map((g) => {
               const active = selectedGenre === g;
               return (
                 <button
                   key={g}
                   onClick={() => setSelectedGenre(g)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                     active
                       ? 'bg-burgundy text-cream shadow-sm'
                       : 'bg-white text-ink/65 border border-sage/15 hover:border-burgundy/30'
@@ -451,16 +458,16 @@ export default function GalleryClient({ currentUser }) {
 
         {/* Gallery Feed Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white/50 border border-sage/15 rounded-3xl p-6 h-64 animate-pulse" />
+              <div key={i} className="bg-white/50 border border-sage/15 rounded-2xl p-5 h-48 animate-pulse" />
             ))}
           </div>
         ) : submissions.length === 0 ? (
-          <div className="py-20 text-center bg-white/40 border border-dashed border-sage/30 rounded-[32px] max-w-lg mx-auto p-8 space-y-4">
-            <BookOpen className="opacity-20 mx-auto text-burgundy" size={48} />
+          <div className="py-16 text-center bg-white/40 border border-dashed border-sage/30 rounded-2xl max-w-lg mx-auto p-6 space-y-3">
+            <BookOpen className="opacity-20 mx-auto text-burgundy" size={40} />
             <div className="space-y-1">
-              <h3 className="font-display font-bold text-xl text-burgundy">The Salon is Quiet</h3>
+              <h3 className="font-display font-bold text-lg text-burgundy">The Salon is Quiet</h3>
               <p className="text-xs text-ink/60 font-serif leading-relaxed">
                 {searchQuery || selectedGenre !== 'All'
                   ? 'No unlocked manuscripts match your search filters. Try clearing your search.'
@@ -477,7 +484,7 @@ export default function GalleryClient({ currentUser }) {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {submissions.map((sub) => {
               const isLiked = likeOverrides[sub.id]?.userLiked !== undefined 
                 ? likeOverrides[sub.id].userLiked 
@@ -490,69 +497,69 @@ export default function GalleryClient({ currentUser }) {
                 <motion.div
                   key={sub.id}
                   layout
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -4 }}
+                  whileHover={{ y: -3 }}
                   onClick={() => setSelectedPiece(sub)}
-                  className="bg-white border border-sage/15 p-6 rounded-[28px] shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 cursor-pointer group relative overflow-hidden"
+                  className="bg-white border border-sage/15 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3 cursor-pointer group relative overflow-hidden"
                 >
-                  <div className="space-y-3">
-                    {/* Header: Genre & Date */}
+                  <div className="space-y-2">
+                    {/* Header: Genre & Badge */}
                     <div className="flex justify-between items-center gap-2">
-                      <span className="bg-burgundy/5 text-burgundy text-[9px] font-bold px-2.5 py-0.5 rounded-full border border-burgundy/10 uppercase tracking-widest">
+                      <span className="bg-burgundy/5 text-burgundy text-[8px] font-bold px-2 py-0.5 rounded-full border border-burgundy/10 uppercase tracking-widest">
                         {sub.genre}
                       </span>
                       {sub.hasLaurel && (
-                        <span className="text-accent text-[9px] font-bold flex items-center gap-1 bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20">
-                          <Award size={10} /> Laureled
+                        <span className="text-accent text-[8px] font-bold flex items-center gap-1 bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20">
+                          <Award size={9} /> Laureled
                         </span>
                       )}
                     </div>
 
                     {/* Title & Author Pen Name */}
                     <div>
-                      <h3 className="font-display font-extrabold text-xl text-burgundy group-hover:text-accent transition-colors line-clamp-1">
+                      <h3 className="font-display font-extrabold text-base sm:text-lg text-burgundy group-hover:text-accent transition-colors line-clamp-1">
                         {sub.title}
                       </h3>
-                      <p className="text-xs text-ink/60 font-serif italic mt-0.5">
+                      <p className="text-[11px] text-ink/60 font-serif italic mt-0.5">
                         by <span className="font-bold text-ink/80 not-italic">{sub.displayName}</span>
                       </p>
                     </div>
 
                     {/* Teaser Logline */}
-                    <p className="text-xs text-ink/75 font-serif leading-relaxed line-clamp-3 italic">
+                    <p className="text-xs text-ink/75 font-serif leading-relaxed line-clamp-2 italic">
                       &ldquo;{sub.logline}&rdquo;
                     </p>
                   </div>
 
                   {/* Footer Action Strip */}
-                  <div className="border-t border-sage/10 pt-3.5 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="border-t border-sage/10 pt-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
                       {/* Leaf a Like Button */}
                       <button
                         onClick={(e) => handleToggleLike(sub, e)}
-                        className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+                        className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg transition-all cursor-pointer ${
                           isLiked
                             ? 'bg-[#c96a42]/15 text-[#c96a42]'
                             : 'text-ink/45 hover:text-[#c96a42] hover:bg-sage/10'
                         }`}
                         title="Leaf a Like"
                       >
-                        <span className={`text-sm ${isLiked ? 'scale-110' : ''}`}>🍃</span>
+                        <span className={`text-xs ${isLiked ? 'scale-110' : ''}`}>🍃</span>
                         <span>{likeCount}</span>
                       </button>
 
                       {/* Comment Count */}
-                      <div className="inline-flex items-center gap-1 text-xs text-ink/40 font-medium">
-                        <MessageSquare size={13} />
+                      <div className="inline-flex items-center gap-1 text-[11px] text-ink/40 font-medium">
+                        <MessageSquare size={12} />
                         <span>{sub.commentCount}</span>
                       </div>
                     </div>
 
                     {/* Read CTA */}
-                    <span className="text-[11px] font-bold text-burgundy group-hover:translate-x-0.5 transition-transform flex items-center gap-1 uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-burgundy group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 uppercase tracking-wider">
                       <span>Read</span>
-                      <ChevronRight size={14} />
+                      <ChevronRight size={13} />
                     </span>
                   </div>
                 </motion.div>
@@ -566,78 +573,77 @@ export default function GalleryClient({ currentUser }) {
       {/* ── IMMERSIVE PARCHMENT READER MODAL ── */}
       <AnimatePresence>
         {selectedPiece && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-ink/80 backdrop-blur-md overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-ink/80 backdrop-blur-md overflow-hidden">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#FAF7F0] border border-[#EADFC9] rounded-[32px] max-w-3xl w-full shadow-2xl overflow-hidden relative text-ink flex flex-col my-auto max-h-[92vh]"
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-[#FAF7F0] border border-[#EADFC9] rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden relative text-ink flex flex-col max-h-[88vh]"
             >
               {/* Header Bar */}
-              <div className="px-6 py-4 border-b border-sage/15 flex items-center justify-between bg-white/60 backdrop-blur-sm">
+              <div className="px-5 py-3 border-b border-sage/15 flex items-center justify-between bg-white/70 backdrop-blur-sm flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <span className="bg-burgundy/10 text-burgundy text-[9px] font-bold px-2.5 py-0.5 rounded-full border border-burgundy/15 uppercase tracking-widest">
+                  <span className="bg-burgundy/10 text-burgundy text-[8px] font-bold px-2 py-0.5 rounded-full border border-burgundy/15 uppercase tracking-widest">
                     {selectedPiece.genre}
                   </span>
                   {selectedPiece.hasLaurel && (
-                    <span className="bg-accent/15 text-accent text-[9px] font-bold px-2.5 py-0.5 rounded-full border border-accent/25 uppercase tracking-widest">
-                      🏆 Clubhouse Laureate
+                    <span className="bg-accent/15 text-accent text-[8px] font-bold px-2 py-0.5 rounded-full border border-accent/25 uppercase tracking-widest">
+                      🏆 Laureate
                     </span>
                   )}
                 </div>
 
                 <button
                   onClick={() => setSelectedPiece(null)}
-                  className="text-ink/40 hover:text-ink p-1.5 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
+                  className="text-ink/40 hover:text-ink p-1 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
                 >
-                  <X size={18} />
+                  <X size={17} />
                 </button>
               </div>
 
-              {/* Modal Body: Scrollable Reading Experience */}
-              <div className="p-6 sm:p-10 overflow-y-auto space-y-8 text-center relative">
+              {/* Modal Body: Single Smooth Scroll Container */}
+              <div className="p-5 sm:p-7 overflow-y-auto space-y-6 text-center">
                 
                 {/* Manuscript Title & Epigraph */}
-                <div className="space-y-3 max-w-xl mx-auto">
-                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] text-ink/40">
+                <div className="space-y-2 max-w-lg mx-auto">
+                  <span className="text-[9px] font-sans font-bold uppercase tracking-[0.25em] text-ink/40">
                     P A P E R   T H O U G H T S
                   </span>
-                  <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-burgundy tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-burgundy tracking-tight">
                     {selectedPiece.title}
                   </h2>
-                  <p className="text-xs sm:text-sm text-ink/65 font-serif italic leading-relaxed">
+                  <p className="text-xs text-ink/65 font-serif italic leading-relaxed">
                     &ldquo;{selectedPiece.logline}&rdquo;
                   </p>
                   
                   {/* Classical Divider */}
-                  <div className="w-24 h-px bg-accent/40 mx-auto my-4" />
+                  <div className="w-16 h-px bg-accent/40 mx-auto my-2" />
                 </div>
 
                 {/* Stanza Verse Body */}
-                <div className="max-w-xl mx-auto text-left sm:text-center">
-                  <p className="text-base sm:text-lg leading-8 sm:leading-9 text-ink/90 font-serif whitespace-pre-wrap selection:bg-accent/20">
+                <div className="max-w-lg mx-auto text-left sm:text-center">
+                  <p className="text-sm sm:text-base leading-7 sm:leading-8 text-ink/90 font-serif whitespace-pre-wrap selection:bg-accent/20">
                     {selectedPiece.bodyText}
                   </p>
                 </div>
 
                 {/* Winged Colophon & Author Attribution */}
-                <div className="pt-6 border-t border-sage/15 space-y-2 max-w-md mx-auto">
-                  <div className="flex items-center justify-center gap-3 text-accent text-sm">
-                    <span className="w-12 h-px bg-accent/30" />
+                <div className="pt-4 border-t border-sage/15 space-y-1.5 max-w-sm mx-auto">
+                  <div className="flex items-center justify-center gap-2 text-accent text-xs">
+                    <span className="w-8 h-px bg-accent/30" />
                     <span>❦</span>
-                    <span className="w-12 h-px bg-accent/30" />
+                    <span className="w-8 h-px bg-accent/30" />
                   </div>
-                  <p className="font-display italic text-lg text-burgundy font-bold">
+                  <p className="font-display italic text-base text-burgundy font-bold">
                     by {selectedPiece.displayName}
                   </p>
                 </div>
 
-                {/* Reader Action Bar: Like, Download Card, Share */}
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                  {/* Like Button */}
+                {/* Reader Action Bar: Like, Download Card */}
+                <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
                   <button
                     onClick={() => handleToggleLike(selectedPiece)}
-                    className={`px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm ${
+                    className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
                       likeOverrides[selectedPiece.id]?.userLiked ?? selectedPiece.userLiked
                         ? 'bg-[#c96a42] text-cream'
                         : 'bg-white text-ink/75 border border-sage/25 hover:border-burgundy'
@@ -651,61 +657,60 @@ export default function GalleryClient({ currentUser }) {
                     </span>
                   </button>
 
-                  {/* 1-Click Broadsheet Generator */}
                   <button
                     onClick={() => handleDownloadBroadsheet(selectedPiece)}
-                    className="px-5 py-2.5 rounded-2xl bg-burgundy hover:bg-ink text-cream text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+                    className="px-4 py-2 rounded-xl bg-burgundy hover:bg-ink text-cream text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
                   >
-                    <Download size={14} />
+                    <Download size={13} />
                     <span>Download Card</span>
                   </button>
                 </div>
 
                 {/* Lurker-to-Critic Invitation Ribbon */}
-                <div className="bg-sage/10 border border-sage/20 rounded-2xl p-4 max-w-xl mx-auto text-left flex items-start gap-3">
-                  <Compass size={18} className="text-burgundy flex-shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-burgundy uppercase tracking-wider">
+                <div className="bg-sage/10 border border-sage/20 rounded-xl p-3 max-w-lg mx-auto text-left flex items-start gap-2.5">
+                  <Compass size={16} className="text-burgundy flex-shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <h4 className="text-[11px] font-bold text-burgundy uppercase tracking-wider">
                       Love great writing? Sharpen the craft.
                     </h4>
-                    <p className="text-[11px] text-ink/70 font-serif leading-relaxed">
-                      Step into the double-blind Workshop to review active manuscripts and earn Milestone Tokens toward Keeper status.
+                    <p className="text-[10px] text-ink/70 font-serif leading-relaxed">
+                      Review manuscripts in the double-blind Workshop to earn Milestone Tokens and Leaves.
                     </p>
                     <Link
                       href="/dashboard/review"
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-accent hover:underline pt-1"
+                      className="inline-flex items-center gap-1 text-[10px] font-bold text-accent hover:underline pt-0.5"
                     >
                       <span>Enter Review Queue</span>
-                      <ChevronRight size={12} />
+                      <ChevronRight size={11} />
                     </Link>
                   </div>
                 </div>
 
                 {/* ── PARCHMENT NOTES (COMMENTS SECTION) ── */}
-                <div className="border-t border-sage/15 pt-6 space-y-6 text-left max-w-xl mx-auto">
+                <div className="border-t border-sage/15 pt-4 space-y-4 text-left max-w-lg mx-auto">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display font-bold text-lg text-burgundy flex items-center gap-2">
-                      <MessageSquare size={16} className="text-accent" />
+                    <h3 className="font-display font-bold text-base text-burgundy flex items-center gap-1.5">
+                      <MessageSquare size={14} className="text-accent" />
                       <span>Parchment Notes ({comments.length})</span>
                     </h3>
-                    <span className="text-[10px] text-ink/40 font-mono">Warm Reader Reactions</span>
+                    <span className="text-[9px] text-ink/40 font-mono">Reader Reactions</span>
                   </div>
 
                   {/* Comments List */}
                   {loadingComments ? (
-                    <div className="space-y-2">
-                      <div className="h-12 bg-white/60 rounded-xl animate-pulse" />
-                      <div className="h-12 bg-white/60 rounded-xl animate-pulse" />
+                    <div className="space-y-1.5">
+                      <div className="h-10 bg-white/60 rounded-lg animate-pulse" />
+                      <div className="h-10 bg-white/60 rounded-lg animate-pulse" />
                     </div>
                   ) : comments.length === 0 ? (
-                    <p className="text-xs text-ink/50 font-serif italic bg-white/40 border border-dashed border-sage/20 p-4 rounded-xl text-center">
-                      No notes left for the author yet. Be the first to leave your thoughts!
+                    <p className="text-xs text-ink/50 font-serif italic bg-white/40 border border-dashed border-sage/20 p-3 rounded-xl text-center">
+                      No notes left yet. Leave the author some encouragement!
                     </p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {comments.map((c) => (
-                        <div key={c.id} className="bg-white border border-sage/15 p-3.5 rounded-2xl space-y-1">
-                          <div className="flex justify-between items-center text-[10px]">
+                        <div key={c.id} className="bg-white border border-sage/15 p-3 rounded-xl space-y-0.5">
+                          <div className="flex justify-between items-center text-[9px]">
                             <span className="font-bold text-burgundy font-sans">{c.displayName}</span>
                             <span className="text-ink/35 font-mono">
                               {c.createdAt ? new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}
@@ -719,28 +724,28 @@ export default function GalleryClient({ currentUser }) {
 
                   {/* Comment Form */}
                   {currentUser ? (
-                    <form onSubmit={handlePostComment} className="space-y-2.5 pt-2">
+                    <form onSubmit={handlePostComment} className="space-y-2 pt-1">
                       <div className="flex gap-2">
                         <input
                           type="text"
                           value={commentPenName}
                           onChange={(e) => setCommentPenName(e.target.value)}
-                          placeholder="Your Pen Name (Optional)"
-                          className="w-1/3 bg-white border border-sage/25 rounded-xl py-2 px-3 text-xs text-ink placeholder-ink/35 focus:outline-none focus:border-burgundy"
+                          placeholder="Pen Name (Opt)"
+                          className="w-1/3 bg-white border border-sage/25 rounded-xl py-1.5 px-2.5 text-xs text-ink placeholder-ink/35 focus:outline-none focus:border-burgundy"
                         />
                         <input
                           type="text"
                           value={newCommentText}
                           onChange={(e) => setNewCommentText(e.target.value)}
-                          placeholder="Leave a warm note for the author..."
-                          className="flex-1 bg-white border border-sage/25 rounded-xl py-2 px-3 text-xs text-ink placeholder-ink/35 focus:outline-none focus:border-burgundy"
+                          placeholder="Leave a note for the author..."
+                          className="flex-1 bg-white border border-sage/25 rounded-xl py-1.5 px-2.5 text-xs text-ink placeholder-ink/35 focus:outline-none focus:border-burgundy"
                         />
                         <button
                           type="submit"
                           disabled={submittingComment || !newCommentText.trim()}
-                          className="bg-burgundy hover:bg-ink text-cream px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1.5"
+                          className="bg-burgundy hover:bg-ink text-cream px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
                         >
-                          <Send size={12} />
+                          <Send size={11} />
                           <span>Send</span>
                         </button>
                       </div>
@@ -749,7 +754,7 @@ export default function GalleryClient({ currentUser }) {
                       )}
                     </form>
                   ) : (
-                    <div className="bg-white/70 border border-sage/20 p-3 rounded-xl text-center">
+                    <div className="bg-white/70 border border-sage/20 p-2.5 rounded-xl text-center">
                       <Link href="/sign-in?redirect_url=/village/gallery" className="text-xs font-bold text-burgundy hover:underline">
                         Sign in to leave a note for the author ✍️
                       </Link>

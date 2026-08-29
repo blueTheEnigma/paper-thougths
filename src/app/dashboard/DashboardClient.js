@@ -290,6 +290,18 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
   const [librarySuccess, setLibrarySuccess] = useState(null);
   const [libraryError, setLibraryError] = useState(null);
 
+  // Lock Body Scroll when any Modal is open
+  useEffect(() => {
+    const isAnyModalOpen = selectedSubForRead || selectedSubForEdit || selectedReportId || showBuyLeavesModal;
+    if (isAnyModalOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [selectedSubForRead, selectedSubForEdit, selectedReportId, showBuyLeavesModal]);
+
   // 1-Click Copy Manuscript Quote / Logline
   const [copiedSubId, setCopiedSubId] = useState(null);
 
@@ -2905,45 +2917,44 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                 onClick={() => setSelectedSubForRead(null)}
               />
               <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: 30 }} 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }} 
                 animate={{ opacity: 1, scale: 1, y: 0 }} 
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-3xl bg-cream rounded-3xl p-6 sm:p-8 border border-sage/20 shadow-2xl z-10 max-h-[90vh] overflow-y-auto flex flex-col justify-between text-ink"
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                className="relative w-full max-w-2xl bg-cream rounded-3xl p-5 sm:p-7 border border-sage/20 shadow-2xl z-10 max-h-[85vh] flex flex-col justify-between text-ink"
               >
                 <button 
                   onClick={() => setSelectedSubForRead(null)} 
                   className="absolute top-4 right-4 bg-white/50 backdrop-blur rounded-full p-2 hover:bg-white transition-colors z-20 cursor-pointer"
                 >
-                  <X size={20} className="text-ink" />
+                  <X size={18} className="text-ink" />
                 </button>
 
-                <div className="space-y-4">
-                  <div className="border-b-2 border-dashed border-sage/20 pb-4">
-                    <span className="bg-burgundy/10 text-burgundy text-[9px] font-bold px-3 py-1 rounded-full border border-burgundy/20 uppercase tracking-widest inline-block mb-2">
+                <div className="space-y-4 overflow-y-auto pr-1">
+                  <div className="border-b border-sage/20 pb-3">
+                    <span className="bg-burgundy/10 text-burgundy text-[8px] font-bold px-2.5 py-0.5 rounded-full border border-burgundy/20 uppercase tracking-widest inline-block mb-1.5">
                       {selectedSubForRead.genre}
                     </span>
-                    <h3 className="text-2xl sm:text-3xl font-display text-burgundy font-bold">{selectedSubForRead.title}</h3>
-                    <p className="text-xs text-ink/50 leading-relaxed font-serif mt-1.5 italic">"{selectedSubForRead.logline}"</p>
+                    <h3 className="text-xl sm:text-2xl font-display text-burgundy font-bold">{selectedSubForRead.title}</h3>
+                    <p className="text-xs text-ink/55 leading-relaxed font-serif mt-1 italic">"{selectedSubForRead.logline}"</p>
                   </div>
 
-                  <div className="bg-[#FAF7F0] border border-[#EADFC9] rounded-2xl p-6 sm:p-8 overflow-y-auto max-h-[50vh] relative min-h-[250px]">
-                    <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:100%_2rem] pointer-events-none rounded-2xl"></div>
-                    <p className="text-sm sm:text-base leading-8 text-ink font-serif whitespace-pre-wrap relative z-10">{selectedSubForRead.bodyText}</p>
+                  <div className="bg-[#FAF7F0] border border-[#EADFC9] rounded-2xl p-5 sm:p-6 relative">
+                    <p className="text-sm sm:text-base leading-7 sm:leading-8 text-ink font-serif whitespace-pre-wrap relative z-10">{selectedSubForRead.bodyText}</p>
                   </div>
                 </div>
 
-                <div className="border-t border-sage/15 pt-4 mt-6 flex justify-end items-center">
+                <div className="border-t border-sage/15 pt-3.5 mt-4 flex justify-end items-center flex-shrink-0">
                   <button
                     onClick={() => handleDownload(selectedSubForRead)}
-                    className="mr-auto bg-burgundy hover:bg-ink text-cream px-5 py-2.5 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    className="mr-auto bg-burgundy hover:bg-ink text-cream px-4 py-2 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer flex items-center gap-1.5 shadow-sm"
                   >
-                    <Download size={14} />
-                    {selectedSubForRead.genre.toLowerCase() === 'poetry' ? 'Save Designed Poem (JPEG)' : 'Download Story (PDF)'}
+                    <Download size={13} />
+                    {selectedSubForRead.genre.toLowerCase() === 'poetry' ? 'Save Card (JPEG)' : 'Download (PDF)'}
                   </button>
 
                   <button 
                     onClick={() => setSelectedSubForRead(null)}
-                    className="bg-white hover:bg-sage/10 text-ink border border-sage/30 px-6 py-2.5 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
+                    className="bg-white hover:bg-sage/10 text-ink border border-sage/30 px-5 py-2 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
                   >
                     Close Reader
                   </button>
