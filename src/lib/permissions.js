@@ -187,7 +187,7 @@ export async function isCrewMember(userIdentifier) {
   try {
     // 1. Get user details from database
     const dbUser = await Database.queryOne(`
-      SELECT id, email FROM users WHERE ${field} = $1
+      SELECT u.id, u.email FROM users u WHERE ${field} = $1
     `, [value]);
 
     if (!dbUser) return false;

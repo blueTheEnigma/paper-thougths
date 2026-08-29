@@ -243,7 +243,33 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
   );
 }
 
-export default function DashboardClient({ profile, initialOrders, submissions = [], tbrItems = [], recommendations, userEmail, paystackPublicKey, activeLeaderboard }) {
+export default function DashboardClient({ 
+  profile: rawProfile, 
+  initialOrders = [], 
+  submissions = [], 
+  tbrItems = [], 
+  recommendations = [], 
+  userEmail = '', 
+  paystackPublicKey = '', 
+  activeLeaderboard = null 
+}) {
+  const profile = rawProfile || {
+    name: 'Reader',
+    lkid: 'Guest',
+    tier: 'Reader',
+    milestoneTokens: 0,
+    spendableLeaves: 0,
+    lifetimeLeaves: 0,
+    panguinStage: 0,
+    streak: 0,
+    events: 0,
+    referrals: 0,
+    preferredGenres: [],
+    permissions: [],
+    weeklyReviews: 0,
+    onboarded: false
+  };
+
   const [orders] = useState(initialOrders || []);
   const [tbrList, setTbrList] = useState(tbrItems || []);
   const [copied, setCopied] = useState(false);
