@@ -57,3 +57,5 @@ export const Database = {
     }
   }
 };
+
+export default Database;

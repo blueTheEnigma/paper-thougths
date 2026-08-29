@@ -108,6 +108,41 @@ CREATE TABLE IF NOT EXISTS submission_comments (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- 5d. Book Pitches Table (The Convince-Me Salon)
+CREATE TABLE IF NOT EXISTS book_pitches (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_title VARCHAR(255) NOT NULL,
+    book_author VARCHAR(255) NOT NULL,
+    hook_line TEXT NOT NULL,
+    aftertaste TEXT NOT NULL,
+    killer_quote TEXT,
+    cover_url TEXT,
+    vibe_tags TEXT[] DEFAULT '{}',
+    status VARCHAR(50) DEFAULT 'active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 5e. Book Pitch Pledges Table (Personal TBR Bridge)
+CREATE TABLE IF NOT EXISTS book_pitch_pledges (
+    id SERIAL PRIMARY KEY,
+    pitch_id INT NOT NULL REFERENCES book_pitches(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reading_status VARCHAR(50) DEFAULT 'pledged', -- 'pledged', 'reading', 'completed'
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(pitch_id, user_id)
+);
+
+-- 5f. Book Pitch Notes Table (Banter & Debate)
+CREATE TABLE IF NOT EXISTS book_pitch_notes (
+    id SERIAL PRIMARY KEY,
+    pitch_id INT NOT NULL REFERENCES book_pitches(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pen_name VARCHAR(255),
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 6. Peer Reviews Table
 CREATE TABLE IF NOT EXISTS peer_reviews (
     id SERIAL PRIMARY KEY,

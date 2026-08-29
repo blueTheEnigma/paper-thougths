@@ -6,7 +6,7 @@ import NotificationBell from './NotificationBell';
 import { usePathname } from 'next/navigation';
 import { 
   BookOpen, Compass, ShoppingBag, Feather, Sparkles, 
-  User, Settings, ShieldCheck 
+  User, Settings, ShieldCheck, Flame
 } from 'lucide-react';
 import { useAuth, useUser, UserButton } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
@@ -81,7 +81,7 @@ export default function Navigation() {
     { name: "Home", href: "/", icon: Compass, mobileLabel: "Home" },
     { name: "Book Zodiac", href: "/zodiac", icon: Sparkles, mobileLabel: "Zodiac" },
     { name: "Bookstore", href: "/bookstore", icon: ShoppingBag, mobileLabel: "Books" },
-    { name: "Events", href: "/events", icon: Sparkles, mobileLabel: "Events" },
+    { name: "Pitch Arena", href: "/convince-me", icon: Flame, mobileLabel: "Pitches" },
     { name: "Village", href: "/village", icon: Feather, mobileLabel: "Village" },
   ];
 

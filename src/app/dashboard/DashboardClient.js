@@ -7,7 +7,7 @@ import {
   Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
   ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
   BookOpen, MessageSquare, Gift, Coins, Settings, X, Check, Book,
-  Download, Lock, Quote
+  Download, Lock, Quote, Bookmark, Compass
 } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
@@ -243,13 +243,30 @@ function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
   );
 }
 
-export default function DashboardClient({ profile, initialOrders, submissions = [], recommendations, userEmail, paystackPublicKey, activeLeaderboard }) {
+export default function DashboardClient({ profile, initialOrders, submissions = [], tbrItems = [], recommendations, userEmail, paystackPublicKey, activeLeaderboard }) {
   const [orders] = useState(initialOrders || []);
+  const [tbrList, setTbrList] = useState(tbrItems || []);
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState(null);
   const [activeTab, setActiveTab] = useState('overview'); // Tab state: 'overview', 'workspaces', 'ledger', 'honors', 'settings'
   const [zodiacResult, setZodiacResult] = useState(null);
+
+  const handleUpdateTbrStatus = async (pledgeId, newStatus) => {
+    setTbrList(prev => prev.map(item => 
+      item.pledgeId === pledgeId ? { ...item, readingStatus: newStatus } : item
+    ));
+
+    try {
+      await fetch('/api/me/tbr', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pledgeId, readingStatus: newStatus })
+      });
+    } catch (err) {
+      console.error('Failed to update TBR status:', err);
+    }
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1754,6 +1771,103 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
                           <span>{profile.referrals}/{referralsNeeded}</span>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Personal TBR Shelf: Books I Promised to Read */}
+                    <div className="parchment-card p-5 sm:p-8 space-y-4">
+                      <div className="flex items-center justify-between border-b border-sage/10 pb-3">
+                        <div className="flex items-center gap-2">
+                          <Bookmark size={17} className="text-accent" />
+                          <h3 className="font-display font-extrabold text-lg sm:text-xl text-burgundy">
+                            Books I Promised to Read
+                          </h3>
+                          <span className="bg-accent/10 text-accent text-[9px] font-bold px-2 py-0.5 rounded-full border border-accent/20">
+                            {tbrList.length} Pledged
+                          </span>
+                        </div>
+                        <Link 
+                          href="/convince-me" 
+                          className="text-[11px] font-bold text-accent hover:text-burgundy flex items-center gap-0.5 transition-colors uppercase tracking-wider"
+                        >
+                          <span>Pitch Arena</span>
+                          <ArrowRight size={12} />
+                        </Link>
+                      </div>
+
+                      {tbrList.length === 0 ? (
+                        <div className="py-8 text-center bg-cream/35 rounded-2xl border border-dashed border-sage/30 space-y-2 p-4">
+                          <p className="text-xs text-ink/60 font-serif italic">
+                            You haven't pledged to read any books yet.
+                          </p>
+                          <Link
+                            href="/convince-me"
+                            className="inline-flex items-center gap-1 text-xs font-bold text-burgundy hover:underline uppercase tracking-wider"
+                          >
+                            <span>Explore Member Pitches in the Salon</span>
+                            <ArrowRight size={13} />
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                          {tbrList.map((item) => (
+                            <div 
+                              key={item.pledgeId}
+                              className="bg-white border border-sage/15 p-3.5 sm:p-4 rounded-2xl shadow-sm space-y-2.5 flex flex-col justify-between"
+                            >
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-start gap-1">
+                                  <h4 className="font-display font-bold text-sm text-burgundy line-clamp-1">
+                                    {item.bookTitle}
+                                  </h4>
+                                </div>
+                                <p className="text-[10px] text-ink/60 font-serif italic">
+                                  by <span className="font-bold not-italic">{item.bookAuthor}</span> · <span className="text-ink/40">pitched by {item.pitcherName}</span>
+                                </p>
+                                <p className="text-[11px] text-ink/75 font-serif italic line-clamp-2 leading-relaxed mt-1">
+                                  &ldquo;{item.hookLine}&rdquo;
+                                </p>
+                              </div>
+
+                              {/* Reading Status Switcher */}
+                              <div className="border-t border-sage/10 pt-2 flex items-center justify-between gap-1">
+                                <span className="text-[9px] font-mono text-ink/40 uppercase">Status:</span>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => handleUpdateTbrStatus(item.pledgeId, 'pledged')}
+                                    className={`px-2 py-0.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
+                                      item.readingStatus === 'pledged'
+                                        ? 'bg-accent/20 text-accent border border-accent/30 font-extrabold'
+                                        : 'text-ink/40 hover:text-ink'
+                                    }`}
+                                  >
+                                    🍃 Pledged
+                                  </button>
+                                  <button
+                                    onClick={() => handleUpdateTbrStatus(item.pledgeId, 'reading')}
+                                    className={`px-2 py-0.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
+                                      item.readingStatus === 'reading'
+                                        ? 'bg-burgundy text-cream font-extrabold'
+                                        : 'text-ink/40 hover:text-ink'
+                                    }`}
+                                  >
+                                    📖 Reading
+                                  </button>
+                                  <button
+                                    onClick={() => handleUpdateTbrStatus(item.pledgeId, 'completed')}
+                                    className={`px-2 py-0.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
+                                      item.readingStatus === 'completed'
+                                        ? 'bg-emerald-600 text-cream font-extrabold'
+                                        : 'text-ink/40 hover:text-ink'
+                                    }`}
+                                  >
+                                    ⭐ Read
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Archive Economy Guide */}

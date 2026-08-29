@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, PenTool, Feather, Award, ArrowRight,
-  Sparkles, Clock, Compass, DoorOpen
+  Sparkles, Clock, Compass, DoorOpen, Flame
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -393,49 +393,93 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
             </div>
           </motion.div>
 
-          {/* Three Village Pillars */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {/* Four Village Pillars */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-7xl mx-auto">
 
             {/* 1. The Living Salon (Reading Gallery) */}
             <motion.div
               variants={itemVariants}
               whileHover={{ y: -4 }}
-              className="parchment-card p-6 sm:p-7 flex flex-col justify-between space-y-6 group border border-accent/20"
+              className="parchment-card p-5 sm:p-6 flex flex-col justify-between space-y-5 group border border-accent/20"
               style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(242,169,138,0.12) 0%, rgba(250,247,242,1) 85%)' }}
             >
-              <div className="space-y-4 relative z-10">
-                <div className="w-12 h-12 bg-accent/10 border border-accent/20 rounded-2xl flex items-center justify-center text-accent">
-                  <Sparkles size={22} />
+              <div className="space-y-3.5 relative z-10">
+                <div className="w-11 h-11 bg-accent/10 border border-accent/20 rounded-2xl flex items-center justify-center text-accent">
+                  <Sparkles size={20} />
                 </div>
-                <div className="space-y-1">
-                  <span className="text-[9px] font-sans font-bold uppercase tracking-widest text-accent">Open Sanctuary</span>
-                  <h2 className="text-xl sm:text-2xl font-display font-extrabold text-burgundy">The Living Salon</h2>
-                  <p className="text-xs text-ink/50 uppercase tracking-wider font-bold">Read &amp; Connect Freely</p>
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-sans font-bold uppercase tracking-widest text-accent">Open Sanctuary</span>
+                  <h2 className="text-lg sm:text-xl font-display font-extrabold text-burgundy">The Living Salon</h2>
+                  <p className="text-[10px] text-ink/50 uppercase tracking-wider font-bold">Read &amp; Connect Freely</p>
                 </div>
                 <p className="text-xs text-ink/75 leading-relaxed font-medium">
-                  Browse weekly prompt manuscripts and poetry from across the clubhouse. No review walls—simply read, tap to leave a leaf (🍃), share notes with authors, and download broadsheet cards.
+                  Browse weekly prompt manuscripts and poetry from across the clubhouse. No review walls—simply read, tap to leave a leaf (🍃), and download broadsheets.
                 </p>
 
-                <div className="border-t border-sage/10 pt-4 space-y-2 bg-cream/35 -mx-6 sm:-mx-7 px-6 sm:px-7 pb-2 text-[11px] font-serif text-ink/75">
-                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-ink/40 uppercase tracking-widest font-sans">
-                    <BookOpen size={12} />
+                <div className="border-t border-sage/10 pt-3 space-y-1.5 bg-cream/35 -mx-5 sm:-mx-6 px-5 sm:px-6 pb-2 text-[10px] font-serif text-ink/75">
+                  <div className="flex items-center gap-1.5 text-[8px] font-bold text-ink/40 uppercase tracking-widest font-sans">
+                    <BookOpen size={11} />
                     <span>Salon Highlights</span>
                   </div>
-                  <ul className="space-y-1.5 list-disc pl-4">
-                    <li>Read poems &amp; prose with zero friction.</li>
-                    <li>Discover authors by their artistic <strong>Pen Names</strong>.</li>
-                    <li>1-click broadsheet card exports for WhatsApp &amp; Instagram.</li>
+                  <ul className="space-y-1 list-disc pl-4">
+                    <li>Read poems &amp; prose frictionlessly.</li>
+                    <li>Discover authors by Pen Names.</li>
+                    <li>1-click JPEG card exports.</li>
                   </ul>
                 </div>
               </div>
 
-              <div className="relative z-10 pt-2">
+              <div className="relative z-10 pt-1">
                 <Link
                   href="/village/gallery"
-                  className="w-full bg-accent hover:bg-burgundy text-burgundy hover:text-cream font-bold text-xs py-3.5 px-5 rounded-2xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group-hover:gap-3"
+                  className="w-full bg-accent hover:bg-burgundy text-burgundy hover:text-cream font-bold text-xs py-3 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 group-hover:gap-2"
                 >
-                  <span>Enter Reading Salon</span>
-                  <ArrowRight size={14} />
+                  <span>Enter Salon</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* 2. The Convince-Me Salon (Pitch Arena) */}
+            <motion.div
+              variants={itemVariants}
+              whileHover={{ y: -4 }}
+              className="parchment-card p-5 sm:p-6 flex flex-col justify-between space-y-5 group border border-burgundy/20"
+              style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(92,26,46,0.08) 0%, rgba(250,247,242,1) 85%)' }}
+            >
+              <div className="space-y-3.5 relative z-10">
+                <div className="w-11 h-11 bg-burgundy/10 border border-burgundy/20 rounded-2xl flex items-center justify-center text-burgundy">
+                  <Flame size={20} />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-sans font-bold uppercase tracking-widest text-burgundy">Literary Duel</span>
+                  <h2 className="text-lg sm:text-xl font-display font-extrabold text-burgundy">Convince-Me Arena</h2>
+                  <p className="text-[10px] text-ink/50 uppercase tracking-wider font-bold">Pitch Books &amp; Crown BOTM</p>
+                </div>
+                <p className="text-xs text-ink/75 leading-relaxed font-medium">
+                  Challenge the clubhouse with your book obsessions. Tap 🍃 &ldquo;I&rsquo;m Convinced!&rdquo; to pledge and sync to your TBR shelf. #1 book crowns BOTM!
+                </p>
+
+                <div className="border-t border-sage/10 pt-3 space-y-1.5 bg-cream/35 -mx-5 sm:-mx-6 px-5 sm:px-6 pb-2 text-[10px] font-serif text-ink/75">
+                  <div className="flex items-center gap-1.5 text-[8px] font-bold text-ink/40 uppercase tracking-widest font-sans">
+                    <Award size={11} />
+                    <span>Arena Rewards</span>
+                  </div>
+                  <ul className="space-y-1 list-disc pl-4">
+                    <li>Earn <strong>+10 Leaves</strong> per published pitch.</li>
+                    <li>Automatic sync with Personal TBR shelf.</li>
+                    <li>Crowns Community Book of the Month.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="relative z-10 pt-1">
+                <Link
+                  href="/convince-me"
+                  className="w-full bg-burgundy hover:bg-ink text-cream font-bold text-xs py-3 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 group-hover:gap-2"
+                >
+                  <span>Enter Pitch Arena</span>
+                  <ArrowRight size={13} />
                 </Link>
               </div>
             </motion.div>

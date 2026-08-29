@@ -142,10 +142,34 @@ async function getLocalArchiveData(clerkUser) {
       reviewCount: parseInt(s.reviewCount || 0, 10)
     }));
 
-    return { profile, orders, submissions };
+    // 6. Fetch user's pledged TBR items
+    const tbrRaw = await Database.query(`
+      SELECT 
+        bpp.id as "pledgeId",
+        bpp.reading_status as "readingStatus",
+        bpp.created_at as "pledgedAt",
+        p.id as "pitchId",
+        p.book_title as "bookTitle",
+        p.book_author as "bookAuthor",
+        p.hook_line as "hookLine",
+        p.aftertaste,
+        p.killer_quote as "killerQuote",
+        p.cover_url as "coverUrl",
+        p.vibe_tags as "vibeTags",
+        u.full_name as "pitcherName"
+      FROM book_pitch_pledges bpp
+      JOIN book_pitches p ON p.id = bpp.pitch_id
+      JOIN users u ON u.id = p.user_id
+      WHERE bpp.user_id = $1
+      ORDER BY bpp.created_at DESC
+    `, [dbUser.id]);
+
+    const tbrItems = Array.isArray(tbrRaw) ? tbrRaw : (tbrRaw?.rows || []);
+
+    return { profile, orders, submissions, tbrItems };
   } catch (e) {
     console.error("Dashboard database fetch failed:", e);
-    return { profile: null, orders: [], submissions: [] };
+    return { profile: null, orders: [], submissions: [], tbrItems: [] };
   }
 }
 
@@ -163,7 +187,7 @@ export default async function DashboardPage() {
     getBooks().catch(() => [])
   ]);
 
-  const { profile, orders, submissions } = archive;
+  const { profile, orders, submissions, tbrItems } = archive;
 
   // Curated Recommendation Engine
   let recommendations = [];
@@ -209,24 +233,12 @@ export default async function DashboardPage() {
     }
   }
 
-  const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+  const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
 
-  // Fetch the active monthly leaderboard from DB
+  // 7. Fetch published active monthly honors
   const activeLeaderboard = await Database.queryOne(`
     SELECT 
-      l.id,
-      l.month_year as "monthYear",
-      l.general_bookie_user_id as "generalBookieUserId",
-      l.general_bookie_text as "generalBookieText",
-      l.abuja_bookie_user_id as "abujaBookieUserId",
-      l.abuja_bookie_text as "abujaBookieText",
-      l.review_of_the_month_user_id as "reviewOfTheMonthUserId",
-      l.review_of_the_month_text as "reviewOfTheMonthText",
-      l.author_of_the_month_user_id as "authorOfTheMonthUserId",
-      l.author_of_the_month_text as "authorOfTheMonthText",
-      l.most_improved_author_user_id as "mostImprovedAuthorUserId",
-      l.most_improved_author_text as "mostImprovedAuthorText",
-      l.created_at as "createdAt",
+      l.id, l.month_year as "monthYear", l.title, l.published,
       ug.full_name as "generalBookieName",
       ua.full_name as "abujaBookieName",
       ur.full_name as "reviewWinnerName",
@@ -248,6 +260,7 @@ export default async function DashboardPage() {
       profile={profile} 
       initialOrders={orders} 
       submissions={submissions}
+      tbrItems={tbrItems}
       recommendations={recommendations}
       userEmail={email}
       paystackPublicKey={paystackPublicKey}
