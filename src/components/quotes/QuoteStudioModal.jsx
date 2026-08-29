@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, Download, Copy, Share2, Check, X, 
@@ -85,10 +86,25 @@ export default function QuoteStudioModal({
   initialAuthor = '', 
   initialContext = 'Writers’ Village • Paper Thoughts' 
 }) {
+  const [mounted, setMounted] = useState(false);
   const canvasRef = useRef(null);
   const [quoteText, setQuoteText] = useState(initialQuote || "We loved with a love that was more than love, and lived in the lines left behind.");
   const [authorName, setAuthorName] = useState(initialAuthor || "Paper Thoughts Writer");
   const [contextTag, setContextTag] = useState(initialContext || "Writers’ Village");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('figma_carousel_1');
   const [aspectRatio, setAspectRatio] = useState('square'); // 'square' (1:1) or 'story' (9:16)
   const [fontSize, setFontSize] = useState(40);
@@ -402,18 +418,27 @@ export default function QuoteStudioModal({
     setTimeout(() => setCaptionCopied(false), 2500);
   };
 
-  if (!isOpen) return null;
+  if (!mounted || !isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto">
+  const modalJSX = (
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 overflow-hidden">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-[#080104]/85 backdrop-blur-md cursor-pointer"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-[#140409] border border-[#F2A98A]/30 rounded-3xl max-w-5xl w-full shadow-2xl overflow-hidden relative text-cream flex flex-col my-auto"
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+        className="bg-[#140409] border border-[#F2A98A]/30 rounded-3xl max-w-5xl w-full shadow-2xl overflow-hidden relative text-cream flex flex-col max-h-[88vh] z-10"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
-        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-[#080104]/80">
+        <div className="px-6 py-3.5 border-b border-white/10 flex items-center justify-between bg-[#080104]/80 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#5c1a2e] to-[#c96a42] text-[#F2A98A] flex items-center justify-center shadow-md">
               <Quote size={16} />
@@ -618,4 +643,6 @@ export default function QuoteStudioModal({
       </motion.div>
     </div>
   );
+
+  return createPortal(modalJSX, document.body);
 }

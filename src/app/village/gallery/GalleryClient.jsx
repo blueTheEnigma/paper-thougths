@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  ArrowLeft, BookOpen, Heart, MessageSquare, Sparkles, 
-  Download, Send, Search, Filter, Feather, Share2, 
-  Check, X, Compass, ChevronRight, Award
+  ArrowLeft, BookOpen, MessageSquare, Sparkles, 
+  Search, Feather, X, ChevronRight, Award
 } from 'lucide-react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
+import LiteraryReaderModal from '@/components/common/LiteraryReaderModal';
 
 const GENRES = [
   'All',
@@ -32,24 +32,9 @@ export default function GalleryClient({ currentUser }) {
   // Comments State for selected piece
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
-  const [newCommentText, setNewCommentText] = useState('');
-  const [commentPenName, setCommentPenName] = useState('');
-  const [submittingComment, setSubmittingComment] = useState(false);
-  const [commentError, setCommentError] = useState(null);
 
   // Local like state overrides
   const [likeOverrides, setLikeOverrides] = useState({});
-
-  // Lock Body Scroll when Modal is open
-  useEffect(() => {
-    if (selectedPiece) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalStyle;
-      };
-    }
-  }, [selectedPiece]);
 
   // Fetch Gallery Submissions
   const fetchGallery = useCallback(async () => {
@@ -79,7 +64,6 @@ export default function GalleryClient({ currentUser }) {
   useEffect(() => {
     if (selectedPiece) {
       setLoadingComments(true);
-      setCommentError(null);
       fetch(`/api/submissions/${selectedPiece.id}/comments`)
         .then(res => res.json())
         .then(data => {
@@ -96,7 +80,7 @@ export default function GalleryClient({ currentUser }) {
 
   // Handle Like Toggle
   const handleToggleLike = async (piece, e) => {
-    if (e) e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     if (!currentUser) {
       alert('Please sign in to like manuscripts and support authors!');
       return;
@@ -146,41 +130,29 @@ export default function GalleryClient({ currentUser }) {
   };
 
   // Handle Comment Submission
-  const handlePostComment = async (e) => {
-    e.preventDefault();
+  const handlePostComment = async ({ content, penName }) => {
     if (!currentUser) {
-      alert('Please sign in to leave a note for the author.');
-      return;
+      throw new Error('Please sign in to leave a note.');
     }
-    if (!newCommentText.trim() || !selectedPiece) return;
+    if (!content.trim() || !selectedPiece) return;
 
-    setSubmittingComment(true);
-    setCommentError(null);
+    const res = await fetch(`/api/submissions/${selectedPiece.id}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: content.trim(),
+        penName: penName.trim()
+      })
+    });
 
-    try {
-      const res = await fetch(`/api/submissions/${selectedPiece.id}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: newCommentText.trim(),
-          penName: commentPenName.trim()
-        })
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setComments(prev => [...prev, data.comment]);
-        setNewCommentText('');
-        setSubmissions(prev => prev.map(s => 
-          s.id === selectedPiece.id ? { ...s, commentCount: data.commentCount } : s
-        ));
-      } else {
-        setCommentError(data.error || 'Failed to post note.');
-      }
-    } catch (err) {
-      setCommentError('Network error while posting note.');
-    } finally {
-      setSubmittingComment(false);
+    const data = await res.json();
+    if (data.success) {
+      setComments(prev => [...prev, data.comment]);
+      setSubmissions(prev => prev.map(s => 
+        s.id === selectedPiece.id ? { ...s, commentCount: data.commentCount } : s
+      ));
+    } else {
+      throw new Error(data.error || 'Failed to post note.');
     }
   };
 
@@ -251,7 +223,7 @@ export default function GalleryClient({ currentUser }) {
     ctx.font = '18px Georgia, serif';
     ctx.fillText('❖   ✦   ❖', width / 2, 118);
     
-    // Poem Title
+    // Title
     ctx.fillStyle = '#5E1914';
     ctx.font = 'italic bold 44px Georgia, serif';
     ctx.fillText(sub.title || 'Untitled', width / 2, 175);
@@ -270,7 +242,7 @@ export default function GalleryClient({ currentUser }) {
     ctx.stroke();
     
     // Body Text
-    const rawLines = (sub.bodyText || '').split('\n');
+    const rawLines = (sub.bodyText || sub.body_text || '').split('\n');
     ctx.font = '22px Georgia, serif';
     const maxTextW = 860;
     
@@ -351,7 +323,7 @@ export default function GalleryClient({ currentUser }) {
     ctx.stroke();
     
     // Attribution
-    const authorName = sub.displayName || sub.penName || 'Paper Thoughts Writer';
+    const authorName = sub.displayName || sub.penName || sub.authorFullName || 'Paper Thoughts Writer';
     ctx.fillStyle = '#5E1914';
     ctx.font = 'italic bold 24px Georgia, serif';
     ctx.fillText(`by ${authorName}`, width / 2, 1268);
@@ -570,203 +542,22 @@ export default function GalleryClient({ currentUser }) {
 
       </div>
 
-      {/* ── IMMERSIVE PARCHMENT READER MODAL ── */}
-      <AnimatePresence>
-        {selectedPiece && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-ink/80 backdrop-blur-md overflow-hidden">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-[#FAF7F0] border border-[#EADFC9] rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden relative text-ink flex flex-col max-h-[88vh]"
-            >
-              {/* Header Bar */}
-              <div className="px-5 py-3 border-b border-sage/15 flex items-center justify-between bg-white/70 backdrop-blur-sm flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  <span className="bg-burgundy/10 text-burgundy text-[8px] font-bold px-2 py-0.5 rounded-full border border-burgundy/15 uppercase tracking-widest">
-                    {selectedPiece.genre}
-                  </span>
-                  {selectedPiece.hasLaurel && (
-                    <span className="bg-accent/15 text-accent text-[8px] font-bold px-2 py-0.5 rounded-full border border-accent/25 uppercase tracking-widest">
-                      🏆 Laureate
-                    </span>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => setSelectedPiece(null)}
-                  className="text-ink/40 hover:text-ink p-1 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
-                >
-                  <X size={17} />
-                </button>
-              </div>
-
-              {/* Modal Body: Single Smooth Scroll Container */}
-              <div className="p-5 sm:p-7 overflow-y-auto space-y-6 text-center">
-                
-                {/* Manuscript Title & Epigraph */}
-                <div className="space-y-2 max-w-lg mx-auto">
-                  <span className="text-[9px] font-sans font-bold uppercase tracking-[0.25em] text-ink/40">
-                    P A P E R   T H O U G H T S
-                  </span>
-                  <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-burgundy tracking-tight">
-                    {selectedPiece.title}
-                  </h2>
-                  <p className="text-xs text-ink/65 font-serif italic leading-relaxed">
-                    &ldquo;{selectedPiece.logline}&rdquo;
-                  </p>
-                  
-                  {/* Classical Divider */}
-                  <div className="w-16 h-px bg-accent/40 mx-auto my-2" />
-                </div>
-
-                {/* Stanza Verse Body */}
-                <div className="max-w-lg mx-auto text-left sm:text-center">
-                  <p className="text-sm sm:text-base leading-7 sm:leading-8 text-ink/90 font-serif whitespace-pre-wrap selection:bg-accent/20">
-                    {selectedPiece.bodyText}
-                  </p>
-                </div>
-
-                {/* Winged Colophon & Author Attribution */}
-                <div className="pt-4 border-t border-sage/15 space-y-1.5 max-w-sm mx-auto">
-                  <div className="flex items-center justify-center gap-2 text-accent text-xs">
-                    <span className="w-8 h-px bg-accent/30" />
-                    <span>❦</span>
-                    <span className="w-8 h-px bg-accent/30" />
-                  </div>
-                  <p className="font-display italic text-base text-burgundy font-bold">
-                    by {selectedPiece.displayName}
-                  </p>
-                </div>
-
-                {/* Reader Action Bar: Like, Download Card */}
-                <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
-                  <button
-                    onClick={() => handleToggleLike(selectedPiece)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
-                      likeOverrides[selectedPiece.id]?.userLiked ?? selectedPiece.userLiked
-                        ? 'bg-[#c96a42] text-cream'
-                        : 'bg-white text-ink/75 border border-sage/25 hover:border-burgundy'
-                    }`}
-                  >
-                    <span>🍃</span>
-                    <span>
-                      {likeOverrides[selectedPiece.id]?.userLiked ?? selectedPiece.userLiked ? 'Leafed' : 'Leaf a Like'} (
-                      {likeOverrides[selectedPiece.id]?.likeCount ?? selectedPiece.likeCount}
-                      )
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => handleDownloadBroadsheet(selectedPiece)}
-                    className="px-4 py-2 rounded-xl bg-burgundy hover:bg-ink text-cream text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-                  >
-                    <Download size={13} />
-                    <span>Download Card</span>
-                  </button>
-                </div>
-
-                {/* Lurker-to-Critic Invitation Ribbon */}
-                <div className="bg-sage/10 border border-sage/20 rounded-xl p-3 max-w-lg mx-auto text-left flex items-start gap-2.5">
-                  <Compass size={16} className="text-burgundy flex-shrink-0 mt-0.5" />
-                  <div className="space-y-0.5">
-                    <h4 className="text-[11px] font-bold text-burgundy uppercase tracking-wider">
-                      Love great writing? Sharpen the craft.
-                    </h4>
-                    <p className="text-[10px] text-ink/70 font-serif leading-relaxed">
-                      Review manuscripts in the double-blind Workshop to earn Milestone Tokens and Leaves.
-                    </p>
-                    <Link
-                      href="/dashboard/review"
-                      className="inline-flex items-center gap-1 text-[10px] font-bold text-accent hover:underline pt-0.5"
-                    >
-                      <span>Enter Review Queue</span>
-                      <ChevronRight size={11} />
-                    </Link>
-                  </div>
-                </div>
-
-                {/* ── PARCHMENT NOTES (COMMENTS SECTION) ── */}
-                <div className="border-t border-sage/15 pt-4 space-y-4 text-left max-w-lg mx-auto">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-display font-bold text-base text-burgundy flex items-center gap-1.5">
-                      <MessageSquare size={14} className="text-accent" />
-                      <span>Parchment Notes ({comments.length})</span>
-                    </h3>
-                    <span className="text-[9px] text-ink/40 font-mono">Reader Reactions</span>
-                  </div>
-
-                  {/* Comments List */}
-                  {loadingComments ? (
-                    <div className="space-y-1.5">
-                      <div className="h-10 bg-white/60 rounded-lg animate-pulse" />
-                      <div className="h-10 bg-white/60 rounded-lg animate-pulse" />
-                    </div>
-                  ) : comments.length === 0 ? (
-                    <p className="text-xs text-ink/50 font-serif italic bg-white/40 border border-dashed border-sage/20 p-3 rounded-xl text-center">
-                      No notes left yet. Leave the author some encouragement!
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {comments.map((c) => (
-                        <div key={c.id} className="bg-white border border-sage/15 p-3 rounded-xl space-y-0.5">
-                          <div className="flex justify-between items-center text-[9px]">
-                            <span className="font-bold text-burgundy font-sans">{c.displayName}</span>
-                            <span className="text-ink/35 font-mono">
-                              {c.createdAt ? new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}
-                            </span>
-                          </div>
-                          <p className="text-xs text-ink/80 font-serif leading-relaxed">{c.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Comment Form */}
-                  {currentUser ? (
-                    <form onSubmit={handlePostComment} className="space-y-2 pt-1">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={commentPenName}
-                          onChange={(e) => setCommentPenName(e.target.value)}
-                          placeholder="Pen Name (Opt)"
-                          className="w-1/3 bg-white border border-sage/25 rounded-xl py-1.5 px-2.5 text-xs text-ink placeholder-ink/35 focus:outline-none focus:border-burgundy"
-                        />
-                        <input
-                          type="text"
-                          value={newCommentText}
-                          onChange={(e) => setNewCommentText(e.target.value)}
-                          placeholder="Leave a note for the author..."
-                          className="flex-1 bg-white border border-sage/25 rounded-xl py-1.5 px-2.5 text-xs text-ink placeholder-ink/35 focus:outline-none focus:border-burgundy"
-                        />
-                        <button
-                          type="submit"
-                          disabled={submittingComment || !newCommentText.trim()}
-                          className="bg-burgundy hover:bg-ink text-cream px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1"
-                        >
-                          <Send size={11} />
-                          <span>Send</span>
-                        </button>
-                      </div>
-                      {commentError && (
-                        <p className="text-[10px] text-burgundy font-bold">{commentError}</p>
-                      )}
-                    </form>
-                  ) : (
-                    <div className="bg-white/70 border border-sage/20 p-2.5 rounded-xl text-center">
-                      <Link href="/sign-in?redirect_url=/village/gallery" className="text-xs font-bold text-burgundy hover:underline">
-                        Sign in to leave a note for the author ✍️
-                      </Link>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* ── UNIFIED LITERARY FOLIO READER MODAL ── */}
+      {selectedPiece && (
+        <LiteraryReaderModal
+          isOpen={!!selectedPiece}
+          onClose={() => setSelectedPiece(null)}
+          piece={selectedPiece}
+          currentUser={currentUser}
+          isLiked={likeOverrides[selectedPiece.id]?.userLiked ?? selectedPiece.userLiked}
+          likeCount={likeOverrides[selectedPiece.id]?.likeCount ?? selectedPiece.likeCount}
+          onToggleLike={handleToggleLike}
+          onDownloadCard={handleDownloadBroadsheet}
+          comments={comments}
+          loadingComments={loadingComments}
+          onPostComment={handlePostComment}
+        />
+      )}
 
     </main>
   );

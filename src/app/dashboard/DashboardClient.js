@@ -17,6 +17,7 @@ import FeedbackDashboard from '@/components/FeedbackDashboard';
 import PanguinAvatar from '@/components/PanguinAvatar';
 import OnboardingSequence from '@/components/OnboardingSequence';
 import { getAvatarStage } from '@/lib/avatar';
+import LiteraryReaderModal from '@/components/common/LiteraryReaderModal';
 
 const GENRES = [
   'Fiction',
@@ -2904,66 +2905,14 @@ export default function DashboardClient({ profile, initialOrders, submissions = 
         document.body
       )}
 
-      {/* Read Manuscript Modal */}
-      {mounted && typeof document !== 'undefined' && createPortal(
-        <AnimatePresence>
-          {selectedSubForRead && (
-            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 font-sans">
-              <motion.div 
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-ink/75 backdrop-blur-sm"
-                onClick={() => setSelectedSubForRead(null)}
-              />
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: 20 }} 
-                animate={{ opacity: 1, scale: 1, y: 0 }} 
-                exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                className="relative w-full max-w-2xl bg-cream rounded-3xl p-5 sm:p-7 border border-sage/20 shadow-2xl z-10 max-h-[85vh] flex flex-col justify-between text-ink"
-              >
-                <button 
-                  onClick={() => setSelectedSubForRead(null)} 
-                  className="absolute top-4 right-4 bg-white/50 backdrop-blur rounded-full p-2 hover:bg-white transition-colors z-20 cursor-pointer"
-                >
-                  <X size={18} className="text-ink" />
-                </button>
-
-                <div className="space-y-4 overflow-y-auto pr-1">
-                  <div className="border-b border-sage/20 pb-3">
-                    <span className="bg-burgundy/10 text-burgundy text-[8px] font-bold px-2.5 py-0.5 rounded-full border border-burgundy/20 uppercase tracking-widest inline-block mb-1.5">
-                      {selectedSubForRead.genre}
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-display text-burgundy font-bold">{selectedSubForRead.title}</h3>
-                    <p className="text-xs text-ink/55 leading-relaxed font-serif mt-1 italic">"{selectedSubForRead.logline}"</p>
-                  </div>
-
-                  <div className="bg-[#FAF7F0] border border-[#EADFC9] rounded-2xl p-5 sm:p-6 relative">
-                    <p className="text-sm sm:text-base leading-7 sm:leading-8 text-ink font-serif whitespace-pre-wrap relative z-10">{selectedSubForRead.bodyText}</p>
-                  </div>
-                </div>
-
-                <div className="border-t border-sage/15 pt-3.5 mt-4 flex justify-end items-center flex-shrink-0">
-                  <button
-                    onClick={() => handleDownload(selectedSubForRead)}
-                    className="mr-auto bg-burgundy hover:bg-ink text-cream px-4 py-2 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer flex items-center gap-1.5 shadow-sm"
-                  >
-                    <Download size={13} />
-                    {selectedSubForRead.genre.toLowerCase() === 'poetry' ? 'Save Card (JPEG)' : 'Download (PDF)'}
-                  </button>
-
-                  <button 
-                    onClick={() => setSelectedSubForRead(null)}
-                    className="bg-white hover:bg-sage/10 text-ink border border-sage/30 px-5 py-2 rounded-xl font-bold transition-all text-xs uppercase tracking-wider cursor-pointer"
-                  >
-                    Close Reader
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>,
-        document.body
+      {/* Read Manuscript Modal via Unified LiteraryReaderModal */}
+      {selectedSubForRead && (
+        <LiteraryReaderModal
+          isOpen={!!selectedSubForRead}
+          onClose={() => setSelectedSubForRead(null)}
+          piece={selectedSubForRead}
+          onDownloadCard={handleDownload}
+        />
       )}
 
       {/* Edit Manuscript Modal */}

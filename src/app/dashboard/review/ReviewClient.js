@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, MessageSquare, Flame, CheckCircle2, AlertCircle, 
@@ -15,9 +16,24 @@ export default function ReviewClient() {
   const [error, setError] = useState(null);
 
   // Intent Intercept States
+  const [mounted, setMounted] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const [showSurveyModal, setShowSurveyModal] = useState(false);
   const [surveyReason, setSurveyReason] = useState(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (showSurveyModal) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [showSurveyModal]);
   
   // Manuscript Workspace States
   const [fetchingSubmission, setFetchingSubmission] = useState(false);
@@ -524,56 +540,71 @@ export default function ReviewClient() {
   return (
     <main className="min-h-screen bg-cream pt-24 pb-20 px-4 md:px-8 relative">
       {/* Click Survey Intercept Modal */}
-      <AnimatePresence>
-        {showSurveyModal && selectedCard && (
-          <div className="fixed inset-0 bg-ink/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} 
-              animate={{ scale: 1, opacity: 1 }} 
-              exit={{ scale: 0.95, opacity: 0 }} 
-              className="bg-white max-w-md w-full p-8 rounded-[32px] border border-sage/20 shadow-2xl text-center"
-            >
-              <div className="w-12 h-12 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4 text-burgundy">
-                <HelpCircle size={24} />
-              </div>
-              
-              <h3 className="font-display text-2xl text-burgundy mb-2">A Moment of Intent</h3>
-              <p className="text-xs text-ink/50 uppercase tracking-widest font-mono mb-6">Manuscript Selection Hook</p>
-              
-              <p className="text-sm text-ink/70 leading-relaxed mb-6">
-                Before we open the manuscript ledger, what specific hook elements drew you to review this piece?
-              </p>
-
-              <div className="space-y-2">
-                {[
-                  { key: 'title', label: 'The title sounds intriguing.' },
-                  { key: 'genre', label: 'I am a fan of this genre.' },
-                  { key: 'logline', label: 'The teaser hooks me immediately.' },
-                  { key: 'outside_comfort', label: 'I want to step outside my comfort zone.' }
-                ].map((opt) => (
-                  <button
-                    key={opt.key}
-                    onClick={() => handleSurveySubmit(opt.key)}
-                    className="w-full bg-cream/30 hover:bg-sage/10 border border-sage/20 rounded-xl p-3.5 text-xs font-bold text-ink/80 text-left transition-all active:scale-[0.99]"
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-
-              <button 
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showSurveyModal && selectedCard && (
+            <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 overflow-hidden">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-[#0c0205]/80 backdrop-blur-md cursor-pointer"
                 onClick={() => {
                   setShowSurveyModal(false);
                   setSelectedCard(null);
                 }}
-                className="mt-6 text-xs text-ink/40 font-bold uppercase tracking-wider hover:text-burgundy transition-colors"
+              />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0, y: 15 }} 
+                animate={{ scale: 1, opacity: 1, y: 0 }} 
+                exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="relative bg-[#FAF7F0] max-w-md w-full p-6 sm:p-8 rounded-[32px] border border-[#EADFC9] shadow-2xl text-center z-10 text-ink"
+                onClick={(e) => e.stopPropagation()}
               >
-                Cancel Selection
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+                <div className="w-12 h-12 bg-burgundy/10 rounded-full flex items-center justify-center mx-auto mb-3 text-burgundy">
+                  <HelpCircle size={22} />
+                </div>
+                
+                <h3 className="font-display text-2xl font-bold text-burgundy mb-1">A Moment of Intent</h3>
+                <p className="text-[10px] text-ink/40 uppercase tracking-widest font-mono mb-4">Manuscript Selection Hook</p>
+                
+                <p className="text-xs sm:text-sm text-ink/75 leading-relaxed mb-5 font-serif">
+                  Before opening the manuscript ledger, what specific hook drew you to review this piece?
+                </p>
+
+                <div className="space-y-2">
+                  {[
+                    { key: 'title', label: 'The title sounds intriguing.' },
+                    { key: 'genre', label: 'I am a fan of this genre.' },
+                    { key: 'logline', label: 'The teaser hooks me immediately.' },
+                    { key: 'outside_comfort', label: 'I want to step outside my comfort zone.' }
+                  ].map((opt) => (
+                    <button
+                      key={opt.key}
+                      onClick={() => handleSurveySubmit(opt.key)}
+                      className="w-full bg-white hover:bg-burgundy hover:text-cream border border-sage/20 rounded-xl p-3 text-xs font-bold text-ink/80 text-left transition-all cursor-pointer shadow-sm"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                <button 
+                  onClick={() => {
+                    setShowSurveyModal(false);
+                    setSelectedCard(null);
+                  }}
+                  className="mt-5 text-xs text-ink/40 font-bold uppercase tracking-wider hover:text-burgundy transition-colors cursor-pointer"
+                >
+                  Cancel Selection
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       <div className="max-w-6xl mx-auto">
         {/* Breadcrumb / Header */}

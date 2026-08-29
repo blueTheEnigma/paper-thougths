@@ -108,3 +108,28 @@ body::before {
   animation: pulse-subtle 3s ease-in-out infinite;
 }
 
+/* Slim Parchment Scrollbar for Literary Popouts */
+.paper-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201, 106, 66, 0.45) rgba(250, 247, 240, 0.5);
+}
+
+.paper-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.paper-scrollbar::-webkit-scrollbar-track {
+  background: rgba(250, 247, 240, 0.4);
+  border-radius: 9999px;
+}
+
+.paper-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(201, 106, 66, 0.45);
+  border-radius: 9999px;
+}
+
+.paper-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(92, 26, 46, 0.7);
+}
+
