@@ -79,10 +79,10 @@ export default function Navigation() {
 
   const navLinks = [
     { name: "Home", href: "/", icon: Compass, mobileLabel: "Home" },
-    { name: "Book Zodiac", href: "/zodiac", icon: Sparkles, mobileLabel: "Zodiac" },
+    { name: "Events", href: "/events", icon: Sparkles, mobileLabel: "Events" },
     { name: "Bookstore", href: "/bookstore", icon: ShoppingBag, mobileLabel: "Books" },
-    { name: "Pitch Arena", href: "/convince-me", icon: Flame, mobileLabel: "Pitches" },
     { name: "Village", href: "/village", icon: Feather, mobileLabel: "Village" },
+    { name: "Book Zodiac", href: "/zodiac", icon: Sparkles, mobileLabel: "Zodiac" },
   ];
 
   return (
@@ -95,7 +95,7 @@ export default function Navigation() {
           opacity: isNavVisible ? 1 : 0 
         }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-6xl bg-cream/95 backdrop-blur-lg border border-sage/15 py-3 px-6 rounded-2xl flex items-center justify-between shadow-lg"
+        className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-6xl bg-cream/95 backdrop-blur-lg border border-sage/15 py-3 px-5 sm:px-6 rounded-2xl flex items-center justify-between shadow-lg"
       >
         <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
           <div className="bg-burgundy/5 p-2 rounded-xl border border-burgundy/10 group-hover:bg-burgundy/10 transition-colors">
@@ -108,14 +108,14 @@ export default function Navigation() {
         </Link>
         
         {/* Desktop Links */}
-        <div className="hidden lg:flex gap-8 items-center font-sans font-bold text-sm text-ink/75">
+        <div className="hidden lg:flex gap-4 xl:gap-6 items-center font-sans font-bold text-xs xl:text-sm text-ink/75">
           {navLinks.map((link) => {
             const active = isActive(link.href);
             return (
               <Link 
                 key={link.name} 
                 href={link.href} 
-                className={`relative px-3 py-1.5 transition-colors hover:text-burgundy flex items-center gap-1.5 ${
+                className={`relative px-2.5 py-1.5 transition-colors hover:text-burgundy flex items-center gap-1.5 whitespace-nowrap ${
                   active ? "text-burgundy font-extrabold" : "text-ink/65"
                 }`}
               >
@@ -126,7 +126,7 @@ export default function Navigation() {
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
-                <link.icon size={15} />
+                <link.icon size={14} />
                 <span>{link.name}</span>
               </Link>
             );
