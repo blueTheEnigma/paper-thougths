@@ -91,7 +91,7 @@ async function getLocalArchiveData(clerkUser) {
       preferredGenres: profileRow.preferred_genres || [],
       onboarded: profileRow.onboarded || false,
       archetype: profileRow.reader_archetype || null,
-      isCrewMember: await isCrewMember(clerkUser.id)
+      isCrewMember: await isCrewMember(dbUser.id)
     };
 
     // Calculate actual referrals count
@@ -175,7 +175,7 @@ async function getLocalArchiveData(clerkUser) {
 
 export default async function DashboardPage() {
   const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress;
+  const email = user?.emailAddresses?.[0]?.emailAddress || user?.primaryEmailAddress?.emailAddress;
 
   if (!user || !email) {
     const { redirect } = await import('next/navigation');

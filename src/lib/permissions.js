@@ -20,28 +20,29 @@ export async function syncOrCreateUser(sessionUser) {
   if (!sessionUser) return null;
   
   // Accept either NextAuth session user or Clerk user structure
-  const email = sessionUser.email || sessionUser.emailAddresses?.[0]?.emailAddress;
+  const email = sessionUser.email || sessionUser.primaryEmailAddress?.emailAddress || sessionUser.emailAddresses?.[0]?.emailAddress;
   if (!email) {
     console.error("User has no email address", sessionUser.id);
     return null;
   }
   
   const fullName = sessionUser.name || `${sessionUser.firstName || ''} ${sessionUser.lastName || ''}`.trim() || sessionUser.username || 'Anonymous';
+  const clerkId = sessionUser.id || null;
   
   try {
-    // 1. Try to find the user by email
+    // 1. Try to find the user by email or clerk_id
     let dbUser = await Database.queryOne(`
-      SELECT * FROM users WHERE email = $1
-    `, [email.toLowerCase()]);
+      SELECT * FROM users WHERE LOWER(email) = $1 OR (clerk_id IS NOT NULL AND clerk_id = $2)
+    `, [email.toLowerCase(), clerkId]);
     
     if (!dbUser) {
       // 2. If user doesn't exist, create a new record and assign an LK-ID
       dbUser = await Database.transaction(async (client) => {
         const userRes = await client.query(`
-          INSERT INTO users (email, full_name)
-          VALUES ($1, $2)
+          INSERT INTO users (email, full_name, clerk_id)
+          VALUES ($1, $2, $3)
           RETURNING id
-        `, [email.toLowerCase(), fullName]);
+        `, [email.toLowerCase(), fullName, clerkId]);
         
         const newUserId = userRes.rows[0].id;
         const year = new Date().getFullYear();
@@ -58,17 +59,32 @@ export async function syncOrCreateUser(sessionUser) {
       });
       console.log('Synchronized new user with LK-ID:', dbUser.email, dbUser.lk_id);
     } else {
-      // 3. Automatically generate LK-ID if user exists but lacks one
+      // 3. Automatically sync clerk_id or missing LK-ID
+      const updates = [];
+      const params = [];
+      let pIdx = 1;
+
       if (!dbUser.lk_id) {
         const year = new Date().getFullYear();
         const lkId = `LK-${year}-${1000 + dbUser.id}`;
+        updates.push(`lk_id = $${pIdx++}`);
+        params.push(lkId);
+      }
+
+      if (clerkId && dbUser.clerk_id !== clerkId) {
+        updates.push(`clerk_id = $${pIdx++}`);
+        params.push(clerkId);
+      }
+
+      if (updates.length > 0) {
+        params.push(dbUser.id);
         dbUser = await Database.queryOne(`
           UPDATE users 
-          SET lk_id = $1 
-          WHERE id = $2 
+          SET ${updates.join(', ')} 
+          WHERE id = $${pIdx} 
           RETURNING *
-        `, [lkId, dbUser.id]);
-        console.log('Generated missing LK-ID for user ID:', dbUser.id);
+        `, params);
+        console.log('Updated user sync for ID:', dbUser.id);
       }
     }
     
