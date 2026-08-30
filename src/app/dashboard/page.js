@@ -1,4 +1,5 @@
 import { currentUser } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
 import DashboardClient from './DashboardClient';
 import { getBooks } from '@/lib/data';
 import { Database } from '@/lib/db';
@@ -178,7 +179,6 @@ export default async function DashboardPage() {
   const email = user?.emailAddresses?.[0]?.emailAddress || user?.primaryEmailAddress?.emailAddress;
 
   if (!user || !email) {
-    const { redirect } = await import('next/navigation');
     redirect('/sign-in?redirect_url=/dashboard');
   }
 
@@ -189,48 +189,56 @@ export default async function DashboardPage() {
 
   const { profile, orders, submissions, tbrItems } = archive;
 
-  // Curated Recommendation Engine
+  // Curated Recommendation Engine with full defensive safety
   let recommendations = [];
-  if (allBooks.length > 0) {
-    const boughtItems = orders ? orders.flatMap(o => o.items.split(',').map(i => i.trim().toLowerCase())) : [];
-    const isBought = (book) => boughtItems.some(bi => book.title.toLowerCase().includes(bi));
-    const normalize = (g) => (g || '').trim().toLowerCase();
-    const userPreferredGenres = (profile?.preferredGenres || []).map(normalize);
+  try {
+    if (Array.isArray(allBooks) && allBooks.length > 0) {
+      const boughtItems = (orders && Array.isArray(orders))
+        ? orders.flatMap(o => (o.items && typeof o.items === 'string' ? o.items.split(',').map(i => i.trim().toLowerCase()) : []))
+        : [];
+      const isBought = (book) => boughtItems.some(bi => (book.title || '').toLowerCase().includes(bi));
+      const normalize = (g) => (g || '').trim().toLowerCase();
+      const userPreferredGenres = ((profile?.preferredGenres && Array.isArray(profile.preferredGenres)) ? profile.preferredGenres : []).map(normalize);
 
-    // 1. Match books matching user's preferred genres (excluding bought)
-    let preferredRecommendations = [];
-    if (userPreferredGenres.length > 0) {
-      preferredRecommendations = allBooks
-        .filter(b => userPreferredGenres.includes(normalize(b.genre)) && !isBought(b))
-        .sort((a, b) => b.rating - a.rating);
-    }
-    recommendations = preferredRecommendations.slice(0, 4);
+      // 1. Match books matching user's preferred genres (excluding bought)
+      let preferredRecommendations = [];
+      if (userPreferredGenres.length > 0) {
+        preferredRecommendations = allBooks
+          .filter(b => b.genre && userPreferredGenres.includes(normalize(b.genre)) && !isBought(b))
+          .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+      }
+      recommendations = preferredRecommendations.slice(0, 4);
 
-    // 2. If recommendations count < 4, fill remaining slots with purchase-based recommendations
-    if (recommendations.length < 4 && orders && orders.length > 0) {
-      const boughtBooks = allBooks.filter(isBought);
-      const favoriteGenres = [...new Set(boughtBooks.map(b => normalize(b.genre)))];
+      // 2. If recommendations count < 4, fill remaining slots with purchase-based recommendations
+      if (recommendations.length < 4 && orders && orders.length > 0) {
+        const boughtBooks = allBooks.filter(isBought);
+        const favoriteGenres = [...new Set(boughtBooks.map(b => normalize(b.genre)).filter(Boolean))];
 
-      if (favoriteGenres.length > 0) {
-        const purchaseBased = allBooks
-          .filter(b => 
-            favoriteGenres.includes(normalize(b.genre)) && 
-            !isBought(b) && 
-            !recommendations.some(r => r.id === b.id)
-          )
-          .sort((a, b) => b.rating - a.rating);
-        recommendations = [...recommendations, ...purchaseBased].slice(0, 4);
+        if (favoriteGenres.length > 0) {
+          const purchaseBased = allBooks
+            .filter(b => 
+              b.genre && 
+              favoriteGenres.includes(normalize(b.genre)) && 
+              !isBought(b) && 
+              !recommendations.some(r => r.id === b.id)
+            )
+            .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+          recommendations = [...recommendations, ...purchaseBased].slice(0, 4);
+        }
+      }
+
+      // 3. Fallback to Featured/High Rated if still < 4
+      if (recommendations.length < 4) {
+        const fallback = allBooks
+          .filter(b => (b.featured || (parseFloat(b.rating) || 0) >= 4.5) && !isBought(b))
+          .filter(b => !recommendations.some(r => r.id === b.id))
+          .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+        recommendations = [...recommendations, ...fallback].slice(0, 4);
       }
     }
-
-    // 3. Fallback to Featured/High Rated if still < 4
-    if (recommendations.length < 4) {
-      const fallback = allBooks
-        .filter(b => (b.featured || b.rating >= 4.5) && !isBought(b))
-        .filter(b => !recommendations.some(r => r.id === b.id))
-        .sort((a, b) => b.rating - a.rating);
-      recommendations = [...recommendations, ...fallback].slice(0, 4);
-    }
+  } catch (err) {
+    console.error("Dashboard recommendation engine error:", err);
+    recommendations = [];
   }
 
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';

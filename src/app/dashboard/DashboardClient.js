@@ -1252,7 +1252,7 @@ export default function DashboardClient({
     }
   };
 
-  if (!profile) {
+  if (!rawProfile || !rawProfile.id) {
     return (
       <main className="min-h-screen bg-cream flex items-center justify-center py-12 px-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg w-full bg-white p-10 rounded-3xl border border-sage/20 shadow-xl text-center">
