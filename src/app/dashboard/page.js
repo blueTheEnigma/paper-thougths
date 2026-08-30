@@ -165,7 +165,13 @@ async function getLocalArchiveData(clerkUser) {
       ORDER BY bpp.created_at DESC
     `, [dbUser.id]);
 
-    const tbrItems = Array.isArray(tbrRaw) ? tbrRaw : (tbrRaw?.rows || []);
+    const tbrItemsRaw = Array.isArray(tbrRaw) ? tbrRaw : (tbrRaw?.rows || []);
+    // Convert Date objects to ISO strings for RSC serialization safety
+    const tbrItems = tbrItemsRaw.map(item => ({
+      ...item,
+      pledgedAt: item.pledgedAt ? new Date(item.pledgedAt).toISOString() : null,
+      vibeTags: Array.isArray(item.vibeTags) ? item.vibeTags : (item.vibeTags ? [item.vibeTags] : [])
+    }));
 
     return { profile, orders, submissions, tbrItems };
   } catch (e) {
@@ -276,6 +282,10 @@ export default async function DashboardPage() {
       ORDER BY l.created_at DESC, l.id DESC
       LIMIT 1
     `);
+    // Convert Date objects to ISO strings for RSC serialization safety
+    if (activeLeaderboard && activeLeaderboard.createdAt) {
+      activeLeaderboard.createdAt = new Date(activeLeaderboard.createdAt).toISOString();
+    }
   } catch (err) {
     console.error("Failed to fetch active leaderboard:", err);
   }
