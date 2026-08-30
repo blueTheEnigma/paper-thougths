@@ -334,6 +334,25 @@ export default function DashboardClient({
   const [librarySuccess, setLibrarySuccess] = useState(null);
   const [libraryError, setLibraryError] = useState(null);
 
+  // Local States for Bi-token economy
+  const [spendableLeaves, setSpendableLeaves] = useState(profile?.spendableLeaves || 0);
+  const [milestoneTokens, setMilestoneTokens] = useState(profile?.milestoneTokens || 0);
+  const [lifetimeLeaves, setLifetimeLeaves] = useState(profile?.lifetimeLeaves || 0);
+  const [bookVouchersGifted, setBookVouchersGifted] = useState(profile?.bookVouchersGifted || 0);
+  
+  // States for leaf purchases & transactions history
+  const [showBuyLeavesModal, setShowBuyLeavesModal] = useState(false);
+  const [isBuyingLeaves, setIsBuyingLeaves] = useState(false);
+  const [transactions, setTransactions] = useState([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
+
+  // Chapter Pool States
+  const [chapterPool, setChapterPool] = useState(null);
+  const [donationAmount, setDonationAmount] = useState('');
+  const [donateLoading, setDonateLoading] = useState(false);
+  const [donateMessage, setDonateMessage] = useState(null);
+  const [poolLoading, setPoolLoading] = useState(true);
+
   // Lock Body Scroll when any Modal is open
   useEffect(() => {
     const isAnyModalOpen = selectedSubForRead || selectedSubForEdit || selectedReportId || showBuyLeavesModal;
@@ -894,24 +913,7 @@ export default function DashboardClient({
     }
   };
   
-  // Local States for Bi-token economy
-  const [spendableLeaves, setSpendableLeaves] = useState(profile?.spendableLeaves || 0);
-  const [milestoneTokens, setMilestoneTokens] = useState(profile?.milestoneTokens || 0);
-  const [lifetimeLeaves, setLifetimeLeaves] = useState(profile?.lifetimeLeaves || 0);
-  const [bookVouchersGifted, setBookVouchersGifted] = useState(profile?.bookVouchersGifted || 0);
-  
-  // States for leaf purchases & transactions history
-  const [showBuyLeavesModal, setShowBuyLeavesModal] = useState(false);
-  const [isBuyingLeaves, setIsBuyingLeaves] = useState(false);
-  const [transactions, setTransactions] = useState([]);
-  const [transactionsLoading, setTransactionsLoading] = useState(true);
-
-  // Chapter Pool States
-  const [chapterPool, setChapterPool] = useState(null);
-  const [donationAmount, setDonationAmount] = useState('');
-  const [donateLoading, setDonateLoading] = useState(false);
-  const [donateMessage, setDonateMessage] = useState(null);
-  const [poolLoading, setPoolLoading] = useState(true);
+  // (Bi-token economy, leaf purchase, and chapter pool states moved above the body-scroll useEffect)
 
   // Milestone Celebration Overlay
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
