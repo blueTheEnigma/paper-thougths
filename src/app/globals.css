@@ -86,6 +86,7 @@ body::before {
 
 .glass-counter {
   background: rgba(255, 245, 236, 0.7);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(44, 26, 14, 0.08);
 }
