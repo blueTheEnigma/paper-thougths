@@ -9,6 +9,7 @@ import { ARCHETYPES } from '../../lib/archetypesData';
 export default function NatalChartCard({ chartResult, onRetake }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [activeMobileTriadTab, setActiveMobileTriadTab] = useState('sun'); // 'sun' | 'moon' | 'rising'
 
   const { sunSign, moonSign, risingSign, isCusp, cuspSignName, chosenElement, chosenRealm, chosenHouse, chosenMedium } = chartResult;
 
@@ -435,11 +436,70 @@ export default function NatalChartCard({ chartResult, onRetake }) {
           </p>
         </div>
 
+        {/* CELESTIAL TRINITY AT-A-GLANCE BAR */}
+        <div className="bg-black/50 border border-[#F2A98A]/25 rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div className="flex items-center gap-2">
+            <span className="text-[#F2A98A] text-sm">✦</span>
+            <span className="text-[#F2A98A] font-bold uppercase tracking-wider">Celestial Trinity:</span>
+          </div>
+          <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
+            <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-xl border border-white/5">
+              <span>☀️</span>
+              <span className="text-cream font-bold">Sun: The {sunSign.name}</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-xl border border-white/5">
+              <span>🌙</span>
+              <span className="text-cream/90">Moon: The {moonSign.name}</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-xl border border-white/5">
+              <span>⬆️</span>
+              <span className="text-cream/90">Rising: The {risingSign.name}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* MOBILE SEGMENTED TAB SWITCHER (< md) */}
+        <div className="flex md:hidden items-center justify-center p-1.5 bg-black/60 border border-white/10 rounded-2xl gap-1">
+          <button
+            onClick={() => setActiveMobileTriadTab('sun')}
+            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeMobileTriadTab === 'sun'
+                ? 'bg-gradient-to-r from-[#5C1A2E] to-[#7A2040] text-cream shadow-md border border-[#F2A98A]/40'
+                : 'text-cream/60 hover:text-cream'
+            }`}
+          >
+            <span>☀️</span>
+            <span>Sun</span>
+          </button>
+          <button
+            onClick={() => setActiveMobileTriadTab('moon')}
+            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeMobileTriadTab === 'moon'
+                ? 'bg-[#2C1A0E] text-[#F2A98A] shadow-md border border-[#F2A98A]/40'
+                : 'text-cream/60 hover:text-cream'
+            }`}
+          >
+            <span>🌙</span>
+            <span>Moon</span>
+          </button>
+          <button
+            onClick={() => setActiveMobileTriadTab('rising')}
+            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeMobileTriadTab === 'rising'
+                ? 'bg-[#2C1A0E] text-[#F2A98A] shadow-md border border-[#F2A98A]/40'
+                : 'text-cream/60 hover:text-cream'
+            }`}
+          >
+            <span>⬆️</span>
+            <span>Rising</span>
+          </button>
+        </div>
+
         {/* ASTROLOGICAL TRIAD (Sun, Moon, Rising) - Tight, Gorgeous Tarot Proportions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
           
           {/* SUN SIGN (Primary Essence) */}
-          <div className="bg-[#FFF5EC] rounded-2xl border-2 border-[#C5A059] text-[#2C1A0E] overflow-hidden shadow-2xl flex flex-col justify-between transform md:-translate-y-2 relative">
+          <div className={`${activeMobileTriadTab === 'sun' ? 'flex' : 'hidden md:flex'} bg-[#FFF5EC] rounded-2xl border-2 border-[#C5A059] text-[#2C1A0E] overflow-hidden shadow-2xl flex-col justify-between transform md:-translate-y-2 relative`}>
             <div className="p-4 bg-gradient-to-r from-[#5C1A2E] to-[#7A2040] text-cream flex items-center justify-between">
               <span className="text-xs font-mono font-extrabold uppercase tracking-wider text-amber-200">
                 ☀️ Book Sun (Primary)
@@ -479,7 +539,7 @@ export default function NatalChartCard({ chartResult, onRetake }) {
           </div>
 
           {/* MOON SIGN (Inner Driver) */}
-          <div className="bg-[#FFF5EC] rounded-2xl border border-[#2C1A0E]/15 text-[#2C1A0E] overflow-hidden shadow-xl flex flex-col justify-between">
+          <div className={`${activeMobileTriadTab === 'moon' ? 'flex' : 'hidden md:flex'} bg-[#FFF5EC] rounded-2xl border border-[#2C1A0E]/15 text-[#2C1A0E] overflow-hidden shadow-xl flex-col justify-between`}>
             <div className="p-4 bg-[#2C1A0E] text-cream flex items-center justify-between">
               <span className="text-xs font-mono font-extrabold uppercase tracking-wider text-[#F2A98A]">
                 🌙 Book Moon
@@ -519,7 +579,7 @@ export default function NatalChartCard({ chartResult, onRetake }) {
           </div>
 
           {/* RISING SIGN (Reading Persona) */}
-          <div className="bg-[#FFF5EC] rounded-2xl border border-[#2C1A0E]/15 text-[#2C1A0E] overflow-hidden shadow-xl flex flex-col justify-between">
+          <div className={`${activeMobileTriadTab === 'rising' ? 'flex' : 'hidden md:flex'} bg-[#FFF5EC] rounded-2xl border border-[#2C1A0E]/15 text-[#2C1A0E] overflow-hidden shadow-xl flex-col justify-between`}>
             <div className="p-4 bg-[#2C1A0E] text-cream flex items-center justify-between">
               <span className="text-xs font-mono font-extrabold uppercase tracking-wider text-[#F2A98A]">
                 ⬆️ Book Rising
@@ -558,6 +618,17 @@ export default function NatalChartCard({ chartResult, onRetake }) {
             </div>
           </div>
 
+        </div>
+
+        {/* TRINITY INTERPLAY SYNTHESIS */}
+        <div className="bg-gradient-to-r from-[#5c1a2e]/30 via-black/40 to-[#c96a42]/20 border border-[#F2A98A]/25 rounded-2xl p-5 text-center sm:text-left space-y-2">
+          <div className="text-xs font-mono font-bold text-[#F2A98A] uppercase tracking-wider flex items-center justify-center sm:justify-start gap-1.5">
+            <span>✨</span>
+            <span>Trinity Interplay Synthesis</span>
+          </div>
+          <p className="font-serif italic text-sm text-cream/90 leading-relaxed">
+            Your literary core burns as <strong>The {sunSign.name}</strong>, navigating stories through {chosenElement} emotion as <strong>The {moonSign.name}</strong>, while greeting new literary horizons in {chosenRealm} as <strong>The {risingSign.name}</strong>. A rare, poetic harmony of devotion and curiosity.
+          </p>
         </div>
 
         {/* CHART DETAILS TALISMAN BADGES */}

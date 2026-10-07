@@ -33,6 +33,22 @@ export default function GalleryClient({ currentUser }) {
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
 
+  const [activeCategory, setActiveCategory] = useState('all'); // 'all' | 'stories' | 'poetry'
+
+  // Filter submissions by category and genre
+  const filteredSubmissions = submissions.filter((sub) => {
+    if (activeCategory === 'poetry') {
+      return (sub.genre || '').toLowerCase().includes('poem') || (sub.genre || '').toLowerCase() === 'poetry';
+    }
+    if (activeCategory === 'stories') {
+      return !((sub.genre || '').toLowerCase().includes('poem') || (sub.genre || '').toLowerCase() === 'poetry');
+    }
+    return true;
+  });
+
+  const storiesCount = submissions.filter(s => !((s.genre || '').toLowerCase().includes('poem') || (s.genre || '').toLowerCase() === 'poetry')).length;
+  const poetryCount = submissions.filter(s => (s.genre || '').toLowerCase().includes('poem') || (s.genre || '').toLowerCase() === 'poetry').length;
+
   // Local like state overrides
   const [likeOverrides, setLikeOverrides] = useState({});
 
@@ -378,8 +394,53 @@ export default function GalleryClient({ currentUser }) {
           </div>
         </div>
 
-        {/* Filter Controls: Search & Genre Pills */}
-        <div className="space-y-3">
+        {/* Filter Controls: Category Tabs, Search & Genre Pills */}
+        <div className="space-y-4">
+          {/* Top Category Tabs: All vs Stories vs Poetry */}
+          <div className="flex flex-wrap items-center gap-2 border-b border-sage/15 pb-3">
+            <button
+              onClick={() => setActiveCategory('all')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+                activeCategory === 'all'
+                  ? 'bg-burgundy text-cream shadow-md'
+                  : 'bg-white/80 text-ink/65 hover:text-burgundy border border-sage/15'
+              }`}
+            >
+              <span>✨ All Manuscripts</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-black/10">
+                {submissions.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveCategory('stories')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+                activeCategory === 'stories'
+                  ? 'bg-gradient-to-r from-[#5c1a2e] to-[#c96a42] text-cream shadow-md border border-[#F2A98A]/30'
+                  : 'bg-white/80 text-ink/65 hover:text-[#c96a42] border border-sage/15'
+              }`}
+            >
+              <span>📖 Stories &amp; Prose</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-black/10">
+                {storiesCount}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveCategory('poetry')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+                activeCategory === 'poetry'
+                  ? 'bg-[#120308] text-[#F2A98A] border border-[#F2A98A]/40 shadow-md'
+                  : 'bg-white/80 text-ink/65 hover:text-burgundy border border-sage/15'
+              }`}
+            >
+              <span>🪶 Poetry &amp; Verses</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-white/10">
+                {poetryCount}
+              </span>
+            </button>
+          </div>
+
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
             {/* Search Input */}
             <div className="relative flex-1">
@@ -388,7 +449,7 @@ export default function GalleryClient({ currentUser }) {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by title, pen name, or theme..."
+                placeholder="Search manuscripts by title, pen name, or theme..."
                 className="w-full bg-white border border-sage/20 rounded-xl py-2 pl-9 pr-4 text-xs font-medium text-ink placeholder-ink/35 focus:outline-none focus:border-burgundy shadow-sm"
               />
               {searchQuery && (
@@ -403,61 +464,63 @@ export default function GalleryClient({ currentUser }) {
 
             {/* Quick Count Badge */}
             <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono text-ink/50 bg-white/70 border border-sage/15 px-3 py-2 rounded-xl">
-              <span>{submissions.length} Works Unlocked</span>
+              <span>{filteredSubmissions.length} Works in View</span>
             </div>
           </div>
 
-          {/* Genre Scrollable Filter Bar */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none">
-            {GENRES.map((g) => {
-              const active = selectedGenre === g;
-              return (
-                <button
-                  key={g}
-                  onClick={() => setSelectedGenre(g)}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                    active
-                      ? 'bg-burgundy text-cream shadow-sm'
-                      : 'bg-white text-ink/65 border border-sage/15 hover:border-burgundy/30'
-                  }`}
-                >
-                  {g}
-                </button>
-              );
-            })}
-          </div>
+          {/* Genre Scrollable Filter Bar (hidden if poetry tab active since poetry is single genre) */}
+          {activeCategory !== 'poetry' && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none">
+              {GENRES.filter(g => activeCategory === 'all' || g !== 'Poetry').map((g) => {
+                const active = selectedGenre === g;
+                return (
+                  <button
+                    key={g}
+                    onClick={() => setSelectedGenre(g)}
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                      active
+                        ? 'bg-burgundy text-cream shadow-sm'
+                        : 'bg-white text-ink/65 border border-sage/15 hover:border-burgundy/30'
+                    }`}
+                  >
+                    {g}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Gallery Feed Grid */}
+        {/* Gallery Feed: 3-Column Luxury Dust-Jacket Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white/50 border border-sage/15 rounded-2xl p-5 h-48 animate-pulse" />
+              <div key={i} className="bg-white/50 border border-sage/15 rounded-2xl p-5 h-64 animate-pulse" />
             ))}
           </div>
-        ) : submissions.length === 0 ? (
+        ) : filteredSubmissions.length === 0 ? (
           <div className="py-16 text-center bg-white/40 border border-dashed border-sage/30 rounded-2xl max-w-lg mx-auto p-6 space-y-3">
             <BookOpen className="opacity-20 mx-auto text-burgundy" size={40} />
             <div className="space-y-1">
               <h3 className="font-display font-bold text-lg text-burgundy">The Salon is Quiet</h3>
               <p className="text-xs text-ink/60 font-serif leading-relaxed">
-                {searchQuery || selectedGenre !== 'All'
-                  ? 'No unlocked manuscripts match your search filters. Try clearing your search.'
+                {searchQuery || selectedGenre !== 'All' || activeCategory !== 'all'
+                  ? 'No unlocked manuscripts match your active filters. Try clearing your filters.'
                   : 'Be the first to submit a manuscript to this weekly prompt cycle and grace the gallery!'}
               </p>
             </div>
-            {(searchQuery || selectedGenre !== 'All') && (
+            {(searchQuery || selectedGenre !== 'All' || activeCategory !== 'all') && (
               <button
-                onClick={() => { setSelectedGenre('All'); setSearchQuery(''); }}
+                onClick={() => { setSelectedGenre('All'); setSearchQuery(''); setActiveCategory('all'); }}
                 className="text-xs font-bold text-burgundy underline uppercase tracking-wider cursor-pointer"
               >
-                Reset Filters
+                Reset All Filters
               </button>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {submissions.map((sub) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {filteredSubmissions.map((sub) => {
               const isLiked = likeOverrides[sub.id]?.userLiked !== undefined 
                 ? likeOverrides[sub.id].userLiked 
                 : sub.userLiked;
@@ -465,73 +528,116 @@ export default function GalleryClient({ currentUser }) {
                 ? likeOverrides[sub.id].likeCount 
                 : sub.likeCount;
 
+              const isPoem = (sub.genre || '').toLowerCase().includes('poem') || (sub.genre || '').toLowerCase() === 'poetry';
+
               return (
                 <motion.div
                   key={sub.id}
                   layout
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -3 }}
+                  whileHover={{ y: -5 }}
                   onClick={() => setSelectedPiece(sub)}
-                  className="bg-white border border-sage/15 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3 cursor-pointer group relative overflow-hidden"
+                  className={`rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer group relative overflow-hidden border-2 ${
+                    isPoem
+                      ? 'bg-gradient-to-b from-[#18050c] via-[#100307] to-[#080103] border-[#F2A98A]/35 text-cream border-l-4 border-l-[#F2A98A]'
+                      : 'bg-gradient-to-b from-[#FFFDF9] via-[#FAF6EE] to-[#F3EDE2] border-[#C5A059]/35 text-[#20070e] border-l-4 border-l-[#c96a42]'
+                  } p-5 sm:p-6 space-y-4`}
                 >
-                  <div className="space-y-2">
-                    {/* Header: Genre & Badge */}
+                  {/* Subtle Book Spine Texture Glow */}
+                  <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl pointer-events-none opacity-20 ${
+                    isPoem ? 'bg-[#F2A98A]' : 'bg-[#c96a42]'
+                  }`} />
+
+                  <div className="space-y-3 relative z-10">
+                    {/* Header: Format Badge & Laurel */}
                     <div className="flex justify-between items-center gap-2">
-                      <span className="bg-burgundy/5 text-burgundy text-[8px] font-bold px-2 py-0.5 rounded-full border border-burgundy/10 uppercase tracking-widest">
-                        {sub.genre}
-                      </span>
-                      {sub.hasLaurel && (
-                        <span className="text-accent text-[8px] font-bold flex items-center gap-1 bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20">
-                          <Award size={9} /> Laureled
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[9px] font-mono font-bold px-2.5 py-1 rounded-full uppercase tracking-widest flex items-center gap-1 border ${
+                          isPoem 
+                            ? 'bg-[#F2A98A]/15 text-[#F2A98A] border-[#F2A98A]/30' 
+                            : 'bg-burgundy/10 text-burgundy border-burgundy/20'
+                        }`}>
+                          <span>{isPoem ? '🪶' : '📖'}</span>
+                          <span>{sub.genre || 'Prose'}</span>
                         </span>
-                      )}
+
+                        {sub.hasLaurel && (
+                          <span className="text-[#C5A059] text-[9px] font-bold flex items-center gap-1 bg-[#C5A059]/15 px-2 py-0.5 rounded-full border border-[#C5A059]/30">
+                            <Award size={10} /> Laureled
+                          </span>
+                        )}
+                      </div>
+
+                      <span className={`text-[10px] font-mono uppercase tracking-wider ${
+                        isPoem ? 'text-cream/50' : 'text-ink/40'
+                      }`}>
+                        Folio #{sub.id}
+                      </span>
                     </div>
 
-                    {/* Title & Author Pen Name */}
-                    <div>
-                      <h3 className="font-display font-extrabold text-base sm:text-lg text-burgundy group-hover:text-accent transition-colors line-clamp-1">
+                    {/* Book Dust-Jacket Typography: Title & Author Pen Name */}
+                    <div className="space-y-1">
+                      <h3 className={`font-serif font-bold text-lg sm:text-xl leading-snug line-clamp-2 transition-colors ${
+                        isPoem
+                          ? 'text-cream group-hover:text-[#F2A98A]'
+                          : 'text-[#20070e] group-hover:text-[#c96a42]'
+                      }`}>
                         {sub.title}
                       </h3>
-                      <p className="text-[11px] text-ink/60 font-serif italic mt-0.5">
-                        by <span className="font-bold text-ink/80 not-italic">{sub.displayName}</span>
+                      <p className={`text-xs font-serif italic ${
+                        isPoem ? 'text-[#F2A98A]/90' : 'text-[#c96a42] font-semibold'
+                      }`}>
+                        by <span className="not-italic font-bold">{sub.displayName || 'Anonymous Scribe'}</span>
                       </p>
                     </div>
 
-                    {/* Teaser Logline */}
-                    <p className="text-xs text-ink/75 font-serif leading-relaxed line-clamp-2 italic">
-                      &ldquo;{sub.logline}&rdquo;
-                    </p>
+                    {/* Manuscript Teaser Inset Box */}
+                    <div className={`p-3 rounded-xl border font-serif text-xs leading-relaxed italic line-clamp-3 ${
+                      isPoem
+                        ? 'bg-black/40 border-white/10 text-cream/80'
+                        : 'bg-[#FFFDF9]/90 border-[#20070e]/10 text-[#20070e]/85 shadow-inner'
+                    }`}>
+                      &ldquo;{sub.logline || sub.excerpt || 'Read the full manuscript in the open salon...'}&rdquo;
+                    </div>
                   </div>
 
                   {/* Footer Action Strip */}
-                  <div className="border-t border-sage/10 pt-2.5 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
+                  <div className={`border-t pt-3 flex items-center justify-between relative z-10 ${
+                    isPoem ? 'border-white/10' : 'border-[#20070e]/10'
+                  }`}>
+                    <div className="flex items-center gap-3">
                       {/* Leaf a Like Button */}
                       <button
                         onClick={(e) => handleToggleLike(sub, e)}
-                        className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg transition-all cursor-pointer ${
+                        className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                           isLiked
-                            ? 'bg-[#c96a42]/15 text-[#c96a42]'
-                            : 'text-ink/45 hover:text-[#c96a42] hover:bg-sage/10'
+                            ? 'bg-[#c96a42] text-cream shadow-sm'
+                            : isPoem
+                              ? 'bg-white/5 hover:bg-white/10 text-cream/75 hover:text-[#F2A98A]'
+                              : 'bg-sage/15 hover:bg-[#c96a42]/15 text-ink/75 hover:text-[#c96a42]'
                         }`}
-                        title="Leaf a Like"
+                        title="Leaf a Like 🍃"
                       >
                         <span className={`text-xs ${isLiked ? 'scale-110' : ''}`}>🍃</span>
                         <span>{likeCount}</span>
                       </button>
 
                       {/* Comment Count */}
-                      <div className="inline-flex items-center gap-1 text-[11px] text-ink/40 font-medium">
-                        <MessageSquare size={12} />
-                        <span>{sub.commentCount}</span>
+                      <div className={`inline-flex items-center gap-1 text-xs font-mono ${
+                        isPoem ? 'text-cream/60' : 'text-ink/50'
+                      }`}>
+                        <MessageSquare size={13} />
+                        <span>{sub.commentCount || 0}</span>
                       </div>
                     </div>
 
                     {/* Read CTA */}
-                    <span className="text-[10px] font-bold text-burgundy group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 uppercase tracking-wider">
-                      <span>Read</span>
-                      <ChevronRight size={13} />
+                    <span className={`text-[11px] font-bold uppercase tracking-wider group-hover:translate-x-1 transition-transform flex items-center gap-1 ${
+                      isPoem ? 'text-[#F2A98A]' : 'text-burgundy'
+                    }`}>
+                      <span>{isPoem ? 'Read Verse' : 'Read Folio'}</span>
+                      <ChevronRight size={14} />
                     </span>
                   </div>
                 </motion.div>

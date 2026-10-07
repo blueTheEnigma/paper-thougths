@@ -59,13 +59,20 @@ export default function ConvinceMeClient({ currentUser }) {
   // Local Pledge Overrides
   const [pledgeOverrides, setPledgeOverrides] = useState({});
 
+  // Leaf Tipping State
+  const [tippingPitch, setTippingPitch] = useState(null);
+  const [tipAmount, setTipAmount] = useState(3);
+  const [submittingTip, setSubmittingTip] = useState(false);
+  const [tipError, setTipError] = useState(null);
+  const [userLeavesBalance, setUserLeavesBalance] = useState(currentUser?.spendableLeaves || 0);
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
   // Lock Body Scroll when any Modal is open
   useEffect(() => {
-    const isAnyModalOpen = showCreateModal || selectedPitchForDetail;
+    const isAnyModalOpen = showCreateModal || selectedPitchForDetail || tippingPitch;
     if (isAnyModalOpen) {
       const originalOverflow = document.body.style.overflow;
       const originalPaddingRight = document.body.style.paddingRight;
@@ -81,7 +88,7 @@ export default function ConvinceMeClient({ currentUser }) {
         document.body.style.paddingRight = originalPaddingRight;
       };
     }
-  }, [showCreateModal, selectedPitchForDetail]);
+  }, [showCreateModal, selectedPitchForDetail, tippingPitch]);
 
   // Fetch Pitches
   const fetchPitches = useCallback(async () => {
@@ -127,31 +134,58 @@ export default function ConvinceMeClient({ currentUser }) {
     }
   }, [selectedPitchForDetail]);
 
-  // Handle Toggle Pledge ("I'm Convinced!" -> TBR)
-  const handleTogglePledge = async (pitch, e) => {
+  // Handle 2-Way Vote ("Convinced" vs "Confused")
+  const handleVote = async (pitch, voteType, e) => {
     if (e && e.stopPropagation) e.stopPropagation();
     if (!currentUser) {
-      alert('Please sign in to pledge to read books and add them to your TBR shelf!');
+      alert('Please sign in to vote on pitches and add convinced books to your TBR shelf!');
       return;
     }
 
-    const currentPledged = pledgeOverrides[pitch.id]?.userPledged !== undefined 
-      ? pledgeOverrides[pitch.id].userPledged 
-      : pitch.userPledged;
-    const currentCount = pledgeOverrides[pitch.id]?.pledgeCount !== undefined 
-      ? pledgeOverrides[pitch.id].pledgeCount 
-      : pitch.pledgeCount;
+    const currentVote = pledgeOverrides[pitch.id]?.userVote !== undefined 
+      ? pledgeOverrides[pitch.id].userVote 
+      : (pitch.userVote || (pitch.userPledged ? 'convinced' : null));
 
-    const nextPledged = !currentPledged;
-    const nextCount = nextPledged ? currentCount + 1 : Math.max(0, currentCount - 1);
+    const currentConvinced = pledgeOverrides[pitch.id]?.convincedCount !== undefined
+      ? pledgeOverrides[pitch.id].convincedCount
+      : (pitch.convincedCount !== undefined ? pitch.convincedCount : pitch.pledgeCount || 0);
+
+    const currentConfused = pledgeOverrides[pitch.id]?.confusedCount !== undefined
+      ? pledgeOverrides[pitch.id].confusedCount
+      : (pitch.confusedCount || 0);
+
+    let nextVote = null;
+    let nextConvinced = currentConvinced;
+    let nextConfused = currentConfused;
+
+    if (currentVote === voteType) {
+      // Toggle off
+      nextVote = null;
+      if (voteType === 'convinced') nextConvinced = Math.max(0, currentConvinced - 1);
+      if (voteType === 'confused') nextConfused = Math.max(0, currentConfused - 1);
+    } else {
+      // Switching or first vote
+      if (currentVote === 'convinced') nextConvinced = Math.max(0, currentConvinced - 1);
+      if (currentVote === 'confused') nextConfused = Math.max(0, currentConfused - 1);
+
+      nextVote = voteType;
+      if (voteType === 'convinced') nextConvinced = nextConvinced + 1;
+      if (voteType === 'confused') nextConfused = nextConfused + 1;
+    }
 
     // Optimistic UI update
     setPledgeOverrides(prev => ({
       ...prev,
-      [pitch.id]: { userPledged: nextPledged, pledgeCount: nextCount }
+      [pitch.id]: {
+        userVote: nextVote,
+        userPledged: nextVote === 'convinced',
+        convincedCount: nextConvinced,
+        confusedCount: nextConfused,
+        pledgeCount: nextConvinced
+      }
     }));
 
-    if (nextPledged) {
+    if (nextVote === 'convinced') {
       confetti({
         particleCount: 40,
         spread: 60,
@@ -161,20 +195,84 @@ export default function ConvinceMeClient({ currentUser }) {
     }
 
     try {
-      const res = await fetch(`/api/pitches/${pitch.id}/pledge`, { method: 'POST' });
+      const res = await fetch(`/api/pitches/${pitch.id}/pledge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voteType })
+      });
       const data = await res.json();
       if (data.success) {
         setPledgeOverrides(prev => ({
           ...prev,
-          [pitch.id]: { userPledged: data.userPledged, pledgeCount: data.pledgeCount }
+          [pitch.id]: {
+            userVote: data.userVote,
+            userPledged: data.userPledged,
+            convincedCount: data.convincedCount,
+            confusedCount: data.confusedCount,
+            pledgeCount: data.pledgeCount
+          }
         }));
       }
     } catch (err) {
-      console.error('Pledge toggle failed:', err);
+      console.error('Vote failed:', err);
+      // Revert optimistic update
       setPledgeOverrides(prev => ({
         ...prev,
-        [pitch.id]: { userPledged: currentPledged, pledgeCount: currentCount }
+        [pitch.id]: {
+          userVote: currentVote,
+          userPledged: currentVote === 'convinced',
+          convincedCount: currentConvinced,
+          confusedCount: currentConfused,
+          pledgeCount: currentConvinced
+        }
       }));
+    }
+  };
+
+  // Handle Tip Leaves Submit
+  const handleTipLeaves = async (e) => {
+    e.preventDefault();
+    if (!currentUser) {
+      alert('Please sign in to gift leaves.');
+      return;
+    }
+    if (!tippingPitch) return;
+
+    if (tipAmount <= 0) {
+      setTipError('Please enter at least 1 leaf to gift.');
+      return;
+    }
+    if (tipAmount > userLeavesBalance) {
+      setTipError(`You only have ${userLeavesBalance} spendable leaves.`);
+      return;
+    }
+
+    setSubmittingTip(true);
+    setTipError(null);
+
+    try {
+      const res = await fetch(`/api/pitches/${tippingPitch.id}/tip`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: tipAmount })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUserLeavesBalance(data.newBalance);
+        confetti({
+          particleCount: 50,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#22c55e', '#c96a42', '#F2A98A']
+        });
+        setTippingPitch(null);
+      } else {
+        setTipError(data.error || 'Failed to gift leaves.');
+      }
+    } catch (err) {
+      setTipError(err.message || 'Network error gifting leaves.');
+    } finally {
+      setSubmittingTip(false);
     }
   };
 
@@ -624,10 +722,19 @@ export default function ConvinceMeClient({ currentUser }) {
                         )}
                       </div>
 
-                      <span className="text-[10px] text-accent font-bold font-mono flex items-center gap-1">
-                        <span>🍃</span>
-                        <span>{pledgeCount} Convinced</span>
-                      </span>
+                      {/* 2-Way Vote Counters */}
+                      <div className="flex items-center gap-2 text-[10px] font-mono font-bold">
+                        <span className="text-[#c96a42] flex items-center gap-0.5" title="Convinced Readers">
+                          <span>🍃</span>
+                          <span>{pledgeOverrides[pitch.id]?.convincedCount ?? pitch.convincedCount ?? pitch.pledgeCount ?? 0}</span>
+                        </span>
+                        {(pledgeOverrides[pitch.id]?.confusedCount ?? pitch.confusedCount ?? 0) > 0 && (
+                          <span className="text-burgundy/70 flex items-center gap-0.5" title="Confused / Doubting Readers">
+                            <span>🤔</span>
+                            <span>{pledgeOverrides[pitch.id]?.confusedCount ?? pitch.confusedCount}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Book Title & Author */}
@@ -657,23 +764,54 @@ export default function ConvinceMeClient({ currentUser }) {
                   </div>
 
                   {/* Footer Action Strip */}
-                  <div className="border-t border-sage/10 pt-2.5 flex items-center justify-between">
-                    {/* Pledge Button */}
-                    <button
-                      onClick={(e) => handleTogglePledge(pitch, e)}
-                      className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                        isPledged
-                          ? 'bg-[#c96a42] text-cream shadow-sm'
-                          : 'bg-sage/10 hover:bg-[#c96a42]/15 text-ink/75 hover:text-[#c96a42]'
-                      }`}
-                      title={isPledged ? "Pledged to Read (in your TBR)" : "Pledge to Read (Add to TBR)"}
-                    >
-                      <span className={`text-xs ${isPledged ? 'scale-110' : ''}`}>🍃</span>
-                      <span>{isPledged ? 'Convinced! (In TBR)' : 'I’m Convinced!'}</span>
-                    </button>
+                  <div className="border-t border-sage/10 pt-2.5 flex items-center justify-between gap-2 flex-wrap">
+                    {/* 2-Way Vote Buttons & Tip */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {/* Convinced Button */}
+                      <button
+                        onClick={(e) => handleVote(pitch, 'convinced', e)}
+                        className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+                          (pledgeOverrides[pitch.id]?.userVote ?? (pitch.userVote || (pitch.userPledged ? 'convinced' : null))) === 'convinced'
+                            ? 'bg-[#c96a42] text-cream shadow-sm'
+                            : 'bg-sage/10 hover:bg-[#c96a42]/15 text-ink/75 hover:text-[#c96a42]'
+                        }`}
+                        title="Convinced! Adds to your Personal TBR Shelf"
+                      >
+                        <span className="text-xs">🍃</span>
+                        <span>Convinced</span>
+                      </button>
+
+                      {/* Confused Button */}
+                      <button
+                        onClick={(e) => handleVote(pitch, 'confused', e)}
+                        className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+                          (pledgeOverrides[pitch.id]?.userVote ?? (pitch.userVote || (pitch.userPledged ? 'convinced' : null))) === 'confused'
+                            ? 'bg-[#5c1a2e] text-cream shadow-sm'
+                            : 'bg-sage/10 hover:bg-[#5c1a2e]/15 text-ink/70 hover:text-[#5c1a2e]'
+                        }`}
+                        title="Confused? Friendly debate signal to pitch harder!"
+                      >
+                        <span className="text-xs">🤔</span>
+                        <span>Confused</span>
+                      </button>
+
+                      {/* Tip Leaves Button */}
+                      <button
+                        onClick={(e) => {
+                          if (e && e.stopPropagation) e.stopPropagation();
+                          setTippingPitch(pitch);
+                          setTipAmount(3);
+                          setTipError(null);
+                        }}
+                        className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 border border-amber-500/25 transition-all cursor-pointer"
+                        title="Tip spendable leaves to support this pitcher"
+                      >
+                        <span>✨ Tip</span>
+                      </button>
+                    </div>
 
                     {/* Comments Count & Read */}
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2">
                       <div className="inline-flex items-center gap-1 text-[11px] text-ink/40 font-medium">
                         <MessageSquare size={12} />
                         <span>{pitch.commentCount}</span>
@@ -968,29 +1106,58 @@ export default function ConvinceMeClient({ currentUser }) {
                     </p>
                   </div>
 
-                  {/* Action Bar: Pledge & Broadsheet */}
+                  {/* Action Bar: 2-Way Vote, Tip & Broadsheet */}
                   <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+                    {/* Convinced Button */}
                     <button
-                      onClick={() => handleTogglePledge(selectedPitchForDetail)}
-                      className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
-                        pledgeOverrides[selectedPitchForDetail.id]?.userPledged ?? selectedPitchForDetail.userPledged
+                      onClick={() => handleVote(selectedPitchForDetail, 'convinced')}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
+                        (pledgeOverrides[selectedPitchForDetail.id]?.userVote ?? (selectedPitchForDetail.userVote || (selectedPitchForDetail.userPledged ? 'convinced' : null))) === 'convinced'
                           ? 'bg-[#c96a42] text-cream'
-                          : 'bg-white text-ink/75 border border-sage/25 hover:border-burgundy'
+                          : 'bg-white text-ink/75 border border-sage/25 hover:border-[#c96a42]'
                       }`}
                     >
                       <span>🍃</span>
                       <span>
-                        {pledgeOverrides[selectedPitchForDetail.id]?.userPledged ?? selectedPitchForDetail.userPledged
-                          ? 'Convinced! (Added to TBR)'
-                          : 'I’m Convinced! (Add to TBR)'} (
-                        {pledgeOverrides[selectedPitchForDetail.id]?.pledgeCount ?? selectedPitchForDetail.pledgeCount}
+                        Convinced (
+                        {pledgeOverrides[selectedPitchForDetail.id]?.convincedCount ?? selectedPitchForDetail.convincedCount ?? selectedPitchForDetail.pledgeCount ?? 0}
                         )
                       </span>
                     </button>
 
+                    {/* Confused Button */}
+                    <button
+                      onClick={() => handleVote(selectedPitchForDetail, 'confused')}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
+                        (pledgeOverrides[selectedPitchForDetail.id]?.userVote ?? (selectedPitchForDetail.userVote || (selectedPitchForDetail.userPledged ? 'convinced' : null))) === 'confused'
+                          ? 'bg-[#5c1a2e] text-cream'
+                          : 'bg-white text-ink/75 border border-sage/25 hover:border-[#5c1a2e]'
+                      }`}
+                    >
+                      <span>🤔</span>
+                      <span>
+                        Confused (
+                        {pledgeOverrides[selectedPitchForDetail.id]?.confusedCount ?? selectedPitchForDetail.confusedCount ?? 0}
+                        )
+                      </span>
+                    </button>
+
+                    {/* Tip Leaves Button */}
+                    <button
+                      onClick={() => {
+                        setTippingPitch(selectedPitchForDetail);
+                        setTipAmount(3);
+                        setTipError(null);
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-900 border border-amber-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                    >
+                      <span>✨</span>
+                      <span>Tip Leaves</span>
+                    </button>
+
                     <button
                       onClick={() => handleDownloadPitchCard(selectedPitchForDetail)}
-                      className="px-5 py-2.5 rounded-xl bg-burgundy hover:bg-ink text-cream text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                      className="px-4 py-2.5 rounded-xl bg-burgundy hover:bg-ink text-cream text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
                     >
                       <Download size={13} />
                       <span>Download Pitch Card</span>
@@ -1075,6 +1242,135 @@ export default function ConvinceMeClient({ currentUser }) {
                     )}
                   </div>
 
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* ── LEAF TIPPING MODAL ── */}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {tippingPitch && (
+            <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 overflow-hidden">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-[#0c0205]/80 backdrop-blur-md cursor-pointer"
+                onClick={() => !submittingTip && setTippingPitch(null)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 25, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.98 }}
+                transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+                className="relative w-full max-w-md bg-[#FAF7F0] border-2 border-[#C5A059]/40 rounded-3xl shadow-2xl p-6 sm:p-7 text-ink z-10 space-y-5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between border-b border-[#EADFC9] pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-sm">
+                      🍃
+                    </span>
+                    <div>
+                      <h3 className="font-display font-extrabold text-base text-burgundy">
+                        Tip Paper Leaves
+                      </h3>
+                      <p className="text-[10px] font-mono text-ink/50 uppercase tracking-wider">
+                        Support Clubhouse Pitcher
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setTippingPitch(null)}
+                    disabled={submittingTip}
+                    className="w-8 h-8 rounded-full bg-ink/5 hover:bg-ink/10 text-ink/60 flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+
+                <div className="bg-white/80 border border-sage/15 p-4 rounded-2xl space-y-2 text-center">
+                  <span className="text-[9px] font-mono uppercase text-accent font-bold block">
+                    Gifting Leaves for Pitch:
+                  </span>
+                  <h4 className="font-serif font-bold text-base text-burgundy line-clamp-1">
+                    &ldquo;{tippingPitch.bookTitle}&rdquo;
+                  </h4>
+                  <p className="text-xs text-ink/65 italic font-serif">
+                    by {tippingPitch.bookAuthor} • Pitched by <span className="font-bold text-ink/85">{tippingPitch.authorName}</span>
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-ink/75">Your Spendable Balance:</span>
+                    <span className="font-mono font-bold text-[#c96a42] bg-[#c96a42]/10 px-2 py-0.5 rounded-full border border-[#c96a42]/20">
+                      {userLeavesBalance} Leaves 🍃
+                    </span>
+                  </div>
+
+                  {/* Preset Amount Pills */}
+                  <div className="grid grid-cols-4 gap-2">
+                    {[1, 3, 5, 10].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setTipAmount(preset)}
+                        className={`py-2 rounded-xl text-xs font-bold font-mono transition-all border cursor-pointer ${
+                          tipAmount === preset
+                            ? 'bg-gradient-to-r from-[#5c1a2e] to-[#c96a42] text-cream border-[#F2A98A]/40 shadow-sm'
+                            : 'bg-white hover:bg-cream text-ink/70 border-sage/20'
+                        }`}
+                      >
+                        +{preset} 🍃
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Input */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-ink/60 uppercase tracking-wider block">
+                      Custom Leaf Amount:
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={userLeavesBalance}
+                      value={tipAmount}
+                      onChange={(e) => setTipAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-full bg-white border border-sage/25 rounded-xl py-2 px-3 text-sm font-mono font-bold text-ink focus:outline-none focus:border-burgundy"
+                    />
+                  </div>
+
+                  {tipError && (
+                    <p className="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200">
+                      {tipError}
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setTippingPitch(null)}
+                    disabled={submittingTip}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-ink/60 hover:text-ink cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleTipLeaves}
+                    disabled={submittingTip || userLeavesBalance < tipAmount}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#5c1a2e] to-[#c96a42] hover:from-[#7a2040] hover:to-[#e07a5f] text-cream text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-40 shadow-md cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>🍃</span>
+                    <span>{submittingTip ? 'Transferring Leaves...' : `Gift ${tipAmount} Leaves`}</span>
+                  </button>
                 </div>
               </motion.div>
             </div>

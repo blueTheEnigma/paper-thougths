@@ -35,9 +35,12 @@ export async function GET(request) {
         u.full_name as "authorName",
         u.avatar_url as "authorAvatar",
         u.reader_archetype as "authorArchetype",
-        (SELECT COUNT(*) FROM book_pitch_pledges bpp WHERE bpp.pitch_id = p.id)::int as "pledgeCount",
+        (SELECT COUNT(*) FROM book_pitch_pledges bpp WHERE bpp.pitch_id = p.id AND bpp.reading_status != 'confused')::int as "convincedCount",
+        (SELECT COUNT(*) FROM book_pitch_pledges bpp WHERE bpp.pitch_id = p.id AND bpp.reading_status = 'confused')::int as "confusedCount",
+        (SELECT COUNT(*) FROM book_pitch_pledges bpp WHERE bpp.pitch_id = p.id AND bpp.reading_status != 'confused')::int as "pledgeCount",
         (SELECT COUNT(*) FROM book_pitch_notes bpn WHERE bpn.pitch_id = p.id)::int as "commentCount",
-        EXISTS(SELECT 1 FROM book_pitch_pledges bpp WHERE bpp.pitch_id = p.id AND bpp.user_id = $1) as "userPledged"
+        (SELECT CASE WHEN bpp.reading_status = 'confused' THEN 'confused' ELSE 'convinced' END FROM book_pitch_pledges bpp WHERE bpp.pitch_id = p.id AND bpp.user_id = $1 LIMIT 1) as "userVote",
+        EXISTS(SELECT 1 FROM book_pitch_pledges bpp WHERE bpp.pitch_id = p.id AND bpp.user_id = $1 AND bpp.reading_status != 'confused') as "userPledged"
       FROM book_pitches p
       JOIN users u ON u.id = p.user_id
       WHERE p.status = 'active'
