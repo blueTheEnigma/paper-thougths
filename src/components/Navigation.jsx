@@ -174,12 +174,6 @@ export default function Navigation() {
                   <span>Admin</span>
                 </Link>
               )}
-              {profile?.isCrewMember && (
-                <Link href="/round-table" className="hidden md:flex items-center gap-1.5 bg-burgundy/10 text-burgundy hover:bg-burgundy/20 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border border-burgundy/20">
-                  <BookOpen size={14} />
-                  <span>Crew CRM</span>
-                </Link>
-              )}
               <Link 
                 href="/dashboard" 
                 className={`hidden sm:inline-block font-sans font-bold text-xs uppercase tracking-wider transition-colors hover:text-burgundy ${
@@ -226,18 +220,6 @@ export default function Navigation() {
               </span>
             </Link>
           );
-        })}
-        {isLoaded && isSignedIn && profile?.isCrewMember && (
-          <Link 
-            href="/round-table" 
-            className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all ${
-              isActive('/round-table') ? "text-burgundy scale-105 font-extrabold" : "text-sage"
-            }`}
-          >
-            <BookOpen size={18} className={isActive('/round-table') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
-            <span className="text-[9px] font-sans font-bold mt-0.5 tracking-tight truncate max-w-full text-center">CRM</span>
-          </Link>
-        )}
         {isLoaded && isSignedIn && isAdmin && (
           <Link 
             href="/admin" 
