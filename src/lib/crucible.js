@@ -2,7 +2,7 @@ import { Database } from './db.js';
 import { getThreeTierLeaderboard } from './leaderboard.js';
 import { sendPushNotification } from './pushNotifications.js';
 import { sendEmail } from './email.js';
-import { getMonthlyAuditStrikeEmail, getEvictedMonthlyEmbersEmail } from './emailTemplates.js';
+import { getMonthlyAuditStrikeEmail, getEvictedMonthlyEmbersEmail, getSilverBulletShieldEmail } from './emailTemplates.js';
 
 /**
  * Paper Thoughts Administrative Crucible & Eviction Service
@@ -316,6 +316,7 @@ export async function runMonthlyGovernanceAudit() {
     SELECT u.id, u.full_name, u.email,
            COALESCE(u.probation_strikes_this_year, 0) as probation_strikes_this_year,
            COALESCE(u.consecutive_botm_misses, 0) as consecutive_botm_misses,
+           COALESCE(u.silver_bullets, 0) as silver_bullets,
            COALESCE(u.unsubscribed_from_reminders, false) as unsubscribed_from_reminders
     FROM users u
     WHERE u.membership_status != 'evicted'
@@ -331,11 +332,64 @@ export async function runMonthlyGovernanceAudit() {
   `);
 
   let strikesAdded = 0;
+  let silverBulletsConsumed = 0;
   let notificationsSent = 0;
   let emailsSent = 0;
   let autoEvicted = 0;
 
   for (const user of inactiveUsers) {
+    // AUTOMATED SILVER BULLET SHIELD:
+    // If member holds a Silver Bullet, consume it to absorb the strike automatically
+    if (parseInt(user.silver_bullets, 10) > 0) {
+      const remainingBullets = parseInt(user.silver_bullets, 10) - 1;
+      await Database.query(`
+        UPDATE users
+        SET silver_bullets = $1
+        WHERE id = $2
+      `, [remainingBullets, user.id]);
+
+      silverBulletsConsumed++;
+
+      // In-app notification
+      await Database.query(`
+        INSERT INTO user_notifications (user_id, title, message, type)
+        VALUES ($1, 'Silver Bullet Shield Activated 🛡️', 'Your Silver Bullet automatically absorbed an inactivity strike this cycle! Remaining bullets: ' || $2 || '.', 'silver_bullet')
+      `, [user.id, remainingBullets]);
+
+      // Web Push Alert
+      try {
+        await sendPushNotification(user.id, {
+          title: 'Silver Bullet Shield Activated 🛡️',
+          body: `Your Silver Bullet automatically absorbed an inactivity strike this month. Bullets remaining: ${remainingBullets}.`,
+          link: '/dashboard',
+          tag: 'pt-silver-bullet'
+        });
+        notificationsSent++;
+      } catch (pushErr) {
+        console.warn(`Silver bullet push failed for user ${user.id}:`, pushErr.message);
+      }
+
+      // Transactional Email Alert
+      if (user.email && !user.unsubscribed_from_reminders) {
+        try {
+          const { subject, html } = getSilverBulletShieldEmail({
+            userName: user.full_name,
+            remainingBullets
+          });
+          await sendEmail({
+            to: user.email,
+            subject,
+            html
+          });
+          emailsSent++;
+        } catch (emailErr) {
+          console.warn(`Silver bullet email failed for user ${user.id}:`, emailErr.message);
+        }
+      }
+
+      continue; // Skip adding strike!
+    }
+
     const newStrikes = parseInt(user.probation_strikes_this_year, 10) + 1;
     let newStatus = 'active';
 
@@ -458,6 +512,7 @@ export async function runMonthlyGovernanceAudit() {
     auditedAt: new Date().toISOString(),
     inactiveIdentified: inactiveUsers.length,
     strikesAdded,
+    silverBulletsConsumed,
     autoEvicted,
     notificationsSent,
     emailsSent,

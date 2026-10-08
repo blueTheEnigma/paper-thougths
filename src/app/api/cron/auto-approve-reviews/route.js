@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
+import { sendPushNotification } from '@/lib/pushNotifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,6 +84,14 @@ export async function POST(request) {
             `Your critique on manuscript "${rev.submissionTitle || 'Submission'}" was automatically approved after 8 days. +10 Leaves awarded from the Clubhouse Treasury!`,
             '/dashboard'
           ]);
+
+          // Dispatch native Web Push alert to reviewer
+          sendPushNotification(rev.reviewer_id, {
+            title: 'Critique Auto-Approved! 🌟 (+10 Leaves)',
+            body: `Your critique on "${rev.submissionTitle || 'Submission'}" was auto-approved after 8 days. +10 Leaves awarded!`,
+            link: '/dashboard',
+            tag: 'pt-review-auto-approved'
+          }).catch(err => console.warn('Failed to send auto-approval push:', err.message));
         }
       });
 

@@ -331,3 +331,134 @@ export function getHelpfulCritiqueEarnedEmail({ reviewerName, manuscriptTitle, l
     })
   };
 }
+
+// 8. Automated Silver Bullet Shield Notice
+export function getSilverBulletShieldEmail({ userName, remainingBullets = 0 }) {
+  const firstName = getFirstName(userName);
+  const content = `
+    <p style="margin-top: 0;">Greetings <strong>${firstName}</strong>,</p>
+    <p>Following our monthly community audit, we noticed that you missed participating in last month's writing drops or book critiques.</p>
+    
+    <div style="background-color: #120308; color: #FAF7F2; padding: 18px; border-radius: 14px; margin: 20px 0; border: 1px solid rgba(242, 169, 138, 0.4); text-align: center;">
+      <div style="font-size: 11px; font-weight: bold; color: #F2A98A; text-transform: uppercase; letter-spacing: 1.5px;">Honor Shield Activated</div>
+      <div style="font-size: 20px; font-weight: bold; margin-top: 4px; color: #FAF7F2;">
+        🛡️ Silver Bullet Consumed
+      </div>
+      <div style="font-size: 12px; color: #F2A98A; margin-top: 4px;">
+        0 Strikes Added • ${remainingBullets} Silver Bullet(s) Remaining
+      </div>
+    </div>
+
+    <p>Because you earned a <strong>Silver Bullet</strong> through your dedication on the Annual Crucible, the Sanctuary has automatically shielded your standing. You received zero strikes this cycle.</p>
+    <p>Step back into the lines whenever you are ready. See you in the Village!</p>
+  `;
+
+  return {
+    subject: `🛡️ Silver Bullet Shield Activated: Inactivity Strike Absorbed | Paper Thoughts`,
+    html: renderBaseLayout({
+      title: `Silver Bullet Shield Activated`,
+      subtitle: `Your annual honor has protected your standing`,
+      contentHtml: content,
+      ctaText: `Step Into The Village`,
+      ctaUrl: `${BASE_URL}/village`
+    })
+  };
+}
+
+// 9. The Sanctuary Codex: Full Rules & Economy Guide
+export function getSanctuaryCodexAnnouncementEmail({ userName }) {
+  const firstName = getFirstName(userName);
+  const content = `
+    <p style="margin-top: 0;">Warm greetings, <strong>${firstName}</strong>,</p>
+    <p>Over the past weeks, the foundations of <strong>Paper Thoughts</strong> have been reforged into an immersive literary guild. Whether you are a founding scribe or freshly stepping across the threshold, our sanctuary is designed to honor your reading, sharpen your craft, and reward your dedication.</p>
+    
+    <div style="background-color: #330A17; color: #FAF7F2; padding: 20px; border-radius: 14px; margin: 24px 0; border: 1px solid rgba(242, 169, 138, 0.35); text-align: center;">
+      <div style="font-size: 11px; font-weight: bold; color: #F2A98A; text-transform: uppercase; letter-spacing: 2px;">THE SANCTUARY CODEX</div>
+      <div style="font-size: 21px; font-weight: bold; margin-top: 4px; color: #FAF7F2; font-family: 'Georgia', serif;">
+        The Six Sacred Pillars of Our Fellowship
+      </div>
+      <div style="font-size: 12px; color: rgba(250, 247, 242, 0.7); margin-top: 4px;">
+        Everything you need to know about our economy, standings, and rewards
+      </div>
+    </div>
+
+    <!-- Pillar 1 -->
+    <div style="margin-bottom: 22px;">
+      <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
+        🍃 1. The Paper Leaves Economy (Read, Critique & Buy Books)
+      </div>
+      <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
+        Every Paper Leaf has real tangible value: <strong>1 Leaf = ₦10 at checkout</strong> to purchase physical hardcopies in our Bookstore. You earn <strong>+5 Leaves</strong> instantly on every genuine peer review, and an additional <strong>+10 Leaves</strong> funded from the Community Treasury whenever the author confirms your critique as helpful (or automatically after 8 days).
+      </p>
+    </div>
+
+    <!-- Pillar 2 -->
+    <div style="margin-bottom: 22px;">
+      <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
+        🏆 2. The 3-Tier Leaderboard & ₦18,000 Monthly Laurels
+      </div>
+      <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
+        Every month, nine outstanding scribes are crowned on our new 3-Tier Leaderboard across three distinct podiums: 
+        <strong>Fiction & Prose Top 3</strong> (₦2,000 each), 
+        <strong>Poetry & Verses Top 3</strong> (₦2,000 each), and 
+        <strong>Reviewers of the Month Top 3</strong> (₦2,000 each). 
+        Consistently drafting drops builds your weekly streak and earns permanent Laurel insignias.
+      </p>
+    </div>
+
+    <!-- Pillar 3 -->
+    <div style="margin-bottom: 22px;">
+      <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
+        ⚖️ 3. Sanctuary Standing & Inactivity Strikes
+      </div>
+      <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
+        To ensure our community remains vibrant, members are asked to participate in at least one writing drop or book critique every 30 days. Missing a month records a probation strike. If a member accumulates 3 strikes without grace, their seat is locked to preserve guild standards.
+      </p>
+    </div>
+
+    <!-- Pillar 4 -->
+    <div style="margin-bottom: 22px;">
+      <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
+        🎓 4. Academic & Exam Sabbatical Shield
+      </div>
+      <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
+        We know life and university exams demand focus. Any student or member undergoing exams, thesis defenses, or demanding transitions can activate a <strong>30-Day or 60-Day Sabbatical Shield</strong> directly in their dashboard settings once per calendar year. While active, all review quotas and strikes are paused.
+      </p>
+    </div>
+
+    <!-- Pillar 5 -->
+    <div style="margin-bottom: 22px;">
+      <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
+        🕯️ 5. The Returner’s Crossing (Preserved Wallets)
+      </div>
+      <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
+        If you are ever locked out due to inactivity, <strong>your leaves and milestone tokens are NEVER erased</strong>. They remain safely frozen in the sanctuary vault. When you are ready to rekindle your seat, simply walk <em>The Returner’s Crossing</em> to restore your active key.
+      </p>
+    </div>
+
+    <!-- Pillar 6 -->
+    <div style="margin-bottom: 20px;">
+      <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
+        🔔 6. Native PWA Lock-Screen Notifications
+      </div>
+      <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
+        No app store download is required. Simply visit your dashboard on mobile or desktop and tap the <strong>Bell Icon</strong> beside your profile to enable real-time lock-screen alerts for critique feedback, prompt drops, and book arrivals.
+      </p>
+    </div>
+
+    <p style="margin-top: 25px; border-top: 1px solid rgba(44, 26, 14, 0.1); padding-top: 15px;">
+      We live in the lines. May your pen stay sharp, your eyes stay curious, and your seat at the hearth stay warm!
+    </p>
+  `;
+
+  return {
+    subject: `📜 The Sanctuary Codex: New Community Rituals, Economy & Protections | Paper Thoughts`,
+    html: renderBaseLayout({
+      title: `The Sanctuary Codex`,
+      subtitle: `The newly reforged rules, economy, and protections of Paper Thoughts`,
+      contentHtml: content,
+      ctaText: `Explore Your Dashboard`,
+      ctaUrl: `${BASE_URL}/dashboard`
+    })
+  };
+}

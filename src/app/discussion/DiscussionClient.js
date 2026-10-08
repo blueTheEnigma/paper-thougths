@@ -8,31 +8,20 @@ import {
 import confetti from 'canvas-confetti';
 import PanguinAvatar from '@/components/PanguinAvatar';
 
-export default function DiscussionClient({ generalBotm, abujaBotm, initialStream }) {
-  const [activeStream, setActiveStream] = useState(initialStream || 'general');
+export default function DiscussionClient({ activeBook: propActiveBook, generalBotm, abujaBotm }) {
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
-  // Fallbacks for BOTM books if DB is empty
-  const fallbackGeneral = {
-    id: 1,
-    title: 'Skin of the Sea',
-    author: 'Natasha Bowen',
-    imageUrl: '/images/skin_of_the_sea.png',
-    teaser: `A story of sirens, Yoruba gods, and a choice that could change the world. Natasha Bowen's debut is a breathtaking fantasy set in a world where history and mythology collide.`
+  // Fallback for unified BOTM book if DB is empty
+  const fallbackBook = {
+    id: 17,
+    title: 'Red Rising',
+    author: 'Pierce Brown',
+    imageUrl: '/images/red_rising.jpg',
+    teaser: `“I would have lived in peace, but my enemies brought me war.”\n\nDarrow is a Red, a member of the lowest caste in the color-coded society of the future. Like his fellow Reds, he works all day beneath the surface of Mars, believing that his labor will one day make the planet livable for future generations.\n\nYet he spends his life willingly, knowing that his sacrifice will buy a better world for his children. But Darrow has been betrayed. Soon he discovers that humanity reached the surface generations ago—where vast cities and sprawling parks flourish under the rule of the decadent Gold caste.\n\nFueled by grief and a burning desire for justice, Darrow sacrifices everything to infiltrate the legendary Institute, a brutal proving ground where the dominant caste’s best and brightest vie for power. He will be forced to compete for his life and the very future of civilization among the best of his enemies… and he will stop at nothing to bring down his oppressors from within.`
   };
 
-  const fallbackAbuja = {
-    id: 2,
-    title: 'The Parlour Wife',
-    author: 'Foluso Agbaje',
-    imageUrl: '/images/the_parlour_wife.png',
-    teaser: `Set against the backdrop of colonial Nigeria, 'The Parlour Wife' is a gripping historical drama exploring duty, class, secrets, and a woman's defiance. Foluso Agbaje weaves a rich tapestry of domestic intrigue and social upheaval with breathtaking prose.`
-  };
-
-  const botmGeneral = generalBotm || fallbackGeneral;
-  const botmAbuja = abujaBotm || fallbackAbuja;
-  const activeBook = activeStream === 'general' ? botmGeneral : botmAbuja;
+  const activeBook = propActiveBook || generalBotm || fallbackBook;
 
   // Review states
   const [reviews, setReviews] = useState([]);
@@ -104,15 +93,14 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
     return new Date().getDate() <= 3;
   };
 
-  // Fetch suggestions for active stream and cycle
+  // Fetch suggestions for unified sanctuary stream and cycle
   const fetchSuggestions = useCallback(async () => {
     if (!activeBook?.id) return;
     setSuggestionsLoading(true);
     try {
-      const chapterParam = activeBook.chapterId !== undefined && activeBook.chapterId !== null ? activeBook.chapterId : 'null';
       const endpoint = isVotingPeriodActive()
-        ? `/api/book-of-the-month/votes?chapterId=${chapterParam}`
-        : `/api/book-of-the-month/suggestions?chapterId=${chapterParam}`;
+        ? `/api/book-of-the-month/votes?chapterId=null`
+        : `/api/book-of-the-month/suggestions?chapterId=null`;
       
       const res = await fetch(endpoint);
       const data = await res.json();
@@ -339,31 +327,13 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
           )}
         </div>
 
-        {/* Toggleable Edition Stream Selector */}
+        {/* Unified Sanctuary Flame Ribbon */}
         <div className="flex justify-center">
-          <div className="bg-[#FAF6F0] p-1 rounded-2xl border border-sage/15 flex shadow-inner gap-1">
-            <button
-              onClick={() => setActiveStream('general')}
-              className={`px-6 py-3 rounded-xl text-xs font-bold font-sans uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
-                activeStream === 'general'
-                  ? 'bg-burgundy text-cream shadow-md'
-                  : 'text-ink/60 hover:text-ink hover:bg-white/40'
-              }`}
-            >
-              <span>General Edition</span>
-              <span>🌍</span>
-            </button>
-            <button
-              onClick={() => setActiveStream('abuja')}
-              className={`px-6 py-3 rounded-xl text-xs font-bold font-sans uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
-                activeStream === 'abuja'
-                  ? 'bg-burgundy text-cream shadow-md'
-                  : 'text-ink/60 hover:text-ink hover:bg-white/40'
-              }`}
-            >
-              <span>Abuja Edition</span>
-              <span>📍</span>
-            </button>
+          <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#20070e] via-[#330A17] to-[#20070e] border border-[#c96a42]/40 shadow-sm text-xs font-serif text-[#FBF7EE]">
+            <span className="text-amber-400 text-sm">🔥</span>
+            <span className="font-bold tracking-wide">Unified Sanctuary Reading Lounge</span>
+            <span className="text-[#F2A98A]/60 hidden sm:inline">•</span>
+            <span className="text-[#F2A98A] text-[11px] hidden sm:inline">All Chapters United (Zaria, Kaduna, Abuja)</span>
           </div>
         </div>
 
@@ -374,32 +344,34 @@ export default function DiscussionClient({ generalBotm, abujaBotm, initialStream
           <div className="lg:col-span-5 space-y-6">
             
             {/* Book Detail Card */}
-            <div className="bg-[#FAF6F0] rounded-3xl p-6 sm:p-8 border border-sage/20 shadow-sm space-y-6">
+            <div className="bg-[#FAF6F0] rounded-3xl p-5 sm:p-8 border border-sage/20 shadow-sm space-y-6">
               
               {/* Cover & Info Flex */}
-              <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-                <div className="w-36 aspect-[2/3] overflow-hidden bg-cream shadow-md rounded-xl border border-ink/5 flex-shrink-0">
+              <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left">
+                <div className="w-36 sm:w-40 aspect-[2/3] overflow-hidden bg-black shadow-xl rounded-2xl border border-[#c96a42]/30 flex-shrink-0 relative group">
                   <img 
-                    src={activeBook.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} 
+                    src={activeBook.imageUrl || '/images/red_rising.jpg'} 
                     alt={activeBook.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                 </div>
-                <div className="space-y-2 flex-1 text-center sm:text-left">
-                  <span className="bg-burgundy/10 text-burgundy border border-burgundy/20 font-bold text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full inline-block">
-                    {activeStream === 'general' ? '🌍 General Stream' : '📍 Abuja Chapter'}
+                <div className="space-y-2 flex-1">
+                  <span className="bg-burgundy/10 text-burgundy border border-burgundy/20 font-bold text-[9px] uppercase tracking-wider px-2.5 py-0.5 rounded-full inline-block">
+                    🔥 Sanctuary Book of the Month
                   </span>
-                  <h2 className="text-2xl font-display font-bold text-ink leading-tight">{activeBook.title}</h2>
-                  <p className="text-xs text-burgundy font-sans italic">— by {activeBook.author}</p>
+                  <h2 className="text-2xl sm:text-3xl font-display font-bold text-ink leading-tight">{activeBook.title}</h2>
+                  <p className="text-xs sm:text-sm text-burgundy font-sans italic">— by {activeBook.author}</p>
+                  <p className="text-[10px] text-ink/50 font-mono tracking-wide">Red Rising Saga • Book 1</p>
                 </div>
               </div>
 
               {/* Book Teaser Description */}
-              <div className="border-t border-sage/10 pt-4">
-                <h4 className="text-[10px] font-sans font-bold text-accent uppercase tracking-wider mb-2">Book Teaser</h4>
-                <p className="text-xs sm:text-sm text-ink/70 font-serif leading-relaxed whitespace-pre-wrap">
+              <div className="border-t border-sage/10 pt-4 space-y-2">
+                <h4 className="text-[10px] font-sans font-bold text-accent uppercase tracking-wider">Book Synopsis & Themes</h4>
+                <div className="text-xs sm:text-sm text-ink/70 font-serif leading-relaxed whitespace-pre-wrap">
                   {activeBook.teaser}
-                </p>
+                </div>
               </div>
 
               {/* Bookie badge */}

@@ -1,4 +1,6 @@
 import { Database } from './db';
+import { sendEmail } from './email';
+import { getSanctuaryCodexAnnouncementEmail } from './emailTemplates';
 
 /**
  * Helper to determine if an identifier is a database user ID (integer) or clerk ID (string)
@@ -58,6 +60,14 @@ export async function syncOrCreateUser(sessionUser) {
         return updatedRes.rows[0];
       });
       console.log('Synchronized new user with LK-ID:', dbUser.email, dbUser.lk_id);
+      
+      // Dispatch Sanctuary Codex welcome email upon registration
+      if (dbUser.email) {
+        sendEmail({
+          to: dbUser.email,
+          ...getSanctuaryCodexAnnouncementEmail({ userName: dbUser.full_name })
+        }).catch(err => console.error('Failed to send Sanctuary Codex welcome email:', err));
+      }
     } else {
       // 3. Automatically sync clerk_id or missing LK-ID
       const updates = [];

@@ -13,13 +13,11 @@ const QUOTES = [
   { text: "I have loved the stars too fondly to be fearful of the night.", author: "Sarah Williams" }
 ];
 
-export default function Landing({ images, books = [], storyPrompt, poemPrompt, generalBotm, abujaBotm }) {
+export default function Landing({ images, books = [], storyPrompt, poemPrompt, botmBook, generalBotm, abujaBotm }) {
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterLoading, setNewsletterLoading] = useState(false);
   const [newsletterStatus, setNewsletterStatus] = useState(null);
-  
-  const [activeStream, setActiveStream] = useState('general');
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
@@ -129,25 +127,15 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
     return () => clearInterval(interval);
   }, []);
 
-  const fallbackGeneral = {
-    id: 1,
-    title: 'Skin of the Sea',
-    author: 'Natasha Bowen',
-    imageUrl: '/images/skin_of_the_sea.png',
-    teaser: `A story of sirens, Yoruba gods, and a choice that could change the world. Natasha Bowen's debut is a breathtaking fantasy set in a world where history and mythology collide.`
+  const fallbackBotm = {
+    id: 17,
+    title: 'Red Rising',
+    author: 'Pierce Brown',
+    imageUrl: '/images/red_rising.jpg',
+    teaser: `“I would have lived in peace, but my enemies brought me war.”\n\nDarrow is a Red, a member of the lowest caste in the color-coded society of the future. Fueled by grief and a burning desire for justice, Darrow sacrifices everything to infiltrate the legendary Institute, a brutal proving ground where the dominant caste’s best and brightest vie for power.`
   };
 
-  const fallbackAbuja = {
-    id: 2,
-    title: 'The Parlour Wife',
-    author: 'Foluso Agbaje',
-    imageUrl: '/images/the_parlour_wife.png',
-    teaser: `Set against the backdrop of colonial Nigeria, 'The Parlour Wife' is a gripping historical drama exploring duty, class, secrets, and a woman's defiance. Foluso Agbaje weaves a rich tapestry of domestic intrigue and social upheaval with breathtaking prose.`
-  };
-
-  const botmGeneral = generalBotm || fallbackGeneral;
-  const botmAbuja = abujaBotm || fallbackAbuja;
-  const botmBook = activeStream === 'general' ? botmGeneral : botmAbuja;
+  const activeBotm = botmBook || generalBotm || fallbackBotm;
 
   // Scroll animations variants
   const fadeInReveal = {
@@ -464,65 +452,47 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, g
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-burgundy/5 rounded-full blur-3xl -z-10" />
             
-            {/* Stream Toggle Tabs */}
+            {/* Header: Unified Sanctuary Badge */}
             <div className="flex border-b border-sage/10 pb-4 mb-6 justify-between items-center">
-              <span className="text-accent uppercase tracking-[0.2em] font-bold text-[10px]">Book of the Month</span>
-              <div className="flex bg-cream p-1 rounded-xl border border-sage/15">
-                <button
-                  type="button"
-                  onClick={() => setActiveStream('general')}
-                  className={`px-4 py-1.5 rounded-lg text-[10px] font-sans font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                    activeStream === 'general' 
-                      ? 'bg-burgundy text-cream shadow-sm' 
-                      : 'text-ink/60 hover:text-ink'
-                  }`}
-                >
-                  General Stream
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveStream('abuja')}
-                  className={`px-4 py-1.5 rounded-lg text-[10px] font-sans font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                    activeStream === 'abuja' 
-                      ? 'bg-burgundy text-cream shadow-sm' 
-                      : 'text-ink/60 hover:text-ink'
-                  }`}
-                >
-                  Abuja Edition
-                </button>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                <span className="text-accent uppercase tracking-[0.2em] font-bold text-[10px]">Book of the Month</span>
               </div>
+              <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-burgundy bg-burgundy/5 border border-burgundy/15 px-3 py-1 rounded-full">
+                All Chapters United
+              </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-8 items-center flex-1">
-              {/* Book Cover */}
-              <div className="w-full sm:w-2/5 aspect-[2/3] overflow-hidden bg-cream shadow-xl relative group rounded-lg flex-shrink-0 border border-ink/5">
+            <div className="flex flex-col sm:flex-row gap-6 md:gap-8 items-center flex-1">
+              {/* Book Cover (Responsive Aspect Ratio) */}
+              <div className="w-36 sm:w-2/5 max-w-[200px] aspect-[2/3] overflow-hidden bg-cream shadow-xl relative group rounded-2xl flex-shrink-0 border border-ink/10">
                 <img 
-                  src={botmBook.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} 
-                  alt={botmBook.title} 
+                  src={activeBotm.imageUrl || '/images/red_rising.jpg'} 
+                  alt={activeBotm.title} 
                   className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
                 />
               </div>
 
               {/* Book Info */}
-              <div className="flex-1 flex flex-col justify-between h-full space-y-4">
+              <div className="flex-1 flex flex-col justify-between h-full space-y-4 text-center sm:text-left">
                 <div className="space-y-2">
-                  <span className="text-burgundy/80 uppercase tracking-widest text-[9px] font-bold">
-                    {activeStream === 'general' ? '🌍 Paper Thoughts General' : '📍 Abuja Chapter Exclusive'}
+                  <span className="text-burgundy/80 uppercase tracking-widest text-[9px] font-bold block">
+                    🔥 Sanctuary Reading Lounge
                   </span>
-                  <h3 className="text-2xl md:text-3xl font-display text-ink leading-tight font-extrabold">{botmBook.title}</h3>
-                  <p className="text-xs font-bold text-burgundy/85 font-sans italic">— by {botmBook.author}</p>
+                  <h3 className="text-2xl md:text-3xl font-display text-ink leading-tight font-extrabold">{activeBotm.title}</h3>
+                  <p className="text-xs font-bold text-burgundy/85 font-sans italic">— by {activeBotm.author}</p>
                 </div>
 
                 <p className="text-xs sm:text-sm text-ink/75 leading-relaxed font-serif italic whitespace-pre-wrap font-medium">
-                  "{botmBook.teaser || "A magnificent masterwork handpicked by the community editors. Available for checkout and discussions in our physical chapters."}"
+                  "{activeBotm.teaser || "A magnificent masterwork handpicked by the community editors. Available for checkout and discussions across all physical chapters."}"
                 </p>
 
                 <div className="pt-2">
                   <Link
-                    href={`/discussion?stream=${activeStream}`}
+                    href="/discussion"
                     className="w-full bg-burgundy hover:bg-ink text-cream hover:text-white px-5 py-3 uppercase tracking-widest text-[10px] font-bold transition-all shadow-md rounded-xl inline-flex items-center justify-center gap-2 hover:-translate-y-0.5 cursor-pointer text-center"
                   >
-                    <span>View Reviews & Discussion</span>
+                    <span>Enter Discussion & Reviews</span>
                     <ArrowRight size={12} />
                   </Link>
                 </div>

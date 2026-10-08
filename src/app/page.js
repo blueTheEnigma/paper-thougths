@@ -30,16 +30,14 @@ export default async function Home() {
     LIMIT 1
   `);
 
-  // Fetch active Books of the Month from the database
-  const activeBooks = await Database.query(`
+  // Fetch active Book of the Month from the database (Sanctuary Unified)
+  const botmBook = await Database.queryOne(`
     SELECT id, title, author, image_url as "imageUrl", teaser, price, purchase_link as "purchaseLink", chapter_id as "chapterId"
     FROM book_of_the_month
     WHERE active = TRUE
     ORDER BY created_at DESC
+    LIMIT 1
   `);
-
-  const generalBotm = activeBooks.find(b => b.chapterId === null) || null;
-  const abujaBotm = activeBooks.find(b => b.chapterId === 3) || null;
 
   return (
     <>
@@ -48,8 +46,8 @@ export default async function Home() {
         books={featuredBooks} 
         storyPrompt={storyPrompt ? storyPrompt.promptText : "Write freely about any theme or subject that inspires you today."}
         poemPrompt={poemPrompt ? poemPrompt.promptText : "Write freely about any theme or subject that inspires you today."}
-        generalBotm={generalBotm}
-        abujaBotm={abujaBotm}
+        botmBook={botmBook}
+        generalBotm={botmBook}
       />
       <ContactUs />
     </>
