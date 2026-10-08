@@ -19,6 +19,7 @@ import OnboardingSequence from '@/components/OnboardingSequence';
 import { getAvatarStage } from '@/lib/avatar';
 import LiteraryReaderModal from '@/components/common/LiteraryReaderModal';
 import PushNotificationBell from '@/components/notifications/PushNotificationBell';
+import InstallAppButton from '@/components/InstallAppButton';
 
 const GENRES = [
   'Fiction',
@@ -1485,6 +1486,7 @@ export default function DashboardClient({
         animate="visible"
         variants={containerVariants}
       >
+        <InstallAppButton variant="card" />
         
         {/* Header */}
         <motion.div variants={itemVariants} className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 md:gap-8 pb-4 md:pb-8 border-b border-sage/10">

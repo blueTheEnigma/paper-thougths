@@ -11,6 +11,7 @@ import {
 import { useAuth, useUser, UserButton } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
 import PanguinAvatar from '@/components/PanguinAvatar';
+import InstallAppButton from './InstallAppButton';
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -145,7 +146,8 @@ export default function Navigation() {
         </div>
         
         {/* Right side auth */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <InstallAppButton variant="nav" />
           {isLoaded && !isSignedIn && (
             <div className="flex items-center gap-4">
               <Link href="/join" className="bg-burgundy hover:bg-ink text-cream text-xs px-5 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-colors shadow-sm">

@@ -1,19 +1,66 @@
 {
-  "name": "Paper Thoughts Clubhouse",
+  "id": "/",
+  "name": "Paper Thoughts",
   "short_name": "Paper Thoughts",
-  "description": "An opinionated reading and writing community.",
+  "description": "An opinionated reading and writing community spanning Zaria, Kaduna, and Abuja.",
   "start_url": "/dashboard",
-  "display": "standalone",
-  "background_color": "#FCF9F2",
-  "theme_color": "#4A0E0E",
-  "orientation": "portrait",
   "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#20070E",
+  "theme_color": "#20070E",
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
     {
       "src": "/icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    }
+  ],
+  "categories": [
+    "books",
+    "lifestyle",
+    "social"
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "View active drops and community standings"
+    },
+    {
+      "name": "Writers' Sanctuary",
+      "url": "/village",
+      "description": "Read manuscripts and review drops"
+    },
+    {
+      "name": "Book of the Month",
+      "url": "/discussion",
+      "description": "Discuss Red Rising"
     }
   ]
 }
