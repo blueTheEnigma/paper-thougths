@@ -586,7 +586,11 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
                             <td className="py-3.5 px-4 text-center">
                               {scribe.foundingBadge ? (
                                 <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-900 border border-amber-500/30">
-                                  {scribe.foundingBadge === 'founding_poet' ? '🪶 Founding Poet' : '📜 Founding Scribe'}
+                                  {scribe.foundingBadge === 'founding_poet' 
+                                    ? '🪶 Founding Poet' 
+                                    : scribe.foundingBadge === 'founding_writer'
+                                    ? '📜 Founding Writer'
+                                    : '✨ Founding Scribe'}
                                 </span>
                               ) : scribe.rank <= 3 ? (
                                 <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#c96a42]/15 text-[#c96a42] border border-[#c96a42]/30">

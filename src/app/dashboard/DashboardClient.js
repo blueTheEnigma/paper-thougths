@@ -1498,7 +1498,11 @@ export default function DashboardClient({
                 <span className="bg-white px-2.5 py-1 border border-sage/20 rounded shadow-sm text-burgundy font-bold">{profile.lkid}</span>
                 {profile.foundingBadge && (
                   <span className="bg-amber-500/15 border border-amber-500/30 text-amber-900 font-sans font-bold px-2.5 py-1 rounded shadow-xs uppercase tracking-wider text-[9px] sm:text-[10px]">
-                    {profile.foundingBadge === 'founding_poet' ? '🪶 Founding Poet' : profile.foundingBadge === 'founding_scribe' ? '✨ Founding Scribe' : '📜 Founding Scribe'}
+                    {profile.foundingBadge === 'founding_poet' 
+                      ? '🪶 Founding Poet' 
+                      : profile.foundingBadge === 'founding_writer'
+                      ? '📜 Founding Writer'
+                      : '✨ Founding Scribe'}
                   </span>
                 )}
                 {profile.membershipStatus === 'evicted' ? (

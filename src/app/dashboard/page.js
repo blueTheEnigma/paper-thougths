@@ -203,6 +203,11 @@ export default async function DashboardPage() {
 
   const { profile, orders, submissions, tbrItems } = archive;
 
+  // If member is dormant / evicted, redirect to Returner's Crossing
+  if (profile?.membershipStatus === 'evicted') {
+    redirect('/returners-crossing');
+  }
+
   // Curated Recommendation Engine with full defensive safety
   let recommendations = [];
   try {

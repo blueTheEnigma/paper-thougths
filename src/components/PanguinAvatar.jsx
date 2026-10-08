@@ -22,7 +22,7 @@ function getArchetypeDisplayName(key) {
 }
 
 const FOUNDING_BADGES = {
-  founding_writer: { label: 'Founding Scribe 📜', bg: 'bg-amber-500/10 text-amber-900 border-amber-500/30' },
+  founding_writer: { label: 'Founding Writer 📜', bg: 'bg-amber-500/10 text-amber-900 border-amber-500/30' },
   founding_poet: { label: 'Founding Poet 🪶', bg: 'bg-purple-500/10 text-purple-900 border-purple-500/30' },
   founding_scribe: { label: 'Founding Scribe ✨', bg: 'bg-amber-500/15 text-amber-900 border-amber-500/30' },
 };

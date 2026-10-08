@@ -604,6 +604,12 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
                           <p className="text-[11px] text-ink/60 font-serif">
                             Was this critique helpful? Confirming awards +10 Leaves to the reviewer from the clubhouse treasury and powers the Reviewer of the Month prize.
                           </p>
+                          {rev.isHelpful === null && (
+                            <p className="text-[10px] text-amber-700 font-mono font-bold flex items-center gap-1 mt-1">
+                              <span>🌟 Awaiting your feedback</span>
+                              <span>• Auto-approves in {Math.max(1, 8 - Math.floor((new Date() - new Date(rev.createdAt || Date.now())) / (1000 * 60 * 60 * 24)))} days</span>
+                            </p>
+                          )}
                           {evaluationFeedback[rev.id]?.error && (
                             <p className="text-[10px] text-burgundy font-bold">{evaluationFeedback[rev.id].message}</p>
                           )}

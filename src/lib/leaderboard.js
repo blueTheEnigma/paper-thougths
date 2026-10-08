@@ -222,42 +222,47 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
 
   // 2. TIER 2: Annual Crucible
   const annualRows = await Database.query(`
-    SELECT 
-      u.id, 
-      u.full_name as "name", 
-      u.avatar_url as "avatarUrl", 
-      u.reader_archetype as "archetype", 
-      u.founding_badge as "foundingBadge",
-      COALESCE(u.membership_status, 'active') as "membershipStatus",
-      COALESCE(u.probation_strikes_this_year, 0)::int as "probationStrikes",
-      COALESCE(u.consecutive_botm_misses, 0)::int as "consecutiveBotmMisses",
-      COALESCE(u.silver_bullets, 0)::int as "silverBullets",
-      u.sabbatical_until as "sabbaticalUntil",
-      COALESCE(u.spendable_leaves, 0)::int as "spendableLeaves",
-      COALESCE(u.lifetime_leaves, 0)::int as "lifetimeLeaves",
-      (
-        SELECT COUNT(*)::int 
-        FROM submissions s 
-        WHERE s.author_id = u.id AND s.created_at >= date_trunc('year', CURRENT_DATE)
-      ) as "annualSubmissions",
-      (
-        SELECT COUNT(*)::int 
-        FROM peer_reviews pr 
-        WHERE pr.reviewer_id = u.id AND pr.created_at >= date_trunc('year', CURRENT_DATE)
-      ) as "annualReviews",
-      (
-        SELECT COUNT(*)::int 
-        FROM book_of_the_month_reviews bmr 
-        WHERE bmr.user_id = u.id AND bmr.created_at >= date_trunc('year', CURRENT_DATE)
-      ) as "annualBotmReviews"
-    FROM users u
-    WHERE u.clerk_id IS NOT NULL 
-      AND (u.membership_status IS NULL OR u.membership_status != 'evicted')
+    WITH annual_stats AS (
+      SELECT 
+        u.id, 
+        u.full_name as "name", 
+        u.avatar_url as "avatarUrl", 
+        u.reader_archetype as "archetype", 
+        u.founding_badge as "foundingBadge",
+        COALESCE(u.membership_status, 'active') as "membershipStatus",
+        COALESCE(u.probation_strikes_this_year, 0)::int as "probationStrikes",
+        COALESCE(u.consecutive_botm_misses, 0)::int as "consecutiveBotmMisses",
+        COALESCE(u.silver_bullets, 0)::int as "silverBullets",
+        u.sabbatical_until as "sabbaticalUntil",
+        COALESCE(u.spendable_leaves, 0)::int as "spendableLeaves",
+        COALESCE(u.lifetime_leaves, 0)::int as "lifetimeLeaves",
+        (
+          SELECT COUNT(*)::int 
+          FROM submissions s 
+          WHERE s.author_id = u.id AND s.created_at >= date_trunc('year', CURRENT_DATE)
+        ) as "annualSubmissions",
+        (
+          SELECT COUNT(*)::int 
+          FROM peer_reviews pr 
+          WHERE pr.reviewer_id = u.id AND pr.created_at >= date_trunc('year', CURRENT_DATE)
+        ) as "annualReviews",
+        (
+          SELECT COUNT(*)::int 
+          FROM book_of_the_month_reviews bmr 
+          WHERE bmr.user_id = u.id AND bmr.created_at >= date_trunc('year', CURRENT_DATE)
+        ) as "annualBotmReviews"
+      FROM users u
+      WHERE (u.membership_status IS NULL OR u.membership_status != 'evicted')
+    )
+    SELECT *,
+      ("annualReviews" * 10 + "annualSubmissions" * 15 + "annualBotmReviews" * 20)::int as "annualScore"
+    FROM annual_stats
     ORDER BY 
-      u.lifetime_leaves DESC, 
+      "annualScore" DESC,
+      "lifetimeLeaves" DESC, 
       "annualReviews" DESC, 
       "annualSubmissions" DESC, 
-      u.id ASC
+      id ASC
     LIMIT 60
   `);
 
@@ -297,6 +302,7 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
       annualSubmissions: row.annualSubmissions,
       annualReviews: row.annualReviews,
       annualBotmReviews: row.annualBotmReviews,
+      annualScore: (row.annualReviews * 10) + (row.annualSubmissions * 15) + (row.annualBotmReviews * 20),
       statusLabel,
       statusBadge,
       statusVariant,
@@ -320,9 +326,8 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
       (SELECT COUNT(*)::int FROM peer_reviews pr WHERE pr.reviewer_id = u.id) as "totalReviews",
       (SELECT COUNT(*)::int FROM book_of_the_month_reviews bmr WHERE bmr.user_id = u.id) as "totalBotmReviews"
     FROM users u
-    WHERE u.clerk_id IS NOT NULL
-    ORDER BY u.lifetime_leaves DESC, u.spendable_leaves DESC, "totalReviews" DESC, u.id ASC
-    LIMIT 50
+    ORDER BY u.lifetime_leaves DESC, "totalSubmissions" DESC, "totalReviews" DESC, u.id ASC
+    LIMIT 60
   `);
 
   const hallOfLore = hallRows.map((row, idx) => ({

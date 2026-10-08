@@ -115,6 +115,17 @@ export async function POST(request, { params }) {
           reviewData.reviewer_id, 
           `Author confirmed helpful critique for submission #${reviewData.submission_id} ("${reviewData.submissionTitle || 'Manuscript'}")`
         ]);
+
+        // Insert notification into user_notifications for the reviewer
+        await client.query(`
+          INSERT INTO user_notifications (user_id, type, title, body, link, is_read, created_at)
+          VALUES ($1, 'review_helpful', $2, $3, $4, FALSE, NOW())
+        `, [
+          reviewData.reviewer_id,
+          'Critique Marked Genuinely Helpful! 🍃',
+          `Your critique on manuscript "${reviewData.submissionTitle || 'Submission'}" was confirmed as Genuinely Helpful. +10 Leaves awarded from the Community Treasury!`,
+          '/dashboard'
+        ]);
       }
 
       return {
