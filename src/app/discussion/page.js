@@ -1,6 +1,8 @@
 import { Database } from '@/lib/db';
 import DiscussionClient from './DiscussionClient';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: "Book of the Month Discussions - Paper Thoughts",
   description: "Share your thoughts, read member reviews, and engage in literary debates on our Sanctuary Book of the Month.",
