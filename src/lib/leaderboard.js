@@ -1,4 +1,4 @@
-import { Database } from './db';
+import { Database } from './db.js';
 
 /**
  * Paper Thoughts 3-Tier Leaderboard Service

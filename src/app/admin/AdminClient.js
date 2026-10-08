@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import AdminQuotesTab from '@/components/admin/AdminQuotesTab';
+import AdminCrucibleTab from '@/components/admin/AdminCrucibleTab';
 
 const formatDate = (dateVal) => {
   if (!dateVal) return 'N/A';
@@ -34,12 +35,14 @@ export default function AdminClient({
   initialPrompts,
   initialBotm,
   initialBirthdays = [],
+  initialCrucibleData,
   userPermissions,
   isSuperadmin,
   isCommunityManager
 }) {
   const allTabs = [
     { id: 'members', label: 'Members Ledger', icon: Users },
+    { id: 'crucible', label: 'Crucible & Evictions ⚖️', icon: ShieldAlert },
     { id: 'submissions', label: 'Submissions Moderation', icon: BookOpen },
     { id: 'quotes', label: 'Quotes & Sparks ✨', icon: Quote },
     { id: 'orders', label: 'Bookstore Orders', icon: ShoppingBag },
@@ -56,6 +59,8 @@ export default function AdminClient({
     switch (tab.id) {
       case 'members':
         return permissions.includes('manage_chapter_events') || permissions.includes('community_manager') || isCommunityManager;
+      case 'crucible':
+        return permissions.includes('manage_crucible') || permissions.includes('community_manager') || isCommunityManager;
       case 'submissions':
       case 'quotes':
       case 'prompts':
@@ -576,6 +581,12 @@ export default function AdminClient({
                                   } else if (p === 'view_sales_logs') {
                                     label = 'Sales Rep';
                                     colorClass = 'bg-blue-50 text-blue-700 border-blue-200';
+                                  } else if (p === 'community_manager') {
+                                    label = 'Community Mgr';
+                                    colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                  } else if (p === 'manage_crucible') {
+                                    label = 'Crucible Officer';
+                                    colorClass = 'bg-red-50 text-red-700 border-red-200';
                                   }
                                   return (
                                     <span key={p} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border uppercase tracking-wider ${colorClass}`}>
@@ -739,6 +750,21 @@ export default function AdminClient({
                     </tbody>
                   </table>
                 </div>
+              </motion.div>
+            )}
+
+            {/* CRUCIBLE & EVICTIONS CONTROL ROOM */}
+            {activeTab === 'crucible' && (
+              <motion.div 
+                key="crucible"
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+              >
+                <AdminCrucibleTab 
+                  initialData={initialCrucibleData} 
+                  allMembers={members} 
+                />
               </motion.div>
             )}
 
@@ -1641,6 +1667,12 @@ export default function AdminClient({
                     title: 'Community Manager',
                     desc: 'Grants access to view member directory, upcoming birthdays, and clubhouse activity.',
                     color: 'border-emerald-300'
+                  },
+                  {
+                    key: 'manage_crucible',
+                    title: 'Crucible Officer',
+                    desc: 'Grants access to adjudicate probation strikes, execute evictions, and payout monthly cash laurels.',
+                    color: 'border-red-400'
                   }
                 ].map((role) => {
                   const checked = selectedRoles.includes(role.key);

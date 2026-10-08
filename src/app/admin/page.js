@@ -2,6 +2,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser, getUserPermissions } from '@/lib/permissions';
+import { getCrucibleData } from '@/lib/crucible';
 import AdminClient from './AdminClient';
 
 export const metadata = {
@@ -35,7 +36,7 @@ export default async function AdminPage() {
       AND cm.is_active = TRUE 
       AND (cd.name = 'Events & Community' OR cm.role = 'admin')
   `, [dbUser.id]);
-  const isCommunityManager = !!communityManagerRes || permissions.includes('community_manager') || permissions.includes('manage_chapter_events');
+  const isCommunityManager = !!communityManagerRes || permissions.includes('community_manager') || permissions.includes('manage_chapter_events') || permissions.includes('manage_crucible');
 
   // If user has no admin permissions, isn't the superadmin, and isn't a community manager, bounce them back to dashboard
   if (permissions.length === 0 && !isSuperadmin && !isCommunityManager) {
@@ -167,6 +168,9 @@ export default async function AdminPage() {
   .filter(member => member.daysUntil <= 30)
   .sort((a, b) => a.daysUntil - b.daysUntil);
 
+  // 9. Fetch Crucible & Evictions Governance Data
+  const crucibleData = await getCrucibleData();
+
   return (
     <AdminClient 
       initialMembers={members}
@@ -176,6 +180,7 @@ export default async function AdminPage() {
       initialPrompts={prompts}
       initialBotm={currentBotm}
       initialBirthdays={upcomingBirthdays}
+      initialCrucibleData={crucibleData}
       userPermissions={permissions}
       isSuperadmin={isSuperadmin}
       isCommunityManager={isCommunityManager}

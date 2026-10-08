@@ -32,13 +32,13 @@ export async function POST(request) {
     }
 
     // Sanitize permissions to only allow seeded ones
-    const allowedPermissions = ['moderate_submissions', 'manage_chapter_events', 'view_sales_logs', 'community_manager'];
+    const allowedPermissions = ['moderate_submissions', 'manage_chapter_events', 'view_sales_logs', 'community_manager', 'manage_crucible'];
     const sanitizedPermissions = permissions.filter(p => allowedPermissions.includes(p));
 
     // Ensure the new community_manager permission is seeded in the database
     await Database.query(`
       INSERT INTO permissions (permission_key) 
-      VALUES ('community_manager') 
+      VALUES ('community_manager'), ('manage_crucible') 
       ON CONFLICT (permission_key) DO NOTHING
     `);
 
