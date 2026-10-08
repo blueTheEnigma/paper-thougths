@@ -263,7 +263,6 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
       "annualReviews" DESC, 
       "annualSubmissions" DESC, 
       id ASC
-    LIMIT 60
   `);
 
   const annualRoster = annualRows.map((row, idx) => {
@@ -327,7 +326,6 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
       (SELECT COUNT(*)::int FROM book_of_the_month_reviews bmr WHERE bmr.user_id = u.id) as "totalBotmReviews"
     FROM users u
     ORDER BY u.lifetime_leaves DESC, "totalSubmissions" DESC, "totalReviews" DESC, u.id ASC
-    LIMIT 60
   `);
 
   const hallOfLore = hallRows.map((row, idx) => ({
