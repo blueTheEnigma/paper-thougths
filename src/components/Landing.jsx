@@ -420,24 +420,37 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
           {/* Left: Writers' Village Entrance Card (5 Columns) */}
           <motion.div 
             variants={fadeInReveal}
-            className="lg:col-span-5 bg-gradient-to-br from-burgundy to-ink text-cream p-8 md:p-10 rounded-[32px] shadow-xl flex flex-col justify-between relative overflow-hidden border border-white/10 group min-h-[400px]"
+            className="lg:col-span-5 bg-gradient-to-br from-[#20070e] via-[#2A0B14] to-[#120308] text-cream p-8 md:p-10 rounded-[32px] shadow-xl flex flex-col justify-between relative overflow-hidden border border-[#c96a42]/20 group min-h-[440px]"
           >
             {/* Background Ambient Circles */}
-            <div className="absolute -top-10 -right-10 w-64 h-64 bg-accent/20 rounded-full blur-3xl -z-10 group-hover:scale-110 transition-transform duration-1000" />
-            <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-burgundy/30 rounded-full blur-3xl -z-10" />
+            <div className="absolute -top-10 -right-10 w-64 h-64 bg-[#c96a42]/15 rounded-full blur-3xl -z-10 group-hover:scale-110 transition-transform duration-1000" />
+            <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-[#20070e]/40 rounded-full blur-3xl -z-10" />
             
-            <div className="space-y-4">
-              <span className="text-accent uppercase tracking-[0.25em] font-bold text-[10px] block">Creative Haven</span>
-              <h3 className="text-3xl md:text-4xl font-display text-cream font-bold leading-tight">Writers' Village</h3>
-              <p className="text-sm text-cream/70 font-sans font-medium leading-relaxed">
-                Step into our dedicated creative portal. Submit your drafts to the weekly critique cycle, give constructive feedback on peer manuscripts, and track your milestone tokens. A workspace designed for Zaria, Kaduna, and Abuja members.
+            {/* Header: Balanced Top Bar Rhythm */}
+            <div className="flex border-b border-white/10 pb-4 mb-6 justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#F2A98A] animate-pulse" />
+                <span className="text-[#F2A98A] uppercase tracking-[0.2em] font-bold text-[10px]">Creative Haven</span>
+              </div>
+              <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-cream/70 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
+                Writers' Sanctuary
+              </span>
+            </div>
+
+            <div className="space-y-4 my-auto">
+              <div className="space-y-1">
+                <span className="text-[#c96a42] text-[10px] font-mono uppercase tracking-widest block font-bold">Weekly Critique & Drops</span>
+                <h3 className="text-3xl md:text-4xl font-display text-cream font-bold leading-tight tracking-tight">Writers' Village</h3>
+              </div>
+              <p className="text-xs sm:text-sm text-cream/75 font-serif leading-relaxed font-light">
+                Step into our dedicated creative portal. Submit your drafts to the weekly critique cycle, exchange constructive feedback on peer manuscripts, and track your milestone tokens. A sanctuary designed for Zaria, Kaduna, and Abuja scribes.
               </p>
             </div>
             
-            <div className="pt-8">
+            <div className="pt-6 border-t border-white/5">
               <Link 
                 href="/village" 
-                className="bg-accent hover:bg-white text-burgundy hover:text-ink px-7 py-3.5 rounded-xl uppercase tracking-widest text-xs font-bold transition-all shadow-md inline-flex items-center gap-3 hover:-translate-y-0.5"
+                className="w-full sm:w-auto bg-[#c96a42] hover:bg-cream text-[#20070e] hover:text-[#120308] px-7 py-3.5 rounded-xl uppercase tracking-widest text-xs font-bold transition-all shadow-md inline-flex items-center justify-center gap-3 hover:-translate-y-0.5"
               >
                 <span>Enter The Village</span>
                 <ArrowRight size={14} />
@@ -469,6 +482,10 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
                 <img 
                   src={activeBotm.imageUrl || '/images/red_rising.jpg'} 
                   alt={activeBotm.title} 
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/images/red_rising.jpg';
+                  }}
                   className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
                 />
               </div>

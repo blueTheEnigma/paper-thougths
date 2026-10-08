@@ -1037,15 +1037,11 @@ export default function AdminClient({
 
                     <form onSubmit={handleUpdateBotm} className="space-y-5">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Target Stream / Region *</label>
-                        <select
-                          value={botmChapterId}
-                          onChange={(e) => handleStreamChange(e.target.value)}
-                          className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 font-medium"
-                        >
-                          <option value="">Paper Thoughts General (General Stream)</option>
-                          <option value="3">Abuja Edition (Abuja Chapter)</option>
-                        </select>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Sanctuary Reading Circle *</label>
+                        <div className="w-full bg-cream/40 border border-sage/25 rounded-xl p-3 text-xs text-burgundy font-bold flex items-center justify-between">
+                          <span>🔥 Unified Sanctuary Reading (All Chapters: Zaria, Kaduna, Abuja)</span>
+                          <span className="text-[9px] bg-burgundy/10 text-burgundy px-2 py-0.5 rounded-full uppercase tracking-wider">Universal</span>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

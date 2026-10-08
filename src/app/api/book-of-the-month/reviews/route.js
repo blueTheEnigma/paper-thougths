@@ -70,21 +70,6 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Book of the Month not found.' }, { status: 404 });
     }
 
-    // Abuja Book of the Month stream restriction check (chapter_id = 3 is Abuja)
-    if (book.chapterId === 3) {
-      // Fetch user's chapter to verify it is Abuja
-      const userChapter = await Database.queryOne(`
-        SELECT chapter_id FROM users WHERE id = $1
-      `, [dbUser.id]);
-      
-      if (userChapter?.chapter_id !== 3) {
-        return NextResponse.json({
-          success: false,
-          error: 'Review rejected: The Abuja Book of the Month stream is strictly reserved for members of the Abuja chapter.'
-        }, { status: 403 });
-      }
-    }
-
     // 2. Check if user has already reviewed this book
     const existingReview = await Database.queryOne(`
       SELECT id FROM book_of_the_month_reviews

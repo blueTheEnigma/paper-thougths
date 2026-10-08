@@ -57,37 +57,22 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Missing monthYear parameter.' }, { status: 400 });
     }
 
-    // 2. Fetch Active Books & Bookies
-    // Find active General Book
-    const generalBook = await Database.queryOne(`
-      SELECT id, title FROM book_of_the_month WHERE active = TRUE AND chapter_id IS NULL LIMIT 1
-    `);
-    // Find active Abuja Book
-    const abujaBook = await Database.queryOne(`
-      SELECT id, title FROM book_of_the_month WHERE active = TRUE AND chapter_id = 3 LIMIT 1
+    // 2. Fetch Active Unified Book & Bookie
+    const activeBook = await Database.queryOne(`
+      SELECT id, title FROM book_of_the_month WHERE active = TRUE ORDER BY created_at DESC LIMIT 1
     `);
 
     let generalBookieUser = null;
     let abujaBookieUser = null;
 
-    if (generalBook) {
+    if (activeBook) {
       generalBookieUser = await Database.queryOne(`
         SELECT u.id, u.full_name as "name"
         FROM book_of_the_month_reviews r
         JOIN users u ON u.id = r.user_id
         WHERE r.book_of_the_month_id = $1 AND r.is_bookie = TRUE
         LIMIT 1
-      `, [generalBook.id]);
-    }
-
-    if (abujaBook) {
-      abujaBookieUser = await Database.queryOne(`
-        SELECT u.id, u.full_name as "name"
-        FROM book_of_the_month_reviews r
-        JOIN users u ON u.id = r.user_id
-        WHERE r.book_of_the_month_id = $1 AND r.is_bookie = TRUE
-        LIMIT 1
-      `, [abujaBook.id]);
+      `, [activeBook.id]);
     }
 
     // 3. Fetch User Activity Stats and text samples from the past 30 days

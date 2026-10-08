@@ -303,7 +303,7 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
             </Link>
             <h1 className="text-3xl sm:text-4xl font-display font-bold text-burgundy">Book of the Month Discussions</h1>
             <p className="text-xs sm:text-sm text-ink/60 font-serif mt-1">
-              Read community critiques, share your reviews, and debate themes under each stream.
+              Read community critiques, share your reviews, and debate themes across our unified sanctuary reading circle.
             </p>
           </div>
 
@@ -352,6 +352,10 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
                   <img 
                     src={activeBook.imageUrl || '/images/red_rising.jpg'} 
                     alt={activeBook.title}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/images/red_rising.jpg';
+                    }}
                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
@@ -420,16 +424,6 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
                     <span className="text-xs font-sans font-bold block uppercase tracking-wider">Review Submitted</span>
                     <p className="text-[11px] text-emerald-700/80 font-serif leading-relaxed">
                       You've submitted your review for this Book of the Month! Your leaves and token rewards have been successfully credited to your ledger.
-                    </p>
-                  </div>
-                </div>
-              ) : activeBook.chapterId === 3 && profile.chapter !== 'Abuja' ? (
-                <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-2.5 text-amber-800">
-                  <ShieldAlert size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <span className="text-xs font-sans font-bold block uppercase tracking-wider">Stream Restricted</span>
-                    <p className="text-[11px] text-amber-700/80 font-serif leading-relaxed">
-                      The Abuja Book of the Month stream is restricted. Only active members of the Abuja chapter can submit reviews for this selection.
                     </p>
                   </div>
                 </div>

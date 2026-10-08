@@ -53,79 +53,43 @@ export async function POST(request) {
 
     // ─── 1. Tally Votes and Crown Winners ───
     const result = await Database.transaction(async (client) => {
-      // Find winning General suggestion
-      const genWinner = await client.query(`
+      // Find winning unified Sanctuary suggestion
+      const winner = await client.query(`
         SELECT s.id, s.title, s.author, s.teaser, s.user_id, COUNT(v.id) as votes_count
         FROM botm_suggestions s
         LEFT JOIN botm_votes v ON v.suggestion_id = s.id
-        WHERE s.month_year = $1 AND s.chapter_id IS NULL
+        WHERE s.month_year = $1
         GROUP BY s.id
         ORDER BY votes_count DESC, s.created_at ASC
         LIMIT 1
       `, [currentMonthYear]);
 
-      // Find winning Abuja suggestion
-      const abjWinner = await client.query(`
-        SELECT s.id, s.title, s.author, s.teaser, s.user_id, COUNT(v.id) as votes_count
-        FROM botm_suggestions s
-        LEFT JOIN botm_votes v ON v.suggestion_id = s.id
-        WHERE s.month_year = $1 AND s.chapter_id = 3
-        GROUP BY s.id
-        ORDER BY votes_count DESC, s.created_at ASC
-        LIMIT 1
-      `, [currentMonthYear]);
+      const winnerRow = winner.rows[0] || null;
 
-      const genWinnerRow = genWinner.rows[0] || null;
-      const abjWinnerRow = abjWinner.rows[0] || null;
-
-      // Find current Bookies for General BOTM (before deactivation)
-      const genBookie = await client.query(`
+      // Find current Bookie for unified active BOTM (before deactivation)
+      const bookie = await client.query(`
         SELECT r.user_id 
         FROM book_of_the_month_reviews r
         JOIN book_of_the_month b ON b.id = r.book_of_the_month_id
-        WHERE b.active = TRUE AND b.chapter_id IS NULL AND r.is_bookie = TRUE
+        WHERE b.active = TRUE AND r.is_bookie = TRUE
         LIMIT 1
       `);
 
-      // Find current Bookies for Abuja BOTM (before deactivation)
-      const abjBookie = await client.query(`
-        SELECT r.user_id 
-        FROM book_of_the_month_reviews r
-        JOIN book_of_the_month b ON b.id = r.book_of_the_month_id
-        WHERE b.active = TRUE AND b.chapter_id = 3 AND r.is_bookie = TRUE
-        LIMIT 1
-      `);
+      const bookieUserId = bookie.rows[0]?.user_id || null;
 
-      const genBookieUserId = genBookie.rows[0]?.user_id || null;
-      const abjBookieUserId = abjBookie.rows[0]?.user_id || null;
-
-      // Award +50 leaves to Crowned Bookies
-      if (genBookieUserId) {
+      // Award +50 leaves to Crowned Bookie
+      if (bookieUserId) {
         await client.query(`
           UPDATE users 
           SET spendable_leaves = spendable_leaves + 50,
               lifetime_leaves = lifetime_leaves + 50
           WHERE id = $1
-        `, [genBookieUserId]);
+        `, [bookieUserId]);
         await client.query(`
           INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
-          VALUES ($1, 50, 'bonus', 'Crowned General Bookie leaf bonus for outstanding monthly reviews')
-        `, [genBookieUserId]);
-        console.log(`Awarded +50 leaves to General Bookie User ID: ${genBookieUserId}`);
-      }
-
-      if (abjBookieUserId) {
-        await client.query(`
-          UPDATE users 
-          SET spendable_leaves = spendable_leaves + 50,
-              lifetime_leaves = lifetime_leaves + 50
-          WHERE id = $1
-        `, [abjBookieUserId]);
-        await client.query(`
-          INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
-          VALUES ($1, 50, 'bonus', 'Crowned Abuja Bookie leaf bonus for outstanding monthly reviews')
-        `, [abjBookieUserId]);
-        console.log(`Awarded +50 leaves to Abuja Bookie User ID: ${abjBookieUserId}`);
+          VALUES ($1, 50, 'bonus', 'Crowned Sanctuary Bookie leaf bonus for outstanding monthly reviews')
+        `, [bookieUserId]);
+        console.log(`Awarded +50 leaves to Sanctuary Bookie User ID: ${bookieUserId}`);
       }
 
       // Deactivate current active books
@@ -135,29 +99,18 @@ export async function POST(request) {
         WHERE active = TRUE
       `);
 
-      // Crown General winner
-      if (genWinnerRow) {
+      // Crown Sanctuary winner
+      if (winnerRow) {
         await client.query(`
           INSERT INTO book_of_the_month (title, author, teaser, image_url, price, purchase_link, active, chapter_id)
-          VALUES ($1, $2, $3, '/images/the_parlour_wife.png', '', '/bookstore', TRUE, NULL)
-        `, [genWinnerRow.title, genWinnerRow.author, genWinnerRow.teaser]);
-        console.log(`Crowned General BOTM: "${genWinnerRow.title}"`);
-      }
-
-      // Crown Abuja winner
-      if (abjWinnerRow) {
-        await client.query(`
-          INSERT INTO book_of_the_month (title, author, teaser, image_url, price, purchase_link, active, chapter_id)
-          VALUES ($1, $2, $3, '/images/the_parlour_wife.png', '', '/bookstore', TRUE, 3)
-        `, [abjWinnerRow.title, abjWinnerRow.author, abjWinnerRow.teaser]);
-        console.log(`Crowned Abuja BOTM: "${abjWinnerRow.title}"`);
+          VALUES ($1, $2, $3, '/images/red_rising.jpg', '', '/bookstore', TRUE, NULL)
+        `, [winnerRow.title, winnerRow.author, winnerRow.teaser]);
+        console.log(`Crowned Sanctuary BOTM: "${winnerRow.title}"`);
       }
 
       return {
-        genWinnerRow,
-        abjWinnerRow,
-        genBookieUserId,
-        abjBookieUserId
+        winnerRow,
+        bookieUserId
       };
     });
 
