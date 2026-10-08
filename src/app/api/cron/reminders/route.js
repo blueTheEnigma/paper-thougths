@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
+import { sendPushNotification } from '@/lib/pushNotifications';
 import { 
   getMondayPromptReleaseEmail, 
   getWednesdayDraftNudgeEmail, 
@@ -50,6 +51,7 @@ async function handleReminderCron(request) {
       SELECT DISTINCT id, email, full_name as name, whatsapp 
       FROM users 
       WHERE email IS NOT NULL AND email != ''
+        AND COALESCE(unsubscribed_from_reminders, false) = false
     `);
 
     let subscriberRows = [];
@@ -170,6 +172,15 @@ async function handleReminderCron(request) {
           const waText = `✨ *Paper Thoughts Update*\n\n${emailPayload.subject}\n\nJoin the discussion & draft here: ${targetUrl}`;
           sendWhatsAppMessage({ to: recipient.whatsapp, text: waText })
             .catch(err => console.error('WhatsApp send error:', err));
+        }
+
+        // Channel D: Web Push Notification (PWA lock-screen)
+        if (recipient.id) {
+          sendPushNotification(recipient.id, {
+            title: emailPayload.subject.replace(/^[^\w\s]+\s*/, ''),
+            body: `Weekly ${type} sanctuary drop. Tap to read & draft.`,
+            link: type === 'saturday' ? '/discussion' : '/village'
+          }).catch(err => console.error('Push notification send error:', err));
         }
       }
     }

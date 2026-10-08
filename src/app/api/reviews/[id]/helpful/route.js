@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser } from '@/lib/permissions';
+import { sendPushNotification } from '@/lib/pushNotifications';
+import { sendEmail } from '@/lib/email';
+import { getHelpfulCritiqueEarnedEmail } from '@/lib/emailTemplates';
 
 export const dynamic = 'force-dynamic';
 
@@ -133,6 +136,42 @@ export async function POST(request, { params }) {
         voucherTriggered
       };
     });
+
+    // 6. Multi-channel dispatch: Push notification & email to reviewer (non-blocking)
+    if (isHelpful && reviewData.reviewer_id) {
+      (async () => {
+        try {
+          // Native Web Push to reviewer's devices
+          await sendPushNotification(reviewData.reviewer_id, {
+            title: 'Critique Confirmed Helpful! 🍃',
+            body: `The author marked your critique on "${reviewData.submissionTitle || 'their manuscript'}" as Genuinely Helpful. +10 Leaves awarded!`,
+            link: 'https://www.paperthoughts.org/dashboard',
+            tag: 'pt-helpful-critique'
+          });
+
+          // Fetch reviewer email preference
+          const reviewerRow = await Database.queryOne(`
+            SELECT full_name, email, unsubscribed_from_reminders 
+            FROM users WHERE id = $1
+          `, [reviewData.reviewer_id]);
+
+          if (reviewerRow?.email && !reviewerRow.unsubscribed_from_reminders) {
+            const emailPayload = getHelpfulCritiqueEarnedEmail({
+              reviewerName: reviewerRow.full_name,
+              manuscriptTitle: reviewData.submissionTitle,
+              leavesAwarded: 10
+            });
+            await sendEmail({
+              to: reviewerRow.email,
+              subject: emailPayload.subject,
+              html: emailPayload.html
+            });
+          }
+        } catch (dispatchErr) {
+          console.error('Error dispatching helpful critique push/email notification:', dispatchErr);
+        }
+      })();
+    }
 
     return NextResponse.json({
       success: true,

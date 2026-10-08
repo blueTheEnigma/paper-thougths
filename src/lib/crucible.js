@@ -1,5 +1,8 @@
 import { Database } from './db.js';
 import { getThreeTierLeaderboard } from './leaderboard.js';
+import { sendPushNotification } from './pushNotifications.js';
+import { sendEmail } from './email.js';
+import { getMonthlyAuditStrikeEmail, getEvictedMonthlyEmbersEmail } from './emailTemplates.js';
 
 /**
  * Paper Thoughts Administrative Crucible & Eviction Service
@@ -307,10 +310,13 @@ export async function adjudicateReturnerPetition(userId, action = 'approve') {
 }
 
 export async function runMonthlyGovernanceAudit() {
-  // Identify members who had 0 submissions and 0 reviews in the past 30 days
+  // 1. Identify members who had 0 submissions and 0 reviews in the past 30 days
   // (excluding those on active sabbatical or already evicted)
   const inactiveUsers = await Database.query(`
-    SELECT u.id, u.full_name
+    SELECT u.id, u.full_name, u.email,
+           COALESCE(u.probation_strikes_this_year, 0) as probation_strikes_this_year,
+           COALESCE(u.consecutive_botm_misses, 0) as consecutive_botm_misses,
+           COALESCE(u.unsubscribed_from_reminders, false) as unsubscribed_from_reminders
     FROM users u
     WHERE u.membership_status != 'evicted'
       AND (u.sabbatical_until IS NULL OR u.sabbatical_until < NOW())
@@ -325,20 +331,136 @@ export async function runMonthlyGovernanceAudit() {
   `);
 
   let strikesAdded = 0;
-  if (inactiveUsers.length > 0) {
-    const inactiveIds = inactiveUsers.map(u => u.id);
-    const updateRes = await Database.query(`
-      UPDATE users
-      SET probation_strikes_this_year = COALESCE(probation_strikes_this_year, 0) + 1
-      WHERE id = ANY($1::int[])
-      RETURNING id
-    `, [inactiveIds]);
-    strikesAdded = updateRes.length;
+  let notificationsSent = 0;
+  let emailsSent = 0;
+  let autoEvicted = 0;
+
+  for (const user of inactiveUsers) {
+    const newStrikes = parseInt(user.probation_strikes_this_year, 10) + 1;
+    let newStatus = 'active';
+
+    if (newStrikes >= 3) {
+      newStatus = 'evicted';
+      await Database.query(`
+        UPDATE users
+        SET probation_strikes_this_year = $1,
+            membership_status = 'evicted',
+            evicted_at = NOW()
+        WHERE id = $2
+      `, [newStrikes, user.id]);
+      autoEvicted++;
+
+      // In-app notification
+      await Database.query(`
+        INSERT INTO user_notifications (user_id, title, message, type)
+        VALUES ($1, 'Sanctuary Eviction Notice 🥀', 'Your Paper Thoughts membership has entered eviction status following your 3rd inactivity strike. Visit The Returner\\'s Crossing to begin your renewal petition.', 'eviction')
+      `, [user.id]);
+    } else {
+      await Database.query(`
+        UPDATE users
+        SET probation_strikes_this_year = $1
+        WHERE id = $2
+      `, [newStrikes, user.id]);
+
+      // In-app notification
+      await Database.query(`
+        INSERT INTO user_notifications (user_id, title, message, type)
+        VALUES ($1, 'Inactivity Strike Notice ⚠️', 'A probation strike has been recorded for inactivity this cycle (' || $2 || '/3). Leave a critique in Critique Corner to protect your standing.', 'strike')
+      `, [user.id, newStrikes]);
+    }
+
+    strikesAdded++;
+
+    // Non-blocking Web Push Alert
+    try {
+      const pushTitle = newStatus === 'evicted' 
+        ? 'Sanctuary Eviction Notice 🥀' 
+        : `Sanctuary Warning: Strike ${newStrikes}/3 ⚠️`;
+      const pushBody = newStatus === 'evicted'
+        ? "Your membership has entered eviction status. Tap to visit The Returner's Crossing."
+        : "A strike has been recorded for inactivity. Submit a review to protect your standing.";
+      const pushLink = newStatus === 'evicted' ? '/returners-crossing' : '/dashboard/review';
+
+      await sendPushNotification(user.id, {
+        title: pushTitle,
+        body: pushBody,
+        link: pushLink
+      });
+      notificationsSent++;
+    } catch (pushErr) {
+      console.warn(`Audit push failed for user ${user.id}:`, pushErr.message);
+    }
+
+    // Transactional Email Alert
+    if (user.email && !user.unsubscribed_from_reminders) {
+      try {
+        const { subject, html } = getMonthlyAuditStrikeEmail({
+          userName: user.full_name,
+          strikes: newStrikes,
+          botmMisses: user.consecutive_botm_misses
+        });
+        await sendEmail({
+          to: user.email,
+          subject,
+          html
+        });
+        emailsSent++;
+      } catch (emailErr) {
+        console.warn(`Audit email failed for user ${user.id}:`, emailErr.message);
+      }
+    }
+  }
+
+  // 2. Dispatch Monthly "Embers" Re-engagement Sequence to Evicted Members
+  const evictedNudgeCandidates = await Database.query(`
+    SELECT u.id, u.full_name, u.email
+    FROM users u
+    WHERE u.membership_status = 'evicted'
+      AND COALESCE(u.unsubscribed_from_reminders, false) = false
+      AND (u.last_weekly_nudge_at IS NULL OR u.last_weekly_nudge_at < NOW() - INTERVAL '25 days')
+      AND (u.evicted_at IS NULL OR u.evicted_at < NOW() - INTERVAL '7 days')
+    LIMIT 50
+  `);
+
+  let embersSent = 0;
+  for (const evicted of evictedNudgeCandidates) {
+    try {
+      if (evicted.email) {
+        const { subject, html } = getEvictedMonthlyEmbersEmail({
+          userName: evicted.full_name,
+          email: evicted.email
+        });
+        await sendEmail({
+          to: evicted.email,
+          subject,
+          html
+        });
+        embersSent++;
+      }
+
+      await sendPushNotification(evicted.id, {
+        title: 'The Embers Still Glow 🍂',
+        body: "The sanctuary gates stand open. Walk The Returner's Crossing whenever you are ready.",
+        link: '/returners-crossing'
+      });
+
+      await Database.query(`
+        UPDATE users
+        SET last_weekly_nudge_at = NOW()
+        WHERE id = $1
+      `, [evicted.id]);
+    } catch (embersErr) {
+      console.warn(`Embers dispatch error for evicted user ${evicted.id}:`, embersErr.message);
+    }
   }
 
   return {
     auditedAt: new Date().toISOString(),
     inactiveIdentified: inactiveUsers.length,
-    strikesAdded
+    strikesAdded,
+    autoEvicted,
+    notificationsSent,
+    emailsSent,
+    embersSent
   };
 }

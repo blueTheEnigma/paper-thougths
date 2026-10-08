@@ -232,3 +232,102 @@ export function getSaturdayBotmEmail({ userName, botmTitle, botmAuthor, botmTeas
     })
   };
 }
+
+// 5. Monthly Embers Re-engagement Call (for Evicted Members)
+export function getEvictedMonthlyEmbersEmail({ userName, email }) {
+  const firstName = getFirstName(userName);
+  const unsubUrl = `${BASE_URL}/api/unsubscribe?email=${encodeURIComponent(email || '')}`;
+  const content = `
+    <p style="margin-top: 0;">Dear <strong>${firstName}</strong>,</p>
+    <p>A quiet evening settles over the Sanctuary. Though your desk in the Writers’ Village has rested for some time, your legacy in Paper Thoughts remains unbroken.</p>
+    
+    <div style="background-color: #FAF7F2; border: 1px solid rgba(201, 106, 66, 0.3); padding: 18px; border-radius: 14px; margin: 20px 0; text-align: center;">
+      <div style="font-size: 11px; font-weight: bold; color: #C96A42; text-transform: uppercase; letter-spacing: 1.5px;">The Sanctuary Oath</div>
+      <div style="font-size: 16px; font-weight: bold; color: #20070E; margin-top: 4px;">Your Leaves & Milestones Are Preserved</div>
+      <div style="font-size: 12px; color: #5C1A2E; margin-top: 4px;">Nothing has been wiped. Your wallet and ink are waiting intact.</div>
+    </div>
+
+    <p>When you are ready to return to our shared fires, <strong>The Returner’s Crossing</strong> is open. It takes only a short reflection and a fresh reading critique to renew your active key.</p>
+    <p style="font-size: 11px; color: #8D5B4C; margin-top: 25px;">
+      If you no longer wish to receive these monthly embers notices, you may 
+      <a href="${unsubUrl}" style="color: #C96A42; text-decoration: underline;">unsubscribe with 1-click here</a>.
+    </p>
+  `;
+
+  return {
+    subject: `🕯️ The Embers Still Glow: The Returner’s Crossing is Open | Paper Thoughts`,
+    html: renderBaseLayout({
+      title: `The Embers Still Glow`,
+      subtitle: `Your place at the table is waiting whenever you are ready`,
+      contentHtml: content,
+      ctaText: `Visit The Returner’s Crossing`,
+      ctaUrl: `${BASE_URL}/returners-crossing`
+    })
+  };
+}
+
+// 6. Sanctuary Standing Notice: Probation Strike Warning
+export function getMonthlyAuditStrikeEmail({ userName, strikes = 1, botmMisses = 0 }) {
+  const firstName = getFirstName(userName);
+  const content = `
+    <p style="margin-top: 0;">Greetings <strong>${firstName}</strong>,</p>
+    <p>Following our monthly community audit, we noticed that you missed participating in last month's writing drops or book critiques.</p>
+    
+    <div style="background-color: #330A17; color: #FAF7F2; padding: 18px; border-radius: 14px; margin: 20px 0; border: 1px solid rgba(242, 169, 138, 0.3);">
+      <div style="font-size: 11px; font-weight: bold; color: #F2A98A; text-transform: uppercase; letter-spacing: 1.5px;">Current Standing</div>
+      <div style="font-size: 20px; font-weight: bold; margin-top: 4px; color: #FAF7F2;">
+        Probation Strike ${strikes} of 3
+      </div>
+      <div style="font-size: 12px; color: rgba(250, 247, 242, 0.7); margin-top: 2px;">
+        ${botmMisses > 0 ? `${botmMisses} consecutive Book of the Month review(s) missed • ` : ''}3 strikes trigger eviction lockout
+      </div>
+    </div>
+
+    <p><strong>How to clear or protect your standing?</strong></p>
+    <ul style="padding-left: 20px; margin: 10px 0; font-size: 14px;">
+      <li style="margin-bottom: 6px;"><strong>Review 1 Piece:</strong> Visit the Critique Corner and leave one genuine review to secure active standing this month.</li>
+      <li style="margin-bottom: 6px;"><strong>Request Sabbatical Grace:</strong> Experiencing exams, illness, or intense workload? Turn on your Sabbatical Shield in your settings to pause all strike obligations.</li>
+    </ul>
+
+    <p>We believe in your voice and want you with us. See you in the lines!</p>
+  `;
+
+  return {
+    subject: `⚠️ Paper Thoughts Sanctuary Notice: Probation Strike Recorded (${strikes}/3)`,
+    html: renderBaseLayout({
+      title: `Sanctuary Standing Notice`,
+      subtitle: `Your monthly participation status and grace options`,
+      contentHtml: content,
+      ctaText: `Enter Critique Corner`,
+      ctaUrl: `${BASE_URL}/dashboard/review`
+    })
+  };
+}
+
+// 7. Author Helpful Critique Confirmation Alert
+export function getHelpfulCritiqueEarnedEmail({ reviewerName, manuscriptTitle, leavesAwarded = 10 }) {
+  const firstName = getFirstName(reviewerName);
+  const content = `
+    <p style="margin-top: 0;">Wonderful news, <strong>${firstName}</strong>!</p>
+    <p>An author has read your review on <em>"${manuscriptTitle || 'their manuscript'}"</em> and officially confirmed it as <strong>Genuinely Helpful</strong>!</p>
+    
+    <div style="background-color: #FAF7F2; border-left: 4px solid #C96A42; padding: 18px; border-radius: 10px; margin: 20px 0; text-align: center;">
+      <div style="font-size: 11px; font-weight: bold; color: #C96A42; text-transform: uppercase; letter-spacing: 1px;">Craft Honor</div>
+      <div style="font-size: 24px; font-weight: bold; color: #20070E; margin-top: 4px;">+${leavesAwarded} Spendable Leaves 🍃</div>
+      <div style="font-size: 12px; color: #5C1A2E; margin-top: 4px;">Transferred directly from the Community Treasury to your balance</div>
+    </div>
+
+    <p>Great critique sharpens both the writer and the reviewer. Thank you for your thoughtfulness and dedication to the craft.</p>
+  `;
+
+  return {
+    subject: `🍃 Your Critique Struck True: +${leavesAwarded} Leaves Awarded! | Paper Thoughts`,
+    html: renderBaseLayout({
+      title: `Critique Confirmed Helpful!`,
+      subtitle: `The author found deep value in your words`,
+      contentHtml: content,
+      ctaText: `View Updated Leaves Balance`,
+      ctaUrl: `${BASE_URL}/dashboard`
+    })
+  };
+}

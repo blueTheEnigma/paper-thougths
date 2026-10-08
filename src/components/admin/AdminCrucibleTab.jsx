@@ -1144,6 +1144,8 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
             <div className="p-3 rounded-xl bg-black/40 border border-white/10 text-xs font-serif text-[#F2A98A]/80 space-y-1">
               <div>• Flags members with 0 submissions and 0 critiques in the prior 30 days.</div>
               <div>• Adds +1 probation strike (skipping members on active sabbatical).</div>
+              <div>• Dispatches multi-channel Web Push alerts & transactional emails.</div>
+              <div>• Sends monthly "Embers" re-engagement sequence to evicted members.</div>
               <div>• Updates Due for Eviction radar in real-time.</div>
             </div>
 

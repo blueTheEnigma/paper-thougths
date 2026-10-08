@@ -7,7 +7,7 @@ import {
   Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
   ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
   BookOpen, MessageSquare, Gift, Coins, Settings, X, Check, Book,
-  Download, Lock, Quote, Bookmark, Compass, ShieldAlert, GraduationCap, AlertCircle, Calendar, Trophy
+  Download, Lock, Quote, Bookmark, Compass, ShieldAlert, GraduationCap, AlertCircle, Calendar, Trophy, Bell
 } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
@@ -18,6 +18,7 @@ import PanguinAvatar from '@/components/PanguinAvatar';
 import OnboardingSequence from '@/components/OnboardingSequence';
 import { getAvatarStage } from '@/lib/avatar';
 import LiteraryReaderModal from '@/components/common/LiteraryReaderModal';
+import PushNotificationBell from '@/components/notifications/PushNotificationBell';
 
 const GENRES = [
   'Fiction',
@@ -1572,6 +1573,7 @@ export default function DashboardClient({
                 <span>Crew CRM</span>
               </Link>
             )}
+            <PushNotificationBell />
             <div className="bg-white/50 backdrop-blur-sm border border-sage/15 py-2 px-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
                <span className="text-xs font-bold text-ink/70 truncate max-w-[140px] sm:max-w-none">{userEmail}</span>
                <UserButton afterSignOutUrl="/" />
@@ -3162,6 +3164,30 @@ export default function DashboardClient({
                           </button>
                         );
                       })}
+                    </div>
+                  </div>
+
+                  {/* Push Notifications & Device Alerts Card */}
+                  <div className="bg-white border border-sage/15 p-6 sm:p-8 rounded-[32px] shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-sage/10 pb-3">
+                      <div>
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-burgundy flex items-center gap-2">
+                          <Bell size={16} className="text-[#c96a42]" />
+                          <span>Sanctuary Push Notifications</span>
+                        </h4>
+                        <p className="text-xs text-ink/60 font-serif mt-0.5">
+                          Receive lock-screen alerts for critique feedback, prompt drops, and standing notices.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="pt-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-cream/30 border border-sage/15 p-4 rounded-2xl">
+                      <div className="space-y-1">
+                        <span className="text-xs font-bold text-ink/90 font-serif">Lock-Screen & Device Push</span>
+                        <p className="text-[11px] text-ink/60 font-serif">
+                          No app store required. Works natively on mobile and desktop browsers via Web Push.
+                        </p>
+                      </div>
+                      <PushNotificationBell />
                     </div>
                   </div>
                 </div>
