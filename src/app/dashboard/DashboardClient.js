@@ -7,7 +7,7 @@ import {
   Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
   ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
   BookOpen, MessageSquare, Gift, Coins, Settings, X, Check, Book,
-  Download, Lock, Quote, Bookmark, Compass, ShieldAlert, GraduationCap, AlertCircle, Calendar
+  Download, Lock, Quote, Bookmark, Compass, ShieldAlert, GraduationCap, AlertCircle, Calendar, Trophy
 } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
@@ -1729,7 +1729,39 @@ export default function DashboardClient({
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start">
                   {/* Left Column (Stats & Economy Guide) */}
                   <div className="lg:col-span-2 space-y-6 sm:space-y-8">
-                    
+                    {/* 3-Tier Arena & Monthly Laurels Teaser Banner */}
+                    <motion.div 
+                      whileHover={{ scale: 1.008 }}
+                      className="p-5 sm:p-6 rounded-[28px] bg-gradient-to-r from-[#20070e] via-[#3d111d] to-[#20070e] text-[#FAF7F0] border border-[#c96a42]/35 shadow-lg relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                    >
+                      <div className="absolute top-0 right-0 w-80 h-full bg-radial from-[#F2A98A]/15 to-transparent pointer-events-none" />
+                      <div className="space-y-1.5 relative z-10 max-w-xl">
+                        <div className="flex items-center gap-2">
+                          <span className="bg-[#c96a42] text-white text-[9px] font-mono font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            ₦18,000 Cash Pool Active
+                          </span>
+                          <span className="text-[10px] font-mono text-[#F2A98A]">
+                            Top 10 Silver Bullet Zone
+                          </span>
+                        </div>
+                        <h3 className="font-display font-extrabold text-xl sm:text-2xl text-white">
+                          The Arena of Laurels & Scribes&apos; Monument
+                        </h3>
+                        <p className="text-xs text-white/75 font-serif leading-relaxed">
+                          Compete for nine monthly ₦2,000 cash laurels across Fiction, Poetry, and Peer Critiques. Track your annual standing and secure the Veteran Shield.
+                        </p>
+                      </div>
+                      <div className="relative z-10 self-start md:self-center flex-shrink-0">
+                        <Link
+                          href="/leaderboard"
+                          className="inline-flex items-center gap-2 bg-[#c96a42] hover:bg-[#d8764e] text-white text-xs font-bold uppercase tracking-wider px-5 py-3 rounded-2xl shadow-md transition-all cursor-pointer"
+                        >
+                          <Trophy size={14} className="text-amber-200" />
+                          <span>Enter The Arena 🏆</span>
+                        </Link>
+                      </div>
+                    </motion.div>
+
                     {/* User Stats Grid (Membership, Milestone Tokens, Spendable Leaves, Streak if active) */}
                     <div className={`grid grid-cols-1 sm:grid-cols-2 ${profile.streak > 0 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4 sm:gap-6`}>
                       {/* Membership Status Card */}
@@ -2555,6 +2587,15 @@ export default function DashboardClient({
                     <p className="text-xs sm:text-sm text-ink/75 font-serif leading-relaxed">
                       Every month, we celebrate the members who read with depth, write with passion, and support the community. Here are the crowned laureles for this cycle.
                     </p>
+                    <div className="pt-2">
+                      <Link 
+                        href="/leaderboard"
+                        className="inline-flex items-center gap-2 bg-[#20070e] hover:bg-[#3d111d] text-[#FAF7F0] text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl shadow-md transition-all cursor-pointer border border-[#c96a42]/30"
+                      >
+                        <Trophy size={14} className="text-amber-300" />
+                        <span>Explore Full 3-Tier Leaderboard & ₦18k Arena →</span>
+                      </Link>
+                    </div>
                   </div>
                 </div>
 

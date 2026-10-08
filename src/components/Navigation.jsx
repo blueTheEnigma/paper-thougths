@@ -6,7 +6,7 @@ import NotificationBell from './NotificationBell';
 import { usePathname } from 'next/navigation';
 import { 
   BookOpen, Compass, ShoppingBag, Feather, Sparkles, 
-  User, Settings, ShieldCheck, Flame
+  User, Settings, ShieldCheck, Flame, Trophy
 } from 'lucide-react';
 import { useAuth, useUser, UserButton } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
@@ -131,6 +131,17 @@ export default function Navigation() {
               </Link>
             );
           })}
+          <Link 
+            href="/leaderboard" 
+            className={`relative px-3 py-1.5 transition-all rounded-xl flex items-center gap-1.5 whitespace-nowrap border text-xs font-bold ${
+              isActive('/leaderboard')
+                ? "bg-[#20070e] text-[#FAF7F0] border-[#c96a42] shadow-xs"
+                : "bg-[#20070e]/5 text-[#20070e] hover:bg-[#20070e]/10 border-[#20070e]/10"
+            }`}
+          >
+            <Trophy size={13} className="text-[#c96a42]" />
+            <span>Arena 🏆</span>
+          </Link>
         </div>
         
         {/* Right side auth */}
