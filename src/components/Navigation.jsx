@@ -220,6 +220,7 @@ export default function Navigation() {
               </span>
             </Link>
           );
+        })}
         {isLoaded && isSignedIn && isAdmin && (
           <Link 
             href="/admin" 
