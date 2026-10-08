@@ -21,7 +21,13 @@ function getArchetypeDisplayName(key) {
   return key;
 }
 
-export default function PanguinAvatar({ lifetimeLeaves, avatarUrl, variant = "compact", className = "", archetype = null }) {
+const FOUNDING_BADGES = {
+  founding_writer: { label: 'Founding Scribe 📜', bg: 'bg-amber-500/10 text-amber-900 border-amber-500/30' },
+  founding_poet: { label: 'Founding Poet 🪶', bg: 'bg-purple-500/10 text-purple-900 border-purple-500/30' },
+  founding_scribe: { label: 'Founding Scribe ✨', bg: 'bg-amber-500/15 text-amber-900 border-amber-500/30' },
+};
+
+export default function PanguinAvatar({ lifetimeLeaves, avatarUrl, variant = "compact", className = "", archetype = null, foundingBadge = null }) {
   const stage = getAvatarStage(lifetimeLeaves);
   const [showTooltip, setShowTooltip] = useState(false);
   const displayImage = avatarUrl || stage.image;
@@ -66,6 +72,11 @@ export default function PanguinAvatar({ lifetimeLeaves, avatarUrl, variant = "co
               {getArchetypeDisplayName(archetype)}
             </span>
           )}
+          {foundingBadge && FOUNDING_BADGES[foundingBadge] && (
+            <span className={`text-[8px] font-sans font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 rounded-sm mt-0.5 border ${FOUNDING_BADGES[foundingBadge].bg}`}>
+              {FOUNDING_BADGES[foundingBadge].label}
+            </span>
+          )}
         </div>
         
         {showTooltip && stage.nextStage && (
@@ -85,8 +96,13 @@ export default function PanguinAvatar({ lifetimeLeaves, avatarUrl, variant = "co
         <Image src={displayImage} alt={stage.name} fill sizes="(max-width: 640px) 96px, 112px" className="object-cover" />
       </div>
       <div className="flex flex-col flex-1 w-full max-w-xs text-center sm:text-left">
-        <div className="flex items-baseline justify-center sm:justify-start gap-2 mb-1">
+        <div className="flex flex-wrap items-baseline justify-center sm:justify-start gap-2 mb-1">
           <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Archive Status</span>
+          {foundingBadge && FOUNDING_BADGES[foundingBadge] && (
+            <span className={`text-[9px] font-sans font-bold uppercase tracking-[0.05em] px-2 py-0.5 rounded-full border shadow-xs ${FOUNDING_BADGES[foundingBadge].bg}`}>
+              {FOUNDING_BADGES[foundingBadge].label}
+            </span>
+          )}
         </div>
         <h3 className="text-xl sm:text-2xl font-display font-extrabold text-burgundy mb-2.5">{stage.name}</h3>
         

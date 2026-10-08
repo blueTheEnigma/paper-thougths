@@ -82,6 +82,8 @@ export async function GET() {
       profile.isCrewMember = await isCrewMember(user.id);
       profile.avatarUrl = dbUser.avatar_url || null;
       profile.archetype = dbUser.reader_archetype || null;
+      profile.foundingBadge = dbUser.founding_badge || null;
+      profile.membershipStatus = dbUser.membership_status || 'active';
     }
 
     return NextResponse.json({ success: true, profile });

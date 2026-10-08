@@ -172,7 +172,7 @@ export default function Navigation() {
               <div className="flex items-center gap-2">
                 {profile && (
                   <div className="p-0.5 rounded-full border border-sage/20 bg-white/60 shadow-sm flex items-center justify-center">
-                    <PanguinAvatar lifetimeLeaves={profile.lifetimeLeaves || 0} avatarUrl={profile.avatarUrl} variant="icon" archetype={profile.archetype} />
+                    <PanguinAvatar lifetimeLeaves={profile.lifetimeLeaves || 0} avatarUrl={profile.avatarUrl} variant="icon" archetype={profile.archetype} foundingBadge={profile.foundingBadge} />
                   </div>
                 )}
                 <UserButton afterSignOutUrl="/" />

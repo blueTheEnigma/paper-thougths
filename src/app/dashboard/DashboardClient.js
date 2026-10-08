@@ -1449,7 +1449,7 @@ export default function DashboardClient({
         {/* Header */}
         <motion.div variants={itemVariants} className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 md:gap-8 pb-4 md:pb-8 border-b border-sage/10">
           <div className="w-full lg:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-8">
-            <PanguinAvatar lifetimeLeaves={lifetimeLeaves} avatarUrl={avatarUrl} variant="full" archetype={profile.archetype} />
+            <PanguinAvatar lifetimeLeaves={lifetimeLeaves} avatarUrl={avatarUrl} variant="full" archetype={profile.archetype} foundingBadge={profile.foundingBadge} />
             <div>
               <h1 className="text-2xl sm:text-4xl md:text-5xl font-display text-burgundy leading-none tracking-tight font-extrabold mb-2 md:mb-3">
                 Welcome back, <br className="sm:hidden" />
@@ -1457,6 +1457,11 @@ export default function DashboardClient({
               </h1>
               <div className="flex flex-wrap items-center gap-2 md:gap-3 font-mono text-[10px] sm:text-xs">
                 <span className="bg-white px-2.5 py-1 border border-sage/20 rounded shadow-sm text-burgundy font-bold">{profile.lkid}</span>
+                {profile.foundingBadge && (
+                  <span className="bg-amber-500/15 border border-amber-500/30 text-amber-900 font-sans font-bold px-2.5 py-1 rounded shadow-xs uppercase tracking-wider text-[9px] sm:text-[10px]">
+                    {profile.foundingBadge === 'founding_poet' ? '🪶 Founding Poet' : profile.foundingBadge === 'founding_scribe' ? '✨ Founding Scribe' : '📜 Founding Scribe'}
+                  </span>
+                )}
                 <span className="text-ink/30">•</span>
                 <span className="flex items-center gap-1.5 text-ink/60 font-bold"><MapPin size={12} className="text-sage"/> {profile.chapter}</span>
                 <span className="text-ink/30">•</span>

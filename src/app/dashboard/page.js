@@ -92,6 +92,11 @@ async function getLocalArchiveData(clerkUser) {
       preferredGenres: profileRow.preferred_genres || [],
       onboarded: profileRow.onboarded || false,
       archetype: profileRow.reader_archetype || null,
+      foundingBadge: profileRow.founding_badge || null,
+      membershipStatus: profileRow.membership_status || 'active',
+      probationStrikes: parseInt(profileRow.probation_strikes_this_year || 0),
+      silverBullets: parseInt(profileRow.silver_bullets || 0),
+      sabbaticalUntil: profileRow.sabbatical_until ? new Date(profileRow.sabbatical_until).toISOString().split('T')[0] : null,
       isCrewMember: await isCrewMember(dbUser.id)
     };
 

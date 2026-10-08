@@ -171,12 +171,29 @@ export default function ReviewClient() {
       setError("Please provide a Perception (Theme) analysis.");
       return;
     }
+    if (mirrorWordCount < 10) {
+      setError(`The Perception (Theme) analysis must be at least 10 words (currently ${mirrorWordCount}/10 words).`);
+      return;
+    }
     if (!highwaterResponse.trim()) {
       setError("Please provide a Climax (Standout Moment) analysis.");
       return;
     }
+    if (highwaterWordCount < 10) {
+      setError(`The Climax (Standout Moment) analysis must be at least 10 words (currently ${highwaterWordCount}/10 words).`);
+      return;
+    }
     if (!pivotResponse.trim()) {
       setError("Please provide Constructive Feedback.");
+      return;
+    }
+    if (pivotWordCount < 10) {
+      setError(`The Constructive Feedback must be at least 10 words (currently ${pivotWordCount}/10 words).`);
+      return;
+    }
+    const totalWords = mirrorWordCount + highwaterWordCount + pivotWordCount;
+    if (totalWords < 30) {
+      setError(`Total critique length must be at least 30 words across the three sections (currently ${totalWords}/30 words).`);
       return;
     }
     if (profile && tipAmount > profile.spendableLeaves) {
@@ -279,6 +296,14 @@ export default function ReviewClient() {
                 <Clock size={14} /> Early-Bird Window active (+1.5x payout rate applied)
               </div>
             )}
+
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 text-[11px] font-medium text-burgundy flex items-start gap-2 text-left">
+              <span className="text-base leading-none">⏳</span>
+              <div>
+                <strong className="block text-xs font-bold font-sans">Author Evaluation Pending:</strong>
+                If the author blindly confirms your critique was genuinely helpful, you will automatically be credited an additional <strong>+10 Leaves</strong> from the clubhouse treasury and move up the <strong>Reviewer of the Month</strong> rankings!
+              </div>
+            </div>
             
             {reviewResult.milestoneTriggered && (
               <div className="bg-accent/10 border border-accent/25 rounded-xl p-3 text-[11px] font-bold text-burgundy flex items-center gap-1.5">
@@ -355,6 +380,9 @@ export default function ReviewClient() {
               <div className="border-b border-sage/10 pb-4 mb-6">
                 <h3 className="font-display text-xl text-burgundy flex items-center gap-2"><PenTool size={20}/> The Critique Ledger</h3>
                 <p className="text-[10px] text-ink/40 uppercase tracking-widest font-bold mt-1">Review ledger logs on-chain</p>
+                <div className="mt-2.5 p-2.5 bg-accent/10 border border-accent/20 rounded-xl text-[11px] text-burgundy font-medium leading-relaxed">
+                  ✨ <strong>Unlimited Reviews Active:</strong> Earn <strong>5 🍃</strong> instantly upon submission, plus <strong>+10 🍃</strong> more when the author confirms your critique was genuinely helpful!
+                </div>
               </div>
 
               <form onSubmit={handleSubmitReview} className="space-y-6">
@@ -408,8 +436,10 @@ export default function ReviewClient() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-baseline">
                     <label className="text-xs font-bold text-ink uppercase tracking-wider">3. Perception (Theme)</label>
-                    <span className="text-[10px] font-mono font-bold text-ink/40">
-                      {mirrorWordCount} words
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
+                      mirrorWordCount >= 10 ? 'bg-accent/20 text-burgundy' : 'bg-cream border border-sage/10 text-ink/40'
+                    }`}>
+                      {mirrorWordCount >= 10 ? `✅ ${mirrorWordCount} words` : `${mirrorWordCount} / 10 words min`}
                     </span>
                   </div>
                   <p className="text-[10px] text-ink/50 leading-relaxed italic">
@@ -428,8 +458,10 @@ export default function ReviewClient() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-baseline">
                     <label className="text-xs font-bold text-ink uppercase tracking-wider">4. Climax (Standout Moment)</label>
-                    <span className="text-[10px] font-mono font-bold text-ink/40">
-                      {highwaterWordCount} words
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
+                      highwaterWordCount >= 10 ? 'bg-accent/20 text-burgundy' : 'bg-cream border border-sage/10 text-ink/40'
+                    }`}>
+                      {highwaterWordCount >= 10 ? `✅ ${highwaterWordCount} words` : `${highwaterWordCount} / 10 words min`}
                     </span>
                   </div>
                   <p className="text-[10px] text-ink/50 leading-relaxed italic">
@@ -448,8 +480,10 @@ export default function ReviewClient() {
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-baseline">
                     <label className="text-xs font-bold text-ink uppercase tracking-wider">5. Constructive Feedback</label>
-                    <span className="text-[10px] font-mono font-bold text-ink/40">
-                      {pivotWordCount} words
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
+                      pivotWordCount >= 10 ? 'bg-accent/20 text-burgundy' : 'bg-cream border border-sage/10 text-ink/40'
+                    }`}>
+                      {pivotWordCount >= 10 ? `✅ ${pivotWordCount} words` : `${pivotWordCount} / 10 words min`}
                     </span>
                   </div>
                   <p className="text-[10px] text-ink/50 leading-relaxed italic">
@@ -462,6 +496,19 @@ export default function ReviewClient() {
                     placeholder="Offer constructive feedback on what to target for revision..."
                     className="w-full bg-cream/20 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy placeholder-ink/30 text-ink leading-relaxed"
                   />
+                </div>
+
+                {/* Total Word Count Ticker */}
+                <div className="flex justify-between items-center text-[10px] px-1 font-mono pt-1">
+                  <span className="text-ink/50 uppercase tracking-widest font-bold">Total Critique Length</span>
+                  <span className={`font-bold ${
+                    (mirrorWordCount + highwaterWordCount + pivotWordCount) >= 30 
+                      ? 'text-burgundy' 
+                      : 'text-ink/40'
+                  }`}>
+                    {(mirrorWordCount + highwaterWordCount + pivotWordCount) >= 30 ? '✅ ' : ''}
+                    {mirrorWordCount + highwaterWordCount + pivotWordCount} / 30 words min
+                  </span>
                 </div>
 
                 {/* 6. Support the Author with Leaves (Tipping) */}

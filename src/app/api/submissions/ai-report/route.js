@@ -55,15 +55,18 @@ export async function GET(request) {
       return NextResponse.json({ success: false, error: 'No feedback report compiled for this submission yet.' }, { status: 404 });
     }
 
-    // 3. Fetch anonymous reviews
+    // 3. Fetch anonymous reviews with helpful evaluation status
     const reviewsRes = await Database.query(`
-      SELECT pacing_rating as "pacingRating",
+      SELECT id,
+             pacing_rating as "pacingRating",
              strengths_array as "strengthsArray",
              mirror_response as "mirrorResponse",
              highwater_response as "highwaterResponse",
              pivot_response as "pivotResponse",
              pacing_score as "pacingScore",
              technical_score as "technicalScore",
+             is_helpful as "isHelpful",
+             helpful_reviewed_at as "helpfulReviewedAt",
              created_at as "createdAt"
       FROM peer_reviews
       WHERE submission_id = $1

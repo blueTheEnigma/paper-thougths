@@ -389,7 +389,7 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
               <div className="text-2xl sm:text-3xl font-display text-burgundy font-extrabold">📚 {userStats.weeklyReviews}/3</div>
             </div>
             <div className="text-center space-y-1 p-2 border-l border-sage/15 flex flex-col items-center justify-center">
-              <PanguinAvatar lifetimeLeaves={userStats.lifetimeLeaves || 0} avatarUrl={userStats.avatarUrl} variant="compact" archetype={userStats.archetype} />
+              <PanguinAvatar lifetimeLeaves={userStats.lifetimeLeaves || 0} avatarUrl={userStats.avatarUrl} variant="compact" archetype={userStats.archetype} foundingBadge={userStats.foundingBadge} />
             </div>
           </motion.div>
 
@@ -561,9 +561,9 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
                     <span>Critique Rewards</span>
                   </div>
                   <ul className="space-y-1.5 list-disc pl-4 font-medium">
-                    <li>Earn <strong>+1.0 Token</strong> per critique.</li>
-                    <li>Early-birds (weekend) reward <strong>+1.5 Tokens &amp; +15 Leaves</strong>.</li>
-                    <li>Double-blind active for pure editorial craft.</li>
+                    <li>Unlimited reviews: Earn <strong>5 Leaves</strong> per critique.</li>
+                    <li>Author Helpful Bonus: Earn <strong>+10 Leaves</strong> when confirmed.</li>
+                    <li>Compete for <strong>Reviewer of the Month</strong> (₦2,000 cash prize).</li>
                   </ul>
                 </div>
               </div>

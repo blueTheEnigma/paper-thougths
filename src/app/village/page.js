@@ -74,7 +74,8 @@ export default async function VillagePage() {
       lkId: dbUser.lk_id || 'Guest',
       name: dbUser.full_name || 'Writer',
       avatarUrl: dbUser.avatar_url || null,
-      archetype: dbUser.reader_archetype || null
+      archetype: dbUser.reader_archetype || null,
+      foundingBadge: dbUser.founding_badge || null
     };
   }
 

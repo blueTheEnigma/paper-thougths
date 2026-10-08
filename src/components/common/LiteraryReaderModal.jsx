@@ -196,7 +196,7 @@ export default function LiteraryReaderModal({
                   Love great literature? Sharpen the craft.
                 </h4>
                 <p className="text-[10px] sm:text-[11px] text-ink/70 font-serif leading-relaxed">
-                  Review active prompt manuscripts in the double-blind Workshop to earn Milestone Tokens and spendable Leaves.
+                  Review active prompt manuscripts in the double-blind Workshop to earn 5 Leaves (+10 when confirmed helpful by author).
                 </p>
                 <Link
                   href="/dashboard/review"

@@ -10,6 +10,41 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
   const [activeSubTab, setActiveSubTab] = useState('summary'); // 'summary' or 'critiques'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [evaluatingReviewId, setEvaluatingReviewId] = useState(null);
+  const [evaluationFeedback, setEvaluationFeedback] = useState({});
+
+  const handleEvaluateHelpful = async (reviewId, isHelpful) => {
+    if (!reviewId || evaluatingReviewId) return;
+    setEvaluatingReviewId(reviewId);
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}/helpful`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isHelpful })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, isHelpful, helpfulReviewedAt: new Date().toISOString() } : r));
+        setEvaluationFeedback(prev => ({
+          ...prev,
+          [reviewId]: { success: true, message: data.message }
+        }));
+      } else {
+        setEvaluationFeedback(prev => ({
+          ...prev,
+          [reviewId]: { error: true, message: data.error || 'Failed to update evaluation.' }
+        }));
+      }
+    } catch (err) {
+      console.error('Error evaluating critique:', err);
+      setEvaluationFeedback(prev => ({
+        ...prev,
+        [reviewId]: { error: true, message: 'Network error. Please try again.' }
+      }));
+    } finally {
+      setEvaluatingReviewId(null);
+    }
+  };
 
   const fetchReport = useCallback(async () => {
     setLoading(true);
@@ -556,6 +591,55 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
                           <p className="text-xs sm:text-sm text-ink/80 leading-relaxed font-serif bg-cream/10 p-4 rounded-2xl border border-sage/5 italic">
                             &quot;{rev.pivotResponse}&quot;
                           </p>
+                        </div>
+                      </div>
+
+                      {/* Author Helpful Evaluation Bar */}
+                      <div className="pt-4 border-t border-sage/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-cream/30 -mx-6 sm:-mx-8 -mb-6 sm:-mb-8 p-4 sm:p-5 rounded-b-[32px]">
+                        <div className="space-y-0.5">
+                          <div className="text-[10px] font-sans font-bold uppercase tracking-wider text-burgundy flex items-center gap-1.5">
+                            <span>Author Evaluation</span>
+                            <span className="text-[9px] font-normal text-ink/40 font-mono">• Zero cost to your wallet</span>
+                          </div>
+                          <p className="text-[11px] text-ink/60 font-serif">
+                            Was this critique helpful? Confirming awards +10 Leaves to the reviewer from the clubhouse treasury and powers the Reviewer of the Month prize.
+                          </p>
+                          {evaluationFeedback[rev.id]?.error && (
+                            <p className="text-[10px] text-burgundy font-bold">{evaluationFeedback[rev.id].message}</p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                          {rev.isHelpful === true ? (
+                            <div className="inline-flex items-center gap-1.5 bg-accent/15 border border-accent/30 text-burgundy font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs">
+                              <span>🌟</span>
+                              <span>Marked Genuinely Helpful (+10 🍃 Awarded)</span>
+                            </div>
+                          ) : rev.isHelpful === false ? (
+                            <div className="inline-flex items-center gap-1.5 bg-black/5 border border-black/10 text-ink/50 font-bold text-xs px-3 py-1.5 rounded-xl">
+                              <span>Passed (Not Helpful)</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                disabled={evaluatingReviewId === rev.id}
+                                onClick={() => handleEvaluateHelpful(rev.id, false)}
+                                className="px-3 py-2 rounded-xl border border-sage/30 hover:border-ink/40 text-ink/60 hover:text-ink text-xs font-bold transition-all disabled:opacity-40 cursor-pointer"
+                              >
+                                {evaluatingReviewId === rev.id ? 'Saving...' : 'Pass'}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={evaluatingReviewId === rev.id}
+                                onClick={() => handleEvaluateHelpful(rev.id, true)}
+                                className="px-4 py-2 rounded-xl bg-accent hover:bg-burgundy text-burgundy hover:text-cream text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
+                              >
+                                <span>🍃</span>
+                                <span>{evaluatingReviewId === rev.id ? 'Rewarding...' : 'Genuinely Helpful (+10 🍃)'}</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
