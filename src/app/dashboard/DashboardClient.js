@@ -7,7 +7,7 @@ import {
   Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
   ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
   BookOpen, MessageSquare, Gift, Coins, Settings, X, Check, Book,
-  Download, Lock, Quote, Bookmark, Compass
+  Download, Lock, Quote, Bookmark, Compass, ShieldAlert, GraduationCap, AlertCircle, Calendar
 } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
@@ -353,9 +353,48 @@ export default function DashboardClient({
   const [donateMessage, setDonateMessage] = useState(null);
   const [poolLoading, setPoolLoading] = useState(true);
 
+
+  // Academic Sabbatical Shield states
+  const [sabbaticalUntil, setSabbaticalUntil] = useState(profile?.sabbaticalUntil || null);
+  const [showSabbaticalModal, setShowSabbaticalModal] = useState(false);
+  const [sabbaticalDays, setSabbaticalDays] = useState(30);
+  const [sabbaticalReason, setSabbaticalReason] = useState('');
+  const [submittingSabbatical, setSubmittingSabbatical] = useState(false);
+  const [sabbaticalSuccess, setSabbaticalSuccess] = useState(null);
+  const [sabbaticalError, setSabbaticalError] = useState(null);
+
+  const handleRequestSabbatical = async (e) => {
+    e.preventDefault();
+    setSubmittingSabbatical(true);
+    setSabbaticalError(null);
+    setSabbaticalSuccess(null);
+    try {
+      const res = await fetch('/api/me/sabbatical', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days: sabbaticalDays, reason: sabbaticalReason }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to request sabbatical');
+      }
+      setSabbaticalUntil(data.sabbaticalUntil);
+      if (profile) profile.sabbaticalUntil = data.sabbaticalUntil;
+      setSabbaticalSuccess(data.message);
+      setTimeout(() => {
+        setShowSabbaticalModal(false);
+        setSabbaticalSuccess(null);
+      }, 2500);
+    } catch (err) {
+      setSabbaticalError(err.message || 'Failed to request sabbatical');
+    } finally {
+      setSubmittingSabbatical(false);
+    }
+  };
+
   // Lock Body Scroll when any Modal is open
   useEffect(() => {
-    const isAnyModalOpen = selectedSubForRead || selectedSubForEdit || selectedReportId || showBuyLeavesModal;
+    const isAnyModalOpen = selectedSubForRead || selectedSubForEdit || selectedReportId || showBuyLeavesModal || showSabbaticalModal;
     if (isAnyModalOpen) {
       const originalStyle = window.getComputedStyle(document.body).overflow;
       document.body.style.overflow = 'hidden';
@@ -363,7 +402,7 @@ export default function DashboardClient({
         document.body.style.overflow = originalStyle;
       };
     }
-  }, [selectedSubForRead, selectedSubForEdit, selectedReportId, showBuyLeavesModal]);
+  }, [selectedSubForRead, selectedSubForEdit, selectedReportId, showBuyLeavesModal, showSabbaticalModal]);
 
   // 1-Click Copy Manuscript Quote / Logline
   const [copiedSubId, setCopiedSubId] = useState(null);
@@ -1462,6 +1501,24 @@ export default function DashboardClient({
                     {profile.foundingBadge === 'founding_poet' ? '🪶 Founding Poet' : profile.foundingBadge === 'founding_scribe' ? '✨ Founding Scribe' : '📜 Founding Scribe'}
                   </span>
                 )}
+                {profile.membershipStatus === 'evicted' ? (
+                  <Link 
+                    href="/returners-crossing" 
+                    className="bg-red-500/15 border border-red-500/30 text-red-800 hover:text-red-900 font-sans font-bold px-2.5 py-1 rounded shadow-xs uppercase tracking-wider text-[9px] sm:text-[10px] flex items-center gap-1 hover:bg-red-500/25 transition-all"
+                  >
+                    <ShieldAlert size={11} className="text-red-600" />
+                    <span>Dormant / Exiled (Walk Gates →)</span>
+                  </Link>
+                ) : sabbaticalUntil && new Date(sabbaticalUntil) > new Date() ? (
+                  <span className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 font-sans font-bold px-2.5 py-1 rounded shadow-xs uppercase tracking-wider text-[9px] sm:text-[10px] flex items-center gap-1">
+                    <GraduationCap size={11} className="text-emerald-700" />
+                    <span>Sabbatical Active</span>
+                  </span>
+                ) : profile.probationStrikes > 0 ? (
+                  <span className="bg-amber-500/15 border border-amber-500/30 text-amber-900 font-sans font-bold px-2.5 py-1 rounded shadow-xs text-[9px] sm:text-[10px]">
+                    ⚠️ {profile.probationStrikes}/3 Strikes
+                  </span>
+                ) : null}
                 <span className="text-ink/30">•</span>
                 <span className="flex items-center gap-1.5 text-ink/60 font-bold"><MapPin size={12} className="text-sage"/> {profile.chapter}</span>
                 <span className="text-ink/30">•</span>
@@ -1617,6 +1674,58 @@ export default function DashboardClient({
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-6 sm:space-y-8"
               >
+                {/* Sealed Sanctuary Exile Gate Banner (Shown if member is evicted) */}
+                {profile.membershipStatus === 'evicted' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-[#1b0610] via-[#120308] to-[#080204] border-2 border-[#c96a42]/40 shadow-2xl relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-80 h-80 bg-[#c96a42]/10 blur-[90px] pointer-events-none" />
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+                      <div className="space-y-3 max-w-2xl">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wider">
+                          <ShieldAlert size={12} />
+                          <span>Sanctuary Standing: Dormant / Exiled</span>
+                        </div>
+                        <h3 className="font-display font-extrabold text-2xl sm:text-3xl text-cream">
+                          The Gates of Exile: Sanctuary Sealed
+                        </h3>
+                        <p className="text-xs sm:text-sm font-serif text-cream/75 leading-relaxed">
+                          Your active seat at the clubhouse has been paused due to 3 recorded inactivity strikes or consecutive missed reading cycles. Your past manuscripts and lifetime leaves are completely safe, but you must complete the Three Gates of Return to reclaim full sanctuary privileges.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-mono text-cream/60">
+                          <span>Strikes: <strong className="text-red-400">{profile.probationStrikes || 3}/3</strong></span>
+                          <span>•</span>
+                          <span>Missed Books: <strong className="text-red-400">{profile.consecutiveBotmMisses || 2}</strong></span>
+                          {profile.evictedAt && (
+                            <>
+                              <span>•</span>
+                              <span>Exiled on: <strong className="text-cream/80">{new Date(profile.evictedAt).toLocaleDateString()}</strong></span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row lg:flex-col gap-3 w-full lg:w-auto">
+                        <Link
+                          href="/returners-crossing"
+                          className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#c96a42] to-burgundy text-cream font-bold text-xs uppercase tracking-widest shadow-xl border border-[#F2A98A]/30 hover:scale-105 transition-all text-center cursor-pointer"
+                        >
+                          <span>Walk The Returner’s Crossing</span>
+                          <ArrowRight size={14} />
+                        </Link>
+                        <Link
+                          href="/dashboard/review"
+                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-cream/80 text-xs font-bold uppercase tracking-wider border border-white/10 transition-all text-center cursor-pointer"
+                        >
+                          <span>Fulfill Peer Penance</span>
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start">
                   {/* Left Column (Stats & Economy Guide) */}
                   <div className="lg:col-span-2 space-y-6 sm:space-y-8">
@@ -2829,6 +2938,73 @@ export default function DashboardClient({
                       </div>
                     </form>
                   </div>
+
+                  {/* Academic / Exam Sabbatical Shield Card */}
+                  <div className="bg-white border border-sage/15 p-6 sm:p-8 rounded-[32px] shadow-sm space-y-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sage/10 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">🎓</span>
+                          <h3 className="text-xl font-display font-extrabold text-burgundy">Academic & Exam Sabbatical Shield</h3>
+                        </div>
+                        <p className="text-xs text-ink/60 font-serif mt-1">
+                          Protect your membership standing during university examinations, thesis defense, or intense study periods.
+                        </p>
+                      </div>
+                      {sabbaticalUntil && new Date(sabbaticalUntil) > new Date() ? (
+                        <span className="self-start sm:self-auto bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5">
+                          <CheckCircle2 size={12} className="text-emerald-700" />
+                          <span>Active until {new Date(sabbaticalUntil).toLocaleDateString()}</span>
+                        </span>
+                      ) : (
+                        <span className="self-start sm:self-auto bg-sage/10 border border-sage/20 text-ink/50 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                          Available (1x / Year)
+                        </span>
+                      )}
+                    </div>
+
+                    {sabbaticalUntil && new Date(sabbaticalUntil) > new Date() ? (
+                      <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/60 space-y-2">
+                        <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs font-sans">
+                          <ShieldCheck size={16} className="text-emerald-700" />
+                          <span>Your Sabbatical Shield is Currently Active</span>
+                        </div>
+                        <p className="text-xs font-serif text-emerald-950/80 leading-relaxed">
+                          Your weekly and monthly review quotas are safely frozen until <strong>{new Date(sabbaticalUntil).toLocaleDateString()}</strong>. You will not receive inactivity strikes, and your consecutive Book of the Month counters are paused. Focus on your exams!
+                        </p>
+                        <div className="pt-1 text-[11px] font-mono text-emerald-800">
+                          {Math.max(0, Math.ceil((new Date(sabbaticalUntil) - new Date()) / (1000 * 60 * 60 * 24)))} days remaining
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <p className="text-xs font-serif text-ink/75 leading-relaxed">
+                          As writers and readers, university exams and academic rigor require full concentration. To prevent student members from receiving inactivity strikes or eviction, you may claim a <strong>30-Day</strong> or <strong>60-Day</strong> Sabbatical Shield once per calendar year.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                          <div className="p-3.5 rounded-2xl bg-cream/30 border border-sage/15 space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-burgundy">30-Day Shield</span>
+                            <p className="text-[11px] font-serif text-ink/70">Ideal for midterms, semester exam papers, and short project sprints.</p>
+                          </div>
+                          <div className="p-3.5 rounded-2xl bg-cream/30 border border-sage/15 space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-burgundy">60-Day Shield</span>
+                            <p className="text-[11px] font-serif text-ink/70">Comprehensive protection for final year thesis defense, bar exams, or intensive clearance.</p>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowSabbaticalModal(true)}
+                            className="bg-burgundy hover:bg-ink text-cream font-bold text-xs py-3 px-6 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer"
+                          >
+                            <GraduationCap size={15} />
+                            <span>Request Academic Sabbatical</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* RIGHT: Profile Picture Form */}
@@ -3240,6 +3416,118 @@ export default function DashboardClient({
             </div>
           )}
         </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Academic / Exam Sabbatical Shield Request Modal */}
+      {mounted && showSabbaticalModal && createPortal(
+        <div className="fixed inset-0 bg-ink/75 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="bg-white border border-sage/20 rounded-[32px] p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 relative"
+          >
+            <button
+              type="button"
+              onClick={() => setShowSabbaticalModal(false)}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-sage/10 text-ink/40 hover:text-ink transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-burgundy/10 text-burgundy text-[10px] font-bold uppercase tracking-wider">
+                <GraduationCap size={13} />
+                <span>Academic Policy</span>
+              </div>
+              <h3 className="text-xl font-display font-extrabold text-burgundy">
+                Request Sabbatical Shield
+              </h3>
+              <p className="text-xs text-ink/60 font-serif">
+                Freeze review quotas and strike evaluations for your selected duration.
+              </p>
+            </div>
+
+            <form onSubmit={handleRequestSabbatical} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-ink/60">Select Shield Duration</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSabbaticalDays(30)}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                      sabbaticalDays === 30
+                        ? 'bg-burgundy/5 border-burgundy shadow-sm text-burgundy font-bold'
+                        : 'bg-white border-sage/20 text-ink/70 hover:border-sage/40'
+                    }`}
+                  >
+                    <div className="text-xs font-bold font-sans">30 Days</div>
+                    <div className="text-[10px] font-serif text-ink/50 mt-0.5">Semester Exams</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSabbaticalDays(60)}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                      sabbaticalDays === 60
+                        ? 'bg-burgundy/5 border-burgundy shadow-sm text-burgundy font-bold'
+                        : 'bg-white border-sage/20 text-ink/70 hover:border-sage/40'
+                    }`}
+                  >
+                    <div className="text-xs font-bold font-sans">60 Days</div>
+                    <div className="text-[10px] font-serif text-ink/50 mt-0.5">Thesis / Final Project</div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-ink/60">Reason / Institution (Optional)</label>
+                <input
+                  type="text"
+                  value={sabbaticalReason}
+                  onChange={(e) => setSabbaticalReason(e.target.value)}
+                  placeholder="e.g. UNILAG Semester Finals / Law School Prep"
+                  className="w-full bg-cream/20 border border-sage/25 rounded-xl py-2.5 px-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink"
+                />
+              </div>
+
+              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] font-serif text-amber-900 leading-relaxed">
+                <strong>Note:</strong> Academic sabbaticals are limited to once per calendar year. Once granted, review strikes and BOTM reading misses will be waived for {sabbaticalDays} days.
+              </div>
+
+              {sabbaticalSuccess && (
+                <div className="p-3 bg-green-500/10 border border-green-500/20 text-green-700 text-xs font-bold rounded-xl flex items-center gap-2">
+                  <CheckCircle2 size={16} />
+                  <span>{sabbaticalSuccess}</span>
+                </div>
+              )}
+
+              {sabbaticalError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-700 text-xs font-bold rounded-xl flex items-center gap-2">
+                  <X size={16} className="bg-red-700 text-white rounded-full p-0.5" />
+                  <span>{sabbaticalError}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSabbaticalModal(false)}
+                  className="px-5 py-2.5 rounded-xl border border-sage/20 text-ink/60 text-xs font-bold hover:bg-sage/5 transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingSabbatical}
+                  className="bg-burgundy hover:bg-ink text-cream font-bold text-xs py-2.5 px-6 rounded-xl transition-all shadow-md disabled:opacity-50 cursor-pointer"
+                >
+                  {submittingSabbatical ? 'Activating...' : `Activate ${sabbaticalDays}-Day Shield`}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>,
         document.body
       )}
     </main>

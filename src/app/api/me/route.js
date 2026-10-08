@@ -84,6 +84,12 @@ export async function GET() {
       profile.archetype = dbUser.reader_archetype || null;
       profile.foundingBadge = dbUser.founding_badge || null;
       profile.membershipStatus = dbUser.membership_status || 'active';
+      profile.probationStrikes = parseInt(dbUser.probation_strikes_this_year || 0, 10);
+      profile.consecutiveBotmMisses = parseInt(dbUser.consecutive_botm_misses || 0, 10);
+      profile.silverBullets = parseInt(dbUser.silver_bullets || 0, 10);
+      profile.sabbaticalUntil = dbUser.sabbatical_until ? new Date(dbUser.sabbatical_until).toISOString().split('T')[0] : null;
+      profile.sabbaticalType = dbUser.sabbatical_type || null;
+      profile.evictedAt = dbUser.evicted_at ? new Date(dbUser.evicted_at).toISOString() : null;
     }
 
     return NextResponse.json({ success: true, profile });

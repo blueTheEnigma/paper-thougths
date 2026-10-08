@@ -147,6 +147,16 @@ export default function Navigation() {
           )}
           {isLoaded && isSignedIn && (
             <div className="flex items-center gap-3">
+              {profile?.membershipStatus === 'evicted' && (
+                <Link 
+                  href="/returners-crossing" 
+                  className="flex items-center gap-1.5 bg-red-500/15 text-red-700 hover:bg-red-500/25 px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border border-red-500/30"
+                  title="Your sanctuary privileges are dormant. Walk the Returner's Crossing."
+                >
+                  <Flame size={13} className="text-red-600 animate-pulse" />
+                  <span className="hidden sm:inline">Exile Crossing</span>
+                </Link>
+              )}
               {isAdmin && (
                 <Link href="/admin" className="hidden md:flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border border-accent/20">
                   <ShieldCheck size={14} />

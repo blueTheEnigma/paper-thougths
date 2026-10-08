@@ -24,6 +24,11 @@ export default async function WritePage({ searchParams }) {
     redirect('/dashboard');
   }
 
+  // If member is dormant / evicted, redirect to Returner's Crossing
+  if (dbUser.membership_status === 'evicted') {
+    redirect('/returners-crossing');
+  }
+
   // Get active story prompt (within 7 days)
   const storyPrompt = await Database.queryOne(`
     SELECT prompt_text as "promptText", id

@@ -32,6 +32,14 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'User sync failed' }, { status: 500 });
     }
 
+    // Gate evicted/dormant members from submitting until Returner Crossing is cleared
+    if (dbUser.membership_status === 'evicted') {
+      return NextResponse.json({
+        success: false,
+        error: 'Your sanctuary standing is currently dormant. You must complete the Returner’s Crossing before submitting new manuscripts to the weekly pool.'
+      }, { status: 403 });
+    }
+
     const body = await request.json();
     const { title, genre, logline, bodyText, penName } = body;
     const cleanPenName = penName && typeof penName === 'string' && penName.trim() ? penName.trim() : null;
