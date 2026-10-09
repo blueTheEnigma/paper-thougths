@@ -1,10 +1,15 @@
 import webpush from 'web-push';
 import { Database } from './db.js';
 
-// Configure VAPID details if keys exist
-const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-const privateKey = process.env.VAPID_PRIVATE_KEY;
-const subject = process.env.VAPID_SUBJECT || 'mailto:admin@paperthoughts.org';
+// Default Sanctuary VAPID Keypair (Used in production when env vars are pending)
+const DEFAULT_VAPID_PUBLIC_KEY = 'BMRNMFiG_3S0Qs85Lz2PofYfTIeHcmXeMF1jF77ZoHCIUMKntke9iFPc0wTG2-574IEj20Zkvm998k3-kTEb6Lo';
+const DEFAULT_VAPID_PRIVATE_KEY = 'efe08bPmtVZgZuBT7pNTxN5xaDPvxzqaJBo-xrm8IAQ';
+const DEFAULT_VAPID_SUBJECT = 'mailto:admin@paperthoughts.org';
+
+// Configure VAPID details
+const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY;
+const privateKey = process.env.VAPID_PRIVATE_KEY || DEFAULT_VAPID_PRIVATE_KEY;
+const subject = process.env.VAPID_SUBJECT || DEFAULT_VAPID_SUBJECT;
 
 if (publicKey && privateKey) {
   try {

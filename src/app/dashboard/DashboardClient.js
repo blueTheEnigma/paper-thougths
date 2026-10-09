@@ -1542,22 +1542,6 @@ export default function DashboardClient({
                 >
                   <BookOpen size={13}/> Rules & Guide
                 </button>
-                {isAdmin && (
-                  <>
-                    <span className="text-ink/30">•</span>
-                    <Link href="/admin" className="bg-[#5C1A2E]/10 hover:bg-[#5C1A2E]/20 text-[#5C1A2E] font-bold text-[10px] px-2.5 py-1.5 rounded-lg border border-[#5C1A2E]/20 uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer">
-                      <ShieldCheck size={12}/> Admin Panel
-                    </Link>
-                  </>
-                )}
-                {profile?.isCrewMember && (
-                  <>
-                    <span className="text-ink/30">•</span>
-                    <Link href="/round-table" className="bg-sage/15 hover:bg-sage/20 text-sage font-bold text-[10px] px-2.5 py-1.5 rounded-lg border border-sage/20 uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer">
-                      <BookOpen size={12}/> Crew CRM
-                    </Link>
-                  </>
-                )}
               </div>
             </div>
           </div>
@@ -1565,14 +1549,8 @@ export default function DashboardClient({
           <div className="w-full lg:w-auto flex flex-wrap items-center justify-start sm:justify-between lg:justify-end gap-2.5">
             {isAdmin && (
               <Link href="/admin" className="bg-[#5C1A2E]/10 hover:bg-[#5C1A2E]/15 text-[#5C1A2E] px-4 py-2.5 rounded-2xl border border-[#5C1A2E]/20 transition-all flex items-center gap-2 text-xs font-bold shadow-sm cursor-pointer">
-                <Settings size={14}/>
+                <ShieldCheck size={14}/>
                 <span>Admin Panel</span>
-              </Link>
-            )}
-            {profile?.isCrewMember && (
-              <Link href="/round-table" className="bg-sage/10 hover:bg-sage/15 text-sage px-4 py-2.5 rounded-2xl border border-sage/20 transition-all flex items-center gap-2 text-xs font-bold shadow-sm cursor-pointer">
-                <BookOpen size={14}/>
-                <span>Crew CRM</span>
               </Link>
             )}
             <PushNotificationBell />

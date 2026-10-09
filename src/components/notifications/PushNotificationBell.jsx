@@ -63,13 +63,20 @@ export default function PushNotificationBell({ className = '' }) {
         return;
       }
 
-      // 2. Fetch VAPID key
-      const keyRes = await fetch('/api/notifications/push/vapid-key');
-      const keyData = await keyRes.json();
-      const vapidPublicKey = keyData.publicKey;
+      // 2. Fetch VAPID key with fallback
+      let vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      try {
+        const keyRes = await fetch('/api/notifications/push/vapid-key');
+        const keyData = await keyRes.json();
+        if (keyData?.publicKey) {
+          vapidPublicKey = keyData.publicKey;
+        }
+      } catch (fetchErr) {
+        console.warn('Could not fetch dynamic VAPID key, checking fallback:', fetchErr);
+      }
 
       if (!vapidPublicKey) {
-        throw new Error('VAPID public key not configured on server.');
+        vapidPublicKey = 'BMRNMFiG_3S0Qs85Lz2PofYfTIeHcmXeMF1jF77ZoHCIUMKntke9iFPc0wTG2-574IEj20Zkvm998k3-kTEb6Lo';
       }
 
       // 3. Subscribe with Service Worker
