@@ -30,17 +30,30 @@ export async function savePushSubscription(userId, subscription, userAgent = '')
   const { endpoint, keys } = subscription;
   const { p256dh, auth } = keys;
 
-  return await Database.queryOne(`
-    INSERT INTO user_push_subscriptions (user_id, endpoint, p256dh, auth, user_agent, updated_at)
-    VALUES ($1, $2, $3, $4, $5, NOW())
-    ON CONFLICT (endpoint) DO UPDATE 
-    SET user_id = EXCLUDED.user_id,
-        p256dh = EXCLUDED.p256dh,
-        auth = EXCLUDED.auth,
-        user_agent = EXCLUDED.user_agent,
-        updated_at = NOW()
-    RETURNING id, user_id, endpoint, created_at
-  `, [userId, endpoint, p256dh, auth, userAgent]);
+  try {
+    return await Database.queryOne(`
+      INSERT INTO user_push_subscriptions (user_id, endpoint, p256dh, auth, user_agent, updated_at)
+      VALUES ($1, $2, $3, $4, $5, NOW())
+      ON CONFLICT (endpoint) DO UPDATE 
+      SET user_id = EXCLUDED.user_id,
+          p256dh = EXCLUDED.p256dh,
+          auth = EXCLUDED.auth,
+          user_agent = EXCLUDED.user_agent,
+          updated_at = NOW()
+      RETURNING id, user_id, endpoint, created_at
+    `, [userId, endpoint, p256dh, auth, userAgent]);
+  } catch (err) {
+    console.warn('savePushSubscription user_agent fallback triggered:', err.message);
+    return await Database.queryOne(`
+      INSERT INTO user_push_subscriptions (user_id, endpoint, p256dh, auth)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (endpoint) DO UPDATE 
+      SET user_id = EXCLUDED.user_id,
+          p256dh = EXCLUDED.p256dh,
+          auth = EXCLUDED.auth
+      RETURNING id, user_id, endpoint, created_at
+    `, [userId, endpoint, p256dh, auth]);
+  }
 }
 
 /**
