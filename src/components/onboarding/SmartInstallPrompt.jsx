@@ -365,6 +365,25 @@ export default function SmartInstallPrompt() {
                       </div>
                     </div>
                   )}
+
+                  {/* Xiaomi / Redmi / Mi Browser Troubleshooting Callout */}
+                  <div className="mt-3 pt-3 border-t border-[#F2A98A]/15 space-y-2">
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#F2A98A]">
+                      <HelpCircle size={13} />
+                      <span>Using a Redmi, Xiaomi, or POCO phone?</span>
+                    </div>
+                    <div className="space-y-1.5 text-[10.5px] text-cream/75 leading-relaxed bg-[#140409]/80 p-2.5 rounded-xl border border-white/5 font-sans">
+                      <p>
+                        <strong>1. Use Google Chrome:</strong> Redmi phones often open links in <em>Mi Browser</em> or WhatsApp's internal viewer, which don't support app installation. Tap the 3 dots and choose <strong>"Open in Chrome"</strong>.
+                      </p>
+                      <p>
+                        <strong>2. Turn Off "Desktop site":</strong> In Chrome's menu (⋮), ensure the <strong>Desktop site</strong> checkbox is <strong>UNCHECKED</strong>. Chrome hides "Install App" if desktop view is enabled!
+                      </p>
+                      <p>
+                        <strong>3. Allow MIUI Shortcut Permission:</strong> In phone Settings ➔ Apps ➔ Manage Apps ➔ Chrome ➔ Other Permissions ➔ Enable <strong>"Home screen shortcuts"</strong>.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
