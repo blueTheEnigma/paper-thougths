@@ -109,6 +109,12 @@ async function getLocalArchiveData(clerkUser) {
     `, [dbUser.id]);
     profile.referrals = parseInt(referralsCount?.count || 0);
 
+    // Calculate anchored gatherings count
+    const anchoredCount = await Database.queryOne(`
+      SELECT COUNT(*) as count FROM gatherings WHERE moderator_user_id = $1
+    `, [dbUser.id]);
+    profile.anchoredEvents = parseInt(anchoredCount?.count || 0);
+
     // Fetch user permissions list
     const permissions = await Database.query(`
       SELECT p.permission_key FROM user_permissions up

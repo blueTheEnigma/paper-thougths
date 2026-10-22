@@ -40,7 +40,8 @@ export default function AdminClient({
   initialGatherings = [],
   userPermissions,
   isSuperadmin,
-  isCommunityManager
+  isCommunityManager,
+  isEventsCurator
 }) {
   const allTabs = [
     { id: 'gatherings', label: 'Events & Rituals 🏛️', icon: Calendar },
@@ -61,9 +62,9 @@ export default function AdminClient({
     const permissions = userPermissions || [];
     switch (tab.id) {
       case 'gatherings':
-        return permissions.includes('manage_chapter_events') || permissions.includes('community_manager') || isCommunityManager;
+        return permissions.includes('manage_chapter_events') || isEventsCurator || permissions.includes('community_manager') || isCommunityManager;
       case 'members':
-        return permissions.includes('manage_chapter_events') || permissions.includes('community_manager') || isCommunityManager;
+        return permissions.includes('community_manager') || isCommunityManager;
       case 'crucible':
         return permissions.includes('manage_crucible') || permissions.includes('community_manager') || isCommunityManager;
       case 'submissions':
@@ -75,9 +76,9 @@ export default function AdminClient({
       case 'orders':
         return permissions.includes('view_sales_logs');
       case 'pools':
-        return permissions.includes('manage_chapter_events');
+        return permissions.includes('community_manager') || isCommunityManager;
       case 'birthdays':
-        return permissions.includes('manage_chapter_events') || permissions.includes('community_manager') || isCommunityManager;
+        return permissions.includes('community_manager') || isCommunityManager;
       default:
         return false;
     }
@@ -1592,7 +1593,7 @@ export default function AdminClient({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <AdminGatheringsTab initialGatherings={initialGatherings} />
+                <AdminGatheringsTab initialGatherings={initialGatherings} members={members} />
               </motion.div>
             )}
 
@@ -1665,8 +1666,8 @@ export default function AdminClient({
                   },
                   {
                     key: 'manage_chapter_events',
-                    title: 'Events Planner',
-                    desc: 'Grants access to organize and update local chapter events & RSVPs.',
+                    title: 'Events Curator',
+                    desc: 'Grants access to create & curate event cards, assign session anchors, and corroborate Corona Muralis.',
                     color: 'border-sage'
                   },
                   {

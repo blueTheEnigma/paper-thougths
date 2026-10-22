@@ -269,6 +269,7 @@ export default function DashboardClient({
     preferredGenres: [],
     permissions: [],
     weeklyReviews: 0,
+    anchoredEvents: 0,
     onboarded: false
   };
 
@@ -1526,6 +1527,11 @@ export default function DashboardClient({
                     ⚠️ {profile.probationStrikes}/3 Strikes
                   </span>
                 ) : null}
+                {profile.anchoredEvents > 0 && (
+                  <span className="bg-[#20070e]/10 border border-[#c96a42]/30 text-[#20070e] font-sans font-bold px-2.5 py-1 rounded shadow-xs uppercase tracking-wider text-[9px] sm:text-[10px] flex items-center gap-1">
+                    <span className="text-[#c96a42]">🎙️</span> {profile.anchoredEvents} {profile.anchoredEvents === 1 ? 'Ritual' : 'Rituals'} Anchored
+                  </span>
+                )}
                 <span className="text-ink/30">•</span>
                 <span className="flex items-center gap-1.5 text-ink/60 font-bold"><MapPin size={12} className="text-sage"/> {profile.chapter}</span>
                 <span className="text-ink/30">•</span>

@@ -5,10 +5,10 @@ import {
   Calendar, Clock, MapPin, Users, Award, Crown, CheckCircle, 
   Loader2, Plus, Sparkles, Radio, Copy, Check, ExternalLink, 
   MessageCircle, ShieldAlert, Image as ImageIcon, ChevronRight, X,
-  Edit, Upload, Trash2
+  Edit, Upload, Trash2, Mic, UserCheck
 } from 'lucide-react';
 
-export default function AdminGatheringsTab({ initialGatherings = [], chapters = [] }) {
+export default function AdminGatheringsTab({ initialGatherings = [], chapters = [], members = [] }) {
   const [gatherings, setGatherings] = useState(initialGatherings);
   const [loading, setLoading] = useState(false);
   const [selectedGathering, setSelectedGathering] = useState(null);
@@ -27,7 +27,14 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
     venueName: '',
     description: '',
     coverUrl: '/images/gatherings/townhall.jpg',
-    chapterId: ''
+    chapterId: '',
+    moderatorUserId: '',
+    moderatorName: '',
+    moderatorAvatarUrl: '',
+    moderatorLkid: '',
+    moderatorBio: '',
+    moderatorLeavesBounty: 50,
+    isGuestModerator: false
   });
 
   // Edit Gathering State
@@ -183,6 +190,57 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
     }
   };
 
+  // Compute Top Anchors for Hall of Honor
+  const anchorStats = (gatherings || []).reduce((acc, g) => {
+    if (g.moderatorName) {
+      const key = g.moderatorUserId ? `user_${g.moderatorUserId}` : `guest_${g.moderatorName}`;
+      if (!acc[key]) {
+        acc[key] = {
+          name: g.moderatorName,
+          lkid: g.moderatorLkid,
+          avatarUrl: g.moderatorAvatarUrl,
+          count: 0,
+          concludedCount: 0
+        };
+      }
+      acc[key].count += 1;
+      if (g.status === 'concluded') acc[key].concludedCount += 1;
+    }
+    return acc;
+  }, {});
+  const topAnchors = Object.values(anchorStats).sort((a, b) => b.count - a.count);
+
+  const handleSelectMember = (userId, isEdit = false) => {
+    const selected = members.find(m => String(m.id) === String(userId));
+    if (selected) {
+      const update = {
+        moderatorUserId: selected.id,
+        moderatorName: selected.name,
+        moderatorAvatarUrl: selected.avatarUrl || '',
+        moderatorLkid: selected.lkid || '',
+        isGuestModerator: false
+      };
+      if (isEdit) {
+        setEditFormData(prev => ({ ...prev, ...update }));
+      } else {
+        setFormData(prev => ({ ...prev, ...update }));
+      }
+    } else if (!userId) {
+      const clear = {
+        moderatorUserId: '',
+        moderatorName: '',
+        moderatorAvatarUrl: '',
+        moderatorLkid: '',
+        isGuestModerator: false
+      };
+      if (isEdit) {
+        setEditFormData(prev => ({ ...prev, ...clear }));
+      } else {
+        setFormData(prev => ({ ...prev, ...clear }));
+      }
+    }
+  };
+
   const handleOpenEdit = (g) => {
     setEditFormData({
       id: g.id,
@@ -196,7 +254,15 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
       coverUrl: g.coverUrl || '/images/gatherings/townhall.jpg',
       status: g.status || 'published',
       gateCode: g.gateCode || '2015',
-      chapterId: g.chapterId ? String(g.chapterId) : ''
+      chapterId: g.chapterId ? String(g.chapterId) : '',
+      moderatorUserId: g.moderatorUserId ? String(g.moderatorUserId) : '',
+      moderatorName: g.moderatorName || '',
+      moderatorAvatarUrl: g.moderatorAvatarUrl || '',
+      moderatorLkid: g.moderatorLkid || '',
+      moderatorBio: g.moderatorBio || '',
+      moderatorLeavesBounty: g.moderatorLeavesBounty !== undefined && g.moderatorLeavesBounty !== null ? g.moderatorLeavesBounty : 50,
+      moderatorBountyAwarded: !!g.moderatorBountyAwarded,
+      isGuestModerator: !g.moderatorUserId && !!g.moderatorName
     });
     setIsEditOpen(true);
   };
@@ -351,6 +417,53 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
         </button>
       </div>
 
+      {/* Anchor Hall of Honor / Moderator Celebrations */}
+      {topAnchors.length > 0 && (
+        <div className="p-4 rounded-3xl bg-[#20070e] text-[#FBF7EE] border border-[#c96a42]/30 shadow-md">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">🎙️</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-[#F2A98A]">
+                Ritual Anchors Hall of Honor
+              </span>
+            </div>
+            <span className="text-[11px] text-[#FBF7EE]/60 font-serif">
+              Recognizing Kin Who Guard the Sanctuary
+            </span>
+          </div>
+
+          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+            {topAnchors.map((anchor, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 shrink-0 transition-colors"
+              >
+                {anchor.avatarUrl ? (
+                  <img src={anchor.avatarUrl} alt={anchor.name} className="w-7 h-7 rounded-full object-cover border border-[#F2A98A]/50 shrink-0" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-[#c96a42] text-[#FBF7EE] flex items-center justify-center font-bold text-xs shrink-0">
+                    {anchor.name.charAt(0)}
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center gap-1.5 leading-none">
+                    <span className="text-xs font-bold text-[#FBF7EE]">{anchor.name}</span>
+                    {anchor.lkid && (
+                      <span className="text-[9px] font-mono text-[#F2A98A] bg-black/40 px-1.5 py-0.5 rounded">
+                        {anchor.lkid}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-[#FBF7EE]/70 mt-1 block">
+                    {anchor.count} {anchor.count === 1 ? 'Ritual' : 'Rituals'} Anchored ({anchor.concludedCount} Concluded)
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Gatherings List Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {gatherings.length > 0 ? (
@@ -401,7 +514,7 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
                       <span>{g.startTime?.substring(0, 5)} WAT</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[#FBF7EE] border border-black/5 text-center text-xs mb-4">
+                    <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[#FBF7EE] border border-black/5 text-center text-xs mb-3">
                       <div>
                         <span className="text-[10px] text-[#120308]/40 uppercase font-bold block">RSVPs</span>
                         <span className="font-bold text-[#20070e]">{g.rsvpCount || 0}</span>
@@ -411,6 +524,29 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
                         <span className="font-bold text-[#c96a42]">{g.attendanceCount || 0}</span>
                       </div>
                     </div>
+
+                    {/* Anchor Pill */}
+                    {g.moderatorName && (
+                      <div className="flex items-center gap-2 mb-3 px-2.5 py-1.5 rounded-xl bg-[#20070e]/5 border border-[#c96a42]/15">
+                        {g.moderatorAvatarUrl ? (
+                          <img src={g.moderatorAvatarUrl} alt={g.moderatorName} className="w-5 h-5 rounded-full object-cover border border-[#c96a42]/30 shrink-0" />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-[#20070e] text-[#FBF7EE] flex items-center justify-center text-[10px] font-bold shrink-0">
+                            {g.moderatorName.charAt(0)}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0 flex items-center justify-between gap-1">
+                          <span className="text-[11px] font-bold text-[#20070e] truncate">
+                            🎙️ {g.moderatorName}
+                          </span>
+                          {g.moderatorLkid && (
+                            <span className="text-[9px] font-mono font-bold text-[#c96a42] bg-[#c96a42]/10 px-1.5 py-0.5 rounded shrink-0">
+                              {g.moderatorLkid}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Card Action Footer */}
@@ -520,6 +656,42 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
               </div>
             ) : gatheringDetails ? (
               <div className="space-y-6">
+
+                {/* Session Anchor / Moderator Banner */}
+                {selectedGathering.moderatorName && (
+                  <div className="p-4 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/30 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      {selectedGathering.moderatorAvatarUrl ? (
+                        <img src={selectedGathering.moderatorAvatarUrl} alt={selectedGathering.moderatorName} className="w-10 h-10 rounded-full object-cover border-2 border-[#c96a42]/40" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-[#20070e] text-[#FBF7EE] flex items-center justify-center font-bold text-sm">
+                          {selectedGathering.moderatorName.charAt(0)}
+                        </div>
+                      )}
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-[#20070e] text-sm">{selectedGathering.moderatorName}</span>
+                          {selectedGathering.moderatorLkid && (
+                            <span className="font-mono text-[9px] bg-[#20070e] text-[#FBF7EE] px-1.5 py-0.5 rounded font-bold">
+                              {selectedGathering.moderatorLkid}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-[#120308]/60 font-serif">
+                          Session Anchor & Ritual Moderator
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold uppercase block text-[#c96a42]">
+                        Anchor Bounty
+                      </span>
+                      <span className="font-mono font-bold text-xs text-[#20070e]">
+                        +{selectedGathering.moderatorLeavesBounty || 50} Leaves {selectedGathering.moderatorBountyAwarded ? '✓ Inscribed' : '(Upon Conclusion)'}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 
                 {/* First Herald Banner */}
                 <div className="p-4 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/30 flex items-center justify-between text-xs">
@@ -810,6 +982,132 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
                 </div>
               </div>
 
+              {/* Session Anchor / Moderator Assignment */}
+              <div className="p-4 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-[#20070e] flex items-center gap-1.5 uppercase tracking-wider">
+                    <Mic size={13} className="text-[#c96a42]" /> Session Anchor & Moderator
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-[10px] lowercase text-[#120308]/60 font-sans">
+                    <input
+                      type="checkbox"
+                      checked={!!editFormData.isGuestModerator}
+                      onChange={(e) => {
+                        const isGuest = e.target.checked;
+                        setEditFormData(prev => ({
+                          ...prev,
+                          isGuestModerator: isGuest,
+                          moderatorUserId: isGuest ? '' : prev.moderatorUserId
+                        }));
+                      }}
+                      className="rounded text-[#c96a42] focus:ring-[#c96a42]"
+                    />
+                    <span>guest / external host</span>
+                  </label>
+                </div>
+
+                {!editFormData.isGuestModerator ? (
+                  <div>
+                    <select
+                      value={editFormData.moderatorUserId || ''}
+                      onChange={(e) => handleSelectMember(e.target.value, true)}
+                      className="w-full px-3 py-2 rounded-xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-xs normal-case bg-white"
+                    >
+                      <option value="">-- Select Member Anchor (e.g. Naffy) --</option>
+                      {members.map(m => (
+                        <option key={m.id} value={m.id}>
+                          {m.name} {m.lkid ? `(${m.lkid})` : ''} — {m.chapter || 'Kin'}
+                        </option>
+                      ))}
+                    </select>
+
+                    {editFormData.moderatorName && (
+                      <div className="mt-2 flex items-center justify-between p-2.5 rounded-xl bg-white border border-[#c96a42]/20">
+                        <div className="flex items-center gap-2">
+                          {editFormData.moderatorAvatarUrl ? (
+                            <img
+                              src={editFormData.moderatorAvatarUrl}
+                              alt="Anchor"
+                              className="w-7 h-7 rounded-full object-cover border border-[#c96a42]/30 shrink-0"
+                            />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-[#20070e] text-[#FBF7EE] flex items-center justify-center font-bold text-xs shrink-0">
+                              {editFormData.moderatorName?.charAt(0)}
+                            </div>
+                          )}
+                          <div>
+                            <span className="font-bold text-xs text-[#20070e] block normal-case">
+                              {editFormData.moderatorName}
+                            </span>
+                            <span className="text-[10px] text-[#120308]/50 font-mono">
+                              {editFormData.moderatorLkid || 'Paper Thoughts Kin'}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                          Assigned Anchor
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block mb-1 text-[10px] text-black/60">Guest Host Full Name</label>
+                      <input
+                        type="text"
+                        value={editFormData.moderatorName || ''}
+                        onChange={(e) => setEditFormData(prev => ({ ...prev, moderatorName: e.target.value, moderatorUserId: '' }))}
+                        placeholder="e.g. Chimamanda Ngozi Adichie"
+                        className="w-full px-3 py-2 rounded-xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-xs normal-case bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-[10px] text-black/60">Photo URL (Optional)</label>
+                      <input
+                        type="url"
+                        value={editFormData.moderatorAvatarUrl || ''}
+                        onChange={(e) => setEditFormData(prev => ({ ...prev, moderatorAvatarUrl: e.target.value }))}
+                        placeholder="https://..."
+                        className="w-full px-3 py-2 rounded-xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-[11px] font-mono normal-case bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-[10px] text-black/60">Bio / Credentials (Optional)</label>
+                      <textarea
+                        rows={2}
+                        value={editFormData.moderatorBio || ''}
+                        onChange={(e) => setEditFormData(prev => ({ ...prev, moderatorBio: e.target.value }))}
+                        placeholder="Short guest bio..."
+                        className="w-full px-3 py-2 rounded-xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-xs normal-case font-serif bg-white"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Anchor Bounty Configuration */}
+                <div className="pt-2 border-t border-black/5 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold text-[#20070e] block">Anchor Leaves Bounty 🌿</span>
+                    <span className="text-[9px] text-[#120308]/60 normal-case font-serif block">
+                      {editFormData.moderatorBountyAwarded ? '✓ Bounty already awarded to this host' : 'Awarded to anchor upon event conclusion'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      min={0}
+                      max={500}
+                      disabled={editFormData.moderatorBountyAwarded}
+                      value={editFormData.moderatorLeavesBounty ?? 50}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, moderatorLeavesBounty: parseInt(e.target.value) || 0 }))}
+                      className="w-16 px-2 py-1.5 rounded-lg border border-black/10 focus:border-[#c96a42] focus:outline-none text-xs font-mono font-bold text-center bg-white disabled:opacity-50"
+                    />
+                    <span className="text-[10px] font-bold text-[#c96a42]">Leaves</span>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block mb-1 text-black/70">Description / Lore Notice</label>
                 <textarea
@@ -1026,6 +1324,131 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
                     placeholder="https://meet.google.com/..."
                     className="w-full px-4 py-2.5 rounded-xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-xs font-mono normal-case"
                   />
+                </div>
+              </div>
+
+              {/* Session Anchor / Moderator Assignment */}
+              <div className="p-4 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-[#20070e] flex items-center gap-1.5 uppercase tracking-wider">
+                    <Mic size={13} className="text-[#c96a42]" /> Session Anchor & Moderator
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-[10px] lowercase text-[#120308]/60 font-sans">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.isGuestModerator}
+                      onChange={(e) => {
+                        const isGuest = e.target.checked;
+                        setFormData(prev => ({
+                          ...prev,
+                          isGuestModerator: isGuest,
+                          moderatorUserId: isGuest ? '' : prev.moderatorUserId
+                        }));
+                      }}
+                      className="rounded text-[#c96a42] focus:ring-[#c96a42]"
+                    />
+                    <span>guest / external host</span>
+                  </label>
+                </div>
+
+                {!formData.isGuestModerator ? (
+                  <div>
+                    <select
+                      value={formData.moderatorUserId || ''}
+                      onChange={(e) => handleSelectMember(e.target.value, false)}
+                      className="w-full px-3 py-2 rounded-xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-xs normal-case bg-white"
+                    >
+                      <option value="">-- Select Member Anchor (e.g. Naffy) --</option>
+                      {members.map(m => (
+                        <option key={m.id} value={m.id}>
+                          {m.name} {m.lkid ? `(${m.lkid})` : ''} — {m.chapter || 'Kin'}
+                        </option>
+                      ))}
+                    </select>
+
+                    {formData.moderatorName && (
+                      <div className="mt-2 flex items-center justify-between p-2.5 rounded-xl bg-white border border-[#c96a42]/20">
+                        <div className="flex items-center gap-2">
+                          {formData.moderatorAvatarUrl ? (
+                            <img
+                              src={formData.moderatorAvatarUrl}
+                              alt="Anchor"
+                              className="w-7 h-7 rounded-full object-cover border border-[#c96a42]/30 shrink-0"
+                            />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-[#20070e] text-[#FBF7EE] flex items-center justify-center font-bold text-xs shrink-0">
+                              {formData.moderatorName?.charAt(0)}
+                            </div>
+                          )}
+                          <div>
+                            <span className="font-bold text-xs text-[#20070e] block normal-case">
+                              {formData.moderatorName}
+                            </span>
+                            <span className="text-[10px] text-[#120308]/50 font-mono">
+                              {formData.moderatorLkid || 'Paper Thoughts Kin'}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                          Assigned Anchor
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block mb-1 text-[10px] text-black/60">Guest Host Full Name</label>
+                      <input
+                        type="text"
+                        value={formData.moderatorName || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, moderatorName: e.target.value, moderatorUserId: '' }))}
+                        placeholder="e.g. Chimamanda Ngozi Adichie"
+                        className="w-full px-3 py-2 rounded-xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-xs normal-case bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-[10px] text-black/60">Photo URL (Optional)</label>
+                      <input
+                        type="url"
+                        value={formData.moderatorAvatarUrl || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, moderatorAvatarUrl: e.target.value }))}
+                        placeholder="https://..."
+                        className="w-full px-3 py-2 rounded-xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-[11px] font-mono normal-case bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-[10px] text-black/60">Bio / Credentials (Optional)</label>
+                      <textarea
+                        rows={2}
+                        value={formData.moderatorBio || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, moderatorBio: e.target.value }))}
+                        placeholder="Short guest bio..."
+                        className="w-full px-3 py-2 rounded-xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-xs normal-case font-serif bg-white"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Anchor Bounty Configuration */}
+                <div className="pt-2 border-t border-black/5 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold text-[#20070e] block">Anchor Leaves Bounty 🌿</span>
+                    <span className="text-[9px] text-[#120308]/60 normal-case font-serif block">
+                      Awarded to anchor upon event conclusion
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      min={0}
+                      max={500}
+                      value={formData.moderatorLeavesBounty ?? 50}
+                      onChange={(e) => setFormData(prev => ({ ...prev, moderatorLeavesBounty: parseInt(e.target.value) || 0 }))}
+                      className="w-16 px-2 py-1.5 rounded-lg border border-black/10 focus:border-[#c96a42] focus:outline-none text-xs font-mono font-bold text-center bg-white"
+                    />
+                    <span className="text-[10px] font-bold text-[#c96a42]">Leaves</span>
+                  </div>
                 </div>
               </div>
 

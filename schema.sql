@@ -362,6 +362,13 @@ CREATE TABLE IF NOT EXISTS gatherings (
     magic_token VARCHAR(100) UNIQUE,      -- Temporary session token
     gate_code VARCHAR(10),                -- 4-digit numeric code for physical venues
     cover_url TEXT,                       -- Event flyer image URL / Base64
+    moderator_user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    moderator_name VARCHAR(255),
+    moderator_avatar_url TEXT,
+    moderator_lkid VARCHAR(50),
+    moderator_bio TEXT,
+    moderator_leaves_bounty INT DEFAULT 50,
+    moderator_bounty_awarded BOOLEAN DEFAULT FALSE,
     first_herald_user_id INT REFERENCES users(id) ON DELETE SET NULL,
     first_herald_claimed_at TIMESTAMP WITH TIME ZONE,
     created_by_id INT REFERENCES users(id) ON DELETE SET NULL,
@@ -369,6 +376,13 @@ CREATE TABLE IF NOT EXISTS gatherings (
 );
 
 ALTER TABLE gatherings ADD COLUMN IF NOT EXISTS cover_url TEXT;
+ALTER TABLE gatherings ADD COLUMN IF NOT EXISTS moderator_user_id INT REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE gatherings ADD COLUMN IF NOT EXISTS moderator_name VARCHAR(255);
+ALTER TABLE gatherings ADD COLUMN IF NOT EXISTS moderator_avatar_url TEXT;
+ALTER TABLE gatherings ADD COLUMN IF NOT EXISTS moderator_lkid VARCHAR(50);
+ALTER TABLE gatherings ADD COLUMN IF NOT EXISTS moderator_bio TEXT;
+ALTER TABLE gatherings ADD COLUMN IF NOT EXISTS moderator_leaves_bounty INT DEFAULT 50;
+ALTER TABLE gatherings ADD COLUMN IF NOT EXISTS moderator_bounty_awarded BOOLEAN DEFAULT FALSE;
 
 -- 17. Gathering RSVPs Table
 CREATE TABLE IF NOT EXISTS gathering_rsvps (

@@ -36,16 +36,17 @@ export default async function AdminPage() {
       AND cm.is_active = TRUE 
       AND (cd.name = 'Events & Community' OR cm.role = 'admin')
   `, [dbUser.id]);
-  const isCommunityManager = !!communityManagerRes || permissions.includes('community_manager') || permissions.includes('manage_chapter_events') || permissions.includes('manage_crucible');
+  const isEventsCurator = permissions.includes('manage_chapter_events');
+  const isCommunityManager = !!communityManagerRes || permissions.includes('community_manager') || permissions.includes('manage_crucible');
 
-  // If user has no admin permissions, isn't the superadmin, and isn't a community manager, bounce them back to dashboard
-  if (permissions.length === 0 && !isSuperadmin && !isCommunityManager) {
+  // If user has no admin permissions, isn't the superadmin, and isn't a community manager or events curator, bounce them back to dashboard
+  if (permissions.length === 0 && !isSuperadmin && !isCommunityManager && !isEventsCurator) {
     redirect('/dashboard');
   }
 
   // 2. Fetch Members Ledger (Lifetime Leaves)
   const membersRaw = await Database.query(`
-    SELECT u.id, u.full_name as name, u.email, u.lk_id as lkid, 
+    SELECT u.id, u.full_name as name, u.email, u.lk_id as lkid, u.avatar_url as "avatarUrl", 
            u.milestone_tokens as "milestoneTokens", u.spendable_leaves as "spendableLeaves", 
            u.lifetime_leaves as "lifetimeLeaves", u.book_vouchers_gifted as "vouchersGifted", 
            u.writing_streak as streak, c.name as chapter,
@@ -188,6 +189,13 @@ export default async function AdminPage() {
       g.magic_token as "magicToken",
       g.gate_code as "gateCode",
       g.cover_url as "coverUrl",
+      g.moderator_user_id as "moderatorUserId",
+      g.moderator_name as "moderatorName",
+      g.moderator_avatar_url as "moderatorAvatarUrl",
+      g.moderator_lkid as "moderatorLkid",
+      g.moderator_bio as "moderatorBio",
+      g.moderator_leaves_bounty as "moderatorLeavesBounty",
+      g.moderator_bounty_awarded as "moderatorBountyAwarded",
       g.first_herald_user_id as "firstHeraldUserId",
       fh.full_name as "firstHeraldName",
       fh.lk_id as "firstHeraldLkId",
@@ -216,6 +224,7 @@ export default async function AdminPage() {
       userPermissions={permissions}
       isSuperadmin={isSuperadmin}
       isCommunityManager={isCommunityManager}
+      isEventsCurator={isEventsCurator}
     />
   );
 }

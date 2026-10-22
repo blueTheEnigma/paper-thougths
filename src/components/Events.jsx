@@ -294,8 +294,40 @@ export default function Events({ initialEvents = [] }) {
                         </span>
                       </div>
 
+                      {/* Session Anchor Chip */}
+                      {gathering.moderatorName && (
+                        <div 
+                          onClick={() => setModalGathering(gathering)}
+                          className="flex items-center gap-1.5 mb-1.5 py-0.5 px-2 rounded-lg bg-[#20070e]/5 hover:bg-[#20070e]/10 border border-[#c96a42]/15 w-fit max-w-full cursor-pointer transition-colors"
+                          title="Click to view Anchor profile"
+                        >
+                          {gathering.moderatorAvatarUrl ? (
+                            <img
+                              src={gathering.moderatorAvatarUrl}
+                              alt={gathering.moderatorName}
+                              className="w-3.5 h-3.5 rounded-full object-cover border border-[#c96a42]/40 shrink-0"
+                            />
+                          ) : (
+                            <div className="w-3.5 h-3.5 rounded-full bg-[#20070e] text-[#FBF7EE] flex items-center justify-center text-[7px] font-bold shrink-0">
+                              {gathering.moderatorName.charAt(0)}
+                            </div>
+                          )}
+                          <span className="text-[9px] sm:text-[10px] font-bold text-[#20070e] truncate">
+                            <span className="text-[#c96a42]">🎙️</span> {gathering.moderatorName}
+                          </span>
+                          {gathering.moderatorLkid && (
+                            <span className="text-[8px] font-mono font-bold text-[#c96a42] bg-[#c96a42]/10 px-1 rounded shrink-0 hidden xs:inline">
+                              {gathering.moderatorLkid}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
                       {/* Gathering Title */}
-                      <h2 className="text-xs sm:text-base md:text-lg font-display text-[#20070e] leading-snug line-clamp-2 mb-1 group-hover:text-[#c96a42] transition-colors">
+                      <h2 
+                        onClick={() => setModalGathering(gathering)}
+                        className="text-xs sm:text-base md:text-lg font-display text-[#20070e] leading-snug line-clamp-2 mb-1 group-hover:text-[#c96a42] transition-colors cursor-pointer"
+                      >
                         {gathering.title}
                       </h2>
 
@@ -416,9 +448,44 @@ export default function Events({ initialEvents = [] }) {
               <h3 className="text-xl sm:text-2xl font-display text-[#20070e] mb-1">
                 Reserve Your Seat
               </h3>
-              <p className="text-[11px] sm:text-xs text-[#120308]/60 mb-5 font-serif leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-[#120308]/60 mb-4 font-serif leading-relaxed">
                 Enter your details or Lore Keeper ID to claim your seat for <span className="font-bold text-[#20070e]">{modalGathering.title}</span>.
               </p>
+
+              {/* Session Anchor Showcase */}
+              {modalGathering.moderatorName && (
+                <div className="mb-4 p-3 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/25 flex items-start gap-3">
+                  {modalGathering.moderatorAvatarUrl ? (
+                    <img
+                      src={modalGathering.moderatorAvatarUrl}
+                      alt={modalGathering.moderatorName}
+                      className="w-10 h-10 rounded-full object-cover border-2 border-[#c96a42]/30 shrink-0 mt-0.5"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-[#20070e] text-[#FBF7EE] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                      {modalGathering.moderatorName.charAt(0)}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-[#20070e]">{modalGathering.moderatorName}</span>
+                      {modalGathering.moderatorLkid && (
+                        <span className="text-[9px] font-mono text-[#c96a42] bg-[#c96a42]/10 px-1.5 py-0.5 rounded font-bold">
+                          {modalGathering.moderatorLkid}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-[#120308]/60 font-serif block">
+                      Session Anchor & Ritual Moderator
+                    </span>
+                    {modalGathering.moderatorBio && (
+                      <p className="text-[11px] text-[#120308]/75 italic mt-1 font-serif leading-relaxed">
+                        &ldquo;{modalGathering.moderatorBio}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <form
                 onSubmit={(e) => {

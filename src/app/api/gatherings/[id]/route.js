@@ -29,6 +29,13 @@ export async function GET(request, { params }) {
         g.magic_token as "magicToken",
         g.gate_code as "gateCode",
         g.cover_url as "coverUrl",
+        g.moderator_user_id as "moderatorUserId",
+        g.moderator_name as "moderatorName",
+        g.moderator_avatar_url as "moderatorAvatarUrl",
+        g.moderator_lkid as "moderatorLkid",
+        g.moderator_bio as "moderatorBio",
+        g.moderator_leaves_bounty as "moderatorLeavesBounty",
+        g.moderator_bounty_awarded as "moderatorBountyAwarded",
         g.first_herald_user_id as "firstHeraldUserId",
         g.first_herald_claimed_at as "firstHeraldClaimedAt",
         fh.full_name as "firstHeraldName",
@@ -134,7 +141,13 @@ export async function PATCH(request, { params }) {
       startTime,
       chapterId,
       coverUrl,
-      gateCode
+      gateCode,
+      moderatorUserId,
+      moderatorName,
+      moderatorAvatarUrl,
+      moderatorLkid,
+      moderatorBio,
+      moderatorLeavesBounty
     } = body;
 
     const allowedUpdates = [];
@@ -144,6 +157,35 @@ export async function PATCH(request, { params }) {
     if (status !== undefined) {
       allowedUpdates.push(`status = $${idx++}`);
       values.push(status);
+
+      // Automated Bounty Payout when session concludes
+      if (status === 'concluded') {
+        try {
+          const currentGathering = await Database.queryOne(
+            'SELECT moderator_user_id, moderator_leaves_bounty, moderator_bounty_awarded, title FROM gatherings WHERE id = $1',
+            [gatheringId]
+          );
+          if (currentGathering?.moderator_user_id && !currentGathering.moderator_bounty_awarded) {
+            const bounty = parseInt(currentGathering.moderator_leaves_bounty || 50, 10);
+            await Database.query(
+              'UPDATE users SET leaves_balance = leaves_balance + $1 WHERE id = $2',
+              [bounty, currentGathering.moderator_user_id]
+            );
+            await Database.query(
+              `INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
+               VALUES ($1, $2, 'event_anchor_bounty', $3)`,
+              [
+                currentGathering.moderator_user_id,
+                bounty,
+                `Host Bounty for moderating: ${currentGathering.title}`
+              ]
+            );
+            allowedUpdates.push(`moderator_bounty_awarded = TRUE`);
+          }
+        } catch (bountyErr) {
+          console.error('Error auto-awarding moderator leaves bounty:', bountyErr);
+        }
+      }
     }
     if (title !== undefined) {
       allowedUpdates.push(`title = $${idx++}`);
@@ -184,6 +226,30 @@ export async function PATCH(request, { params }) {
     if (gateCode !== undefined) {
       allowedUpdates.push(`gate_code = $${idx++}`);
       values.push(gateCode);
+    }
+    if (moderatorUserId !== undefined) {
+      allowedUpdates.push(`moderator_user_id = $${idx++}`);
+      values.push(moderatorUserId ? parseInt(moderatorUserId, 10) : null);
+    }
+    if (moderatorName !== undefined) {
+      allowedUpdates.push(`moderator_name = $${idx++}`);
+      values.push(moderatorName || null);
+    }
+    if (moderatorAvatarUrl !== undefined) {
+      allowedUpdates.push(`moderator_avatar_url = $${idx++}`);
+      values.push(moderatorAvatarUrl || null);
+    }
+    if (moderatorLkid !== undefined) {
+      allowedUpdates.push(`moderator_lkid = $${idx++}`);
+      values.push(moderatorLkid || null);
+    }
+    if (moderatorBio !== undefined) {
+      allowedUpdates.push(`moderator_bio = $${idx++}`);
+      values.push(moderatorBio || null);
+    }
+    if (moderatorLeavesBounty !== undefined) {
+      allowedUpdates.push(`moderator_leaves_bounty = $${idx++}`);
+      values.push(parseInt(moderatorLeavesBounty || 50, 10));
     }
 
     if (allowedUpdates.length === 0) {
