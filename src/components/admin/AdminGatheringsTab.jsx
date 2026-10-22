@@ -52,6 +52,7 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
   const [copiedBroadcast, setCopiedBroadcast] = useState(false);
   const [isCorroborating, setIsCorroborating] = useState(false);
   const [photoViewerUrl, setPhotoViewerUrl] = useState(null);
+  const [copiedMagicLinkId, setCopiedMagicLinkId] = useState(null);
 
   // Helper to compress uploaded flyer image client-side to Base64 (<150KB)
   const handleFlyerUpload = (file, isEdit = false) => {
@@ -390,6 +391,20 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
     setTimeout(() => setCopiedBroadcast(false), 2500);
   };
 
+  const getMagicLink = (g) => {
+    if (!g) return '';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://paperthoughts.org';
+    return `${origin}/checkin?gatheringId=${g.id}&magicToken=${g.magicToken || ''}&code=${g.gateCode || ''}`;
+  };
+
+  const copyMagicLink = (g) => {
+    if (!g) return;
+    const link = getMagicLink(g);
+    navigator.clipboard.writeText(link);
+    setCopiedMagicLinkId(g.id);
+    setTimeout(() => setCopiedMagicLinkId(null), 2500);
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header & Quick Actions */}
@@ -572,6 +587,23 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
 
                     <div className="flex items-center gap-1.5">
                       <button
+                        onClick={() => copyMagicLink(g)}
+                        className="px-2.5 py-1.5 rounded-lg border border-black/10 hover:border-[#c96a42] text-xs font-bold text-[#20070e] flex items-center gap-1 transition-colors"
+                        title="Copy Direct Magic Check-In Link"
+                      >
+                        {copiedMagicLinkId === g.id ? (
+                          <>
+                            <Check size={12} className="text-emerald-600" />
+                            <span className="text-emerald-600">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={12} className="text-[#c96a42]" />
+                            <span>Link</span>
+                          </>
+                        )}
+                      </button>
+                      <button
                         onClick={() => handleOpenEdit(g)}
                         className="px-2.5 py-1.5 rounded-lg border border-black/10 hover:border-[#c96a42] text-xs font-bold text-[#20070e] flex items-center gap-1 transition-colors"
                         title="Edit Gathering Details"
@@ -646,9 +678,54 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
             <h3 className="text-2xl font-display text-[#20070e] mb-1">
               {selectedGathering.title}
             </h3>
-            <p className="text-xs text-[#120308]/60 mb-6 font-serif">
+            <p className="text-xs text-[#120308]/60 mb-4 font-serif">
               Status: <span className="font-bold uppercase text-[#c96a42]">{selectedGathering.status}</span> • Gate Code: <span className="font-mono font-bold text-[#20070e]">{selectedGathering.gateCode}</span> • Token: <span className="font-mono text-xs">{selectedGathering.magicToken}</span>
             </p>
+
+            {/* Direct Magic Check-In Link Bar */}
+            <div className="p-3.5 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[11px] font-bold text-[#20070e] uppercase tracking-wider flex items-center gap-1">
+                    🔗 Direct Magic Check-In Link
+                  </span>
+                  <span className="text-[10px] font-mono text-[#c96a42] bg-[#c96a42]/10 px-2 py-0.5 rounded-full font-bold">
+                    Gate Code: {selectedGathering.gateCode}
+                  </span>
+                </div>
+                <div className="text-[11px] font-mono text-black/60 truncate bg-white px-2.5 py-1.5 rounded-xl border border-black/10 select-all">
+                  {getMagicLink(selectedGathering)}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => copyMagicLink(selectedGathering)}
+                  className="px-4 py-2.5 rounded-xl bg-[#20070e] hover:bg-[#120308] text-[#FBF7EE] text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-xs"
+                >
+                  {copiedMagicLinkId === selectedGathering.id ? (
+                    <>
+                      <Check size={13} className="text-emerald-400" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={13} className="text-[#F2A98A]" />
+                      <span>Copy Magic Link</span>
+                    </>
+                  )}
+                </button>
+                <a
+                  href={getMagicLink(selectedGathering)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-2.5 rounded-xl border border-black/10 hover:border-[#c96a42] text-[#20070e] transition-colors"
+                  title="Test Check-In Page"
+                >
+                  <ExternalLink size={14} />
+                </a>
+              </div>
+            </div>
 
             {loadingDetails ? (
               <div className="py-16 text-center text-black/40 flex items-center justify-center gap-2">

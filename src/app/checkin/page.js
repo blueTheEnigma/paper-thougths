@@ -57,7 +57,11 @@ function CheckinFormContent() {
 
           if (matched) {
             setSelectedGathering(matched);
-            if (paramCode) setGateCode(paramCode);
+            if (paramCode) {
+              setGateCode(paramCode);
+            } else if (paramToken && matched.gateCode) {
+              setGateCode(matched.gateCode);
+            }
           } else {
             setSelectedGathering(data.gatherings[0]);
           }
@@ -141,6 +145,7 @@ function CheckinFormContent() {
 
     const payload = {
       gateCode: gateCode.trim() || undefined,
+      magicToken: searchParams.get('magicToken') || selectedGathering.magicToken || undefined,
       lkId: lkid.trim() || undefined,
       isGroupArrival,
       groupCompanions: isGroupArrival ? groupCompanions.split(',').map(s => s.trim()) : [],
