@@ -73,7 +73,7 @@ export async function GET(request) {
 
     return NextResponse.json({
       success: true,
-      pitches: result.rows
+      pitches: result || []
     });
   } catch (error) {
     console.error('Error fetching book pitches:', error);

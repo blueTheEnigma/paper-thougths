@@ -12,7 +12,7 @@ export const PODCAST_SHOW = {
   hostBio: 'LIFELORE Podcast is where life is retold through its highs, lows, and in-betweens—The Good, The Bad, and The Ugly—woven into thought-provoking, entertaining, and deeply relatable stories by host Debbie Doowuese Ajom.',
   coverImage: 'https://i.scdn.co/image/ab6765630000ba8a9be26c760ec1a3210b8c1ce9',
   spotifyShowUrl: 'https://open.spotify.com/show/1z10DT9xtMxBdanA2Y4lCk',
-  spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=generator&theme=0',
+    spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=oembed',
   socials: {
     spotify: 'https://open.spotify.com/show/1z10DT9xtMxBdanA2Y4lCk?si=p3koHDEoRd6hcFwyfUXBlQ',
     youtube: 'https://youtube.com/@lifelore_podcast?si=LZQumfjW2XRWYsl0',
@@ -45,7 +45,7 @@ export const PODCAST_EPISODES = [
     isHeroFeatured: true,
     isEssential: true,
     spotifyUrl: 'https://open.spotify.com/show/1z10DT9xtMxBdanA2Y4lCk',
-    spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=generator&theme=0',
+      spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=oembed',
     archetypes: ['Oracle', 'Haven', 'Scribe'],
     soundscapePairing: {
       id: 'still_hour',
@@ -68,7 +68,7 @@ export const PODCAST_EPISODES = [
     isHeroFeatured: false,
     isEssential: true,
     spotifyUrl: 'https://open.spotify.com/show/1z10DT9xtMxBdanA2Y4lCk',
-    spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=generator&theme=0',
+      spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=oembed',
     archetypes: ['Scribe', 'Sage'],
     soundscapePairing: {
       id: 'reading_room',
@@ -91,7 +91,7 @@ export const PODCAST_EPISODES = [
     isHeroFeatured: false,
     isEssential: true,
     spotifyUrl: 'https://open.spotify.com/show/1z10DT9xtMxBdanA2Y4lCk',
-    spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=generator&theme=0',
+      spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=oembed',
     archetypes: ['Titan', 'Haven'],
     soundscapePairing: {
       id: 'midnight_express',
@@ -114,7 +114,7 @@ export const PODCAST_EPISODES = [
     isHeroFeatured: false,
     isEssential: false,
     spotifyUrl: 'https://open.spotify.com/show/1z10DT9xtMxBdanA2Y4lCk',
-    spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=generator&theme=0',
+      spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=oembed',
     archetypes: ['Votive', 'Haven'],
     soundscapePairing: {
       id: 'corner_cafe',
@@ -137,7 +137,7 @@ export const PODCAST_EPISODES = [
     isHeroFeatured: false,
     isEssential: true,
     spotifyUrl: 'https://open.spotify.com/show/1z10DT9xtMxBdanA2Y4lCk',
-    spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=generator&theme=0',
+      spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=oembed',
     archetypes: ['Oracle', 'Matrix'],
     soundscapePairing: {
       id: 'hollow_manor',
@@ -160,7 +160,7 @@ export const PODCAST_EPISODES = [
     isHeroFeatured: false,
     isEssential: false,
     spotifyUrl: 'https://open.spotify.com/show/1z10DT9xtMxBdanA2Y4lCk',
-    spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=generator&theme=0',
+      spotifyEmbedUrl: 'https://open.spotify.com/embed/show/1z10DT9xtMxBdanA2Y4lCk?utm_source=oembed',
     archetypes: ['Sage', 'Scribe'],
     soundscapePairing: {
       id: 'forest_cabin',

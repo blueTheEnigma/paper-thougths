@@ -118,8 +118,8 @@ export async function POST(request) {
         // B: Log sent tip transaction for reviewer
         await client.query(`
           INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
-          VALUES ($1, -$2, 'tip_sent', $3)
-        `, [dbUser.id, parsedTipAmount, `Sent tip of ${parsedTipAmount} leaves to author of submission #${submissionId}`]);
+          VALUES ($1, $2, 'tip_sent', $3)
+        `, [dbUser.id, -parsedTipAmount, `Sent tip of ${parsedTipAmount} leaves to author of submission #${submissionId}`]);
 
         // C: Add leaves to author
         await client.query(`

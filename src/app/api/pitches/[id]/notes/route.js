@@ -30,7 +30,7 @@ export async function GET(request, { params }) {
 
     return NextResponse.json({
       success: true,
-      notes: res.rows
+      notes: res || []
     });
   } catch (error) {
     console.error('Error fetching pitch notes:', error);
@@ -76,7 +76,7 @@ export async function POST(request, { params }) {
     `, [pitchId, dbUser.id, cleanPenName, content.trim()]);
 
     const newNote = {
-      ...res.rows[0],
+      ...(res[0] || {}),
       displayName: cleanPenName || dbUser.full_name || 'Literary Reader',
       authorAvatar: dbUser.avatar_url || null,
       authorArchetype: dbUser.reader_archetype || null
@@ -92,7 +92,7 @@ export async function POST(request, { params }) {
     return NextResponse.json({
       success: true,
       note: newNote,
-      commentCount: countRes.rows[0].count
+      commentCount: countRes[0]?.count || 0
     });
   } catch (error) {
     console.error('Error posting pitch note:', error);

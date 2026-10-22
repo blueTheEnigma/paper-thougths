@@ -254,20 +254,41 @@ export default function PodcastsGrid() {
 
               {/* Responsive Spotify Iframe Embed */}
               <iframe
-                src={activeEpisode.spotifyEmbedUrl}
+                key={activeEpisode.id}
+                src={activeEpisode.spotifyEmbedUrl || PODCAST_SHOW.spotifyEmbedUrl}
                 width="100%"
                 height="352"
                 frameBorder="0"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                allowFullScreen
                 loading="lazy"
-                className="rounded-xl w-full"
+                className="rounded-xl w-full bg-[#120308]"
                 style={{ borderRadius: '12px', minHeight: '352px' }}
                 title={activeEpisode.title}
               />
 
-              <p className="text-[10px] text-center text-cream/40 pt-2 font-mono">
-                Powered by Spotify • Streams count directly to creator metrics
-              </p>
+              <div className="pt-2.5 flex items-center justify-between text-[10px] text-cream/50 font-mono">
+                <span>Powered by Spotify</span>
+                <div className="flex items-center gap-2">
+                  <a 
+                    href={activeEpisode.spotifyUrl || PODCAST_SHOW.socials.spotify} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:text-[#1DB954] flex items-center gap-1 transition-colors underline"
+                  >
+                    Open on App <ExternalLink size={10} />
+                  </a>
+                  <span>•</span>
+                  <a 
+                    href={PODCAST_SHOW.socials.youtube} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:text-red-400 flex items-center gap-1 transition-colors underline"
+                  >
+                    YouTube <ExternalLink size={10} />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
 
