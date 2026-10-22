@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
-import { syncOrCreateUser, getUserPermissions } from '@/lib/permissions';
+import { syncOrCreateUser, getUserPermissions, hasGatheringAdminAccess } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,15 +23,9 @@ export async function POST(request, { params }) {
       return NextResponse.json({ success: false, error: 'User sync failed' }, { status: 500 });
     }
 
-    const permissions = await getUserPermissions(dbUser.id);
-    const hasAccess = 
-      permissions.includes('manage_chapter_events') || 
-      permissions.includes('community_manager') || 
-      dbUser.role === 'admin' || 
-      dbUser.role === 'superadmin';
-
+    const hasAccess = await hasGatheringAdminAccess(clerkUser, dbUser);
     if (!hasAccess) {
-      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ success: false, error: 'Forbidden: Insufficient ritual privileges' }, { status: 403 });
     }
 
     const body = await request.json().catch(() => ({}));

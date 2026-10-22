@@ -353,106 +353,127 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
 
       {/* Gatherings List Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {gatherings.map((g) => {
-          const isLive = g.status === 'live';
-          const isConcluded = g.status === 'concluded';
-          const coverImg = g.coverUrl || '/images/gatherings/townhall.jpg';
+        {gatherings.length > 0 ? (
+          gatherings.map((g) => {
+            const isLive = g.status === 'live';
+            const isConcluded = g.status === 'concluded';
+            const coverImg = g.coverUrl || '/images/gatherings/townhall.jpg';
 
-          return (
-            <div
-              key={g.id}
-              className={`rounded-3xl bg-white border overflow-hidden transition-all flex flex-col justify-between ${
-                isLive
-                  ? 'border-2 border-[#c96a42] ring-2 ring-[#F2A98A]/30 shadow-md'
-                  : 'border-black/8 hover:border-[#c96a42]/35 shadow-xs'
-              }`}
+            return (
+              <div
+                key={g.id}
+                className={`rounded-3xl bg-white border overflow-hidden transition-all flex flex-col justify-between ${
+                  isLive
+                    ? 'border-2 border-[#c96a42] ring-2 ring-[#F2A98A]/30 shadow-md'
+                    : 'border-black/8 hover:border-[#c96a42]/35 shadow-xs'
+                }`}
+              >
+                {/* Event Cover Flyer Preview */}
+                <div className="aspect-[16/9] w-full overflow-hidden relative bg-black/5">
+                  <img src={coverImg} alt={g.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
+
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#20070e]/85 text-[#FBF7EE] backdrop-blur-xs">
+                    {g.gatheringType}
+                  </div>
+
+                  <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs ${
+                      isLive ? 'bg-red-600 text-white animate-pulse' : isConcluded ? 'bg-black/60 text-white/80' : 'bg-emerald-600 text-white'
+                    }`}>
+                      {g.status}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Content Details */}
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-[#20070e] leading-snug mb-1 font-display line-clamp-2">
+                      {g.title}
+                    </h3>
+
+                    <div className="text-[11px] text-[#120308]/60 flex items-center gap-2 mb-3">
+                      <Calendar size={12} className="text-[#c96a42]" />
+                      <span>{g.eventDate}</span>
+                      <span>•</span>
+                      <Clock size={12} className="text-[#c96a42]" />
+                      <span>{g.startTime?.substring(0, 5)} WAT</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[#FBF7EE] border border-black/5 text-center text-xs mb-4">
+                      <div>
+                        <span className="text-[10px] text-[#120308]/40 uppercase font-bold block">RSVPs</span>
+                        <span className="font-bold text-[#20070e]">{g.rsvpCount || 0}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-[#120308]/40 uppercase font-bold block">Arrivals</span>
+                        <span className="font-bold text-[#c96a42]">{g.attendanceCount || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Action Footer */}
+                  <div className="pt-2 border-t border-black/5 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      {g.status === 'published' && (
+                        <button
+                          onClick={() => handleUpdateStatus(g.id, 'live')}
+                          className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg bg-[#c96a42] text-white hover:bg-[#20070e] transition-colors"
+                        >
+                          Go Live 🔴
+                        </button>
+                      )}
+                      {g.status === 'live' && (
+                        <button
+                          onClick={() => handleUpdateStatus(g.id, 'concluded')}
+                          className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg bg-black/80 text-white hover:bg-black transition-colors"
+                        >
+                          Conclude
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => handleOpenEdit(g)}
+                        className="px-2.5 py-1.5 rounded-lg border border-black/10 hover:border-[#c96a42] text-xs font-bold text-[#20070e] flex items-center gap-1 transition-colors"
+                        title="Edit Gathering Details"
+                      >
+                        <Edit size={12} /> Edit
+                      </button>
+                      <button
+                        onClick={() => openGatheringDetails(g)}
+                        className="text-xs font-bold text-[#20070e] hover:text-[#c96a42] flex items-center gap-1"
+                      >
+                        War Room <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="col-span-full text-center py-16 bg-[#FBF7EE] rounded-3xl border border-dashed border-[#c96a42]/30 p-8">
+            <div className="text-4xl mb-3">🏛️</div>
+            <h3 className="text-lg font-bold font-display text-[#20070e] mb-1">
+              No Gathering Cards Active
+            </h3>
+            <p className="text-xs text-[#120308]/60 max-w-md mx-auto font-serif mb-5">
+              The ledger is clear. Click below to schedule your weekly Thursday Townhall, Sunday Book Banter on X Spaces, or your chosen Book of the Month.
+            </p>
+            <button
+              onClick={() => {
+                applyTemplate('townhall');
+                setIsCreateOpen(true);
+              }}
+              className="bg-[#20070e] text-[#FBF7EE] text-xs font-bold uppercase tracking-widest px-5 py-3 rounded-2xl hover:bg-[#120308] transition-all shadow-sm inline-flex items-center gap-2"
             >
-              {/* Event Cover Flyer Preview */}
-              <div className="aspect-[16/9] w-full overflow-hidden relative bg-black/5">
-                <img src={coverImg} alt={g.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
-
-                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#20070e]/85 text-[#FBF7EE] backdrop-blur-xs">
-                  {g.gatheringType}
-                </div>
-
-                <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs ${
-                    isLive ? 'bg-red-600 text-white animate-pulse' : isConcluded ? 'bg-black/60 text-white/80' : 'bg-emerald-600 text-white'
-                  }`}>
-                    {g.status}
-                  </span>
-                </div>
-              </div>
-
-              {/* Content Details */}
-              <div className="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-[#20070e] leading-snug mb-1 font-display line-clamp-2">
-                    {g.title}
-                  </h3>
-
-                  <div className="text-[11px] text-[#120308]/60 flex items-center gap-2 mb-3">
-                    <Calendar size={12} className="text-[#c96a42]" />
-                    <span>{g.eventDate}</span>
-                    <span>•</span>
-                    <Clock size={12} className="text-[#c96a42]" />
-                    <span>{g.startTime?.substring(0, 5)} WAT</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[#FBF7EE] border border-black/5 text-center text-xs mb-4">
-                    <div>
-                      <span className="text-[10px] text-[#120308]/40 uppercase font-bold block">RSVPs</span>
-                      <span className="font-bold text-[#20070e]">{g.rsvpCount || 0}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-[#120308]/40 uppercase font-bold block">Arrivals</span>
-                      <span className="font-bold text-[#c96a42]">{g.attendanceCount || 0}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Action Footer */}
-                <div className="pt-2 border-t border-black/5 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5">
-                    {g.status === 'published' && (
-                      <button
-                        onClick={() => handleUpdateStatus(g.id, 'live')}
-                        className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg bg-[#c96a42] text-white hover:bg-[#20070e] transition-colors"
-                      >
-                        Go Live 🔴
-                      </button>
-                    )}
-                    {g.status === 'live' && (
-                      <button
-                        onClick={() => handleUpdateStatus(g.id, 'concluded')}
-                        className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg bg-black/80 text-white hover:bg-black transition-colors"
-                      >
-                        Conclude
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => handleOpenEdit(g)}
-                      className="px-2.5 py-1.5 rounded-lg border border-black/10 hover:border-[#c96a42] text-xs font-bold text-[#20070e] flex items-center gap-1 transition-colors"
-                      title="Edit Gathering Details"
-                    >
-                      <Edit size={12} /> Edit
-                    </button>
-                    <button
-                      onClick={() => openGatheringDetails(g)}
-                      className="text-xs font-bold text-[#20070e] hover:text-[#c96a42] flex items-center gap-1"
-                    >
-                      War Room <ChevronRight size={14} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+              <Plus size={16} className="text-[#F2A98A]" /> Post Your First Gathering Card
+            </button>
+          </div>
+        )}
       </div>
 
       {/* War Room & Corroboration Drawer / Modal */}

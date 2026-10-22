@@ -244,3 +244,62 @@ export async function isCrewMember(userIdentifier) {
   }
 }
 
+/**
+ * Check if a user has authority to create, edit, or purge gatherings / ritual ledgers.
+ * Grants access to:
+ * - Superadmins (umorgan2001@gmail.com, paperthoughts01@gmail.com, or process.env.SUPERADMIN_EMAIL)
+ * - Users with 'admin' or 'superadmin' role in the database
+ * - Users with 'manage_chapter_events', 'community_manager', or 'manage_crucible' permissions
+ * - Active crew members in the 'Events & Community' department or admin crew role
+ */
+export async function hasGatheringAdminAccess(clerkUser, dbUser) {
+  if (!dbUser && !clerkUser) return false;
+
+  const superadminEmails = [
+    (process.env.SUPERADMIN_EMAIL || "umorgan2001@gmail.com").toLowerCase(),
+    "paperthoughts01@gmail.com"
+  ];
+
+  const userEmail = (
+    dbUser?.email || 
+    clerkUser?.email ||
+    clerkUser?.primaryEmailAddress?.emailAddress || 
+    clerkUser?.emailAddresses?.[0]?.emailAddress || 
+    ""
+  ).toLowerCase();
+
+  if (userEmail && superadminEmails.includes(userEmail)) {
+    return true;
+  }
+
+  if (dbUser?.role === 'admin' || dbUser?.role === 'superadmin') {
+    return true;
+  }
+
+  if (dbUser?.id) {
+    const permissions = await getUserPermissions(dbUser.id);
+    if (
+      permissions.includes('manage_chapter_events') || 
+      permissions.includes('community_manager') ||
+      permissions.includes('manage_crucible')
+    ) {
+      return true;
+    }
+
+    const communityManagerRes = await Database.queryOne(`
+      SELECT 1 FROM crew_members cm
+      LEFT JOIN crew_member_departments cmd ON cmd.crew_member_id = cm.id
+      LEFT JOIN crew_departments cd ON cd.id = cmd.department_id
+      WHERE cm.user_id = $1 
+        AND cm.is_active = TRUE 
+        AND (cd.name = 'Events & Community' OR cm.role = 'admin')
+    `, [dbUser.id]);
+
+    if (communityManagerRes) {
+      return true;
+    }
+  }
+
+  return false;
+}
+

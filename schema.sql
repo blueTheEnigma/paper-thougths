@@ -416,49 +416,5 @@ CREATE TABLE IF NOT EXISTS gathering_disputes (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Seed Initial Upcoming Gatherings
-INSERT INTO gatherings (title, gathering_type, event_date, start_time, meet_url, venue_name, description, status, magic_token, gate_code, cover_url)
-VALUES 
-(
-  'Weekly Townhall: The Grand Archive & Storytellers Circle',
-  'townhall',
-  CURRENT_DATE + INTERVAL '1 day',
-  '20:15:00',
-  'https://meet.google.com/pt-townhall-weekly',
-  'Google Meet',
-  'Join the kin for our weekly virtual townhall as we explore writing craft, archive updates, and upcoming chapter gatherings. Punctual kin will be crowned at the ramparts.',
-  'published',
-  'TH-' || to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYYMMDD'),
-  '2015',
-  '/images/gatherings/townhall.jpg'
-),
-(
-  'Sunday Book Banter: Plot Twists & Unreliable Narrators',
-  'book_banter',
-  CURRENT_DATE + INTERVAL '4 days',
-  '15:00:00',
-  'https://x.com/i/spaces/pt-book-banter',
-  'X Spaces',
-  'Unfiltered literary banter on the craft of deception in fiction. Spoken vault cipher will be revealed on stage for the living roll.',
-  'published',
-  'BB-' || to_char(CURRENT_DATE + INTERVAL '4 days', 'YYYYMMDD'),
-  '1500',
-  '/images/gatherings/book_banter.jpg'
-),
-(
-  'BOTM Review: The Parlour Wife by Foluso Agbaje',
-  'botm_review',
-  CURRENT_DATE + INTERVAL '8 days',
-  '20:15:00',
-  'https://meet.google.com/pt-botm-review',
-  'Google Meet',
-  'Our monthly flagship review dissecting the domestic intrigue, secrets, and historical prose of The Parlour Wife. First arrivals take the Corona Muralis.',
-  'published',
-  'BR-' || to_char(CURRENT_DATE + INTERVAL '8 days', 'YYYYMMDD'),
-  '2026',
-  '/images/gatherings/botm_review.jpg'
-)
-ON CONFLICT DO NOTHING;
-
 
 
