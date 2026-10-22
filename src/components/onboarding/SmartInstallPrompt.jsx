@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Download, X, Share, PlusSquare, Smartphone, Monitor, 
-  CheckCircle2, Sparkles, ExternalLink, Copy, Check, ChevronRight, HelpCircle
+  Sparkles, ExternalLink, Copy, Check, HelpCircle, ShieldCheck
 } from 'lucide-react';
 
 export default function SmartInstallPrompt() {
+  const [mounted, setMounted] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [platform, setPlatform] = useState(null); // 'ios', 'android', 'desktop', 'in-app', 'standalone'
   const [isStandalone, setIsStandalone] = useState(false);
@@ -17,8 +18,13 @@ export default function SmartInstallPrompt() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
-    // Check if running as standalone PWA
+    setMounted(true);
+
+    const ua = (typeof window !== 'undefined' ? window.navigator.userAgent : '') || '';
+
+    // Check if running as standalone PWA or inside our Native Android APK
     const standaloneMode = 
+      ua.includes('PaperThoughtsNative') ||
       (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) || 
       (typeof window !== 'undefined' && window.navigator.standalone === true) || 
       (typeof document !== 'undefined' && document.referrer.includes('android-app://'));
@@ -29,14 +35,15 @@ export default function SmartInstallPrompt() {
       return;
     }
 
-    // Check banner dismissed in session
-    const isDismissed = sessionStorage.getItem('pt_install_prompt_dismissed') === 'true';
-    if (isDismissed) {
-      setBannerDismissed(true);
-    }
+    // Check banner dismissed permanently in localStorage
+    try {
+      const isDismissed = localStorage.getItem('pt_install_prompt_dismissed') === 'true';
+      if (isDismissed) {
+        setBannerDismissed(true);
+      }
+    } catch (e) {}
 
     // Detect browser & device
-    const ua = window.navigator.userAgent || window.navigator.vendor || window.opera || '';
     const isInApp = /Instagram|FBAN|FBAV|WhatsApp|TikTok|Snapchat/i.test(ua);
     const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
     const isAndroid = /Android/i.test(ua);
@@ -52,7 +59,7 @@ export default function SmartInstallPrompt() {
       setActiveTab('android');
     } else {
       setPlatform('desktop');
-      setActiveTab('android'); // Default to mobile instructions if on desktop viewing mobile
+      setActiveTab('android');
     }
 
     // Capture beforeinstallprompt (Android / Desktop Chrome / Edge)
@@ -67,7 +74,7 @@ export default function SmartInstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
-    // Global event listeners to open modal from ANY button on the site
+    // Global event listener to open modal from ANY button on the site
     const handleOpenModal = (e) => {
       setShowInstructions(true);
       if (e?.detail?.tab) {
@@ -82,6 +89,9 @@ export default function SmartInstallPrompt() {
         const { outcome } = await promptToUse.userChoice;
         if (outcome === 'accepted') {
           setBannerDismissed(true);
+          try {
+            localStorage.setItem('pt_install_prompt_dismissed', 'true');
+          } catch (e) {}
         }
         setDeferredPrompt(null);
         window.__pt_deferred_prompt = null;
@@ -113,7 +123,9 @@ export default function SmartInstallPrompt() {
       const { outcome } = await promptToUse.userChoice;
       if (outcome === 'accepted') {
         setBannerDismissed(true);
-        sessionStorage.setItem('pt_install_prompt_dismissed', 'true');
+        try {
+          localStorage.setItem('pt_install_prompt_dismissed', 'true');
+        } catch (e) {}
       }
       setDeferredPrompt(null);
       if (typeof window !== 'undefined') window.__pt_deferred_prompt = null;
@@ -124,7 +136,9 @@ export default function SmartInstallPrompt() {
 
   const handleDismissBanner = () => {
     setBannerDismissed(true);
-    sessionStorage.setItem('pt_install_prompt_dismissed', 'true');
+    try {
+      localStorage.setItem('pt_install_prompt_dismissed', 'true');
+    } catch (e) {}
   };
 
   const copyAppUrl = () => {
@@ -135,8 +149,8 @@ export default function SmartInstallPrompt() {
     }
   };
 
-  // If already running standalone, do not show install UI
-  if (isStandalone) {
+  // If running inside native app, standalone PWA, or during SSR, never render install UI
+  if (!mounted || isStandalone) {
     return null;
   }
 
@@ -156,36 +170,34 @@ export default function SmartInstallPrompt() {
               
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#c96a42] to-[#5c1a2e] flex items-center justify-center text-cream shadow-md flex-shrink-0">
-                  <Download size={18} className="animate-bounce text-[#FAF7F0]" />
+                  <Download size={18} className="animate-pulse text-[#FAF7F0]" />
                 </div>
 
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-serif font-bold text-xs text-cream tracking-tight">Paper Thoughts Native App</span>
-                    <span className="text-[9px] px-1.5 py-0.2 bg-[#F2A98A]/20 text-[#F2A98A] font-mono rounded font-bold uppercase">PWA</span>
+                    <span className="font-serif font-bold text-xs text-cream tracking-tight">Paper Thoughts App</span>
+                    <span className="text-[9px] px-1.5 py-0.2 bg-[#F2A98A]/20 text-[#F2A98A] font-mono rounded font-bold uppercase">APK & PWA</span>
                   </div>
                   <p className="text-[11px] text-cream/70 leading-tight">
-                    {platform === 'in-app' 
-                      ? 'Open in Chrome/Safari to install natively.' 
-                      : platform === 'ios'
-                      ? 'Add to Home Screen for lock-screen alerts.'
-                      : 'Install to device for 1-tap reading & alerts.'}
+                    {platform === 'ios'
+                      ? 'Add to iPhone Home Screen for instant reading & alerts.'
+                      : 'Download the APK or save to home screen for 1-tap reading.'}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
-                  onClick={handleInstallClick}
+                  onClick={() => setShowInstructions(true)}
                   className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#5c1a2e] to-[#c96a42] text-cream font-sans font-bold text-[11px] uppercase tracking-wider shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
                 >
-                  {deferredPrompt ? 'Install Now' : 'How to Install'}
+                  Get App
                 </button>
 
                 <button
                   onClick={handleDismissBanner}
                   className="text-cream/40 hover:text-cream p-1.5 rounded-full hover:bg-white/5 transition-colors cursor-pointer"
-                  title="Dismiss banner"
+                  title="Don't show again"
                 >
                   <X size={15} />
                 </button>
@@ -196,28 +208,7 @@ export default function SmartInstallPrompt() {
         )}
       </AnimatePresence>
 
-      {/* 2. Persistent Unobtrusive Quick-Install Pill (Appears if banner was dismissed) */}
-      <AnimatePresence>
-        {bannerDismissed && !showInstructions && platform && (
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            className="fixed bottom-20 lg:bottom-6 right-3 z-30"
-          >
-            <button
-              onClick={() => setShowInstructions(true)}
-              className="bg-[#20070e]/90 hover:bg-[#20070e] border border-[#F2A98A]/40 text-[#FAF7F0] px-3 py-2 rounded-full shadow-lg backdrop-blur-md flex items-center gap-2 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer"
-              title="Install Paper Thoughts to your home screen"
-            >
-              <Download size={14} className="text-[#c96a42]" />
-              <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-wider">Install App</span>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 3. Reforged Interactive Step-by-Step Installation Modal */}
+      {/* 2. Interactive Installation & APK Download Modal */}
       <AnimatePresence>
         {showInstructions && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
@@ -239,14 +230,14 @@ export default function SmartInstallPrompt() {
               <div className="space-y-1 text-center sm:text-left pr-8">
                 <div className="flex items-center gap-2 justify-center sm:justify-start">
                   <span className="text-[10px] font-mono uppercase tracking-widest text-[#F2A98A] font-bold">
-                    Native Device Setup
+                    Paper Thoughts App
                   </span>
                   <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#c96a42]/20 text-[#c96a42] font-bold">
                     Zero App Store Friction
                   </span>
                 </div>
                 <h3 className="text-2xl font-serif font-bold text-cream">
-                  Install Paper Thoughts
+                  Install or Download App
                 </h3>
                 <p className="text-xs text-cream/70 leading-relaxed">
                   Fast navigation, offline drafts, lockscreen critique alerts, and zero browser bars.
@@ -264,7 +255,7 @@ export default function SmartInstallPrompt() {
                   }`}
                 >
                   <Smartphone size={14} />
-                  <span>Android (Chrome)</span>
+                  <span>Android</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('ios')}
@@ -275,7 +266,7 @@ export default function SmartInstallPrompt() {
                   }`}
                 >
                   <Smartphone size={14} />
-                  <span>iPhone (Safari)</span>
+                  <span>iPhone (iOS)</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('desktop')}
@@ -310,78 +301,101 @@ export default function SmartInstallPrompt() {
                 </div>
               )}
 
-              {/* TAB 1: ANDROID (CHROME / BRAVE / SAMSUNG) */}
+              {/* TAB 1: ANDROID (DUAL CHOICE: DIRECT APK vs SAVE TO HOME SCREEN) */}
               {activeTab === 'android' && (
-                <div className="space-y-4 bg-[#080104] p-4.5 rounded-2xl border border-[#F2A98A]/20">
-                  {deferredPrompt ? (
-                    <div className="text-center py-2 space-y-3">
-                      <div className="p-3 bg-[#5c1a2e]/20 rounded-xl border border-[#c96a42]/30">
-                        <Sparkles size={20} className="mx-auto text-[#c96a42] mb-1" />
-                        <p className="text-xs font-bold text-cream">Your browser is primed and ready!</p>
-                        <p className="text-[11px] text-cream/70">Tap below to install directly to your device launcher.</p>
+                <div className="space-y-3.5">
+                  {/* Option A: Direct APK Download (Native) */}
+                  <div className="bg-[#080104] p-4 sm:p-5 rounded-2xl border border-[#c96a42]/40 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 px-2.5 py-0.5 bg-gradient-to-l from-[#c96a42] to-[#5c1a2e] text-[9px] font-mono font-bold uppercase tracking-wider text-white rounded-bl-xl">
+                      Recommended
+                    </div>
+
+                    <div className="flex items-start gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#c96a42] to-[#5c1a2e] flex items-center justify-center text-cream shadow-md flex-shrink-0 mt-0.5">
+                        <Download size={20} className="text-[#FAF7F0]" />
                       </div>
-                      <button
-                        onClick={handleInstallClick}
-                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#c96a42] to-[#5c1a2e] hover:brightness-110 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                      <div className="space-y-1 pr-14 sm:pr-18">
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="font-serif font-bold text-sm text-cream">
+                            Download Native APK
+                          </h4>
+                          <span className="text-[9px] px-1.5 py-0.2 bg-green-500/20 text-green-300 font-mono rounded font-bold">
+                            Safe
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-cream/70 leading-relaxed">
+                          Pure standalone application. Zero browser address bars, offline access, fast navigation, and verified safe by Google Play Protect.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3.5 pt-3 border-t border-white/5 flex flex-col sm:flex-row items-center gap-2">
+                      <a
+                        href="/paper-thoughts.apk"
+                        download="PaperThoughts.apk"
+                        className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#c96a42] to-[#5c1a2e] hover:brightness-110 active:scale-[0.98] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer text-center"
                       >
-                        <Download size={16} />
-                        <span>Install Paper Thoughts (1-Tap)</span>
-                      </button>
+                        <Download size={15} />
+                        <span>Download APK (4.3 MB)</span>
+                      </a>
+                      <a
+                        href="https://github.com/blueTheEnigma/paper-thougths/releases/tag/v1.0.0-apk"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full sm:w-auto py-3 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-cream/80 hover:text-cream text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all text-center"
+                      >
+                        <ExternalLink size={13} />
+                        <span>Releases</span>
+                      </a>
                     </div>
-                  ) : (
-                    <div className="space-y-3.5">
-                      <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-[#5c1a2e] text-[#F2A98A] flex items-center justify-center font-mono text-xs font-bold flex-shrink-0 mt-0.5">
-                          1
-                        </div>
-                        <div className="text-xs space-y-0.5">
-                          <p className="text-cream font-bold">Tap the Three Dots Menu (⋮)</p>
-                          <p className="text-cream/70">Located in the top-right corner of Google Chrome or Brave.</p>
-                        </div>
-                      </div>
+                  </div>
 
-                      <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-[#5c1a2e] text-[#F2A98A] flex items-center justify-center font-mono text-xs font-bold flex-shrink-0 mt-0.5">
-                          2
-                        </div>
-                        <div className="text-xs space-y-0.5">
-                          <p className="text-cream font-bold">Look for "Install App" or "Add to Home screen"</p>
-                          <p className="text-cream/70">
-                            Chrome will display a phone icon with <strong>"Install app"</strong>. Tap it.
-                          </p>
-                        </div>
+                  {/* Option B: Add to Home Screen (Instant PWA) */}
+                  <div className="bg-[#080104] p-4 sm:p-5 rounded-2xl border border-[#F2A98A]/20 space-y-3">
+                    <div className="flex items-start gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-[#5c1a2e]/30 border border-[#F2A98A]/20 flex items-center justify-center text-[#F2A98A] flex-shrink-0 mt-0.5">
+                        <Smartphone size={20} />
                       </div>
-
-                      <div className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-[#5c1a2e] text-[#F2A98A] flex items-center justify-center font-mono text-xs font-bold flex-shrink-0 mt-0.5">
-                          3
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-serif font-bold text-sm text-cream">
+                            Save to Home Screen (Web PWA)
+                          </h4>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-cream/70 font-mono font-bold uppercase">
+                            No Download
+                          </span>
                         </div>
-                        <div className="text-xs space-y-0.5">
-                          <p className="text-cream font-bold">Tap "Install" on the confirmation prompt</p>
-                          <p className="text-cream/70">
-                            The official Paper Thoughts icon will be placed directly in your app drawer!
-                          </p>
-                        </div>
+                        <p className="text-[11px] text-cream/70 leading-relaxed">
+                          Prefer not to download an APK file? Save Paper Thoughts straight from your browser to your home screen with 1 tap.
+                        </p>
                       </div>
                     </div>
-                  )}
 
-                  {/* Xiaomi / Redmi / Mi Browser Troubleshooting Callout */}
-                  <div className="mt-3 pt-3 border-t border-[#F2A98A]/15 space-y-2">
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#F2A98A]">
-                      <HelpCircle size={13} />
-                      <span>Using a Redmi, Xiaomi, or POCO phone?</span>
-                    </div>
-                    <div className="space-y-1.5 text-[10.5px] text-cream/75 leading-relaxed bg-[#140409]/80 p-2.5 rounded-xl border border-white/5 font-sans">
-                      <p>
-                        <strong>1. Use Google Chrome:</strong> Redmi phones often open links in <em>Mi Browser</em> or WhatsApp's internal viewer, which don't support app installation. Tap the 3 dots and choose <strong>"Open in Chrome"</strong>.
-                      </p>
-                      <p>
-                        <strong>2. Turn Off "Desktop site":</strong> In Chrome's menu (⋮), ensure the <strong>Desktop site</strong> checkbox is <strong>UNCHECKED</strong>. Chrome hides "Install App" if desktop view is enabled!
-                      </p>
-                      <p>
-                        <strong>3. Allow MIUI Shortcut Permission:</strong> In phone Settings ➔ Apps ➔ Manage Apps ➔ Chrome ➔ Other Permissions ➔ Enable <strong>"Home screen shortcuts"</strong>.
-                      </p>
+                    {deferredPrompt ? (
+                      <div className="pt-1">
+                        <button
+                          onClick={handleInstallClick}
+                          className="w-full py-2.5 rounded-xl bg-[#5c1a2e]/60 hover:bg-[#5c1a2e] border border-[#c96a42]/40 text-cream font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <PlusSquare size={14} className="text-[#c96a42]" />
+                          <span>Add to Home Screen (1-Tap)</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="pt-1 space-y-2 text-[11px] text-cream/80 bg-[#140409]/60 p-3 rounded-xl border border-white/5">
+                        <p className="font-bold text-cream text-xs">How to save in Chrome / Brave:</p>
+                        <ol className="list-decimal list-inside space-y-1 text-cream/70 text-[10.5px]">
+                          <li>Tap the Three Dots Menu (⋮) in the top right</li>
+                          <li>Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong></li>
+                          <li>Confirm <strong>"Install"</strong></li>
+                        </ol>
+                      </div>
+                    )}
+
+                    {/* Redmi / Xiaomi note */}
+                    <div className="pt-2 border-t border-white/5 flex items-center gap-1.5 text-[10px] text-cream/60">
+                      <HelpCircle size={12} className="text-[#F2A98A] flex-shrink-0" />
+                      <span>On Xiaomi/Redmi phones, ensure "Desktop site" is unchecked in Chrome menu.</span>
                     </div>
                   </div>
                 </div>
@@ -427,7 +441,7 @@ export default function SmartInstallPrompt() {
                     <div className="text-xs space-y-0.5">
                       <p className="text-cream font-bold">Tap "Add" in the top-right corner</p>
                       <p className="text-cream/70">
-                        Paper Thoughts will install instantly to your home screen with no URL bars!
+                        Paper Thoughts will install instantly to your home screen with zero browser bars!
                       </p>
                     </div>
                   </div>
