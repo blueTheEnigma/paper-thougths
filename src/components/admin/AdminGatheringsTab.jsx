@@ -176,6 +176,47 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
     }
   };
 
+  const buildWhatsAppMessage = (gathering, list = []) => {
+    if (!gathering) return '';
+    const top5 = list.slice(0, 5);
+    const corona = top5[0];
+    const herald = gathering.firstHeraldInstagram 
+      ? `@${gathering.firstHeraldInstagram.replace('@', '')}` 
+      : (gathering.firstHeraldName || 'Claimed');
+    
+    const moderator = gathering.moderatorName 
+      ? `@${gathering.moderatorName.replace('@', '')}`
+      : 'Grand Custodians';
+
+    const vanguardText = top5.map((v, i) => {
+      const handle = v.instagram ? `@${v.instagram.replace('@', '')}` : (v.handle || v.name);
+      const crown = i === 0 ? '👑 (+25 Leaves)' : '🛡️ (+10 Leaves)';
+      return `${i + 1}. ${handle} ${crown}`;
+    }).join('\n');
+
+    return `🏛️ *PAPER THOUGHTS SANCTUARY — ROLL OF HONOR* 🏛️
+*Gathering:* ${gathering.title}
+
+*"The first man over the wall holds the standard for all who follow."*
+
+👑 *CORONA MURALIS (First Over the Wall):*
+✦ ${corona ? (corona.instagram ? `@${corona.instagram.replace('@', '')}` : (corona.handle || corona.name)) : 'The Kin'} (+25 Leaves Awarded)
+
+🛡️ *THE PUNCTUAL VANGUARD (Top Arrivals):*
+${vanguardText || '1. Verified by Grand Custodians'}
+
+📯 *THE FIRST HERALD (Fastest RSVP):*
+✦ ${herald} (+15 Leaves Awarded)
+
+⚖️ *GRAND CUSTODIANS (Hosts & Moderators):*
+✦ ${moderator}
+
+To the ${list.length} kindred spirits who answered the summons tonight: we live in the lines.
+The next gathering card drops this weekend on the Archive. Be ready.
+
+👉 View the Archive Ledger: https://www.paperthoughts.org/events`;
+  };
+
   const openGatheringDetails = async (g) => {
     setSelectedGathering(g);
     setLoadingDetails(true);
@@ -184,10 +225,10 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
       const data = await res.json();
       if (data.success) {
         setGatheringDetails(data);
-        setAttendeesList(data.attendances || []);
-        const initialTop5 = (data.attendances || [])
-          .slice(0, 5)
-          .map(a => a.id);
+        const list = data.attendances || [];
+        setAttendeesList(list);
+        setWhatsappBroadcast(buildWhatsAppMessage(g, list));
+        const initialTop5 = list.slice(0, 5).map(a => a.id);
         setReorderedVanguardIds(initialTop5);
       }
     } catch (err) {
@@ -402,6 +443,7 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
     const [item] = copy.splice(index, 1);
     copy.splice(target, 0, item);
     setAttendeesList(copy);
+    setWhatsappBroadcast(buildWhatsAppMessage(selectedGathering, copy));
   };
 
   const crownCoronaMuralis = (index) => {
@@ -410,6 +452,7 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
     const [item] = copy.splice(index, 1);
     copy.unshift(item);
     setAttendeesList(copy);
+    setWhatsappBroadcast(buildWhatsAppMessage(selectedGathering, copy));
   };
 
   const handleAddMemberToRoll = async (member) => {
@@ -488,6 +531,7 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
         setWhatsappBroadcast(data.whatsappMessage);
         if (data.attendances) setAttendeesList(data.attendances);
         await openGatheringDetails(selectedGathering);
+        alert('✓ Roster corroborated and leaves updated successfully!');
       } else {
         alert(data.error || 'Failed to corroborate roster');
       }
@@ -499,10 +543,40 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
   };
 
   const copyToClipboard = () => {
-    if (!whatsappBroadcast) return;
-    navigator.clipboard.writeText(whatsappBroadcast);
-    setCopiedBroadcast(true);
-    setTimeout(() => setCopiedBroadcast(false), 2500);
+    const textToCopy = whatsappBroadcast || (selectedGathering ? buildWhatsAppMessage(selectedGathering, attendeesList) : '');
+    if (!textToCopy) return;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        navigator.clipboard.writeText(textToCopy).catch(() => {
+          fallbackCopy(textToCopy);
+        });
+      } else {
+        fallbackCopy(textToCopy);
+      }
+      setCopiedBroadcast(true);
+      setTimeout(() => setCopiedBroadcast(false), 2500);
+    } catch {
+      fallbackCopy(textToCopy);
+      setCopiedBroadcast(true);
+      setTimeout(() => setCopiedBroadcast(false), 2500);
+    }
+  };
+
+  const fallbackCopy = (text) => {
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand('copy');
+      textArea.remove();
+    } catch (e) {
+      console.warn('Fallback copy failed', e);
+    }
   };
 
   const getMagicLink = (g) => {
@@ -1104,29 +1178,29 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
                     </button>
                   </div>
 
-                  {/* Pre-Formatted WhatsApp Message */}
-                  {whatsappBroadcast && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-3 border-t border-black/5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-[#20070e] flex items-center gap-1.5">
-                          <MessageCircle size={14} className="text-emerald-600" /> Formatted WhatsApp Broadcast
-                        </span>
-                        <button
-                          onClick={copyToClipboard}
-                          className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center gap-1 hover:bg-emerald-700 transition-colors"
-                        >
-                          {copiedBroadcast ? <Check size={12} /> : <Copy size={12} />}
-                          {copiedBroadcast ? 'Copied!' : 'Copy to Clipboard'}
-                        </button>
-                      </div>
-                      <textarea
-                        readOnly
-                        rows={8}
-                        value={whatsappBroadcast}
-                        className="w-full p-3 rounded-xl bg-white border border-black/10 font-mono text-[11px] text-black/80 leading-relaxed focus:outline-none"
-                      />
-                    </motion.div>
-                  )}
+                  {/* Pre-Formatted WhatsApp Message - Always Available */}
+                  <div className="space-y-2 pt-3 border-t border-black/5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-[#20070e] flex items-center gap-1.5">
+                        <MessageCircle size={14} className="text-emerald-600" /> Formatted WhatsApp Broadcast
+                      </span>
+                      <button
+                        onClick={copyToClipboard}
+                        type="button"
+                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center gap-1 hover:bg-emerald-700 transition-colors cursor-pointer shadow-xs active:scale-95"
+                      >
+                        {copiedBroadcast ? <Check size={12} /> : <Copy size={12} />}
+                        {copiedBroadcast ? 'Copied to Clipboard!' : 'Copy to Clipboard'}
+                      </button>
+                    </div>
+                    <textarea
+                      readOnly
+                      rows={9}
+                      value={whatsappBroadcast || (selectedGathering ? buildWhatsAppMessage(selectedGathering, attendeesList) : '')}
+                      onClick={(e) => e.target.select()}
+                      className="w-full p-3 rounded-xl bg-white border border-black/10 font-mono text-[11px] text-black/80 leading-relaxed focus:outline-none selection:bg-emerald-100 cursor-text"
+                    />
+                  </div>
                 </div>
 
               </div>

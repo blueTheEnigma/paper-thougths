@@ -214,7 +214,7 @@ export async function POST(request, { params }) {
         ga.group_companions as "groupCompanions",
         ga.photo_proof_url as "photoProofUrl",
         ga.leaves_awarded as "leavesAwarded",
-        ga.created_at as "checkinTime"
+        ga.checkin_time as "checkinTime"
       FROM gathering_attendances ga
       LEFT JOIN users u ON u.id = ga.user_id
       WHERE ga.gathering_id = $1
