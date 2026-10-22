@@ -27,19 +27,51 @@ export async function POST(request, { params }) {
     const body = await request.json().catch(() => ({}));
     const magicToken = body.magicToken?.trim();
     const gateCode = body.gateCode?.trim();
-    const inputLkId = body.lkId?.trim()?.toUpperCase() || null;
+    const rawInput = (body.lkId || body.name || body.email || '').trim();
+    const selectedUserId = body.userId ? parseInt(body.userId, 10) : null;
+    const inputLkId = body.lkId?.trim() || null;
     const inputEmail = body.email?.trim()?.toLowerCase() || null;
     const guestName = body.name?.trim() || null;
     const isGroupArrival = Boolean(body.isGroupArrival);
     const groupCompanions = Array.isArray(body.groupCompanions) ? body.groupCompanions.filter(Boolean) : [];
     const photoProof = body.photoProof || null; // Base64 WhatsApp screenshot
 
-    // If not authenticated, resolve via LK-ID or email fallback
-    if (!dbUser && (inputLkId || inputEmail)) {
-      if (inputLkId) {
-        dbUser = await Database.queryOne('SELECT * FROM users WHERE UPPER(lk_id) = $1', [inputLkId]);
-      } else if (inputEmail) {
-        dbUser = await Database.queryOne('SELECT * FROM users WHERE LOWER(email) = $1', [inputEmail]);
+    // ✦ Seamless Name & LK-ID Alignment ✦
+    // If not authenticated via Clerk session, resolve against registered users:
+    if (!dbUser) {
+      // 1. Explicit userId selected from autocomplete
+      if (selectedUserId && !isNaN(selectedUserId)) {
+        dbUser = await Database.queryOne('SELECT * FROM users WHERE id = $1', [selectedUserId]);
+      }
+
+      // 2. Exact LK-ID match
+      if (!dbUser && rawInput) {
+        dbUser = await Database.queryOne('SELECT * FROM users WHERE UPPER(lk_id) = UPPER($1)', [rawInput]);
+      }
+
+      // 3. Email match (either from email field or typed in input)
+      if (!dbUser && (inputEmail || rawInput.includes('@'))) {
+        const searchEmail = (inputEmail || rawInput).toLowerCase();
+        dbUser = await Database.queryOne('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [searchEmail]);
+      }
+
+      // 4. Exact Full Name match (case-insensitive & trimmed)
+      const nameCandidate = guestName || rawInput;
+      if (!dbUser && nameCandidate) {
+        dbUser = await Database.queryOne(
+          'SELECT * FROM users WHERE LOWER(TRIM(full_name)) = LOWER(TRIM($1))',
+          [nameCandidate]
+        );
+      }
+
+      // 5. Case-insensitive Substring / Fuzzy match for Name (if >= 3 characters)
+      if (!dbUser && nameCandidate && nameCandidate.length >= 3) {
+        dbUser = await Database.queryOne(`
+          SELECT * FROM users 
+          WHERE full_name ILIKE $1 
+          ORDER BY LENGTH(full_name) ASC 
+          LIMIT 1
+        `, [`%${nameCandidate}%`]);
       }
     }
 
@@ -62,8 +94,8 @@ export async function POST(request, { params }) {
     }
 
     const userId = dbUser ? dbUser.id : null;
-    const attendeeName = dbUser ? dbUser.full_name : (guestName || inputLkId || 'Kindred Spirit');
-    const attendeeLkId = dbUser ? dbUser.lk_id : inputLkId;
+    const attendeeName = dbUser ? dbUser.full_name : (guestName || rawInput || 'Kindred Spirit');
+    const attendeeLkId = dbUser ? dbUser.lk_id : (rawInput.toUpperCase().startsWith('LK-') ? rawInput.toUpperCase() : null);
 
     // Check duplicate check-in
     if (userId) {
@@ -75,11 +107,36 @@ export async function POST(request, { params }) {
         return NextResponse.json({
           success: true,
           alreadyCheckedIn: true,
-          message: 'Your presence has already been inscribed into the lines.',
+          message: `Your presence has already been inscribed into the lines, ${attendeeName}.`,
           arrivalOrder: existing.arrival_order,
           isCoronaMuralis: existing.is_corona_muralis,
           isVanguard: existing.is_vanguard,
-          leavesAwarded: existing.leaves_awarded
+          leavesAwarded: existing.leaves_awarded,
+          attendeeName,
+          attendeeLkId,
+          alignedUser: {
+            name: attendeeName,
+            lkId: attendeeLkId
+          }
+        });
+      }
+    } else if (attendeeName && attendeeName !== 'Kindred Spirit') {
+      const existing = await Database.queryOne(
+        'SELECT * FROM gathering_attendances WHERE gathering_id = $1 AND LOWER(TRIM(attendee_name)) = LOWER(TRIM($2))',
+        [gatheringId, attendeeName]
+      );
+      if (existing) {
+        return NextResponse.json({
+          success: true,
+          alreadyCheckedIn: true,
+          message: `Attendance for "${attendeeName}" is already inscribed for this gathering.`,
+          arrivalOrder: existing.arrival_order,
+          isCoronaMuralis: existing.is_corona_muralis,
+          isVanguard: existing.is_vanguard,
+          leavesAwarded: existing.leaves_awarded,
+          attendeeName,
+          attendeeLkId: null,
+          alignedUser: null
         });
       }
     }
@@ -207,12 +264,19 @@ export async function POST(request, { params }) {
       success: true,
       message: result.leavesAwarded > 0 
         ? `✦ Laurels Bestowed! ${result.honorTitle} (+${result.leavesAwarded} Leaves Awarded)` 
-        : 'Welcome to the Sanctuary. Your presence has been recorded.',
+        : `Welcome ${attendeeName}! Your presence has been recorded.`,
       arrivalOrder: result.arrivalOrder,
       isCoronaMuralis: result.isCoronaMuralis,
       isVanguard: result.isVanguard,
       leavesAwarded: result.leavesAwarded,
       honorTitle: result.honorTitle,
+      attendeeName,
+      attendeeLkId,
+      alignedUser: dbUser ? {
+        id: dbUser.id,
+        name: dbUser.full_name,
+        lkId: dbUser.lk_id
+      } : null,
       topVanguard,
       gateCode: gathering.gate_code,
       magicToken: gathering.magic_token

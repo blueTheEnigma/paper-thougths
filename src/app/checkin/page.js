@@ -4,13 +4,14 @@ import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   QrCode, Loader2, CheckCircle2, ShieldCheck, MapPin, KeyRound, 
-  CalendarDays, Crown, Award, Users, Camera, Upload, ArrowRight, Sparkles, MessageCircle
+  CalendarDays, Crown, Award, Users, Camera, Upload, ArrowRight, Sparkles, MessageCircle, X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 function CheckinFormContent() {
   const searchParams = useSearchParams();
   const fileInputRef = useRef(null);
+  const searchContainerRef = useRef(null);
 
   const [gatherings, setGatherings] = useState([]);
   const [isLoadingGatherings, setIsLoadingGatherings] = useState(true);
@@ -21,8 +22,13 @@ function CheckinFormContent() {
   const [error, setError] = useState("");
   const [successData, setSuccessData] = useState(null);
 
-  // Form Fields
-  const [lkid, setLkid] = useState("");
+  // Form Fields & Name Alignment
+  const [nameOrId, setNameOrId] = useState("");
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const [gateCode, setGateCode] = useState("");
   const [isFirstArrival, setIsFirstArrival] = useState(false);
   const [isGroupArrival, setIsGroupArrival] = useState(false);
@@ -37,9 +43,16 @@ function CheckinFormContent() {
         const res = await fetch('/api/me');
         const data = await res.json();
         if (data.success && data.user) {
-          setLkid(prev => prev || data.user.lk_id || data.user.full_name || data.user.email || '');
+          const userVal = data.user.full_name || data.user.lk_id || data.user.email || '';
+          setNameOrId(userVal);
+          setSelectedMember({
+            id: data.user.id,
+            fullName: data.user.full_name,
+            lkId: data.user.lk_id,
+            chapter: data.user.chapter
+          });
         }
-      } catch (err) {
+      } catch {
         // Guest user, no problem
       }
     }
@@ -87,6 +100,70 @@ function CheckinFormContent() {
     }
     loadGatherings();
   }, [searchParams]);
+
+  // Live Member Autocomplete debouncer
+  useEffect(() => {
+    const trimmed = nameOrId.trim();
+    if (trimmed.length < 2) {
+      setSuggestions([]);
+      setIsDropdownOpen(false);
+      return;
+    }
+
+    if (selectedMember && selectedMember.fullName.toLowerCase() === trimmed.toLowerCase()) {
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsLoadingSuggestions(true);
+      try {
+        const res = await fetch(`/api/members/search?q=${encodeURIComponent(trimmed)}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.members)) {
+          setSuggestions(data.members);
+          setIsDropdownOpen(data.members.length > 0);
+        }
+      } catch (err) {
+        console.error("Member autocomplete error:", err);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [nameOrId, selectedMember]);
+
+  // Dismiss suggestions dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelectMember = (member) => {
+    setSelectedMember(member);
+    setNameOrId(member.fullName);
+    setIsDropdownOpen(false);
+  };
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setNameOrId(val);
+    if (selectedMember && val.toLowerCase() !== selectedMember.fullName.toLowerCase()) {
+      setSelectedMember(null);
+    }
+  };
+
+  const handleClearInput = () => {
+    setNameOrId("");
+    setSelectedMember(null);
+    setSuggestions([]);
+    setIsDropdownOpen(false);
+  };
 
   // Image compressor for WhatsApp screenshot proof
   const handleImageUpload = (e) => {
@@ -159,7 +236,9 @@ function CheckinFormContent() {
     const payload = {
       gateCode: gateCode.trim() || undefined,
       magicToken: searchParams.get('magicToken') || selectedGathering.magicToken || undefined,
-      lkId: lkid.trim() || undefined,
+      lkId: nameOrId.trim() || undefined,
+      name: selectedMember?.fullName || (nameOrId.trim() && !nameOrId.trim().toUpperCase().startsWith('LK-') ? nameOrId.trim() : undefined),
+      userId: selectedMember?.id || undefined,
       isGroupArrival,
       groupCompanions: isGroupArrival ? groupCompanions.split(',').map(s => s.trim()) : [],
       photoProof: photoProofBase64 || undefined
@@ -214,10 +293,33 @@ function CheckinFormContent() {
 
         {/* Laurel / Leaves Award Box */}
         <div className="bg-white border border-[#20070e]/10 rounded-3xl p-6 sm:p-8 shadow-xl mb-6 text-left">
-          <div className="flex items-center justify-between border-b border-black/5 pb-4 mb-4">
-            <div>
+          
+          {/* Inscribed Kin Info Card */}
+          <div className="p-4 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/20 mb-5 flex items-center justify-between">
+            <div className="min-w-0 pr-3">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#120308]/40 block">Inscribed Kin</span>
+              <span className="text-xl font-bold font-display text-[#20070e] truncate block">
+                {successData.attendeeName || selectedMember?.fullName || nameOrId}
+              </span>
+              {(successData.attendeeLkId || successData.alignedUser?.lkId || selectedMember?.lkId) && (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <CheckCircle2 size={12} className="text-[#c96a42]" />
+                  <span className="text-[11px] font-mono font-bold text-[#c96a42]">
+                    LK-ID: {successData.attendeeLkId || successData.alignedUser?.lkId || selectedMember?.lkId}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="text-right shrink-0">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#120308]/40 block">Arrival Sequence</span>
               <span className="text-2xl font-bold font-display text-[#20070e]">Rank #{successData.arrivalOrder}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between border-b border-black/5 pb-4 mb-4">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#120308]/40 block">Honorific</span>
+              <span className="text-sm font-bold text-[#20070e]">{successData.honorTitle}</span>
             </div>
             {successData.leavesAwarded > 0 && (
               <div className="text-right">
@@ -271,6 +373,9 @@ function CheckinFormContent() {
           onClick={() => {
             setIsSuccess(false);
             setSuccessData(null);
+            setNameOrId("");
+            setSelectedMember(null);
+            setSuggestions([]);
           }}
           className="text-[#120308]/50 font-bold uppercase tracking-widest text-xs hover:text-[#20070e] transition-colors"
         >
@@ -331,19 +436,113 @@ function CheckinFormContent() {
           )}
         </div>
 
-        {/* Lore Keeper ID or Handle */}
+        {/* Name or Lore Keeper ID with Live Auto-Align */}
         <div className="space-y-1.5">
-          <label className="text-xs font-bold uppercase tracking-wider text-[#120308]/80 flex items-center gap-2">
-            <QrCode size={14} className="text-[#c96a42]" /> Lore Keeper ID or Email
-          </label>
-          <input 
-            type="text" 
-            required 
-            value={lkid}
-            onChange={(e) => setLkid(e.target.value)}
-            placeholder="e.g. LK-2026-0042 or email"
-            className="w-full px-4 py-3 rounded-2xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-sm font-mono uppercase"
-          />
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold uppercase tracking-wider text-[#120308]/80 flex items-center gap-2">
+              <Users size={14} className="text-[#c96a42]" /> Your Name or Lore Keeper ID
+            </label>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#c96a42] bg-[#c96a42]/10 px-2 py-0.5 rounded-full border border-[#c96a42]/20">
+              Sign In With Name
+            </span>
+          </div>
+          <p className="text-[11px] text-[#120308]/60 font-serif leading-tight">
+            Just enter your registered name. We will auto-match and align your Lore Keeper ID.
+          </p>
+
+          <div ref={searchContainerRef} className="relative mt-1">
+            <div className="relative">
+              <input 
+                type="text" 
+                required 
+                value={nameOrId}
+                onChange={handleInputChange}
+                onFocus={() => {
+                  if (suggestions.length > 0) setIsDropdownOpen(true);
+                }}
+                placeholder="Type your name (e.g. Mary Okon, Ahmadu, or LK-ID)"
+                className="w-full px-4 py-3.5 pr-16 rounded-2xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-sm font-sans text-[#20070e] placeholder:text-[#120308]/30 transition-all bg-[#FBF7EE]/40"
+              />
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                {isLoadingSuggestions && (
+                  <Loader2 size={16} className="animate-spin text-[#c96a42]" />
+                )}
+                {nameOrId && (
+                  <button
+                    type="button"
+                    onClick={handleClearInput}
+                    className="p-1 rounded-full text-[#120308]/40 hover:text-[#20070e] hover:bg-black/5 transition-colors text-xs font-bold"
+                    title="Clear"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Live Autocomplete Suggestions Dropdown */}
+            <AnimatePresence>
+              {isDropdownOpen && suggestions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute z-30 left-0 right-0 mt-2 bg-white border border-[#c96a42]/30 rounded-2xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto divide-y divide-black/5"
+                >
+                  <div className="px-3.5 py-2 bg-[#FBF7EE] text-[10px] font-bold uppercase tracking-wider text-[#120308]/60 flex items-center justify-between border-b border-black/5">
+                    <span>Matching Registered Kin</span>
+                    <span className="text-[#c96a42]">Tap your profile to align</span>
+                  </div>
+                  {suggestions.map((member) => (
+                    <button
+                      key={member.id}
+                      type="button"
+                      onClick={() => handleSelectMember(member)}
+                      className="w-full text-left px-4 py-3 hover:bg-[#FBF7EE] flex items-center justify-between transition-colors group cursor-pointer"
+                    >
+                      <div className="min-w-0 pr-3">
+                        <div className="text-sm font-bold text-[#20070e] group-hover:text-[#c96a42] transition-colors truncate">
+                          {member.fullName}
+                        </div>
+                        <div className="text-[11px] text-[#120308]/50 flex items-center gap-2">
+                          {member.chapter && <span>{member.chapter}</span>}
+                          {member.emailHint && <span>• {member.emailHint}</span>}
+                        </div>
+                      </div>
+                      {member.lkId && (
+                        <span className="shrink-0 text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-[#20070e]/8 text-[#20070e] border border-[#20070e]/15 group-hover:bg-[#c96a42] group-hover:text-white group-hover:border-[#c96a42] transition-all">
+                          {member.lkId}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Aligned Confirmation Pill */}
+            {selectedMember && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2.5 p-3 rounded-2xl bg-gradient-to-r from-[#20070e]/5 via-[#c96a42]/10 to-[#F2A98A]/10 border border-[#c96a42]/30 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <CheckCircle2 size={16} className="text-[#c96a42] shrink-0" />
+                  <div className="text-xs text-[#20070e] truncate">
+                    <span className="font-bold">{selectedMember.fullName}</span>
+                    <span className="text-[#120308]/60 ml-1.5 font-serif">matched to account</span>
+                  </div>
+                </div>
+                {selectedMember.lkId && (
+                  <span className="shrink-0 text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-[#20070e] text-[#FBF7EE] shadow-sm">
+                    {selectedMember.lkId}
+                  </span>
+                )}
+              </motion.div>
+            )}
+          </div>
         </div>
 
         {/* Venue Gate Code (Only for physical in-person gatherings) */}
@@ -443,7 +642,7 @@ function CheckinFormContent() {
         <button 
           type="submit" 
           disabled={isSubmitting || gatherings.length === 0}
-          className="w-full bg-[#20070e] text-[#FBF7EE] font-bold py-4 rounded-2xl hover:bg-[#120308] transition-all shadow-md flex justify-center items-center gap-2 uppercase tracking-widest text-xs disabled:opacity-50"
+          className="w-full bg-[#20070e] text-[#FBF7EE] font-bold py-4 rounded-2xl hover:bg-[#120308] transition-all shadow-md flex justify-center items-center gap-2 uppercase tracking-widest text-xs disabled:opacity-50 cursor-pointer"
         >
           {isSubmitting ? (
             <Loader2 className="animate-spin" size={18} />

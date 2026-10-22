@@ -30,12 +30,20 @@ export async function POST(request, { params }) {
     const guestWhatsapp = body.whatsapp?.trim() || null;
     const guestLkId = body.lkId?.trim()?.toUpperCase() || null;
 
-    // If not logged in, try resolving user by lkId or email
-    if (!dbUser && (guestLkId || guestEmail)) {
+    // If not logged in, try resolving user by lkId, email, or full_name
+    if (!dbUser && (guestLkId || guestEmail || guestName)) {
       if (guestLkId) {
         dbUser = await Database.queryOne('SELECT * FROM users WHERE UPPER(lk_id) = $1', [guestLkId]);
-      } else if (guestEmail) {
+      }
+      if (!dbUser && guestEmail) {
         dbUser = await Database.queryOne('SELECT * FROM users WHERE LOWER(email) = $1', [guestEmail]);
+      }
+      const nameCandidate = guestName || guestLkId;
+      if (!dbUser && nameCandidate) {
+        dbUser = await Database.queryOne('SELECT * FROM users WHERE LOWER(TRIM(full_name)) = LOWER(TRIM($1))', [nameCandidate]);
+      }
+      if (!dbUser && nameCandidate && nameCandidate.length >= 3) {
+        dbUser = await Database.queryOne('SELECT * FROM users WHERE full_name ILIKE $1 ORDER BY LENGTH(full_name) ASC LIMIT 1', [`%${nameCandidate}%`]);
       }
     }
 

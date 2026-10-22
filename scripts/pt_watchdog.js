@@ -356,11 +356,13 @@ async function runWatchdog() {
   console.log(`\n${colors.bold}${colors.burgundy}══════════════════════════════════════════════════════════════════${colors.reset}`);
   if (totalErrors === 0) {
     console.log(`${colors.bold}${colors.green} ✓ AUDIT COMPLETE: 0 ERRORS DETECTED (${totalWarnings} warnings). SYSTEM HEALTHY! 🌟${colors.reset}`);
+    console.log(`${colors.bold}${colors.burgundy}══════════════════════════════════════════════════════════════════${colors.reset}\n`);
+    process.exit(0);
   } else {
     console.log(`${colors.bold}${colors.red} ✗ AUDIT COMPLETE: ${totalErrors} CRITICAL ERROR(S) DETECTED! MUST FIX BEFORE DEPLOY.${colors.reset}`);
+    console.log(`${colors.bold}${colors.burgundy}══════════════════════════════════════════════════════════════════${colors.reset}\n`);
     process.exit(1);
   }
-  console.log(`${colors.bold}${colors.burgundy}══════════════════════════════════════════════════════════════════${colors.reset}\n`);
 }
 
 runWatchdog();

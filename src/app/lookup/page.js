@@ -59,7 +59,7 @@ export default function LookupPage() {
         
         <h2 className="text-4xl font-display text-burgundy mb-4">Find your ID</h2>
         <p className="text-ink/60 mb-10 text-sm font-quote italic">
-          Enter your Instagram handle or Email Address to retrieve your Lore Keeper ID.
+          Enter your Full Name, Email Address, or Instagram handle to retrieve your Lore Keeper ID.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -68,7 +68,7 @@ export default function LookupPage() {
               type="text" 
               name="query" 
               required 
-              placeholder="@username or email"
+              placeholder="Your name, email, or @handle"
               className="w-full bg-transparent border-b-2 border-sage/20 px-0 py-4 focus:outline-none focus:border-primary transition-colors text-xl"
             />
           </div>
