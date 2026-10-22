@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "org.paperthoughts.twa",
+      "sha256_cert_fingerprints": [
+        "78:C4:01:A3:2F:1B:60:35:B9:6E:6C:4A:28:CD:D4:20:66:1F:87:45:EC:DA:52:33:CE:FB:FD:34:9F:54:48:79"
+      ]
+    }
+  }
+]
