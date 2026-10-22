@@ -347,4 +347,112 @@ INSERT INTO prompts (prompt_text, prompt_type, active_date) VALUES
 ('A poem exploring the colors of a city skyline at 3:00 AM.', 'poem', NULL)
 ON CONFLICT DO NOTHING;
 
+-- 16. Gatherings Table (Weekly Townhall, Sunday Book Banter, BOTM Review, Physical Meets)
+CREATE TABLE IF NOT EXISTS gatherings (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    gathering_type VARCHAR(50) NOT NULL, -- 'townhall', 'book_banter', 'botm_review', 'physical'
+    chapter_id INT REFERENCES chapters(id) ON DELETE SET NULL, -- NULL for global virtual
+    event_date DATE NOT NULL,
+    start_time TIME NOT NULL DEFAULT '20:15:00',
+    meet_url TEXT,                        -- Google Meet / X Spaces link
+    venue_name TEXT,                      -- Physical venue name or 'Google Meet' / 'X Spaces'
+    description TEXT,
+    status VARCHAR(30) DEFAULT 'published', -- 'draft', 'published', 'live', 'concluded'
+    magic_token VARCHAR(100) UNIQUE,      -- Temporary session token
+    gate_code VARCHAR(10),                -- 4-digit numeric code for physical venues
+    first_herald_user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    first_herald_claimed_at TIMESTAMP WITH TIME ZONE,
+    created_by_id INT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 17. Gathering RSVPs Table
+CREATE TABLE IF NOT EXISTS gathering_rsvps (
+    id SERIAL PRIMARY KEY,
+    gathering_id INT NOT NULL REFERENCES gatherings(id) ON DELETE CASCADE,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    guest_name VARCHAR(255),
+    guest_email VARCHAR(255),
+    guest_whatsapp VARCHAR(50),
+    is_first_herald BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(gathering_id, user_id)
+);
+
+-- 18. Gathering Attendances Table
+CREATE TABLE IF NOT EXISTS gathering_attendances (
+    id SERIAL PRIMARY KEY,
+    gathering_id INT NOT NULL REFERENCES gatherings(id) ON DELETE CASCADE,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    lk_id VARCHAR(50),
+    attendee_name VARCHAR(255),
+    arrival_order INT,                    -- Monotonic arrival sequence (1, 2, 3...)
+    is_corona_muralis BOOLEAN DEFAULT FALSE,
+    is_vanguard BOOLEAN DEFAULT FALSE,    -- True for ranks 1-5
+    is_co_vanguard BOOLEAN DEFAULT FALSE, -- True if part of a group arrival
+    group_companions TEXT[],              -- Array of names/handles arrived together
+    photo_proof_url TEXT,                 -- Base64 or URL of WhatsApp screenshot proof
+    status VARCHAR(30) DEFAULT 'verified',-- 'verified', 'contested', 'revoked'
+    leaves_awarded INT DEFAULT 0,
+    checkin_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(gathering_id, user_id)
+);
+
+-- 19. Gathering Disputes Table
+CREATE TABLE IF NOT EXISTS gathering_disputes (
+    id SERIAL PRIMARY KEY,
+    gathering_id INT NOT NULL REFERENCES gatherings(id) ON DELETE CASCADE,
+    disputant_user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    target_attendance_id INT REFERENCES gathering_attendances(id) ON DELETE CASCADE,
+    dispute_reason TEXT NOT NULL,
+    counter_photo_proof TEXT,             -- Disputant's proof
+    status VARCHAR(30) DEFAULT 'pending', -- 'pending', 'resolved_upheld', 'resolved_dismissed'
+    adjudicated_by_id INT REFERENCES users(id) ON DELETE SET NULL,
+    resolution_notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Seed Initial Upcoming Gatherings
+INSERT INTO gatherings (title, gathering_type, event_date, start_time, meet_url, venue_name, description, status, magic_token, gate_code)
+VALUES 
+(
+  'Weekly Townhall: The Grand Archive & Storytellers Circle',
+  'townhall',
+  CURRENT_DATE + INTERVAL '1 day',
+  '20:15:00',
+  'https://meet.google.com/pt-townhall-weekly',
+  'Google Meet',
+  'Join the kin for our weekly virtual townhall as we explore writing craft, archive updates, and upcoming chapter gatherings. Punctual kin will be crowned at the ramparts.',
+  'published',
+  'TH-' || to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYYMMDD'),
+  '2015'
+),
+(
+  'Sunday Book Banter: Plot Twists & Unreliable Narrators',
+  'book_banter',
+  CURRENT_DATE + INTERVAL '4 days',
+  '15:00:00',
+  'https://x.com/i/spaces/pt-book-banter',
+  'X Spaces',
+  'Unfiltered literary banter on the craft of deception in fiction. Spoken vault cipher will be revealed on stage for the living roll.',
+  'published',
+  'BB-' || to_char(CURRENT_DATE + INTERVAL '4 days', 'YYYYMMDD'),
+  '1500'
+),
+(
+  'BOTM Review: The Parlour Wife by Foluso Agbaje',
+  'botm_review',
+  CURRENT_DATE + INTERVAL '8 days',
+  '20:15:00',
+  'https://meet.google.com/pt-botm-review',
+  'Google Meet',
+  'Our monthly flagship review dissecting the domestic intrigue, secrets, and historical prose of The Parlour Wife. First arrivals take the Corona Muralis.',
+  'published',
+  'BR-' || to_char(CURRENT_DATE + INTERVAL '8 days', 'YYYYMMDD'),
+  '2026'
+)
+ON CONFLICT DO NOTHING;
+
+
 

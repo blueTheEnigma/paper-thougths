@@ -5,11 +5,12 @@ import {
   Users, BookOpen, ShoppingBag, MapPin, Search, ShieldAlert, 
   CheckCircle, ArrowLeft, RefreshCw, Star, Gift, Flame, AlertCircle, 
   TrendingUp, Settings, ExternalLink, Archive, FileText, Shield, X, Loader2,
-  Book, Cake, MessageCircle, Award, Quote
+  Book, Cake, MessageCircle, Award, Quote, Calendar
 } from 'lucide-react';
 import Link from 'next/link';
 import AdminQuotesTab from '@/components/admin/AdminQuotesTab';
 import AdminCrucibleTab from '@/components/admin/AdminCrucibleTab';
+import AdminGatheringsTab from '@/components/admin/AdminGatheringsTab';
 
 const formatDate = (dateVal) => {
   if (!dateVal) return 'N/A';
@@ -36,11 +37,13 @@ export default function AdminClient({
   initialBotm,
   initialBirthdays = [],
   initialCrucibleData,
+  initialGatherings = [],
   userPermissions,
   isSuperadmin,
   isCommunityManager
 }) {
   const allTabs = [
+    { id: 'gatherings', label: 'Events & Rituals 🏛️', icon: Calendar },
     { id: 'members', label: 'Members Ledger', icon: Users },
     { id: 'crucible', label: 'Crucible & Evictions ⚖️', icon: ShieldAlert },
     { id: 'submissions', label: 'Submissions Moderation', icon: BookOpen },
@@ -57,6 +60,8 @@ export default function AdminClient({
     if (isSuperadmin) return true;
     const permissions = userPermissions || [];
     switch (tab.id) {
+      case 'gatherings':
+        return permissions.includes('manage_chapter_events') || permissions.includes('community_manager') || isCommunityManager;
       case 'members':
         return permissions.includes('manage_chapter_events') || permissions.includes('community_manager') || isCommunityManager;
       case 'crucible':
@@ -1576,6 +1581,18 @@ export default function AdminClient({
                     })}
                   </div>
                 )}
+              </motion.div>
+            )}
+
+            {/* 11. GATHERINGS & RITUALS */}
+            {activeTab === 'gatherings' && (
+              <motion.div
+                key="gatherings"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <AdminGatheringsTab initialGatherings={initialGatherings} />
               </motion.div>
             )}
 

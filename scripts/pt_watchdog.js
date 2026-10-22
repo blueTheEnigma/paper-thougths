@@ -215,6 +215,28 @@ async function auditDatabaseQueries() {
       totalErrors++;
     }
 
+    // 1.7 Gatherings & Rituals Query
+    try {
+      await pool.query(`
+        SELECT 
+          g.id, g.title, g.gathering_type, g.event_date, g.start_time,
+          c.name as chapter_name, fh.full_name as first_herald_name,
+          COUNT(DISTINCT r.id)::int as rsvp_count,
+          COUNT(DISTINCT a.id)::int as attendance_count
+        FROM gatherings g
+        LEFT JOIN chapters c ON c.id = g.chapter_id
+        LEFT JOIN users fh ON fh.id = g.first_herald_user_id
+        LEFT JOIN gathering_rsvps r ON r.gathering_id = g.id
+        LEFT JOIN gathering_attendances a ON a.gathering_id = g.id
+        GROUP BY g.id, c.name, fh.full_name
+        ORDER BY g.event_date DESC LIMIT 5
+      `);
+      logPass('Events Hub & Admin: Gatherings, RSVPs & Attendance query');
+    } catch (e) {
+      logFail(`Gatherings Query Error: ${e.message}`);
+      totalErrors++;
+    }
+
   } catch (err) {
     logFail(`Database connection error: ${err.message}`);
     totalErrors++;

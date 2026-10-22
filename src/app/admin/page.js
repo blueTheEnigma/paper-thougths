@@ -171,6 +171,36 @@ export default async function AdminPage() {
   // 9. Fetch Crucible & Evictions Governance Data
   const crucibleData = await getCrucibleData();
 
+  // 10. Fetch Gatherings & Rituals
+  const gatheringsRaw = await Database.query(`
+    SELECT 
+      g.id,
+      g.title,
+      g.gathering_type as "gatheringType",
+      g.chapter_id as "chapterId",
+      c.name as "chapterName",
+      TO_CHAR(g.event_date, 'YYYY-MM-DD') as "eventDate",
+      g.start_time as "startTime",
+      g.meet_url as "meetUrl",
+      g.venue_name as "venueName",
+      g.description,
+      g.status,
+      g.magic_token as "magicToken",
+      g.gate_code as "gateCode",
+      g.first_herald_user_id as "firstHeraldUserId",
+      fh.full_name as "firstHeraldName",
+      fh.lk_id as "firstHeraldLkId",
+      COUNT(DISTINCT r.id)::int as "rsvpCount",
+      COUNT(DISTINCT a.id)::int as "attendanceCount"
+    FROM gatherings g
+    LEFT JOIN chapters c ON c.id = g.chapter_id
+    LEFT JOIN users fh ON fh.id = g.first_herald_user_id
+    LEFT JOIN gathering_rsvps r ON r.gathering_id = g.id
+    LEFT JOIN gathering_attendances a ON a.gathering_id = g.id
+    GROUP BY g.id, c.name, fh.full_name, fh.lk_id
+    ORDER BY g.event_date DESC, g.start_time DESC
+  `);
+
   return (
     <AdminClient 
       initialMembers={members}
@@ -181,6 +211,7 @@ export default async function AdminPage() {
       initialBotm={currentBotm}
       initialBirthdays={upcomingBirthdays}
       initialCrucibleData={crucibleData}
+      initialGatherings={gatheringsRaw}
       userPermissions={permissions}
       isSuperadmin={isSuperadmin}
       isCommunityManager={isCommunityManager}

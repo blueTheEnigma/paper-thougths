@@ -1,67 +1,131 @@
 "use client";
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { QrCode, Loader2, CheckCircle2, ShieldCheck, MapPin, KeyRound, CalendarDays } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  QrCode, Loader2, CheckCircle2, ShieldCheck, MapPin, KeyRound, 
+  CalendarDays, Crown, Award, Users, Camera, Upload, ArrowRight, Sparkles, MessageCircle
+} from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 function CheckinFormContent() {
   const searchParams = useSearchParams();
+  const fileInputRef = useRef(null);
+
+  const [gatherings, setGatherings] = useState([]);
+  const [isLoadingGatherings, setIsLoadingGatherings] = useState(true);
+  const [selectedGathering, setSelectedGathering] = useState(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [memberName, setMemberName] = useState("");
-  const [points, setPoints] = useState(0);
-  
-  const [events, setEvents] = useState([]);
-  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [successData, setSuccessData] = useState(null);
 
+  // Form Fields
+  const [lkid, setLkid] = useState("");
+  const [gateCode, setGateCode] = useState("");
+  const [isFirstArrival, setIsFirstArrival] = useState(false);
+  const [isGroupArrival, setIsGroupArrival] = useState(false);
+  const [groupCompanions, setGroupCompanions] = useState("");
+  const [photoProofBase64, setPhotoProofBase64] = useState("");
+  const [photoPreview, setPhotoPreview] = useState("");
+
+  // Auto-detect URL parameters
   useEffect(() => {
-    async function fetchEvents() {
+    async function loadGatherings() {
       try {
-        const res = await fetch('/api/events');
+        const res = await fetch('/api/gatherings');
         const data = await res.json();
-        if (data.success && data.events) {
-          setEvents(data.events);
+        if (data.success && data.gatherings && data.gatherings.length > 0) {
+          setGatherings(data.gatherings);
           
-          // Pre-select if URL parameter matches
-          const urlEvent = searchParams.get('event');
-          if (urlEvent) {
-            const matched = data.events.find(e => e.name === urlEvent);
-            if (matched) setSelectedEvent(matched);
-            else if (data.events.length > 0) setSelectedEvent(data.events[0]);
-          } else if (data.events.length > 0) {
-            setSelectedEvent(data.events[0]);
+          const paramId = searchParams.get('gatheringId');
+          const paramToken = searchParams.get('magicToken');
+          const paramCode = searchParams.get('code');
+          const paramEvent = searchParams.get('event');
+
+          let matched = null;
+          if (paramId) {
+            matched = data.gatherings.find(g => String(g.id) === paramId);
+          } else if (paramToken) {
+            matched = data.gatherings.find(g => g.magicToken?.toUpperCase() === paramToken.toUpperCase());
+          } else if (paramCode) {
+            matched = data.gatherings.find(g => g.gateCode === paramCode);
+          } else if (paramEvent) {
+            matched = data.gatherings.find(g => g.title === paramEvent);
+          }
+
+          if (matched) {
+            setSelectedGathering(matched);
+            if (paramCode) setGateCode(paramCode);
+          } else {
+            setSelectedGathering(data.gatherings[0]);
           }
         }
       } catch (err) {
-        console.error("Failed to fetch events:", err);
+        console.error("Failed to fetch gatherings for checkin:", err);
       } finally {
-        setIsLoadingEvents(false);
+        setIsLoadingGatherings(false);
       }
     }
-    fetchEvents();
+    loadGatherings();
   }, [searchParams]);
 
-  const triggerConfetti = () => {
-    const duration = 3 * 1000;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+  // Image compressor for WhatsApp screenshot proof
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const randomInRange = (min, max) => Math.random() * (max - min) + min;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 800;
 
-    const interval = setInterval(function() {
-      const timeLeft = animationEnd - Date.now();
+        if (width > height && width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
 
-      if (timeLeft <= 0) {
-        return clearInterval(interval);
-      }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        setPhotoProofBase64(compressedBase64);
+        setPhotoPreview(compressedBase64);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
-      const particleCount = 50 * (timeLeft / duration);
-      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-    }, 250);
+  const triggerLaurelCelebration = () => {
+    const end = Date.now() + 3500;
+    const colors = ['#c96a42', '#20070e', '#F2A98A', '#e6c594'];
+    (function frame() {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 60,
+        origin: { x: 0.1, y: 0.8 },
+        colors
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 60,
+        origin: { x: 0.9, y: 0.8 },
+        colors
+      });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    })();
   };
 
   const handleSubmit = async (e) => {
@@ -69,164 +133,319 @@ function CheckinFormContent() {
     setIsSubmitting(true);
     setError("");
 
-    if (!selectedEvent) {
-      setError("Please select an event.");
+    if (!selectedGathering) {
+      setError("Please select a gathering.");
       setIsSubmitting(false);
       return;
     }
 
-    const formData = new FormData(e.target);
-    const data = {
-      lkid: formData.get('lkid'),
-      secret: formData.get('secret'),
-      event: selectedEvent.name,
-      eventType: selectedEvent.type
+    const payload = {
+      gateCode: gateCode.trim() || undefined,
+      lkId: lkid.trim() || undefined,
+      isGroupArrival,
+      groupCompanions: isGroupArrival ? groupCompanions.split(',').map(s => s.trim()) : [],
+      photoProof: photoProofBase64 || undefined
     };
 
     try {
-      const res = await fetch('/api/checkin', {
+      const res = await fetch(`/api/gatherings/${selectedGathering.id}/checkin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload)
       });
 
-      const result = await res.json();
-      if (result.success) {
-        setMemberName(result.name);
-        setPoints(result.points);
+      const data = await res.json();
+      if (data.success) {
+        setSuccessData(data);
         setIsSuccess(true);
-        triggerConfetti();
+        triggerLaurelCelebration();
       } else {
-        setError(result.error || "Something went wrong.");
+        setError(data.error || "Unable to complete check-in.");
       }
-    } catch (err) {
-      setError("Failed to connect to the server.");
+    } catch {
+      setError("Network error connecting to Sanctuary records.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isSuccess) {
+  if (isSuccess && successData) {
+    const isPhysical = selectedGathering?.gatheringType === 'physical';
+
     return (
       <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-xl mx-auto text-center py-12 px-6"
+        className="max-w-xl mx-auto text-center py-8 px-4 sm:px-6"
       >
-        <div className="w-24 h-24 bg-sage/20 rounded-full flex items-center justify-center mx-auto mb-8">
-          <CheckCircle2 size={56} className="text-sage" />
-        </div>
-        <h2 className="text-5xl font-display text-burgundy mb-4">Checked In!</h2>
-        <p className="text-xl text-ink/80 mb-8 font-quote italic">
-          Welcome to the lines, {memberName}.
-        </p>
-        <div className="bg-white border-2 border-sage/20 rounded-3xl p-8 shadow-xl">
-          <span className="text-xs font-bold uppercase tracking-widest text-ink/40 block mb-2">Event Recorded</span>
-          <div className="text-2xl font-bold text-burgundy mb-6">{selectedEvent?.name}</div>
-          <div className="bg-primary/10 p-4 rounded-2xl border border-primary/20 text-sm font-bold text-accent">
-            Total Event Points: {points} / 6
-          </div>
-          {points >= 6 && (
-            <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 text-sm text-sage font-bold px-4 py-2 bg-sage/10 rounded-full inline-block">
-              🎉 Keeper Status Achieved!
-            </motion.p>
+        <div className="w-20 h-20 bg-[#20070e]/8 border border-[#c96a42]/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+          {successData.isCoronaMuralis ? (
+            <Crown size={40} className="text-[#c96a42]" />
+          ) : (
+            <CheckCircle2 size={42} className="text-[#c96a42]" />
           )}
         </div>
+
+        <h2 className="text-4xl sm:text-5xl font-display text-[#20070e] mb-2">
+          {successData.isCoronaMuralis ? "Corona Muralis Claimed!" : "Inscribed in the Lines!"}
+        </h2>
+        
+        <p className="text-sm sm:text-base text-[#120308]/75 mb-6 font-serif italic max-w-md mx-auto">
+          {successData.honorTitle} — {selectedGathering?.title}
+        </p>
+
+        {/* Laurel / Leaves Award Box */}
+        <div className="bg-white border border-[#20070e]/10 rounded-3xl p-6 sm:p-8 shadow-xl mb-6 text-left">
+          <div className="flex items-center justify-between border-b border-black/5 pb-4 mb-4">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#120308]/40 block">Arrival Sequence</span>
+              <span className="text-2xl font-bold font-display text-[#20070e]">Rank #{successData.arrivalOrder}</span>
+            </div>
+            {successData.leavesAwarded > 0 && (
+              <div className="text-right">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#c96a42] block">Laurel Bestowed</span>
+                <span className="text-xl font-bold text-[#c96a42]">+{successData.leavesAwarded} Leaves</span>
+              </div>
+            )}
+          </div>
+
+          {/* Physical Host QR Gate Screen for Subsequent Arrivals */}
+          {isPhysical && successData.isCoronaMuralis && (
+            <div className="mt-4 p-5 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/30 text-center">
+              <span className="text-xs font-bold uppercase tracking-widest text-[#20070e] block mb-2">
+                🏛️ You Hold the Rampart
+              </span>
+              <p className="text-xs text-[#120308]/70 mb-4 font-serif">
+                Display this gate code to kindred spirits arriving after you:
+              </p>
+              <div className="inline-block p-4 bg-white rounded-2xl border-2 border-[#c96a42] shadow-sm mb-2">
+                <span className="text-4xl font-mono font-bold tracking-widest text-[#20070e]">
+                  {successData.gateCode || selectedGathering?.gateCode}
+                </span>
+              </div>
+              <p className="text-[11px] text-[#120308]/50 block">Venue Gate Code: {successData.gateCode || selectedGathering?.gateCode}</p>
+            </div>
+          )}
+
+          {/* Top 5 Vanguard Live Roll */}
+          {successData.topVanguard && successData.topVanguard.length > 0 && (
+            <div className="mt-4">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#20070e] block mb-2.5 flex items-center gap-1.5">
+                <Award size={14} className="text-[#c96a42]" /> Punctual Vanguard of this Gathering
+              </span>
+              <div className="space-y-1.5">
+                {successData.topVanguard.map((vg, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs py-1.5 px-3 rounded-xl bg-black/3">
+                    <span className="font-semibold text-[#120308]/80">
+                      {vg.arrivalOrder}. {vg.name} {vg.isCoronaMuralis && '👑'} {vg.isCoVanguard && '🤝'}
+                    </span>
+                    <span className="font-mono text-[10px] text-[#c96a42] font-bold">
+                      {vg.leavesAwarded > 0 ? `+${vg.leavesAwarded} Leaves` : 'Verified'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <button 
-          onClick={() => setIsSuccess(false)}
-          className="mt-12 text-ink/40 font-bold uppercase tracking-widest text-xs hover:text-burgundy transition-colors"
+          onClick={() => {
+            setIsSuccess(false);
+            setSuccessData(null);
+          }}
+          className="text-[#120308]/50 font-bold uppercase tracking-widest text-xs hover:text-[#20070e] transition-colors"
         >
-          Check in another member
+          ← Check In Another Member
         </button>
       </motion.div>
     );
   }
 
+  const isPhysical = selectedGathering?.gatheringType === 'physical';
+
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-xl mx-auto bg-white p-8 md:p-12 rounded-[40px] border border-sage/20 shadow-xl relative overflow-hidden"
+      className="max-w-xl mx-auto bg-white p-6 sm:p-10 rounded-[36px] border border-black/8 shadow-xl relative overflow-hidden"
     >
-      <div className="flex items-center gap-3 mb-4">
-        <ShieldCheck className="text-sage" size={20} />
-        <span className="text-xs font-bold uppercase tracking-[0.2em] text-ink/40">Secure Check-in</span>
+      <div className="flex items-center gap-2 mb-2 text-[#c96a42]">
+        <ShieldCheck size={18} />
+        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#120308]/50">Sanctuary Gate</span>
       </div>
       
-      <h2 className="text-4xl font-display text-burgundy mb-8">Log Attendance</h2>
+      <h1 className="text-3xl sm:text-4xl font-display text-[#20070e] mb-1">
+        Log Gathering Attendance
+      </h1>
+      <p className="text-xs text-[#120308]/60 font-serif mb-6 leading-relaxed">
+        Punctual kin are crowned at the wall. The first arrival takes the Corona Muralis.
+      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         
-        {/* Event Selection */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-ink flex items-center gap-2">
-            <CalendarDays size={14} className="text-primary" /> Select Event
+        {/* Gathering Selection */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-[#120308]/80 flex items-center gap-2">
+            <CalendarDays size={14} className="text-[#c96a42]" /> Selected Gathering
           </label>
-          {isLoadingEvents ? (
-            <div className="flex items-center gap-2 py-4 text-ink/50"><Loader2 className="animate-spin" size={16} /> Fetching active events...</div>
-          ) : events.length === 0 ? (
-            <div className="py-4 text-red-500 font-bold text-sm">No active events found. Please contact an admin.</div>
+          {isLoadingGatherings ? (
+            <div className="flex items-center gap-2 py-3 text-sm text-[#120308]/40">
+              <Loader2 className="animate-spin" size={16} /> Fetching active gatherings...
+            </div>
+          ) : gatherings.length === 0 ? (
+            <div className="py-3 text-red-600 font-bold text-xs">No active gatherings found.</div>
           ) : (
             <select 
-              className="w-full bg-transparent border-b-2 border-sage/20 px-0 py-4 focus:outline-none focus:border-primary transition-colors text-xl font-bold appearance-none cursor-pointer"
-              value={selectedEvent?.name || ""}
+              className="w-full bg-[#FBF7EE] border border-black/10 rounded-2xl px-4 py-3 text-sm font-bold text-[#20070e] focus:outline-none focus:border-[#c96a42]"
+              value={selectedGathering?.id || ""}
               onChange={(e) => {
-                const matched = events.find(ev => ev.name === e.target.value);
-                if (matched) setSelectedEvent(matched);
+                const matched = gatherings.find(g => String(g.id) === e.target.value);
+                if (matched) setSelectedGathering(matched);
               }}
             >
-              {events.map((ev, i) => (
-                <option key={i} value={ev.name}>{ev.name} ({ev.type === 'physical' ? '2 Pts' : '1 Pt'})</option>
+              {gatherings.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.title} ({g.eventDate} • {g.venueName || 'Virtual'})
+                </option>
               ))}
             </select>
           )}
         </div>
 
-        {/* LK-ID */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-ink flex items-center gap-2">
-            <QrCode size={14} className="text-primary" /> Lore Keeper ID
+        {/* Lore Keeper ID or Handle */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-[#120308]/80 flex items-center gap-2">
+            <QrCode size={14} className="text-[#c96a42]" /> Lore Keeper ID or Email
           </label>
           <input 
             type="text" 
-            name="lkid" 
             required 
-            placeholder="LK-2026-..."
-            className="w-full bg-transparent border-b-2 border-sage/20 px-0 py-4 focus:outline-none focus:border-primary transition-colors text-2xl font-mono uppercase"
+            value={lkid}
+            onChange={(e) => setLkid(e.target.value)}
+            placeholder="e.g. LK-2026-0042 or email"
+            className="w-full px-4 py-3 rounded-2xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-sm font-mono uppercase"
           />
         </div>
 
-        {/* Secret Code */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-widest text-ink flex items-center gap-2">
-            <KeyRound size={14} className="text-primary" /> Event Cipher
+        {/* Venue Gate Code (For physical gatherings or passcode-protected calls) */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-[#120308]/80 flex items-center gap-2">
+            <KeyRound size={14} className="text-[#c96a42]" /> 
+            {isPhysical ? "4-Digit Venue Code (from First Man screen)" : "Session Gate Code (Optional)"}
           </label>
           <input 
             type="text" 
-            name="secret" 
-            required 
-            placeholder="Enter the secret code"
-            className="w-full bg-transparent border-b-2 border-sage/20 px-0 py-4 focus:outline-none focus:border-primary transition-colors text-xl"
+            value={gateCode}
+            onChange={(e) => setGateCode(e.target.value)}
+            placeholder={isPhysical ? "e.g. 2015" : "Enter code if announced"}
+            className="w-full px-4 py-3 rounded-2xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-sm font-mono tracking-widest"
           />
         </div>
+
+        {/* Physical Gathering First Arrival & Co-Vanguard Controls */}
+        {isPhysical && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/30 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#20070e] flex items-center gap-1.5">
+                <Crown size={14} className="text-[#c96a42]" /> Physical Venue Arrival Ceremony
+              </span>
+              <label className="flex items-center gap-2 text-xs font-bold text-[#c96a42] cursor-pointer">
+                <input 
+                  type="checkbox"
+                  checked={isFirstArrival}
+                  onChange={(e) => setIsFirstArrival(e.target.checked)}
+                  className="rounded text-[#c96a42] focus:ring-[#c96a42]"
+                />
+                I am First at the Venue
+              </label>
+            </div>
+
+            {isFirstArrival && (
+              <div className="space-y-3 pt-2 border-t border-black/5 text-xs text-[#120308]/75 font-serif">
+                <p>
+                  To secure the <strong>Corona Muralis</strong>:
+                  <br />1. Take a photo of the venue table.
+                  <br />2. Post it to your <strong>Chapter WhatsApp Group</strong> announcing your arrival!
+                  <br />3. Upload a screenshot of that WhatsApp message below:
+                </p>
+
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-[#c96a42]/40 rounded-xl p-4 text-center cursor-pointer hover:bg-white transition-colors"
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    accept="image/*" 
+                    onChange={handleImageUpload} 
+                    className="hidden" 
+                  />
+                  {photoPreview ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <img src={photoPreview} alt="WhatsApp Proof" className="max-h-32 rounded-lg shadow-sm" />
+                      <span className="text-[11px] font-bold text-[#c96a42]">✓ WhatsApp Proof Attached (Click to change)</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-[#120308]/60">
+                      <Upload size={20} className="text-[#c96a42]" />
+                      <span className="font-bold text-xs text-[#20070e]">Upload WhatsApp Screenshot Proof</span>
+                      <span className="text-[10px]">Photo with timestamp from the group chat</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Co-Vanguard Group Option */}
+                <div className="pt-2 border-t border-black/5">
+                  <label className="flex items-center gap-2 text-xs font-bold text-[#20070e] cursor-pointer mb-2">
+                    <input 
+                      type="checkbox"
+                      checked={isGroupArrival}
+                      onChange={(e) => setIsGroupArrival(e.target.checked)}
+                      className="rounded text-[#c96a42]"
+                    />
+                    🤝 We Arrived Together as a Guild / Group (Co-Vanguard)
+                  </label>
+                  {isGroupArrival && (
+                    <input 
+                      type="text" 
+                      value={groupCompanions}
+                      onChange={(e) => setGroupCompanions(e.target.value)}
+                      placeholder="List companions: e.g. Tunde, Amaka, Kelechi"
+                      className="w-full px-3 py-2 rounded-xl border border-black/10 text-xs font-sans"
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <button 
           type="submit" 
-          disabled={isSubmitting || events.length === 0}
-          className="w-full bg-burgundy text-white font-bold py-6 px-10 rounded-full hover:bg-ink transition-all shadow-lg hover:shadow-xl flex justify-center items-center gap-3 uppercase tracking-[0.2em] text-sm disabled:opacity-50"
+          disabled={isSubmitting || gatherings.length === 0}
+          className="w-full bg-[#20070e] text-[#FBF7EE] font-bold py-4 rounded-2xl hover:bg-[#120308] transition-all shadow-md flex justify-center items-center gap-2 uppercase tracking-widest text-xs disabled:opacity-50"
         >
-          {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : "Log Attendance"}
+          {isSubmitting ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
+            <>
+              <Sparkles size={16} className="text-[#F2A98A]" />
+              Inscribe Attendance
+            </>
+          )}
         </button>
+
         {error && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 p-4 rounded-xl border border-red-200">
-            <p className="text-red-600 text-center font-bold text-sm">{error}</p>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 p-3.5 rounded-xl border border-red-200">
+            <p className="text-red-700 text-center font-bold text-xs">{error}</p>
           </motion.div>
         )}
       </form>
 
-      <div className="mt-8 text-center border-t border-sage/10 pt-8">
-        <a href="/lookup" className="text-xs text-ink/60 hover:text-primary font-bold uppercase tracking-widest transition-colors">
-          Forgot your LK-ID? Look it up
+      <div className="mt-8 text-center border-t border-black/5 pt-4">
+        <a href="/lookup" className="text-[11px] text-[#120308]/50 hover:text-[#c96a42] font-bold uppercase tracking-wider transition-colors">
+          Forgot your LK-ID? Search the Codex Directory →
         </a>
       </div>
     </motion.div>
@@ -235,11 +454,10 @@ function CheckinFormContent() {
 
 export default function CheckinPage() {
   return (
-    <main className="min-h-screen bg-cream selection:bg-primary/30 flex items-center justify-center py-12 px-6">
-      <Suspense fallback={<Loader2 className="animate-spin text-primary" size={48} />}>
+    <main className="min-h-screen bg-[#FBF7EE] selection:bg-[#F2A98A]/30 flex items-center justify-center py-12 px-4 sm:px-6">
+      <Suspense fallback={<Loader2 className="animate-spin text-[#c96a42]" size={40} />}>
         <CheckinFormContent />
       </Suspense>
     </main>
   );
 }
-
