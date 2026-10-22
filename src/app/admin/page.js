@@ -187,6 +187,7 @@ export default async function AdminPage() {
       g.status,
       g.magic_token as "magicToken",
       g.gate_code as "gateCode",
+      g.cover_url as "coverUrl",
       g.first_herald_user_id as "firstHeraldUserId",
       fh.full_name as "firstHeraldName",
       fh.lk_id as "firstHeraldLkId",

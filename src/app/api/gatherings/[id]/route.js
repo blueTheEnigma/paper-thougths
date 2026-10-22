@@ -28,6 +28,7 @@ export async function GET(request, { params }) {
         g.status,
         g.magic_token as "magicToken",
         g.gate_code as "gateCode",
+        g.cover_url as "coverUrl",
         g.first_herald_user_id as "firstHeraldUserId",
         g.first_herald_claimed_at as "firstHeraldClaimedAt",
         fh.full_name as "firstHeraldName",
@@ -128,17 +129,29 @@ export async function PATCH(request, { params }) {
     }
 
     const body = await request.json();
-    const { status, title, meetUrl, venueName, description } = body;
+    const { 
+      status, 
+      title, 
+      meetUrl, 
+      venueName, 
+      description,
+      gatheringType,
+      eventDate,
+      startTime,
+      chapterId,
+      coverUrl,
+      gateCode
+    } = body;
 
     const allowedUpdates = [];
     const values = [];
     let idx = 1;
 
-    if (status) {
+    if (status !== undefined) {
       allowedUpdates.push(`status = $${idx++}`);
       values.push(status);
     }
-    if (title) {
+    if (title !== undefined) {
       allowedUpdates.push(`title = $${idx++}`);
       values.push(title);
     }
@@ -153,6 +166,30 @@ export async function PATCH(request, { params }) {
     if (description !== undefined) {
       allowedUpdates.push(`description = $${idx++}`);
       values.push(description);
+    }
+    if (gatheringType !== undefined) {
+      allowedUpdates.push(`gathering_type = $${idx++}`);
+      values.push(gatheringType);
+    }
+    if (eventDate !== undefined) {
+      allowedUpdates.push(`event_date = $${idx++}`);
+      values.push(eventDate);
+    }
+    if (startTime !== undefined) {
+      allowedUpdates.push(`start_time = $${idx++}`);
+      values.push(startTime);
+    }
+    if (chapterId !== undefined) {
+      allowedUpdates.push(`chapter_id = $${idx++}`);
+      values.push(chapterId ? parseInt(chapterId, 10) : null);
+    }
+    if (coverUrl !== undefined) {
+      allowedUpdates.push(`cover_url = $${idx++}`);
+      values.push(coverUrl);
+    }
+    if (gateCode !== undefined) {
+      allowedUpdates.push(`gate_code = $${idx++}`);
+      values.push(gateCode);
     }
 
     if (allowedUpdates.length === 0) {
@@ -174,5 +211,47 @@ export async function PATCH(request, { params }) {
   } catch (error) {
     console.error('Error updating gathering:', error);
     return NextResponse.json({ success: false, error: error.message || 'Failed to update gathering' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request, { params }) {
+  try {
+    const { id } = await params;
+    const gatheringId = parseInt(id, 10);
+    if (isNaN(gatheringId)) {
+      return NextResponse.json({ success: false, error: 'Invalid gathering ID' }, { status: 400 });
+    }
+
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const dbUser = await syncOrCreateUser(clerkUser);
+    if (!dbUser) {
+      return NextResponse.json({ success: false, error: 'User sync failed' }, { status: 500 });
+    }
+
+    const permissions = await getUserPermissions(dbUser.id);
+    const hasAccess = 
+      permissions.includes('manage_chapter_events') || 
+      permissions.includes('community_manager') || 
+      dbUser.role === 'admin' || 
+      dbUser.role === 'superadmin';
+
+    if (!hasAccess) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Cascade delete rsvps and attendances
+    await Database.query('DELETE FROM gathering_rsvps WHERE gathering_id = $1', [gatheringId]);
+    await Database.query('DELETE FROM gathering_attendances WHERE gathering_id = $1', [gatheringId]);
+    await Database.query('DELETE FROM gathering_disputes WHERE gathering_id = $1', [gatheringId]);
+    await Database.query('DELETE FROM gatherings WHERE id = $1', [gatheringId]);
+
+    return NextResponse.json({ success: true, message: 'Gathering removed successfully' });
+  } catch (error) {
+    console.error('Error deleting gathering:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Failed to delete gathering' }, { status: 500 });
   }
 }

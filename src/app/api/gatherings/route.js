@@ -45,6 +45,7 @@ export async function GET(request) {
         g.status,
         g.magic_token as "magicToken",
         g.gate_code as "gateCode",
+        g.cover_url as "coverUrl",
         g.first_herald_user_id as "firstHeraldUserId",
         g.first_herald_claimed_at as "firstHeraldClaimedAt",
         fh.full_name as "firstHeraldName",
@@ -117,11 +118,20 @@ export async function POST(request) {
       meetUrl, 
       venueName, 
       description, 
-      chapterId = null 
+      chapterId = null,
+      coverUrl = null
     } = body;
 
     if (!title || !eventDate) {
       return NextResponse.json({ success: false, error: 'Title and event date are required' }, { status: 400 });
+    }
+
+    // Default flyer fallback based on type if not provided
+    let finalCoverUrl = coverUrl;
+    if (!finalCoverUrl) {
+      if (gatheringType === 'townhall') finalCoverUrl = '/images/gatherings/townhall.jpg';
+      else if (gatheringType === 'book_banter') finalCoverUrl = '/images/gatherings/book_banter.jpg';
+      else if (gatheringType === 'botm_review') finalCoverUrl = '/images/gatherings/botm_review.jpg';
     }
 
     // Generate random 4-digit numeric gate code and unique session token
@@ -139,9 +149,9 @@ export async function POST(request) {
     const insertQuery = `
       INSERT INTO gatherings (
         title, gathering_type, chapter_id, event_date, start_time,
-        meet_url, venue_name, description, status, magic_token, gate_code, created_by_id
+        meet_url, venue_name, description, status, magic_token, gate_code, cover_url, created_by_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'published', $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'published', $9, $10, $11, $12)
       RETURNING *
     `;
 
@@ -156,6 +166,7 @@ export async function POST(request) {
       description || '',
       magicToken,
       gateCode,
+      finalCoverUrl,
       dbUser.id
     ]);
 

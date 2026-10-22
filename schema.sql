@@ -361,11 +361,14 @@ CREATE TABLE IF NOT EXISTS gatherings (
     status VARCHAR(30) DEFAULT 'published', -- 'draft', 'published', 'live', 'concluded'
     magic_token VARCHAR(100) UNIQUE,      -- Temporary session token
     gate_code VARCHAR(10),                -- 4-digit numeric code for physical venues
+    cover_url TEXT,                       -- Event flyer image URL / Base64
     first_herald_user_id INT REFERENCES users(id) ON DELETE SET NULL,
     first_herald_claimed_at TIMESTAMP WITH TIME ZONE,
     created_by_id INT REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE gatherings ADD COLUMN IF NOT EXISTS cover_url TEXT;
 
 -- 17. Gathering RSVPs Table
 CREATE TABLE IF NOT EXISTS gathering_rsvps (
@@ -414,7 +417,7 @@ CREATE TABLE IF NOT EXISTS gathering_disputes (
 );
 
 -- Seed Initial Upcoming Gatherings
-INSERT INTO gatherings (title, gathering_type, event_date, start_time, meet_url, venue_name, description, status, magic_token, gate_code)
+INSERT INTO gatherings (title, gathering_type, event_date, start_time, meet_url, venue_name, description, status, magic_token, gate_code, cover_url)
 VALUES 
 (
   'Weekly Townhall: The Grand Archive & Storytellers Circle',
@@ -426,7 +429,8 @@ VALUES
   'Join the kin for our weekly virtual townhall as we explore writing craft, archive updates, and upcoming chapter gatherings. Punctual kin will be crowned at the ramparts.',
   'published',
   'TH-' || to_char(CURRENT_DATE + INTERVAL '1 day', 'YYYYMMDD'),
-  '2015'
+  '2015',
+  '/images/gatherings/townhall.jpg'
 ),
 (
   'Sunday Book Banter: Plot Twists & Unreliable Narrators',
@@ -438,7 +442,8 @@ VALUES
   'Unfiltered literary banter on the craft of deception in fiction. Spoken vault cipher will be revealed on stage for the living roll.',
   'published',
   'BB-' || to_char(CURRENT_DATE + INTERVAL '4 days', 'YYYYMMDD'),
-  '1500'
+  '1500',
+  '/images/gatherings/book_banter.jpg'
 ),
 (
   'BOTM Review: The Parlour Wife by Foluso Agbaje',
@@ -450,7 +455,8 @@ VALUES
   'Our monthly flagship review dissecting the domestic intrigue, secrets, and historical prose of The Parlour Wife. First arrivals take the Corona Muralis.',
   'published',
   'BR-' || to_char(CURRENT_DATE + INTERVAL '8 days', 'YYYYMMDD'),
-  '2026'
+  '2026',
+  '/images/gatherings/botm_review.jpg'
 )
 ON CONFLICT DO NOTHING;
 
