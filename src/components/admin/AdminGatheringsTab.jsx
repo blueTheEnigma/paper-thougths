@@ -1,11 +1,11 @@
 "use client";
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calendar, Clock, MapPin, Users, Award, Crown, CheckCircle, 
   Loader2, Plus, Sparkles, Radio, Copy, Check, ExternalLink, 
   MessageCircle, ShieldAlert, Image as ImageIcon, ChevronRight, X,
-  Edit, Upload, Trash2, Mic, UserCheck
+  Edit, Upload, Trash2, Mic, UserCheck, ChevronUp, ChevronDown, Search
 } from 'lucide-react';
 
 export default function AdminGatheringsTab({ initialGatherings = [], chapters = [], members = [] }) {
@@ -47,6 +47,11 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
   const editFileInputRef = useRef(null);
 
   // Corroboration & WhatsApp Draft Modal
+  const [attendeesList, setAttendeesList] = useState([]);
+  const [isAddAttendeeOpen, setIsAddAttendeeOpen] = useState(false);
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [memberSearchResults, setMemberSearchResults] = useState([]);
+  const [isSearchingMembers, setIsSearchingMembers] = useState(false);
   const [reorderedVanguardIds, setReorderedVanguardIds] = useState([]);
   const [whatsappBroadcast, setWhatsappBroadcast] = useState('');
   const [copiedBroadcast, setCopiedBroadcast] = useState(false);
@@ -179,6 +184,7 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
       const data = await res.json();
       if (data.success) {
         setGatheringDetails(data);
+        setAttendeesList(data.attendances || []);
         const initialTop5 = (data.attendances || [])
           .slice(0, 5)
           .map(a => a.id);
@@ -361,6 +367,111 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
     }
   };
 
+  // Member Search debounce for adding attendee manually
+  useEffect(() => {
+    const trimmed = memberSearchQuery.trim();
+    if (trimmed.length < 2) {
+      setMemberSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingMembers(true);
+      try {
+        const res = await fetch(`/api/members/search?q=${encodeURIComponent(trimmed)}`);
+        const data = await res.json();
+        if (data.success) {
+          const existingUserIds = new Set(attendeesList.map(a => a.userId).filter(Boolean));
+          const filtered = (data.members || []).filter(m => !existingUserIds.has(m.id));
+          setMemberSearchResults(filtered);
+        }
+      } catch (err) {
+        console.error('Failed to search members:', err);
+      } finally {
+        setIsSearchingMembers(false);
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [memberSearchQuery, attendeesList]);
+
+  const moveAttendee = (index, direction) => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === attendeesList.length - 1) return;
+    const target = direction === 'up' ? index - 1 : index + 1;
+    const copy = [...attendeesList];
+    const [item] = copy.splice(index, 1);
+    copy.splice(target, 0, item);
+    setAttendeesList(copy);
+  };
+
+  const crownCoronaMuralis = (index) => {
+    if (index === 0) return;
+    const copy = [...attendeesList];
+    const [item] = copy.splice(index, 1);
+    copy.unshift(item);
+    setAttendeesList(copy);
+  };
+
+  const handleAddMemberToRoll = async (member) => {
+    if (!selectedGathering) return;
+    setIsCorroborating(true);
+    try {
+      const res = await fetch(`/api/gatherings/${selectedGathering.id}/corroborate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderedAttendanceIds: attendeesList.map(a => a.id),
+          addMemberId: member.id
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMemberSearchQuery('');
+        setMemberSearchResults([]);
+        setIsAddAttendeeOpen(false);
+        if (data.attendances) setAttendeesList(data.attendances);
+        if (data.whatsappMessage) setWhatsappBroadcast(data.whatsappMessage);
+        await openGatheringDetails(selectedGathering);
+      } else {
+        alert(data.error || 'Failed to add attendee');
+      }
+    } catch {
+      alert('Error adding attendee');
+    } finally {
+      setIsCorroborating(false);
+    }
+  };
+
+  const handleRemoveAttendee = async (attendanceId) => {
+    if (!selectedGathering) return;
+    if (!window.confirm("Remove this attendee from the roll? Any leaves awarded will be reclaimed.")) {
+      return;
+    }
+    setIsCorroborating(true);
+    try {
+      const res = await fetch(`/api/gatherings/${selectedGathering.id}/corroborate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderedAttendanceIds: attendeesList.filter(a => a.id !== attendanceId).map(a => a.id),
+          removeAttendanceId: attendanceId
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.attendances) setAttendeesList(data.attendances);
+        if (data.whatsappMessage) setWhatsappBroadcast(data.whatsappMessage);
+        await openGatheringDetails(selectedGathering);
+      } else {
+        alert(data.error || 'Failed to remove attendee');
+      }
+    } catch {
+      alert('Error removing attendee');
+    } finally {
+      setIsCorroborating(false);
+    }
+  };
+
   const handleCorroborateRoster = async () => {
     if (!selectedGathering) return;
     setIsCorroborating(true);
@@ -368,11 +479,14 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
       const res = await fetch(`/api/gatherings/${selectedGathering.id}/corroborate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topFiveAttendanceIds: reorderedVanguardIds })
+        body: JSON.stringify({
+          orderedAttendanceIds: attendeesList.map(a => a.id)
+        })
       });
       const data = await res.json();
       if (data.success) {
         setWhatsappBroadcast(data.whatsappMessage);
+        if (data.attendances) setAttendeesList(data.attendances);
         await openGatheringDetails(selectedGathering);
       } else {
         alert(data.error || 'Failed to corroborate roster');
@@ -781,48 +895,183 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
                   </span>
                 </div>
 
-                {/* Checked-in Attendees Roll */}
+                {/* Checked-in Attendees Roll & Interactive Reordering */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#20070e] flex items-center gap-1.5">
-                      <Award size={14} className="text-[#c96a42]" />
-                      Recorded Attendees ({gatheringDetails.attendances?.length || 0})
-                    </h4>
-                    <span className="text-[10px] text-[#120308]/40">
-                      Ranks 1-5 hold the Punctual Vanguard
-                    </span>
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#20070e] flex items-center gap-1.5">
+                        <Award size={14} className="text-[#c96a42]" />
+                        Attendees & Arrival Order ({attendeesList.length || 0})
+                      </h4>
+                      <p className="text-[10px] text-[#120308]/50 font-serif">
+                        Rank #1 receives 👑 Corona Muralis (+25 leaves). Ranks #2–5 receive 🛡️ Vanguard (+10 leaves).
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddAttendeeOpen(!isAddAttendeeOpen)}
+                      className="px-2.5 py-1 rounded-xl bg-[#c96a42]/10 hover:bg-[#c96a42]/20 text-[#c96a42] text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <Plus size={13} /> {isAddAttendeeOpen ? 'Close Search' : 'Inscribe Member'}
+                    </button>
                   </div>
 
+                  {/* Add Kin to Roll search drawer */}
+                  <AnimatePresence>
+                    {isAddAttendeeOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-3 p-3 bg-[#FBF7EE] border border-[#c96a42]/30 rounded-2xl space-y-2 overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-[#20070e] uppercase tracking-wider">
+                            Inscribe Kin who attended but missed check-in
+                          </span>
+                          <span className="text-[10px] text-[#120308]/40">Search by name or LK-ID</span>
+                        </div>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={memberSearchQuery}
+                            onChange={(e) => setMemberSearchQuery(e.target.value)}
+                            placeholder="Type name (e.g. Mary, Gaius, Tunde...)"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-xs bg-white focus:outline-none focus:border-[#c96a42]"
+                          />
+                          {isSearchingMembers && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <Loader2 size={13} className="animate-spin text-[#c96a42]" />
+                            </div>
+                          )}
+                        </div>
+
+                        {memberSearchResults.length > 0 && (
+                          <div className="max-h-36 overflow-y-auto divide-y divide-black/5 bg-white rounded-xl border border-black/10">
+                            {memberSearchResults.map((m) => (
+                              <button
+                                key={m.id}
+                                type="button"
+                                onClick={() => handleAddMemberToRoll(m)}
+                                className="w-full p-2.5 hover:bg-[#FBF7EE] flex items-center justify-between text-left text-xs transition-colors group cursor-pointer"
+                              >
+                                <div>
+                                  <span className="font-bold text-[#20070e] group-hover:text-[#c96a42] block">
+                                    {m.fullName}
+                                  </span>
+                                  <span className="text-[10px] text-black/40 font-mono">
+                                    {m.lkId} {m.chapter && `• ${m.chapter}`}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-lg bg-[#20070e] text-[#FBF7EE] group-hover:bg-[#c96a42]">
+                                  + Inscribe
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {memberSearchQuery.trim().length >= 2 && !isSearchingMembers && memberSearchResults.length === 0 && (
+                          <p className="text-[10px] text-red-600 italic">No registered kin found matching &quot;{memberSearchQuery}&quot;.</p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Editable Attendees List */}
                   <div className="border border-black/10 rounded-2xl overflow-hidden divide-y divide-black/5 text-xs">
-                    {gatheringDetails.attendances && gatheringDetails.attendances.length > 0 ? (
-                      gatheringDetails.attendances.map((att, idx) => (
-                        <div key={att.id} className="p-3 flex items-center justify-between hover:bg-black/2 gap-3">
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono font-bold text-xs text-black/40 w-5">
-                              #{att.arrivalOrder || idx + 1}
+                    {attendeesList && attendeesList.length > 0 ? (
+                      attendeesList.map((att, idx) => (
+                        <div key={att.id} className={`p-3 flex items-center justify-between gap-3 transition-colors ${
+                          idx === 0 ? 'bg-amber-50/60' : idx < 5 ? 'bg-black/[0.015]' : 'bg-white'
+                        }`}>
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {/* Rank Badge */}
+                            <span className={`font-mono font-bold text-[11px] px-2 py-0.5 rounded-lg shrink-0 flex items-center gap-1 ${
+                              idx === 0 
+                                ? 'bg-[#c96a42] text-white shadow-sm' 
+                                : idx < 5 
+                                ? 'bg-[#20070e] text-[#FBF7EE]' 
+                                : 'bg-black/5 text-black/40'
+                            }`}>
+                              {idx === 0 ? '👑 #1' : idx < 5 ? `🛡️ #${idx + 1}` : `#${idx + 1}`}
                             </span>
-                            <div>
-                              <span className="font-bold text-[#20070e] block">
-                                {att.name} {att.isCoronaMuralis && '👑 (First Over Wall)'} {att.isCoVanguard && '🤝 (Co-Vanguard)'}
+
+                            {/* Name & ID */}
+                            <div className="min-w-0">
+                              <span className="font-bold text-[#20070e] truncate block">
+                                {att.name} {idx === 0 && '👑 (First Over Wall)'} {idx > 0 && idx < 5 && '🛡️ (Punctual Vanguard)'}
                               </span>
-                              <span className="text-[10px] text-black/40 font-mono">
-                                {att.lkId || 'Kindred'} • {new Date(att.checkinTime).toLocaleTimeString()}
+                              <span className="text-[10px] text-black/40 font-mono block">
+                                {att.lkId || 'Kindred Spirit'} {att.checkinTime && `• ${new Date(att.checkinTime).toLocaleTimeString()}`}
                               </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          {/* Controls & Leaves */}
+                          <div className="flex items-center gap-1.5 shrink-0">
                             {att.photoProofUrl && (
                               <button
                                 onClick={() => setPhotoViewerUrl(att.photoProofUrl)}
-                                className="px-2 py-1 rounded-lg bg-black/5 hover:bg-black/10 text-[10px] font-bold text-[#20070e] flex items-center gap-1"
+                                className="px-2 py-1 rounded-lg bg-black/5 hover:bg-black/10 text-[10px] font-bold text-[#20070e] flex items-center gap-1 cursor-pointer"
                               >
-                                <ImageIcon size={11} /> View WhatsApp Proof
+                                <ImageIcon size={11} /> Proof
                               </button>
                             )}
-                            <span className="text-[10px] font-bold font-mono text-[#c96a42] bg-[#c96a42]/10 px-2 py-0.5 rounded-full">
-                              +{att.leavesAwarded || 0} Leaves
+
+                            {/* Leaves indicator */}
+                            <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-full ${
+                              idx === 0 
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300' 
+                                : idx < 5 
+                                ? 'bg-[#c96a42]/10 text-[#c96a42] border border-[#c96a42]/20' 
+                                : 'bg-black/5 text-black/40'
+                            }`}>
+                              {idx === 0 ? '+25 Leaves' : idx < 5 ? '+10 Leaves' : '+0 Leaves'}
                             </span>
+
+                            {/* Set #1 Crown Button */}
+                            {idx !== 0 && (
+                              <button
+                                type="button"
+                                onClick={() => crownCoronaMuralis(idx)}
+                                title="Crown #1 First Over Wall"
+                                className="px-2 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                <Crown size={11} className="text-amber-700" /> Crown #1
+                              </button>
+                            )}
+
+                            {/* Move Up */}
+                            <button
+                              type="button"
+                              onClick={() => moveAttendee(idx, 'up')}
+                              disabled={idx === 0}
+                              title="Move Up"
+                              className="p-1 rounded-lg bg-black/5 hover:bg-black/10 text-[#20070e] disabled:opacity-20 transition-colors cursor-pointer"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+
+                            {/* Move Down */}
+                            <button
+                              type="button"
+                              onClick={() => moveAttendee(idx, 'down')}
+                              disabled={idx === attendeesList.length - 1}
+                              title="Move Down"
+                              className="p-1 rounded-lg bg-black/5 hover:bg-black/10 text-[#20070e] disabled:opacity-20 transition-colors cursor-pointer"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+
+                            {/* Delete / Remove */}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveAttendee(att.id)}
+                              title="Remove attendee from roll"
+                              className="p-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-colors cursor-pointer ml-0.5"
+                            >
+                              <Trash2 size={12} />
+                            </button>
                           </div>
                         </div>
                       ))
@@ -842,16 +1091,16 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
                         ⚖️ Moderator Call Corroboration
                       </h4>
                       <p className="text-[11px] text-[#120308]/60 font-serif">
-                        Confirm the Top 5 attendees who arrived in Google Meet or on stage to generate the WhatsApp celebration copy.
+                        Click below to lock in the re-ordered roster, sync leaves balances, and generate the final WhatsApp celebration copy.
                       </p>
                     </div>
                     <button
                       onClick={handleCorroborateRoster}
-                      disabled={isCorroborating || (gatheringDetails.attendances || []).length === 0}
-                      className="px-4 py-2 rounded-xl bg-[#20070e] text-[#FBF7EE] text-xs font-bold uppercase tracking-wider hover:bg-[#120308] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                      disabled={isCorroborating || attendeesList.length === 0}
+                      className="px-4 py-2 rounded-xl bg-[#20070e] text-[#FBF7EE] text-xs font-bold uppercase tracking-wider hover:bg-[#120308] transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-md"
                     >
                       {isCorroborating ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} className="text-[#F2A98A]" />}
-                      Corroborate & Draft Blast
+                      Corroborate & Re-rank Roster
                     </button>
                   </div>
 
