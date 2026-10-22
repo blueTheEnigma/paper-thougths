@@ -179,17 +179,24 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
   const buildWhatsAppMessage = (gathering, list = []) => {
     if (!gathering) return '';
     const top5 = list.slice(0, 5);
-    const corona = top5[0];
-    const herald = gathering.firstHeraldInstagram 
+    const formatKinHandle = (kin) => {
+      if (!kin) return 'The Kin';
+      const raw = kin.instagram ? kin.instagram.trim().replace(/^@/, '') : '';
+      const isDummy = !raw || ['non', 'none', 'n/a', 'na', 'nil', 'null', 'no', '-', '--'].includes(raw.toLowerCase());
+      if (!isDummy) return `@${raw}`;
+      return kin.name || kin.attendeeName || kin.handle || 'The Kin';
+    };
+
+    const herald = gathering.firstHeraldInstagram && !['non', 'none', 'n/a', 'nil'].includes(gathering.firstHeraldInstagram.trim().toLowerCase().replace('@', ''))
       ? `@${gathering.firstHeraldInstagram.replace('@', '')}` 
       : (gathering.firstHeraldName || 'Claimed');
     
     const moderator = gathering.moderatorName 
-      ? `@${gathering.moderatorName.replace('@', '')}`
+      ? gathering.moderatorName.replace(/^@/, '')
       : 'Grand Custodians';
 
     const vanguardText = top5.map((v, i) => {
-      const handle = v.instagram ? `@${v.instagram.replace('@', '')}` : (v.handle || v.name);
+      const handle = formatKinHandle(v);
       const crown = i === 0 ? '👑 (+25 Leaves)' : '🛡️ (+10 Leaves)';
       return `${i + 1}. ${handle} ${crown}`;
     }).join('\n');
@@ -200,7 +207,7 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
 *"The first man over the wall holds the standard for all who follow."*
 
 👑 *CORONA MURALIS (First Over the Wall):*
-✦ ${corona ? (corona.instagram ? `@${corona.instagram.replace('@', '')}` : (corona.handle || corona.name)) : 'The Kin'} (+25 Leaves Awarded)
+✦ ${corona ? formatKinHandle(corona) : 'The Kin'} (+25 Leaves Awarded)
 
 🛡️ *THE PUNCTUAL VANGUARD (Top Arrivals):*
 ${vanguardText || '1. Verified by Grand Custodians'}

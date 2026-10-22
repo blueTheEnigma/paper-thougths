@@ -228,14 +228,24 @@ export async function POST(request, { params }) {
     const totalAttendees = totalCountRes ? totalCountRes.count : 0;
 
     // Generate formatted WhatsApp announcement
+    const formatKinHandle = (kin) => {
+      if (!kin) return 'The Kin';
+      const raw = kin.handle || kin.instagram;
+      const isDummy = !raw || ['non', 'none', 'n/a', 'na', 'nil', 'null', 'no', '-', '--'].includes(raw.trim().toLowerCase().replace('@', ''));
+      if (!isDummy && raw) return `@${raw.replace(/^@/, '')}`;
+      return kin.name || kin.attendeeName || 'The Kin';
+    };
+
     const coronaWinner = corroboratedVanguard.find(v => v.isCoronaMuralis) || corroboratedVanguard[0];
     const vanguardList = corroboratedVanguard
-      .map(v => `${v.arrivalOrder}. ${v.handle ? `@${v.handle.replace('@', '')}` : v.name} ${v.isCoronaMuralis ? '👑 (+25 Leaves)' : '🛡️ (+10 Leaves)'}`)
+      .map(v => `${v.arrivalOrder}. ${formatKinHandle(v)} ${v.isCoronaMuralis ? '👑 (+25 Leaves)' : '🛡️ (+10 Leaves)'}`)
       .join('\n');
 
-    const heraldName = gathering.firstHeraldInstagram 
-      ? `@${gathering.firstHeraldInstagram.replace('@', '')}` 
+    const heraldName = gathering.firstHeraldInstagram && !['non', 'none', 'n/a', 'nil'].includes(gathering.firstHeraldInstagram.trim().toLowerCase().replace('@', ''))
+      ? `@${gathering.firstHeraldInstagram.replace(/^@/, '')}` 
       : (gathering.firstHeraldName || 'Claimed');
+
+    const moderatorName = gathering.moderator_name || gathering.moderatorName || dbUser.full_name;
 
     const whatsappMessage = `🏛️ *PAPER THOUGHTS SANCTUARY — ROLL OF HONOR* 🏛️
 *Gathering:* ${gathering.title}
@@ -243,7 +253,7 @@ export async function POST(request, { params }) {
 *"The first man over the wall holds the standard for all who follow."*
 
 👑 *CORONA MURALIS (First Over the Wall):*
-✦ ${coronaWinner ? (coronaWinner.handle ? `@${coronaWinner.handle.replace('@', '')}` : coronaWinner.name) : 'The Kin'} (+25 Leaves Awarded)
+✦ ${coronaWinner ? formatKinHandle(coronaWinner) : 'The Kin'} (+25 Leaves Awarded)
 
 🛡️ *THE PUNCTUAL VANGUARD (Top Arrivals):*
 ${vanguardList || '1. Verified by Grand Custodians'}
@@ -252,7 +262,7 @@ ${vanguardList || '1. Verified by Grand Custodians'}
 ✦ ${heraldName} (+15 Leaves Awarded)
 
 ⚖️ *GRAND CUSTODIANS (Hosts & Moderators):*
-✦ @${dbUser.instagram ? dbUser.instagram.replace('@', '') : dbUser.full_name}
+✦ ${moderatorName}
 
 To the ${totalAttendees} kindred spirits who answered the summons tonight: we live in the lines.
 The next gathering card drops this weekend on the Archive. Be ready.
