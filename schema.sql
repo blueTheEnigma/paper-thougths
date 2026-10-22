@@ -220,13 +220,13 @@ CREATE TABLE IF NOT EXISTS book_of_the_month (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Seed initial Book of the Month (The Parlour Wife by Foluso Agbaje)
+-- Seed initial Book of the Month (Red Rising by Pierce Brown)
 INSERT INTO book_of_the_month (title, author, image_url, teaser, price, purchase_link, active)
 VALUES (
-    'The Parlour Wife', 
-    'Foluso Agbaje', 
-    '/images/the_parlour_wife.png', 
-    'Set against the backdrop of colonial Nigeria, ''The Parlour Wife'' is a gripping historical drama exploring duty, class, secrets, and a woman''s defiance. Foluso Agbaje weaves a rich tapestry of domestic intrigue and social upheaval with breathtaking prose.', 
+    'Red Rising', 
+    'Pierce Brown', 
+    '/images/red_rising.jpg', 
+    '“I would have lived in peace, but my enemies brought me war.” Darrow is a Red, a member of the lowest caste in the color-coded society of the future. Fueled by grief and a burning desire for justice, Darrow sacrifices everything to infiltrate the legendary Institute, a brutal proving ground where the dominant caste’s best and brightest vie for power.', 
     '', 
     '/bookstore', 
     TRUE

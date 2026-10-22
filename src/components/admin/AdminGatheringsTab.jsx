@@ -123,13 +123,13 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
       });
     } else if (type === 'botm_review') {
       setFormData({
-        title: 'BOTM Review: The Parlour Wife by Foluso Agbaje',
+        title: 'BOTM Review: Red Rising by Pierce Brown',
         gatheringType: 'botm_review',
         eventDate: thursdayStr,
         startTime: '20:15:00',
         meetUrl: 'https://meet.google.com/pt-botm-review',
         venueName: 'Google Meet',
-        description: 'Dissecting the secrets, historical prose, and female defiance in Foluso Agbaje’s colonial drama. Corona Muralis awarded to #1 arrival.',
+        description: 'Dissecting caste rebellion, Institute trials, and Darrow’s ascent in Pierce Brown’s sci-fi epic. Corona Muralis awarded to #1 arrival.',
         coverUrl: '/images/gatherings/botm_review.jpg',
         chapterId: ''
       });

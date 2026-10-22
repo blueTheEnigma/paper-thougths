@@ -1057,7 +1057,7 @@ export default function AdminClient({
                             required
                             value={botmTitle}
                             onChange={(e) => setBotmTitle(e.target.value)}
-                            placeholder="e.g. The Parlour Wife"
+                            placeholder="e.g. Red Rising"
                             className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink placeholder-ink/30 font-medium"
                           />
                         </div>
@@ -1411,7 +1411,7 @@ export default function AdminClient({
                                 <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy/85 flex items-center gap-1">📍 Abuja Bookie</span>
                                 <span className="font-sans font-bold text-xs text-ink block">{leaderboardData.abujaBookieName}</span>
                                 <p className="text-[11px] text-ink/65 font-serif leading-normal italic">
-                                  "{leaderboardData.abujaBookieText || `First to complete '${leaderboardData.abujaBookieBook || 'The Parlour Wife'}' and submit a review.`}"
+                                  "{leaderboardData.abujaBookieText || `First to complete '${leaderboardData.abujaBookieBook || 'Red Rising'}' and submit a review.`}"
                                 </p>
                               </div>
                             )}
