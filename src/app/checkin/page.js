@@ -30,8 +30,21 @@ function CheckinFormContent() {
   const [photoProofBase64, setPhotoProofBase64] = useState("");
   const [photoPreview, setPhotoPreview] = useState("");
 
-  // Auto-detect URL parameters
+  // Auto-detect URL parameters and logged-in kin
   useEffect(() => {
+    async function loadMe() {
+      try {
+        const res = await fetch('/api/me');
+        const data = await res.json();
+        if (data.success && data.user) {
+          setLkid(prev => prev || data.user.lk_id || data.user.full_name || data.user.email || '');
+        }
+      } catch (err) {
+        // Guest user, no problem
+      }
+    }
+    loadMe();
+
     async function loadGatherings() {
       try {
         const res = await fetch('/api/gatherings');
@@ -333,20 +346,21 @@ function CheckinFormContent() {
           />
         </div>
 
-        {/* Venue Gate Code (For physical gatherings or passcode-protected calls) */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold uppercase tracking-wider text-[#120308]/80 flex items-center gap-2">
-            <KeyRound size={14} className="text-[#c96a42]" /> 
-            {isPhysical ? "4-Digit Venue Code (from First Man screen)" : "Session Gate Code (Optional)"}
-          </label>
-          <input 
-            type="text" 
-            value={gateCode}
-            onChange={(e) => setGateCode(e.target.value)}
-            placeholder={isPhysical ? "e.g. 2015" : "Enter code if announced"}
-            className="w-full px-4 py-3 rounded-2xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-sm font-mono tracking-widest"
-          />
-        </div>
+        {/* Venue Gate Code (Only for physical in-person gatherings) */}
+        {isPhysical && (
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase tracking-wider text-[#120308]/80 flex items-center gap-2">
+              <KeyRound size={14} className="text-[#c96a42]" /> 4-Digit Venue Code (from First Man screen)
+            </label>
+            <input 
+              type="text" 
+              value={gateCode}
+              onChange={(e) => setGateCode(e.target.value)}
+              placeholder="e.g. 2015"
+              className="w-full px-4 py-3 rounded-2xl border border-black/10 focus:border-[#c96a42] focus:outline-none text-sm font-mono tracking-widest"
+            />
+          </div>
+        )}
 
         {/* Physical Gathering First Arrival & Co-Vanguard Controls */}
         {isPhysical && (
@@ -436,7 +450,7 @@ function CheckinFormContent() {
           ) : (
             <>
               <Sparkles size={16} className="text-[#F2A98A]" />
-              Inscribe Attendance
+              Mark My Attendance
             </>
           )}
         </button>

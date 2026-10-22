@@ -393,8 +393,8 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
 
   const getMagicLink = (g) => {
     if (!g) return '';
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://paperthoughts.org';
-    return `${origin}/checkin?gatheringId=${g.id}&magicToken=${g.magicToken || ''}&code=${g.gateCode || ''}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.paperthoughts.org';
+    return `${origin}/checkin?gatheringId=${g.id}`;
   };
 
   const copyMagicLink = (g) => {
@@ -679,39 +679,35 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
               {selectedGathering.title}
             </h3>
             <p className="text-xs text-[#120308]/60 mb-4 font-serif">
-              Status: <span className="font-bold uppercase text-[#c96a42]">{selectedGathering.status}</span> • Gate Code: <span className="font-mono font-bold text-[#20070e]">{selectedGathering.gateCode}</span> • Token: <span className="font-mono text-xs">{selectedGathering.magicToken}</span>
+              Status: <span className="font-bold uppercase text-[#c96a42]">{selectedGathering.status}</span> • Platform: <span className="font-bold text-[#20070e]">{selectedGathering.venueName || 'Virtual'}</span>
             </p>
 
-            {/* Direct Magic Check-In Link Bar */}
-            <div className="p-3.5 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+            {/* Direct Attendance Link Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#20070e] to-[#2c0a13] text-[#FBF7EE] shadow-lg flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6 border border-[#c96a42]/30">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] font-bold text-[#20070e] uppercase tracking-wider flex items-center gap-1">
-                    🔗 Direct Magic Check-In Link
-                  </span>
-                  <span className="text-[10px] font-mono text-[#c96a42] bg-[#c96a42]/10 px-2 py-0.5 rounded-full font-bold">
-                    Gate Code: {selectedGathering.gateCode}
-                  </span>
-                </div>
-                <div className="text-[11px] font-mono text-black/60 truncate bg-white px-2.5 py-1.5 rounded-xl border border-black/10 select-all">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#F2A98A] flex items-center gap-1.5 mb-1">
+                  🔗 Attendance Link (For Google Meet / WhatsApp)
+                </span>
+                <p className="text-xs text-white/80 font-serif leading-relaxed mb-2">
+                  Drop this in your meeting chat. Kin click it to mark attendance in 1 tap (no codes or tokens needed).
+                </p>
+                <div className="text-xs font-mono text-[#FBF7EE] bg-black/40 px-3 py-2 rounded-xl border border-white/10 select-all truncate">
                   {getMagicLink(selectedGathering)}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex sm:flex-col items-center gap-2 shrink-0">
                 <button
                   onClick={() => copyMagicLink(selectedGathering)}
-                  className="px-4 py-2.5 rounded-xl bg-[#20070e] hover:bg-[#120308] text-[#FBF7EE] text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-xs"
+                  className="w-full px-5 py-3 rounded-xl bg-[#c96a42] hover:bg-[#b05832] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
                 >
                   {copiedMagicLinkId === selectedGathering.id ? (
                     <>
-                      <Check size={13} className="text-emerald-400" />
-                      <span>Copied!</span>
+                      <Check size={16} /> <span>Copied!</span>
                     </>
                   ) : (
                     <>
-                      <Copy size={13} className="text-[#F2A98A]" />
-                      <span>Copy Magic Link</span>
+                      <Copy size={16} /> <span>Copy Link</span>
                     </>
                   )}
                 </button>
@@ -719,10 +715,9 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
                   href={getMagicLink(selectedGathering)}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-2.5 rounded-xl border border-black/10 hover:border-[#c96a42] text-[#20070e] transition-colors"
-                  title="Test Check-In Page"
+                  className="px-3 py-1.5 text-[11px] font-bold text-[#F2A98A] hover:underline flex items-center gap-1"
                 >
-                  <ExternalLink size={14} />
+                  Open Page <ExternalLink size={12} />
                 </a>
               </div>
             </div>

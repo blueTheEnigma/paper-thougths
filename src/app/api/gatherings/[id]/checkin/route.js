@@ -53,14 +53,11 @@ export async function POST(request, { params }) {
       return NextResponse.json({ success: false, error: 'This gathering has already concluded.' }, { status: 400 });
     }
 
-    // Gate code / Token verification (if provided)
-    if (gateCode && gathering.gate_code) {
+    // Gate code verification: Only strictly required for physical in-person venue arrivals
+    const isPhysical = gathering.gathering_type === 'physical';
+    if (isPhysical && gateCode && gathering.gate_code) {
       if (gateCode !== gathering.gate_code) {
         return NextResponse.json({ success: false, error: 'Incorrect 4-digit venue gate code.' }, { status: 400 });
-      }
-    } else if (magicToken && gathering.magic_token) {
-      if (magicToken.toUpperCase() !== gathering.magic_token.toUpperCase()) {
-        return NextResponse.json({ success: false, error: 'Invalid gathering session token.' }, { status: 400 });
       }
     }
 
