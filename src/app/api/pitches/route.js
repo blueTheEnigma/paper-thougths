@@ -134,14 +134,14 @@ export async function POST(request) {
         WHERE id = $1
       `, [dbUser.id]);
 
-      // 3. Log leaves transaction if table exists
+      // 3. Log leaves transaction
       try {
         await client.query(`
-          INSERT INTO leaves_transactions (user_id, amount, transaction_type, reference_id, description)
-          VALUES ($1, 10, 'earn_pitch', $2, $3)
-        `, [dbUser.id, newPitch.id, `Created Book Pitch: "${bookTitle}"`]);
+          INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
+          VALUES ($1, 10, 'earn_pitch', $2)
+        `, [dbUser.id, `Created Book Pitch: "${bookTitle}"`]);
       } catch (err) {
-        // Non-fatal if leaves_transactions schema differs
+        console.error('Failed to log pitch leaf transaction:', err);
       }
 
       return newPitch;
