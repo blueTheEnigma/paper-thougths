@@ -29,14 +29,17 @@ export async function synthesizeWeeklyReviews(submissionId) {
       return null;
     }
 
+    const isPoem = (submission.genre || '').toLowerCase().includes('poem') || 
+                   (submission.genre || '').toLowerCase() === 'poetry';
+
     // 2. Format human responses into a clean text prompt context
     const formattedReviews = reviews.map((r, index) => `
       ### REVIEWER #${index + 1}
-      - Pacing Assessment: ${r.pacing_rating}
+      - ${isPoem ? 'Cadence/Rhythm' : 'Pacing Assessment'}: ${r.pacing_rating}
       - Strong Elements Identified: ${(r.strengths_array || []).join(', ')}
-      - Theme Comprehension (Perception): "${r.mirror_response}"
-      - Standout Moment (Climax): "${r.highwater_response}"
-      - Revision Target (Constructive Feedback): "${r.pivot_response}"
+      - ${isPoem ? 'Theme & Emotional Core (The Mirror)' : 'Theme Comprehension (The Mirror)'}: "${r.mirror_response}"
+      - ${isPoem ? 'The Volta / Piercing Stanza (Highwater Mark)' : 'Standout Moment / Climax (Highwater Mark)'}: "${r.highwater_response}"
+      - ${isPoem ? 'Poetic Craft Polish (Constructive Pivot)' : 'Revision Target (Constructive Pivot)'}: "${r.pivot_response}"
     `).join('\n');
 
     const targetWorkContext = `
@@ -133,15 +136,22 @@ function generateLocalMockSynthesis(submission, reviews) {
     ? highwaters.reduce((a, b) => a.length < b.length && a.length > 10 ? a : b) 
     : "No standout lines quoted.";
 
+  const isPoem = (submission.genre || '').toLowerCase().includes('poem') || 
+                 (submission.genre || '').toLowerCase() === 'poetry';
+
   // Action step template
   const actionStep = pivots.length > 0 
     ? `Address ${pivots[0].toLowerCase().replace(/^\w/, c => c.toLowerCase())}` 
-    : "Refine pacing and strengthen narrative tension across the introduction.";
+    : (isPoem ? "Polish cadence, rhythm transitions, and sharpen sensory imagery." : "Refine pacing and strengthen narrative tension across the introduction.");
 
   return {
-    core_resonance: `The community interpreted the themes of "${submission.title}" as: ${reviews[0]?.mirror_response.substring(0, 150)}... The consensus pacing was assessed as largely "${topPacing}".`,
+    core_resonance: isPoem
+      ? `The community felt the emotional truth of "${submission.title}" as: ${reviews[0]?.mirror_response.substring(0, 150)}... The consensus cadence was assessed as largely "${topPacing}".`
+      : `The community interpreted the themes of "${submission.title}" as: ${reviews[0]?.mirror_response.substring(0, 150)}... The consensus pacing was assessed as largely "${topPacing}".`,
     line_of_the_week: lineOfTheWeek.substring(0, 200),
-    common_critiques: `Readers flagged weaknesses in pacing/tension. The strongest elements identified were: ${topStrengths.join(' and ')}.`,
+    common_critiques: isPoem
+      ? `Readers celebrated poetic craft in: ${topStrengths.join(' and ')}.`
+      : `Readers flagged weaknesses in pacing/tension. The strongest elements identified were: ${topStrengths.join(' and ')}.`,
     action_step: actionStep.substring(0, 250)
   };
 }

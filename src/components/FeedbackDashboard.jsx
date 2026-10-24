@@ -513,15 +513,27 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
             ) : (
               <div className="space-y-6">
                 {reviews.map((rev, index) => {
+                  const isPoem = (submission?.genre || '').toLowerCase().includes('poem') || 
+                                 (submission?.genre || '').toLowerCase() === 'poetry';
+
                   const strengthLabels = {
+                    // Prose
                     voice: 'Narrative Voice',
-                    dialogue: 'Dialogue & Rhythm',
+                    dialogue: 'Dialogue & Subtext',
                     world_building: 'World-Building',
                     pacing: 'Narrative Pacing',
-                    emotional_impact: 'Emotional Impact',
                     character_dev: 'Character Development',
                     prose: 'Sentence Prose',
-                    theme: 'Thematic Depth'
+                    // Poetry
+                    musicality: 'Musicality & Meter',
+                    imagery: 'Sensory Imagery & Metaphor',
+                    line_breaks: 'Line Breaks & Enjambment',
+                    volta: 'The Volta (The Turn)',
+                    diction: 'Diction & Economy',
+                    stanza: 'Stanza Architecture',
+                    // Shared
+                    emotional_impact: 'Emotional Resonance',
+                    theme: 'Thematic Depth & Message'
                   };
 
                   return (
@@ -538,16 +550,16 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
                         
                         <div className="flex flex-wrap items-center gap-3">
                           <span className="bg-sage/10 border border-sage/20 text-sage font-bold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-lg">
-                            Pacing: {rev.pacingRating}
+                            {isPoem ? 'Cadence' : 'Pacing'}: {rev.pacingRating}
                           </span>
                           {rev.pacingScore && (
                             <span className="bg-burgundy/5 border border-burgundy/10 text-burgundy font-bold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-lg">
-                              Pacing: {rev.pacingScore}.0/5
+                              {isPoem ? 'Cadence' : 'Pacing'}: {rev.pacingScore}.0/5
                             </span>
                           )}
                           {rev.technicalScore && (
                             <span className="bg-accent/10 border border-accent/15 text-burgundy font-bold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-lg">
-                              Prose: {rev.technicalScore}.0/5
+                              {isPoem ? 'Meter' : 'Prose'}: {rev.technicalScore}.0/5
                             </span>
                           )}
                         </div>
@@ -571,7 +583,9 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
                         {/* The Mirror */}
                         <div className="space-y-1.5">
-                          <div className="text-[9px] font-sans font-bold uppercase tracking-wider text-[#F2A98A]">The Mirror (Perception)</div>
+                          <div className="text-[9px] font-sans font-bold uppercase tracking-wider text-[#F2A98A]">
+                            {isPoem ? 'The Mirror (Theme & Message)' : 'The Mirror (Perception & Theme)'}
+                          </div>
                           <p className="text-xs sm:text-sm text-ink/80 leading-relaxed font-serif bg-cream/10 p-4 rounded-2xl border border-sage/5 italic">
                             &quot;{rev.mirrorResponse}&quot;
                           </p>
@@ -579,7 +593,9 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
                         
                         {/* Standout Climax */}
                         <div className="space-y-1.5">
-                          <div className="text-[9px] font-sans font-bold uppercase tracking-wider text-sage">High-Water Mark (Standout)</div>
+                          <div className="text-[9px] font-sans font-bold uppercase tracking-wider text-sage">
+                            {isPoem ? 'High-Water Mark (Volta / Stanza)' : 'High-Water Mark (Climax / Standout)'}
+                          </div>
                           <p className="text-xs sm:text-sm text-ink/80 leading-relaxed font-serif bg-cream/10 p-4 rounded-2xl border border-sage/5 italic">
                             &quot;{rev.highwaterResponse}&quot;
                           </p>
@@ -587,7 +603,9 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
 
                         {/* Constructive Pivot */}
                         <div className="space-y-1.5">
-                          <div className="text-[9px] font-sans font-bold uppercase tracking-wider text-[#C96A42]">Constructive Pivot</div>
+                          <div className="text-[9px] font-sans font-bold uppercase tracking-wider text-[#C96A42]">
+                            {isPoem ? 'Constructive Pivot (Poetic Polish)' : 'Constructive Pivot (Craft Revision)'}
+                          </div>
                           <p className="text-xs sm:text-sm text-ink/80 leading-relaxed font-serif bg-cream/10 p-4 rounded-2xl border border-sage/5 italic">
                             &quot;{rev.pivotResponse}&quot;
                           </p>

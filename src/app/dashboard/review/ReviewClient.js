@@ -51,16 +51,40 @@ export default function ReviewClient() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewResult, setReviewResult] = useState(null);
 
-  // Available Strengths options
-  const strengthOptions = [
+  // Differentiated Rubrics for Stories vs. Poetry
+  const storyStrengthOptions = [
     { id: 'voice', label: 'Narrative Voice' },
-    { id: 'dialogue', label: 'Dialogue & Rhythm' },
+    { id: 'dialogue', label: 'Dialogue & Subtext' },
     { id: 'world_building', label: 'World-Building' },
     { id: 'pacing', label: 'Narrative Pacing' },
-    { id: 'emotional_impact', label: 'Emotional Impact' },
-    { id: 'character_dev', label: 'Character Development' },
+    { id: 'emotional_impact', label: 'Emotional Resonance' },
+    { id: 'character_dev', label: 'Character Arc' },
     { id: 'prose', label: 'Sentence Prose' },
-    { id: 'theme', label: 'Thematic Depth' }
+    { id: 'theme', label: 'Theme & Moral Depth' }
+  ];
+
+  const poemStrengthOptions = [
+    { id: 'musicality', label: 'Musicality & Meter' },
+    { id: 'imagery', label: 'Sensory Imagery & Metaphor' },
+    { id: 'line_breaks', label: 'Line Breaks & Enjambment' },
+    { id: 'volta', label: 'The Volta (The Turn)' },
+    { id: 'diction', label: 'Diction & Economy' },
+    { id: 'stanza', label: 'Stanza Architecture' },
+    { id: 'emotional_impact', label: 'Emotional Resonance' },
+    { id: 'theme', label: 'Theme & Emotional Core' }
+  ];
+
+  const storyPacingOptions = [
+    { id: 'rushed', label: 'Rushed' },
+    { id: 'balanced', label: 'Balanced' },
+    { id: 'dragging', label: 'Dragging' }
+  ];
+
+  const poemCadenceOptions = [
+    { id: 'melodic', label: 'Lyrical / Melodic' },
+    { id: 'staccato', label: 'Sharp / Staccato' },
+    { id: 'measured', label: 'Measured / Slow' },
+    { id: 'conversational', label: 'Freeform / Conversational' }
   ];
 
   // Load Queue of 3 blind cards
@@ -125,6 +149,11 @@ export default function ReviewClient() {
       const data = await res.json();
       if (data.success && data.submission) {
         setSelectedSubmission(data.submission);
+        setPacingRating('');
+        setStrengthsArray([]);
+        setMirrorResponse('');
+        setHighwaterResponse('');
+        setPivotResponse('');
       } else {
         setError(data.error || 'Failed to retrieve manuscript body.');
       }
@@ -158,9 +187,12 @@ export default function ReviewClient() {
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     
+    const isPoem = (selectedSubmission?.genre || '').toLowerCase().includes('poem') || 
+                   (selectedSubmission?.genre || '').toLowerCase() === 'poetry';
+
     // Explicit Validation Warnings for Users
     if (!pacingRating) {
-      setError("Please select a Narrative Pacing rating.");
+      setError(isPoem ? "Please select a Cadence & Rhythm rating." : "Please select a Narrative Pacing rating.");
       return;
     }
     if (strengthsArray.length === 0) {
@@ -168,27 +200,27 @@ export default function ReviewClient() {
       return;
     }
     if (!mirrorResponse.trim()) {
-      setError("Please provide a Perception (Theme) analysis.");
+      setError(isPoem ? "Please provide a Theme & Emotional Truth reflection." : "Please provide a Perception (Theme & Message) analysis.");
       return;
     }
     if (mirrorWordCount < 10) {
-      setError(`The Perception (Theme) analysis must be at least 10 words (currently ${mirrorWordCount}/10 words).`);
+      setError(`${isPoem ? "The Theme reflection" : "The Perception (Theme) analysis"} must be at least 10 words (currently ${mirrorWordCount}/10 words).`);
       return;
     }
     if (!highwaterResponse.trim()) {
-      setError("Please provide a Climax (Standout Moment) analysis.");
+      setError(isPoem ? "Please quote a standout line or stanza (Highwater Mark)." : "Please provide a Climax (Standout Moment) analysis.");
       return;
     }
     if (highwaterWordCount < 10) {
-      setError(`The Climax (Standout Moment) analysis must be at least 10 words (currently ${highwaterWordCount}/10 words).`);
+      setError(`${isPoem ? "The Standout Line / Volta reflection" : "The Climax (Standout Moment) analysis"} must be at least 10 words (currently ${highwaterWordCount}/10 words).`);
       return;
     }
     if (!pivotResponse.trim()) {
-      setError("Please provide Constructive Feedback.");
+      setError(isPoem ? "Please offer poetic craft feedback." : "Please provide Constructive Feedback.");
       return;
     }
     if (pivotWordCount < 10) {
-      setError(`The Constructive Feedback must be at least 10 words (currently ${pivotWordCount}/10 words).`);
+      setError(`${isPoem ? "The Poetic Craft feedback" : "The Constructive Feedback"} must be at least 10 words (currently ${pivotWordCount}/10 words).`);
       return;
     }
     const totalWords = mirrorWordCount + highwaterWordCount + pivotWordCount;
@@ -385,133 +417,159 @@ export default function ReviewClient() {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmitReview} className="space-y-6">
-                {/* 1. Narrative Pacing */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-ink uppercase tracking-wider block">1. Narrative Pacing</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['rushed', 'balanced', 'dragging'].map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => setPacingRating(option)}
-                        className={`py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
-                          pacingRating === option
-                            ? 'bg-burgundy border-burgundy text-cream shadow-sm'
-                            : 'bg-cream/40 border-sage/20 text-ink/60 hover:bg-sage/5'
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              {(() => {
+                const isPoem = (selectedSubmission?.genre || '').toLowerCase().includes('poem') || 
+                               (selectedSubmission?.genre || '').toLowerCase() === 'poetry';
+                const currentStrengthOptions = isPoem ? poemStrengthOptions : storyStrengthOptions;
 
-                {/* 2. Standout Elements */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-ink uppercase tracking-wider block">2. Standout Elements (Select 1+)</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {strengthOptions.map((opt) => {
-                      const active = strengthsArray.includes(opt.id);
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => handleStrengthToggle(opt.id)}
-                          className={`p-2.5 rounded-xl border text-left text-xs font-medium transition-all flex items-center justify-between ${
-                            active
-                              ? 'bg-sage/15 border-sage text-sage font-bold'
-                              : 'bg-cream/20 border-sage/10 text-ink/70 hover:bg-sage/5'
-                          }`}
-                        >
-                          <span>{opt.label}</span>
-                          {active && <Check size={12} className="text-sage" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                return (
+                  <form onSubmit={handleSubmitReview} className="space-y-6">
+                    {/* 1. Cadence / Pacing */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-ink uppercase tracking-wider block">
+                        {isPoem ? '1. Cadence & Rhythm' : '1. Narrative Pacing'}
+                      </label>
+                      <div className={isPoem ? "grid grid-cols-2 sm:grid-cols-4 gap-2" : "grid grid-cols-3 gap-2"}>
+                        {(isPoem ? poemCadenceOptions : storyPacingOptions).map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => setPacingRating(option.id)}
+                            className={`py-2 px-1 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all text-center ${
+                              pacingRating === option.id
+                                ? 'bg-burgundy border-burgundy text-cream shadow-sm'
+                                : 'bg-cream/40 border-sage/20 text-ink/60 hover:bg-sage/5'
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-                {/* 3. Perception Theme Comprehension */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-baseline">
-                    <label className="text-xs font-bold text-ink uppercase tracking-wider">3. Perception (Theme)</label>
-                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
-                      mirrorWordCount >= 10 ? 'bg-accent/20 text-burgundy' : 'bg-cream border border-sage/10 text-ink/40'
-                    }`}>
-                      {mirrorWordCount >= 10 ? `✅ ${mirrorWordCount} words` : `${mirrorWordCount} / 10 words min`}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-ink/50 leading-relaxed italic">
-                    How did you interpret the core theme or message of this manuscript?
-                  </p>
-                  <textarea
-                    rows="3"
-                    value={mirrorResponse}
-                    onChange={(e) => setMirrorResponse(e.target.value)}
-                    placeholder="Provide a detailed assessment of your perception of the piece's themes..."
-                    className="w-full bg-cream/20 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy placeholder-ink/30 text-ink leading-relaxed"
-                  />
-                </div>
+                    {/* 2. Standout Elements */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-ink uppercase tracking-wider block">2. Standout Elements (Select 1+)</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {currentStrengthOptions.map((opt) => {
+                          const active = strengthsArray.includes(opt.id);
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => handleStrengthToggle(opt.id)}
+                              className={`p-2.5 rounded-xl border text-left text-xs font-medium transition-all flex items-center justify-between ${
+                                active
+                                  ? 'bg-sage/15 border-sage text-sage font-bold'
+                                  : 'bg-cream/20 border-sage/10 text-ink/70 hover:bg-sage/5'
+                              }`}
+                            >
+                              <span>{opt.label}</span>
+                              {active && <Check size={12} className="text-sage" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                {/* 4. Climax Standout Moment */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-baseline">
-                    <label className="text-xs font-bold text-ink uppercase tracking-wider">4. Climax (Standout Moment)</label>
-                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
-                      highwaterWordCount >= 10 ? 'bg-accent/20 text-burgundy' : 'bg-cream border border-sage/10 text-ink/40'
-                    }`}>
-                      {highwaterWordCount >= 10 ? `✅ ${highwaterWordCount} words` : `${highwaterWordCount} / 10 words min`}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-ink/50 leading-relaxed italic">
-                    Quote the exact line, stanza, or climax moment that had the highest impact, and why.
-                  </p>
-                  <textarea
-                    rows="3"
-                    value={highwaterResponse}
-                    onChange={(e) => setHighwaterResponse(e.target.value)}
-                    placeholder="Highlight specific phrases or climax moments and describe their resonance..."
-                    className="w-full bg-cream/20 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy placeholder-ink/30 text-ink leading-relaxed"
-                  />
-                </div>
+                    {/* 3. Perception / Theme */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-baseline">
+                        <label className="text-xs font-bold text-ink uppercase tracking-wider">
+                          {isPoem ? '3. Theme & Emotional Truth (The Mirror)' : '3. Perception (Theme & Message)'}
+                        </label>
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
+                          mirrorWordCount >= 10 ? 'bg-accent/20 text-burgundy' : 'bg-cream border border-sage/10 text-ink/40'
+                        }`}>
+                          {mirrorWordCount >= 10 ? `✅ ${mirrorWordCount} words` : `${mirrorWordCount} / 10 words min`}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-ink/50 leading-relaxed italic">
+                        {isPoem 
+                          ? 'What central emotion, truth, or message did this poem illuminate for you?' 
+                          : 'How did you interpret the central theme, moral tension, or message of this manuscript?'}
+                      </p>
+                      <textarea
+                        rows="3"
+                        value={mirrorResponse}
+                        onChange={(e) => setMirrorResponse(e.target.value)}
+                        placeholder={isPoem 
+                          ? "Describe the core emotional truth, philosophy, or message of this poem..." 
+                          : "Provide a detailed assessment of your perception of the piece's themes and message..."}
+                        className="w-full bg-cream/20 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy placeholder-ink/30 text-ink leading-relaxed"
+                      />
+                    </div>
 
-                {/* 5. Constructive Feedback */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-baseline">
-                    <label className="text-xs font-bold text-ink uppercase tracking-wider">5. Constructive Feedback</label>
-                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
-                      pivotWordCount >= 10 ? 'bg-accent/20 text-burgundy' : 'bg-cream border border-sage/10 text-ink/40'
-                    }`}>
-                      {pivotWordCount >= 10 ? `✅ ${pivotWordCount} words` : `${pivotWordCount} / 10 words min`}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-ink/50 leading-relaxed italic">
-                    Identify one specific structural or phrasing revision that would elevate this draft.
-                  </p>
-                  <textarea
-                    rows="3"
-                    value={pivotResponse}
-                    onChange={(e) => setPivotResponse(e.target.value)}
-                    placeholder="Offer constructive feedback on what to target for revision..."
-                    className="w-full bg-cream/20 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy placeholder-ink/30 text-ink leading-relaxed"
-                  />
-                </div>
+                    {/* 4. Standout Moment / Volta */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-baseline">
+                        <label className="text-xs font-bold text-ink uppercase tracking-wider">
+                          {isPoem ? '4. Standout Stanza / Volta (Highwater Mark)' : '4. Climax & Standout Moment (Highwater Mark)'}
+                        </label>
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
+                          highwaterWordCount >= 10 ? 'bg-accent/20 text-burgundy' : 'bg-cream border border-sage/10 text-ink/40'
+                        }`}>
+                          {highwaterWordCount >= 10 ? `✅ ${highwaterWordCount} words` : `${highwaterWordCount} / 10 words min`}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-ink/50 leading-relaxed italic">
+                        {isPoem 
+                          ? 'Quote the exact line, stanza, or volta (turn) that resonated deepest, and why.' 
+                          : 'Quote the exact line, stanza, or climax moment that had the highest impact, and why.'}
+                      </p>
+                      <textarea
+                        rows="3"
+                        value={highwaterResponse}
+                        onChange={(e) => setHighwaterResponse(e.target.value)}
+                        placeholder={isPoem 
+                          ? "Quote specific phrases or stanzas and describe their poetic resonance..." 
+                          : "Highlight specific phrases or climax moments and describe their resonance..."}
+                        className="w-full bg-cream/20 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy placeholder-ink/30 text-ink leading-relaxed"
+                      />
+                    </div>
 
-                {/* Total Word Count Ticker */}
-                <div className="flex justify-between items-center text-[10px] px-1 font-mono pt-1">
-                  <span className="text-ink/50 uppercase tracking-widest font-bold">Total Critique Length</span>
-                  <span className={`font-bold ${
-                    (mirrorWordCount + highwaterWordCount + pivotWordCount) >= 30 
-                      ? 'text-burgundy' 
-                      : 'text-ink/40'
-                  }`}>
-                    {(mirrorWordCount + highwaterWordCount + pivotWordCount) >= 30 ? '✅ ' : ''}
-                    {mirrorWordCount + highwaterWordCount + pivotWordCount} / 30 words min
-                  </span>
-                </div>
+                    {/* 5. Constructive Feedback */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-baseline">
+                        <label className="text-xs font-bold text-ink uppercase tracking-wider">
+                          {isPoem ? '5. Poetic Craft Polish (Constructive Pivot)' : '5. Constructive Revision (Constructive Pivot)'}
+                        </label>
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
+                          pivotWordCount >= 10 ? 'bg-accent/20 text-burgundy' : 'bg-cream border border-sage/10 text-ink/40'
+                        }`}>
+                          {pivotWordCount >= 10 ? `✅ ${pivotWordCount} words` : `${pivotWordCount} / 10 words min`}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-ink/50 leading-relaxed italic">
+                        {isPoem 
+                          ? 'Identify one specific line break, rhythm irregularity, or metaphor to sharpen or polish.' 
+                          : 'Identify one specific structural or phrasing revision that would elevate this draft.'}
+                      </p>
+                      <textarea
+                        rows="3"
+                        value={pivotResponse}
+                        onChange={(e) => setPivotResponse(e.target.value)}
+                        placeholder={isPoem 
+                          ? "Offer constructive feedback on lineation, cadence, or imagery to elevate the poem..." 
+                          : "Offer constructive feedback on what to target for revision..."}
+                        className="w-full bg-cream/20 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy placeholder-ink/30 text-ink leading-relaxed"
+                      />
+                    </div>
 
-                {/* 6. Support the Author with Leaves (Tipping) */}
+                    {/* Total Word Count Ticker */}
+                    <div className="flex justify-between items-center text-[10px] px-1 font-mono pt-1">
+                      <span className="text-ink/50 uppercase tracking-widest font-bold">Total Critique Length</span>
+                      <span className={`font-bold ${
+                        (mirrorWordCount + highwaterWordCount + pivotWordCount) >= 30 
+                          ? 'text-burgundy' 
+                          : 'text-ink/40'
+                      }`}>
+                        {(mirrorWordCount + highwaterWordCount + pivotWordCount) >= 30 ? '✅ ' : ''}
+                        {mirrorWordCount + highwaterWordCount + pivotWordCount} / 30 words min
+                      </span>
+                    </div>
+
+                    {/* 6. Support the Author with Leaves (Tipping) */}
                 {profile && profile.spendableLeaves > 0 && (
                   <div className="bg-[#FAF6F0] border border-sage/20 rounded-2xl p-5 space-y-3">
                     <div className="flex justify-between items-center">
@@ -576,6 +634,8 @@ export default function ReviewClient() {
                   {submittingReview ? 'Submitting Critique...' : 'Submit Critique'}
                 </button>
               </form>
+            );
+          })()}
             </div>
           </div>
         </div>
