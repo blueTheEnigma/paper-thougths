@@ -57,6 +57,7 @@ export async function GET(request) {
         g.first_herald_claimed_at as "firstHeraldClaimedAt",
         fh.full_name as "firstHeraldName",
         fh.lk_id as "firstHeraldLkId",
+        fh.instagram as "firstHeraldInstagram",
         COUNT(DISTINCT r.id)::int as "rsvpCount",
         COUNT(DISTINCT a.id)::int as "attendanceCount",
         CASE 
@@ -77,7 +78,7 @@ export async function GET(request) {
       LEFT JOIN gathering_rsvps r ON r.gathering_id = g.id
       LEFT JOIN gathering_attendances a ON a.gathering_id = g.id
       WHERE ${statusCondition}
-      GROUP BY g.id, c.name, fh.full_name, fh.lk_id
+      GROUP BY g.id, c.name, fh.full_name, fh.lk_id, fh.instagram
       ORDER BY g.event_date ASC, g.start_time ASC
     `;
 

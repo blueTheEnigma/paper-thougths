@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calendar, Clock, MapPin, Users, Award, Crown, CheckCircle, 
@@ -9,6 +10,11 @@ import {
 } from 'lucide-react';
 
 export default function AdminGatheringsTab({ initialGatherings = [], chapters = [], members = [] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [gatherings, setGatherings] = useState(initialGatherings);
   const [loading, setLoading] = useState(false);
   const [selectedGathering, setSelectedGathering] = useState(null);
@@ -177,32 +183,36 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
   };
 
   const buildWhatsAppMessage = (gathering, list = []) => {
-    if (!gathering) return '';
-    const top5 = list.slice(0, 5);
-    const formatKinHandle = (kin) => {
-      if (!kin) return 'The Kin';
-      const raw = kin.instagram ? kin.instagram.trim().replace(/^@/, '') : '';
-      const isDummy = !raw || ['non', 'none', 'n/a', 'na', 'nil', 'null', 'no', '-', '--'].includes(raw.toLowerCase());
-      if (!isDummy) return `@${raw}`;
-      return kin.name || kin.attendeeName || kin.handle || 'The Kin';
-    };
+    try {
+      if (!gathering) return '';
+      const safeList = Array.isArray(list) ? list : [];
+      const top5 = safeList.slice(0, 5);
+      const corona = safeList.find(v => v.isCoronaMuralis) || top5[0];
 
-    const herald = gathering.firstHeraldInstagram && !['non', 'none', 'n/a', 'nil'].includes(gathering.firstHeraldInstagram.trim().toLowerCase().replace('@', ''))
-      ? `@${gathering.firstHeraldInstagram.replace('@', '')}` 
-      : (gathering.firstHeraldName || 'Claimed');
-    
-    const moderator = gathering.moderatorName 
-      ? gathering.moderatorName.replace(/^@/, '')
-      : 'Grand Custodians';
+      const formatKinHandle = (kin) => {
+        if (!kin) return 'The Kin';
+        const raw = kin.instagram ? String(kin.instagram).trim().replace(/^@/, '') : '';
+        const isDummy = !raw || ['non', 'none', 'n/a', 'na', 'nil', 'null', 'no', '-', '--'].includes(raw.toLowerCase());
+        if (!isDummy) return `@${raw}`;
+        return kin.name || kin.attendeeName || kin.handle || 'The Kin';
+      };
 
-    const vanguardText = top5.map((v, i) => {
-      const handle = formatKinHandle(v);
-      const crown = i === 0 ? '👑 (+25 Leaves)' : '🛡️ (+10 Leaves)';
-      return `${i + 1}. ${handle} ${crown}`;
-    }).join('\n');
+      const herald = gathering.firstHeraldInstagram && !['non', 'none', 'n/a', 'nil'].includes(String(gathering.firstHeraldInstagram).trim().toLowerCase().replace('@', ''))
+        ? `@${String(gathering.firstHeraldInstagram).replace(/^@/, '')}` 
+        : (gathering.firstHeraldName || 'Claimed');
+      
+      const moderator = gathering.moderatorName 
+        ? String(gathering.moderatorName).replace(/^@/, '')
+        : 'Grand Custodians';
 
-    return `🏛️ *PAPER THOUGHTS SANCTUARY — ROLL OF HONOR* 🏛️
-*Gathering:* ${gathering.title}
+      const vanguardText = top5.map((v, i) => {
+        const handle = formatKinHandle(v);
+        const crown = i === 0 ? '👑 (+25 Leaves)' : '🛡️ (+10 Leaves)';
+        return `${i + 1}. ${handle} ${crown}`;
+      }).join('\n');
+
+      return `🏛️ *PAPER THOUGHTS SANCTUARY — ROLL OF HONOR* 🏛️
+*Gathering:* ${gathering.title || 'Paper Thoughts Gathering'}
 
 *"The first man over the wall holds the standard for all who follow."*
 
@@ -218,10 +228,14 @@ ${vanguardText || '1. Verified by Grand Custodians'}
 ⚖️ *GRAND CUSTODIANS (Hosts & Moderators):*
 ✦ ${moderator}
 
-To the ${list.length} kindred spirits who answered the summons tonight: we live in the lines.
+To the ${safeList.length} kindred spirits who answered the summons tonight: we live in the lines.
 The next gathering card drops this weekend on the Archive. Be ready.
 
 👉 View the Archive Ledger: https://www.paperthoughts.org/events`;
+    } catch (e) {
+      console.error('Error generating WhatsApp message:', e);
+      return '';
+    }
   };
 
   const openGatheringDetails = async (g) => {
@@ -237,6 +251,8 @@ The next gathering card drops this weekend on the Archive. Be ready.
         setWhatsappBroadcast(buildWhatsAppMessage(g, list));
         const initialTop5 = list.slice(0, 5).map(a => a.id);
         setReorderedVanguardIds(initialTop5);
+      } else {
+        console.error('Failed to load gathering details:', data.error);
       }
     } catch (err) {
       console.error('Failed to load gathering details:', err);
@@ -840,7 +856,7 @@ The next gathering card drops this weekend on the Archive. Be ready.
       </div>
 
       {/* War Room & Corroboration Drawer / Modal */}
-      {selectedGathering && (
+      {mounted && typeof document !== 'undefined' && selectedGathering && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -1213,11 +1229,12 @@ The next gathering card drops this weekend on the Archive. Be ready.
               </div>
             ) : null}
           </motion.div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Edit Gathering Modal */}
-      {isEditOpen && editFormData && (
+      {mounted && typeof document !== 'undefined' && isEditOpen && editFormData && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -1547,11 +1564,12 @@ The next gathering card drops this weekend on the Archive. Be ready.
               </div>
             </form>
           </motion.div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* New Gathering Scheduler Modal */}
-      {isCreateOpen && (
+      {mounted && typeof document !== 'undefined' && isCreateOpen && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -1874,11 +1892,12 @@ The next gathering card drops this weekend on the Archive. Be ready.
               </button>
             </form>
           </motion.div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* WhatsApp Photo Proof Viewer Modal */}
-      {photoViewerUrl && (
+      {mounted && typeof document !== 'undefined' && photoViewerUrl && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
           <div className="bg-white rounded-3xl p-6 max-w-lg w-full relative">
             <button
@@ -1892,7 +1911,8 @@ The next gathering card drops this weekend on the Archive. Be ready.
               <img src={photoViewerUrl} alt="WhatsApp Proof" className="max-h-full max-w-full object-contain" />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

@@ -40,6 +40,7 @@ export async function GET(request, { params }) {
         g.first_herald_claimed_at as "firstHeraldClaimedAt",
         fh.full_name as "firstHeraldName",
         fh.lk_id as "firstHeraldLkId",
+        fh.instagram as "firstHeraldInstagram",
         COUNT(DISTINCT r.id)::int as "rsvpCount",
         COUNT(DISTINCT a.id)::int as "attendanceCount"
       FROM gatherings g
@@ -48,7 +49,7 @@ export async function GET(request, { params }) {
       LEFT JOIN gathering_rsvps r ON r.gathering_id = g.id
       LEFT JOIN gathering_attendances a ON a.gathering_id = g.id
       WHERE g.id = $1
-      GROUP BY g.id, c.name, fh.full_name, fh.lk_id
+      GROUP BY g.id, c.name, fh.full_name, fh.lk_id, fh.instagram
     `;
 
     const gathering = await Database.queryOne(query, [gatheringId]);
