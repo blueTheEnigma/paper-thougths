@@ -1402,6 +1402,40 @@ export default function DashboardClient({
         </motion.div>
       )}
 
+      {/* Living Anthology Monthly Laureates Announcement Banner */}
+      <div className="max-w-6xl mx-auto mb-8">
+        <Link 
+          href="/anthology" 
+          className="block p-5 sm:p-6 rounded-[24px] bg-gradient-to-r from-[#20070e] via-[#3d0f1c] to-[#20070e] text-[#FBF7EE] border border-[#c96a42]/40 shadow-lg hover:border-[#c96a42] transition-all group relative overflow-hidden"
+        >
+          <div className="absolute -right-16 -bottom-16 w-48 h-48 bg-[#c96a42]/20 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+            <div className="flex items-center gap-4">
+              <span className="w-12 h-12 rounded-2xl bg-[#c96a42]/25 border border-[#c96a42]/40 text-[#F2A98A] flex items-center justify-center text-2xl shrink-0">
+                🌿
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-mono tracking-widest uppercase font-bold text-[#F2A98A] bg-[#F2A98A]/10 px-2.5 py-0.5 rounded-full">
+                    The Living Anthology
+                  </span>
+                  <span className="w-2 h-2 rounded-full bg-[#c96a42] animate-ping" />
+                </div>
+                <h3 className="font-serif text-lg sm:text-xl font-bold text-[#FBF7EE] mt-1">
+                  Monthly Laureates Revealed ✨
+                </h3>
+                <p className="text-xs sm:text-sm text-[#FBF7EE]/80 mt-0.5 font-medium leading-relaxed">
+                  The Chief Editorial Desk has crowned the top Short Stories and Poems for this cycle. Read the inducted manuscripts and celebrate our writers.
+                </p>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#F2A98A] group-hover:translate-x-1 transition-transform self-end sm:self-center shrink-0 bg-[#c96a42]/20 px-4 py-2.5 rounded-xl border border-[#c96a42]/30">
+              Read The Laureates →
+            </span>
+          </div>
+        </Link>
+      </div>
+
       {/* Hidden 500 Lifetime Leaves Milestone Voucher Modal Celebration */}
       <AnimatePresence>
         {showMilestoneModal && (

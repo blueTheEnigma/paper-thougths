@@ -14,9 +14,24 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const genre = searchParams.get('genre');
     const search = searchParams.get('search');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '40', 10), 100);
+    const monthYear = searchParams.get('monthYear'); // '2026-10', 'all', or null
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
 
     const currentUserId = dbUser ? dbUser.id : -1;
+
+    // Fetch available distinct cycle months for the archive selector
+    const monthsRes = await Database.query(`
+      SELECT DISTINCT cycle_month 
+      FROM submissions 
+      WHERE cycle_month IS NOT NULL AND batch_status IN ('active_batch', 'archived')
+      ORDER BY cycle_month DESC
+    `);
+    const availableMonths = monthsRes.map(m => m.cycle_month).filter(Boolean);
+
+    // Active cycle month to filter by (default to latest cycle month if not 'all' and not specified)
+    const activeCycle = monthYear === 'all' 
+      ? null 
+      : (monthYear || (availableMonths.length > 0 ? availableMonths[0] : null));
 
     let queryText = `
       SELECT 
@@ -28,6 +43,8 @@ export async function GET(request) {
         s.pen_name as "penName",
         s.batch_status as "batchStatus",
         s.has_laurel as "hasLaurel",
+        s.anthology_inducted as "anthologyInducted",
+        s.cycle_month as "cycleMonth",
         s.created_at as "createdAt",
         u.full_name as "authorFullName",
         u.avatar_url as "authorAvatarUrl",
@@ -44,6 +61,11 @@ export async function GET(request) {
     `;
 
     const queryParams = [currentUserId];
+
+    if (activeCycle) {
+      queryParams.push(activeCycle);
+      queryText += ` AND s.cycle_month = $${queryParams.length}`;
+    }
 
     if (genre && genre !== 'All') {
       queryParams.push(genre);
@@ -62,6 +84,8 @@ export async function GET(request) {
 
     return NextResponse.json({
       success: true,
+      selectedCycle: activeCycle || 'all',
+      availableMonths,
       submissions: submissions.map(s => ({
         id: s.id,
         title: s.title,
@@ -72,7 +96,9 @@ export async function GET(request) {
         displayName: s.displayName,
         authorAvatarUrl: s.authorAvatarUrl,
         authorArchetype: s.authorArchetype,
-        hasLaurel: s.hasLaurel,
+        hasLaurel: !!s.hasLaurel,
+        anthologyInducted: !!s.anthologyInducted,
+        cycleMonth: s.cycleMonth,
         createdAt: s.createdAt,
         likeCount: parseInt(s.likeCount || 0, 10),
         commentCount: parseInt(s.commentCount || 0, 10),

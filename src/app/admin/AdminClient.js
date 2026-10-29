@@ -5,12 +5,13 @@ import {
   Users, BookOpen, ShoppingBag, MapPin, Search, ShieldAlert, 
   CheckCircle, ArrowLeft, RefreshCw, Star, Gift, Flame, AlertCircle, 
   TrendingUp, Settings, ExternalLink, Archive, FileText, Shield, X, Loader2,
-  Book, Cake, MessageCircle, Award, Quote, Calendar
+  Book, Cake, MessageCircle, Award, Quote, Calendar, Feather
 } from 'lucide-react';
 import Link from 'next/link';
 import AdminQuotesTab from '@/components/admin/AdminQuotesTab';
 import AdminCrucibleTab from '@/components/admin/AdminCrucibleTab';
 import AdminGatheringsTab from '@/components/admin/AdminGatheringsTab';
+import AdminEditorialTab from '@/components/admin/AdminEditorialTab';
 
 const formatDate = (dateVal) => {
   if (!dateVal) return 'N/A';
@@ -45,6 +46,7 @@ export default function AdminClient({
 }) {
   const allTabs = [
     { id: 'gatherings', label: 'Events & Rituals 🏛️', icon: Calendar },
+    { id: 'editorial', label: "Editor's Desk 🌿", icon: Feather },
     { id: 'members', label: 'Members Ledger', icon: Users },
     { id: 'crucible', label: 'Crucible & Evictions ⚖️', icon: ShieldAlert },
     { id: 'submissions', label: 'Submissions Moderation', icon: BookOpen },
@@ -67,6 +69,7 @@ export default function AdminClient({
         return permissions.includes('community_manager') || isCommunityManager;
       case 'crucible':
         return permissions.includes('manage_crucible') || permissions.includes('community_manager') || isCommunityManager;
+      case 'editorial':
       case 'submissions':
       case 'quotes':
       case 'prompts':
@@ -632,6 +635,18 @@ export default function AdminClient({
                     </tbody>
                   </table>
                 </div>
+              </motion.div>
+            )}
+
+            {/* EDITORIAL DESK & ANTHOLOGY */}
+            {activeTab === 'editorial' && (
+              <motion.div
+                key="editorial"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <AdminEditorialTab isSuperadmin={isSuperadmin} />
               </motion.div>
             )}
 

@@ -34,6 +34,8 @@ export default function GalleryClient({ currentUser }) {
   const [loadingComments, setLoadingComments] = useState(false);
 
   const [activeCategory, setActiveCategory] = useState('all'); // 'all' | 'stories' | 'poetry'
+  const [availableMonths, setAvailableMonths] = useState([]);
+  const [selectedCycleMonth, setSelectedCycleMonth] = useState('');
 
   // Filter submissions by category and genre
   const filteredSubmissions = submissions.filter((sub) => {
@@ -59,18 +61,21 @@ export default function GalleryClient({ currentUser }) {
       const params = new URLSearchParams();
       if (selectedGenre !== 'All') params.set('genre', selectedGenre);
       if (searchQuery.trim()) params.set('search', searchQuery.trim());
+      if (selectedCycleMonth) params.set('monthYear', selectedCycleMonth);
 
       const res = await fetch(`/api/submissions/gallery?${params.toString()}`);
       const data = await res.json();
       if (data.success) {
         setSubmissions(data.submissions || []);
+        if (data.availableMonths) setAvailableMonths(data.availableMonths);
+        if (data.selectedCycle && !selectedCycleMonth) setSelectedCycleMonth(data.selectedCycle);
       }
     } catch (err) {
       console.error('Failed to load gallery:', err);
     } finally {
       setLoading(false);
     }
-  }, [selectedGenre, searchQuery]);
+  }, [selectedGenre, searchQuery, selectedCycleMonth]);
 
   useEffect(() => {
     fetchGallery();
@@ -394,6 +399,32 @@ export default function GalleryClient({ currentUser }) {
           </div>
         </div>
 
+        {/* Living Anthology Banner */}
+        <Link 
+          href="/anthology" 
+          className="block p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#20070e] via-[#3d0f1c] to-[#20070e] text-[#FBF7EE] border border-[#c96a42]/40 shadow-sm hover:border-[#c96a42] transition-all group"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-[#c96a42]/20 border border-[#c96a42]/40 text-[#F2A98A] flex items-center justify-center text-lg shrink-0">
+                🌿
+              </span>
+              <div>
+                <p className="text-xs font-bold text-[#F2A98A] uppercase tracking-wider flex items-center gap-1.5">
+                  <span>The Living Anthology Is Live</span>
+                  <span className="w-2 h-2 rounded-full bg-[#c96a42] animate-pulse"></span>
+                </p>
+                <p className="text-xs text-[#FBF7EE]/80 mt-0.5">
+                  Read the monthly Top 3 Short Stories &amp; Poems crowned by the Chief Editorial Desk. Free public access.
+                </p>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#F2A98A] group-hover:translate-x-1 transition-transform self-end sm:self-center">
+              Explore Monthly Laureates →
+            </span>
+          </div>
+        </Link>
+
         {/* Filter Controls: Category Tabs, Search & Genre Pills */}
         <div className="space-y-4">
           {/* Top Category Tabs: All vs Stories vs Poetry */}
@@ -461,6 +492,26 @@ export default function GalleryClient({ currentUser }) {
                 </button>
               )}
             </div>
+
+            {/* Cycle / Month Archive Selector */}
+            {availableMonths.length > 0 && (
+              <div className="flex items-center gap-2 bg-white border border-sage/20 rounded-xl px-3 py-2 shadow-sm text-xs font-bold text-burgundy shrink-0">
+                <span className="text-[10px] uppercase font-mono tracking-wider text-ink/40">Cycle:</span>
+                <select
+                  value={selectedCycleMonth}
+                  onChange={(e) => setSelectedCycleMonth(e.target.value)}
+                  className="bg-transparent focus:outline-none cursor-pointer"
+                >
+                  <option value="">Current ({availableMonths[0]})</option>
+                  {availableMonths.map((m) => (
+                    <option key={m} value={m}>
+                      {m} Archive
+                    </option>
+                  ))}
+                  <option value="all">All Seasons &amp; Archives</option>
+                </select>
+              </div>
+            )}
 
             {/* Quick Count Badge */}
             <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono text-ink/50 bg-white/70 border border-sage/15 px-3 py-2 rounded-xl">
