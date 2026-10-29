@@ -794,6 +794,14 @@ The next gathering card drops this weekend on the Archive. Be ready.
                           Conclude
                         </button>
                       )}
+                      {g.status === 'concluded' && (
+                        <button
+                          onClick={() => handleUpdateStatus(g.id, 'live')}
+                          className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 transition-colors"
+                        >
+                          Reopen 🔄
+                        </button>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -889,9 +897,46 @@ The next gathering card drops this weekend on the Archive. Be ready.
             <h3 className="text-2xl font-display text-[#20070e] mb-1">
               {selectedGathering.title}
             </h3>
-            <p className="text-xs text-[#120308]/60 mb-4 font-serif">
-              Status: <span className="font-bold uppercase text-[#c96a42]">{selectedGathering.status}</span> • Platform: <span className="font-bold text-[#20070e]">{selectedGathering.venueName || 'Virtual'}</span>
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <p className="text-xs text-[#120308]/60 font-serif">
+                Status: <span className={`font-bold uppercase ${selectedGathering.status === 'live' ? 'text-red-600 animate-pulse' : selectedGathering.status === 'concluded' ? 'text-black/60' : 'text-emerald-700'}`}>{selectedGathering.status}</span> • Platform: <span className="font-bold text-[#20070e]">{selectedGathering.venueName || 'Virtual'}</span>
+              </p>
+              <div className="flex items-center gap-2">
+                {selectedGathering.status === 'published' && (
+                  <button
+                    onClick={async () => {
+                      await handleUpdateStatus(selectedGathering.id, 'live');
+                      setSelectedGathering(prev => ({ ...prev, status: 'live' }));
+                    }}
+                    className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-[#c96a42] text-white hover:bg-[#20070e] transition-colors"
+                  >
+                    Go Live 🔴
+                  </button>
+                )}
+                {selectedGathering.status === 'live' && (
+                  <button
+                    onClick={async () => {
+                      await handleUpdateStatus(selectedGathering.id, 'concluded');
+                      setSelectedGathering(prev => ({ ...prev, status: 'concluded' }));
+                    }}
+                    className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-black/80 text-white hover:bg-black transition-colors"
+                  >
+                    Conclude Meeting ⏹️
+                  </button>
+                )}
+                {selectedGathering.status === 'concluded' && (
+                  <button
+                    onClick={async () => {
+                      await handleUpdateStatus(selectedGathering.id, 'live');
+                      setSelectedGathering(prev => ({ ...prev, status: 'live' }));
+                    }}
+                    className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 transition-colors"
+                  >
+                    Reopen for Attendance 🔄
+                  </button>
+                )}
+              </div>
+            </div>
 
             {/* Direct Attendance Link Card */}
             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#20070e] to-[#2c0a13] text-[#FBF7EE] shadow-lg flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6 border border-[#c96a42]/30">
