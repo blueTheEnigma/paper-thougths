@@ -3,6 +3,23 @@
 import React, { useState } from 'react';
 import { Download, Copy, Check, RotateCw, BookOpen } from 'lucide-react';
 import { ARCHETYPES } from '@/lib/archetypesData';
+import { SIGNS } from '@/lib/zodiacData';
+
+// Resolve archetype or zodiac title cleanly
+const formatAuthorBadge = (val) => {
+  if (!val) return null;
+  const raw = String(val).trim();
+  const lower = raw.toLowerCase();
+  if (['writer', 'member', 'reader', 'author'].includes(lower)) return null;
+  
+  if (ARCHETYPES[lower]) return ARCHETYPES[lower].name;
+  if (ARCHETYPES[raw]) return ARCHETYPES[raw].name;
+  
+  const signMatch = SIGNS[raw] || Object.values(SIGNS).find(s => s.name.toLowerCase() === lower);
+  if (signMatch) return `${signMatch.name} (Zodiac)`;
+  
+  return raw;
+};
 
 export default function ShareableLaureateCard({
   category = 'Short Story', // 'Short Story' or 'Poetry'
@@ -38,9 +55,7 @@ export default function ShareableLaureateCard({
   const monthDisplay = formatMonthName(monthYear);
 
   // Format clean archetype / chapter display
-  const formattedArchetype = authorArchetype && ARCHETYPES[authorArchetype]
-    ? ARCHETYPES[authorArchetype].name
-    : (authorArchetype && !['writer', 'member', 'reader'].includes(authorArchetype.toLowerCase()) ? authorArchetype : null);
+  const formattedArchetype = formatAuthorBadge(authorArchetype);
 
   const chapterByline = formattedArchetype 
     ? `${chapterName} Chapter · ${formattedArchetype}` 

@@ -39,6 +39,40 @@ export default function AnthologyClient() {
     fetchAnthology(selectedMonth);
   }, [selectedMonth]);
 
+  // Auto-sync Book Zodiac test results from local device to server profile if present
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('pt_zodiac_result');
+      if (stored) {
+        try {
+          const chart = JSON.parse(stored);
+          const primaryArchetype = chart?.sunSign?.archetypeMatches?.[0] || chart?.sunSign?.name?.toLowerCase();
+          if (primaryArchetype) {
+            fetch('/api/archetype', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                archetype: primaryArchetype,
+                zodiacSign: chart?.sunSign?.name,
+                scores: chart?.scores
+              })
+            })
+            .then(res => res.json())
+            .then(resData => {
+              if (resData?.success && resData?.rewarded) {
+                // If newly saved/updated, refresh anthology view so laureate cards reflect the synced archetype
+                fetchAnthology(selectedMonth);
+              }
+            })
+            .catch(() => {});
+          }
+        } catch (e) {
+          console.error("Zodiac sync error:", e);
+        }
+      }
+    }
+  }, [selectedMonth]);
+
   const issue = data?.issue;
   const currentWorks = activeCategory === 'story' ? (issue?.stories || []) : (issue?.poems || []);
 

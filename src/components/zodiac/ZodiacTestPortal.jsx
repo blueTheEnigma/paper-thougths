@@ -34,8 +34,23 @@ export default function ZodiacTestPortal() {
       const savedResult = localStorage.getItem('pt_zodiac_result');
       if (savedResult) {
         try {
-          setChartResult(JSON.parse(savedResult));
+          const parsed = JSON.parse(savedResult);
+          setChartResult(parsed);
           setQuizState('result');
+
+          // Silently sync to PostgreSQL database
+          const primaryArchetype = parsed?.sunSign?.archetypeMatches?.[0] || parsed?.sunSign?.name?.toLowerCase();
+          if (primaryArchetype) {
+            fetch('/api/archetype', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                archetype: primaryArchetype,
+                zodiacSign: parsed?.sunSign?.name,
+                scores: parsed?.scores
+              })
+            }).catch(() => {});
+          }
           return;
         } catch (e) {
           console.error("Failed to parse saved zodiac result", e);
@@ -108,6 +123,21 @@ export default function ZodiacTestPortal() {
         const result = calculateZodiacChart(answers);
         setChartResult(result);
         localStorage.setItem('pt_zodiac_result', JSON.stringify(result));
+
+        // Immediately sync to backend database profile
+        const primaryArchetype = result?.sunSign?.archetypeMatches?.[0] || result?.sunSign?.name?.toLowerCase();
+        if (primaryArchetype) {
+          fetch('/api/archetype', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              archetype: primaryArchetype,
+              zodiacSign: result?.sunSign?.name,
+              scores: result?.scores
+            })
+          }).catch(err => console.error("Could not sync archetype to server:", err));
+        }
+
         setQuizState('result');
         scrollToTop();
       }, 1800);

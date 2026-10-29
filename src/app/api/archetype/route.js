@@ -1,25 +1,50 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
+import { syncOrCreateUser } from '@/lib/permissions';
+import { ARCHETYPES } from '@/lib/archetypesData';
+import { SIGNS } from '@/lib/zodiacData';
 
 export async function POST(request) {
   try {
-    const session = await auth();
-    if (!session || !session.user) {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = parseInt(session.user.id);
-    const body = await request.json();
-    const { archetype } = body;
-
-    if (!archetype) {
-      return NextResponse.json({ success: false, error: 'Archetype is required' }, { status: 400 });
+    const dbUser = await syncOrCreateUser(clerkUser);
+    if (!dbUser) {
+      return NextResponse.json({ success: false, error: 'User sync failed' }, { status: 500 });
     }
 
-    const validArchetypes = ['mood', 'marathon', 'tsundoku', 'completist', 'mourner', 'annotator', 'juggler'];
-    if (!validArchetypes.includes(archetype)) {
-      return NextResponse.json({ success: false, error: 'Invalid archetype' }, { status: 400 });
+    const userId = dbUser.id;
+    const body = await request.json();
+    const { archetype, zodiacSign, scores } = body;
+
+    if (!archetype && !zodiacSign) {
+      return NextResponse.json({ success: false, error: 'Archetype or Zodiac Sign is required' }, { status: 400 });
+    }
+
+    // Determine normalized value to store in reader_archetype
+    // Can be an archetype key (e.g. 'marathon', 'mood', 'researcher') or a zodiac sign key (e.g. 'Sage', 'Titan')
+    let resolvedArchetype = null;
+    const targetKey = (archetype || zodiacSign).toString().trim();
+    const lowerKey = targetKey.toLowerCase();
+
+    if (ARCHETYPES[lowerKey]) {
+      resolvedArchetype = lowerKey;
+    } else if (ARCHETYPES[targetKey]) {
+      resolvedArchetype = targetKey;
+    } else if (SIGNS[targetKey]) {
+      resolvedArchetype = SIGNS[targetKey].name;
+    } else {
+      const signMatch = Object.values(SIGNS).find(s => s.name.toLowerCase() === lowerKey);
+      if (signMatch) {
+        resolvedArchetype = signMatch.name;
+      } else {
+        // Fallback to storing the clean provided string
+        resolvedArchetype = targetKey;
+      }
     }
 
     const result = await Database.transaction(async (client) => {
@@ -45,40 +70,40 @@ export async function POST(request) {
         newLifetime += 10;
         rewarded = true;
 
-        // Update archetype and add leaves
+        // Update archetype and reward leaves
         await client.query(`
           UPDATE users 
           SET reader_archetype = $1, 
               spendable_leaves = $2, 
               lifetime_leaves = $3
           WHERE id = $4
-        `, [archetype, newLeaves, newLifetime, userId]);
+        `, [resolvedArchetype, newLeaves, newLifetime, userId]);
 
         // Insert ledger transaction record
         await client.query(`
           INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
           VALUES ($1, $2, $3, $4)
-        `, [userId, 10, 'archetype_quiz', 'Earned 10 leaves for completing the Reader Archetype Quiz']);
+        `, [userId, 10, 'archetype_quiz', 'Earned 10 leaves for discovering your Literary Archetype & Book Zodiac']);
       } else {
         // Just update archetype
         await client.query(`
           UPDATE users 
           SET reader_archetype = $1
           WHERE id = $2
-        `, [archetype, userId]);
+        `, [resolvedArchetype, userId]);
       }
 
-      return { rewarded, newLeaves };
+      return { rewarded, newLeaves, resolvedArchetype };
     });
 
     return NextResponse.json({
       success: true,
-      archetype,
+      archetype: result.resolvedArchetype,
       rewarded: result.rewarded,
       newLeaves: result.newLeaves,
       message: result.rewarded 
         ? 'Archetype saved! You earned +10 Paper Leaves.' 
-        : 'Archetype updated!'
+        : 'Archetype updated successfully!'
     });
 
   } catch (error) {
@@ -96,14 +121,22 @@ export async function GET(request) {
       return NextResponse.json({ success: false, error: 'Archetype is required' }, { status: 400 });
     }
 
-    const session = await auth();
-    const userId = session?.user?.id ? parseInt(session.user.id) : null;
+    let userId = null;
+    try {
+      const clerkUser = await currentUser();
+      if (clerkUser) {
+        const dbUser = await syncOrCreateUser(clerkUser);
+        userId = dbUser?.id || null;
+      }
+    } catch {
+      // Anonymous user
+    }
 
     let queryText = `
       SELECT u.full_name as "name", u.lk_id as "lkid", c.name as "chapter"
       FROM users u
       LEFT JOIN chapters c ON c.id = u.chapter_id
-      WHERE u.reader_archetype = $1
+      WHERE LOWER(u.reader_archetype) = LOWER($1)
     `;
     const params = [archetype];
 

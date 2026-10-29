@@ -302,13 +302,30 @@ export default function DashboardClient({
       const saved = localStorage.getItem('pt_zodiac_result');
       if (saved) {
         try {
-          setZodiacResult(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          setZodiacResult(parsed);
+
+          // If profile archetype is not yet recorded in DB, auto-sync!
+          if (!profile?.archetype) {
+            const primaryArchetype = parsed?.sunSign?.archetypeMatches?.[0] || parsed?.sunSign?.name?.toLowerCase();
+            if (primaryArchetype) {
+              fetch('/api/archetype', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  archetype: primaryArchetype,
+                  zodiacSign: parsed?.sunSign?.name,
+                  scores: parsed?.scores
+                })
+              }).catch(() => {});
+            }
+          }
         } catch (e) {
           console.error("Failed to parse saved zodiac", e);
         }
       }
     }
-  }, []);
+  }, [profile?.archetype]);
   
   // Profile Form States
   const [fullName, setFullName] = useState(profile?.name || '');
