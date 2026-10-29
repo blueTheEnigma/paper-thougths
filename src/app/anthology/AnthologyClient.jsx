@@ -104,7 +104,7 @@ export default function AnthologyClient() {
                 "{issue.curatorForeword}"
               </p>
               <p className="text-xs font-bold tracking-wider uppercase text-[#20070e]/60 mt-3">
-                — Uche Morgan, Chief Creative Director
+                — Ufuoma Morgan, Chief Creative Director
               </p>
             </div>
           )}
@@ -177,29 +177,9 @@ export default function AnthologyClient() {
                   chapterName={work.chapterName}
                   monthYear={issue?.monthYear}
                   editorCitation={work.editorCitation}
+                  isEditor={false}
                   onReadPiece={() => setReadingPiece(work)}
                 />
-
-                {/* Literary Preview Card */}
-                <div className="bg-white border border-[#20070e]/10 rounded-2xl p-5 space-y-3 shadow-2xs">
-                  <div className="flex items-center justify-between text-[11px] text-[#20070e]/50">
-                    <span className="font-bold uppercase tracking-wider text-[#c96a42]">{work.genre}</span>
-                    <span className="flex items-center gap-1 font-mono">
-                      <Heart size={11} className="text-[#c96a42]" /> {work.likesCount} loves
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-[#20070e]/70 italic line-clamp-3">
-                    "{work.logline}"
-                  </p>
-
-                  <button
-                    onClick={() => setReadingPiece(work)}
-                    className="w-full bg-[#20070e]/5 hover:bg-[#20070e] text-[#20070e] hover:text-[#FBF7EE] text-xs font-bold py-2 rounded-xl transition-all uppercase tracking-wider flex items-center justify-center gap-1.5"
-                  >
-                    <BookOpen size={13} /> Read Full Manuscript
-                  </button>
-                </div>
               </motion.div>
             ))}
           </div>
@@ -284,7 +264,7 @@ export default function AnthologyClient() {
                     "{readingPiece.editorCitation}"
                   </p>
                   <p className="text-[10px] text-[#FBF7EE]/40 uppercase tracking-widest">
-                    — Uche Morgan · Chief Creative Director
+                    — Ufuoma Morgan · Chief Creative Director
                   </p>
                 </div>
 

@@ -462,3 +462,78 @@ export function getSanctuaryCodexAnnouncementEmail({ userName }) {
     })
   };
 }
+
+export function getAnthologyLaureateAnnouncementEmail({
+  recipientName,
+  honors = [] // array of { title, category, rank, citation, prizeAmount }
+}) {
+  const firstName = getFirstName(recipientName);
+
+  const honorsHtml = honors.map(h => {
+    const ordinal = h.rank === 1 ? '1st Place' : h.rank === 2 ? '2nd Place' : '3rd Place';
+    const categoryLabel = h.category === 'poem' ? 'Poetry' : 'Fiction & Prose';
+    return `
+      <div style="margin-bottom: 24px; padding: 18px 20px; background-color: #FAF7F2; border-radius: 12px; border-left: 4px solid #C96A42;">
+        <div style="font-size: 11px; font-family: monospace; letter-spacing: 1.5px; text-transform: uppercase; color: #C96A42; font-weight: bold;">
+          🌿 ${ordinal.toUpperCase()} · ${categoryLabel.toUpperCase()}
+        </div>
+        <div style="font-size: 18px; font-weight: bold; color: #20070E; margin: 4px 0 8px 0; font-family: 'Georgia', serif;">
+          "${h.title}"
+        </div>
+        <div style="font-size: 13.5px; font-style: italic; color: #5C1A2E; margin-bottom: 10px; line-height: 1.6;">
+          "${h.citation}"
+        </div>
+        <div style="font-size: 11px; color: #6B5E4F; font-family: monospace;">
+          — Ufuoma Morgan, Chief Creative Director
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const contentHtml = `
+    <p>Dear ${firstName},</p>
+    <p>
+      It is with boundless excitement and literary pride that we write to inform you that your work has been selected as an official <strong>October Laureate</strong> in the Paper Thoughts Living Anthology!
+    </p>
+
+    <div style="margin: 25px 0;">
+      ${honorsHtml}
+    </div>
+
+    <p style="margin-top: 15px;">
+      <strong>What this means for you:</strong>
+    </p>
+    <ul style="padding-left: 20px; margin: 10px 0;">
+      <li style="margin-bottom: 8px;">
+        <strong>Eternal Induction:</strong> Your manuscript is permanently published on the Living Anthology, accessible to readers and critics worldwide without a login gate.
+      </li>
+      <li style="margin-bottom: 8px;">
+        <strong>Bi-Token Economy Rewards:</strong> 100 Spendable Leaves & 100 Lifetime Leaves have been credited to your Sanctuary account.
+      </li>
+      <li style="margin-bottom: 8px;">
+        <strong>Monthly Cash Laurels:</strong> Ufuoma Morgan will reach out on the WhatsApp community group to collect account details for your cash transfer prize and post the receipt on the group.
+      </li>
+      <li style="margin-bottom: 8px;">
+        <strong>Annual Anthology Inclusion:</strong> Your winning piece has been automatically shortlisted for the inaugural <em>Paper Thoughts Anthology: Volume 1 (2026)</em> collector's edition print and e-book!
+      </li>
+    </ul>
+
+    <p style="margin-top: 25px; border-top: 1px solid rgba(44, 26, 14, 0.1); padding-top: 15px;">
+      Congratulations on writing words that refused to stay quiet. We live in the lines!
+    </p>
+    <p style="margin: 5px 0 0 0; font-style: italic; color: #5C1A2E;">
+      — Ufuoma Morgan &amp; The Paper Thoughts Editorial Board
+    </p>
+  `;
+
+  return {
+    subject: `🌿 Congratulations! You've been crowned an October Laureate in the Living Anthology | Paper Thoughts`,
+    html: renderBaseLayout({
+      title: `You Are An October Laureate`,
+      subtitle: `Honoring the finest manuscripts of the Paper Thoughts Sanctuary`,
+      contentHtml,
+      ctaText: `View Your Laureate Card on the Anthology`,
+      ctaUrl: `${BASE_URL}/anthology`
+    })
+  };
+}

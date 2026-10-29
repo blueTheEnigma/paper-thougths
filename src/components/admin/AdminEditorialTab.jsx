@@ -584,7 +584,7 @@ export default function AdminEditorialTab({ isSuperadmin }) {
                         <span className="flex items-center gap-1.5">
                           <span>❦</span> Chief Editor's Citation (Displayed on 3D Card & Anthology)
                         </span>
-                        <span className="text-[10px] text-[#FBF7EE]/40 font-mono">Uche Morgan</span>
+                        <span className="text-[10px] text-[#FBF7EE]/40 font-mono">Ufuoma Morgan</span>
                       </div>
                       <textarea
                         rows={2}
@@ -914,6 +914,7 @@ export default function AdminEditorialTab({ isSuperadmin }) {
                       chapterName={sub.chapterName}
                       monthYear={monthYear}
                       editorCitation={citations[sub.id] || 'A masterclass in quiet tension and evocative sentence craft.'}
+                      isEditor={true}
                     />
                   </div>
                 );
@@ -936,6 +937,7 @@ export default function AdminEditorialTab({ isSuperadmin }) {
                       chapterName={sub.chapterName}
                       monthYear={monthYear}
                       editorCitation={citations[sub.id] || 'Exquisite cadence and profound emotional resonance.'}
+                      isEditor={true}
                     />
                   </div>
                 );

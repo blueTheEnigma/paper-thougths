@@ -1,18 +1,20 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Sparkles, Download, Copy, Check, RotateCw, ExternalLink } from 'lucide-react';
+import { Download, Copy, Check, RotateCw, BookOpen } from 'lucide-react';
+import { ARCHETYPES } from '@/lib/archetypesData';
 
 export default function ShareableLaureateCard({
   category = 'Short Story', // 'Short Story' or 'Poetry'
   rank = 1,
   title = "Untitled Manuscript",
   authorName = "Paper Thoughts Author",
-  authorArchetype = "The Solitary Scribe",
+  authorArchetype = null,
   chapterName = "Sanctuary",
   monthYear = "October 2026",
   editorCitation = "A masterclass in narrative tension and evocative sentence craft.",
-  editorName = "Uche Morgan",
+  editorName = "Ufuoma Morgan",
+  isEditor = false,
   showControls = true,
   onReadPiece = null
 }) {
@@ -35,6 +37,15 @@ export default function ShareableLaureateCard({
 
   const monthDisplay = formatMonthName(monthYear);
 
+  // Format clean archetype / chapter display
+  const formattedArchetype = authorArchetype && ARCHETYPES[authorArchetype]
+    ? ARCHETYPES[authorArchetype].name
+    : (authorArchetype && !['writer', 'member', 'reader'].includes(authorArchetype.toLowerCase()) ? authorArchetype : null);
+
+  const chapterByline = formattedArchetype 
+    ? `${chapterName} Chapter · ${formattedArchetype}` 
+    : `${chapterName} Chapter`;
+
   // Generate WhatsApp broadcast text
   const getWhatsAppBroadcast = () => {
     return `🌿 *PAPER THOUGHTS MONTHLY LAUREATE REVEAL* 🌿\n\n` +
@@ -56,7 +67,7 @@ export default function ShareableLaureateCard({
       `Announcing the ${ordinalRank} Winner in ${categoryLabel}:\n` +
       `"${title}" by @${authorName.toLowerCase().replace(/\s+/g, '')}\n\n` +
       `" ${editorCitation} "\n` +
-      `— Chief Editor's Citation · Uche Morgan\n\n` +
+      `— Chief Editor's Citation · ${editorName}\n\n` +
       `The full manuscript has been inducted into the permanent Paper Thoughts Anthology.\n` +
       `No paywall. No sign-in gates. Read it now via the link in our bio.\n\n` +
       `—\n` +
@@ -70,7 +81,7 @@ export default function ShareableLaureateCard({
     setTimeout(() => setCopiedType(null), 2500);
   };
 
-  // High-Resolution 1080x1350 PNG Exporter using HTML5 Canvas
+  // High-Resolution 1080x1350 PNG Exporter using HTML5 Canvas (Editor Only)
   const handleDownloadPNG = async (face = 'front') => {
     setIsDownloading(true);
     try {
@@ -79,7 +90,6 @@ export default function ShareableLaureateCard({
       canvas.height = 1350;
       const ctx = canvas.getContext('2d');
 
-      // Helper for wrapped text
       const wrapText = (text, x, y, maxWidth, lineHeight) => {
         const words = text.split(' ');
         let line = '';
@@ -104,17 +114,14 @@ export default function ShareableLaureateCard({
         ctx.fillStyle = '#FBF7EE';
         ctx.fillRect(0, 0, 1080, 1350);
 
-        // Border
         ctx.strokeStyle = '#c96a42';
         ctx.lineWidth = 4;
         ctx.strokeRect(50, 50, 980, 1250);
 
-        // Inner subtle border
         ctx.strokeStyle = 'rgba(32, 7, 14, 0.15)';
         ctx.lineWidth = 1;
         ctx.strokeRect(70, 70, 940, 1210);
 
-        // Header
         ctx.fillStyle = '#c96a42';
         ctx.font = 'bold 28px Georgia, serif';
         ctx.textAlign = 'center';
@@ -124,24 +131,20 @@ export default function ShareableLaureateCard({
         ctx.font = '600 24px monospace';
         ctx.fillText(`${monthDisplay.toUpperCase()} EDITION`, 540, 210);
 
-        // Divider
         ctx.strokeStyle = 'rgba(201, 106, 66, 0.3)';
         ctx.beginPath();
         ctx.moveTo(340, 245);
         ctx.lineTo(740, 245);
         ctx.stroke();
 
-        // Laureate Placement
         ctx.fillStyle = '#c96a42';
         ctx.font = 'bold 36px Georgia, serif';
         ctx.fillText(`🌿 ${ordinalRank.toUpperCase()} · ${categoryLabel.toUpperCase()} 🌿`, 540, 360);
 
-        // Title
         ctx.fillStyle = '#20070e';
         ctx.font = 'bold 64px Georgia, serif';
         wrapText(`"${title}"`, 540, 520, 840, 80);
 
-        // Byline
         ctx.fillStyle = 'rgba(32, 7, 14, 0.5)';
         ctx.font = '24px monospace';
         ctx.fillText('BY', 540, 780);
@@ -152,9 +155,8 @@ export default function ShareableLaureateCard({
 
         ctx.fillStyle = '#c96a42';
         ctx.font = 'italic 28px Georgia, serif';
-        ctx.fillText(`${chapterName} Chapter · ${authorArchetype || 'Member'}`, 540, 890);
+        ctx.fillText(chapterByline, 540, 890);
 
-        // Footer Seal
         ctx.fillStyle = '#20070e';
         ctx.font = 'bold 24px monospace';
         ctx.fillText('INDUCTED INTO THE LIVING ANTHOLOGY', 540, 1160);
@@ -164,16 +166,14 @@ export default function ShareableLaureateCard({
         ctx.fillText('paperthoughts.org/anthology', 540, 1205);
 
       } else {
-        // BACK FACE: Deep burgundy obsidian velvet background
+        // BACK FACE: Burgundy background
         ctx.fillStyle = '#20070e';
         ctx.fillRect(0, 0, 1080, 1350);
 
-        // Copper Border
         ctx.strokeStyle = 'rgba(201, 106, 66, 0.5)';
         ctx.lineWidth = 4;
         ctx.strokeRect(50, 50, 980, 1250);
 
-        // Header
         ctx.fillStyle = '#F2A98A';
         ctx.font = 'bold 28px Georgia, serif';
         ctx.textAlign = 'center';
@@ -183,24 +183,20 @@ export default function ShareableLaureateCard({
         ctx.font = '22px monospace';
         ctx.fillText(`LAUREATE SELECTION · ${monthDisplay.toUpperCase()}`, 540, 220);
 
-        // Divider
         ctx.strokeStyle = 'rgba(242, 169, 138, 0.3)';
         ctx.beginPath();
         ctx.moveTo(340, 260);
         ctx.lineTo(740, 260);
         ctx.stroke();
 
-        // Quotation mark icon
         ctx.fillStyle = 'rgba(201, 106, 66, 0.4)';
         ctx.font = '120px Georgia, serif';
         ctx.fillText('“', 540, 420);
 
-        // Citation Text
         ctx.fillStyle = '#FBF7EE';
         ctx.font = 'italic 40px Georgia, serif';
         wrapText(`"${editorCitation}"`, 540, 510, 820, 60);
 
-        // Signature
         ctx.fillStyle = '#F2A98A';
         ctx.font = 'bold 36px Georgia, serif';
         ctx.fillText(editorName, 540, 920);
@@ -209,7 +205,6 @@ export default function ShareableLaureateCard({
         ctx.font = '24px Georgia, serif';
         ctx.fillText('Chief Creative Director · Paper Thoughts', 540, 965);
 
-        // Footer Link
         ctx.fillStyle = 'rgba(251, 247, 238, 0.4)';
         ctx.font = '20px monospace';
         ctx.fillText('READ THE FULL MANUSCRIPT AT', 540, 1160);
@@ -219,7 +214,6 @@ export default function ShareableLaureateCard({
         ctx.fillText('paperthoughts.org/anthology', 540, 1200);
       }
 
-      // Convert to image and download
       const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       const safeTitle = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
@@ -236,7 +230,7 @@ export default function ShareableLaureateCard({
   return (
     <div className="flex flex-col items-center max-w-sm sm:max-w-md w-full mx-auto">
       
-      {/* 3D Flip Card Container adhering to workspace style rules */}
+      {/* 3D Flip Card Container */}
       <div 
         className="w-full aspect-[4/5] cursor-pointer relative"
         style={{ perspective: '1200px', WebkitPerspective: '1200px' }}
@@ -287,7 +281,7 @@ export default function ShareableLaureateCard({
                   {authorName}
                 </p>
                 <p className="text-[11px] text-[#c96a42] italic">
-                  {chapterName} Chapter · {authorArchetype || 'Writer'}
+                  {chapterByline}
                 </p>
               </div>
             </div>
@@ -357,62 +351,85 @@ export default function ShareableLaureateCard({
         </div>
       </div>
 
-      {/* Editor & Social Controls Bar */}
+      {/* Action Controls */}
       {showControls && (
-        <div className="w-full mt-4 space-y-2">
-          {/* Action Row */}
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <button
-              onClick={() => handleDownloadPNG(isFlipped ? 'back' : 'front')}
-              disabled={isDownloading}
-              className="flex-1 bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] font-bold py-2 px-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 text-[11px]"
-              title="Download high-res 1080x1350 PNG for Instagram / WhatsApp Status"
-            >
-              <Download size={13} />
-              {isDownloading ? 'Exporting...' : `Download ${isFlipped ? 'Citation' : 'Laureate'} PNG`}
-            </button>
-
-            <button
-              onClick={() => setIsFlipped(!isFlipped)}
-              className="bg-white hover:bg-[#FBF7EE] text-[#20070e] border border-[#20070e]/20 font-bold py-2 px-3 rounded-xl transition-colors flex items-center gap-1 text-[11px]"
-              title="Flip between front and back"
-            >
-              <RotateCw size={13} /> Flip
-            </button>
-
-            {onReadPiece && (
+        <div className="w-full mt-3.5 space-y-2">
+          
+          {/* Public Audience Facing: ONLY Flip & Read */}
+          {!isEditor ? (
+            <div className="flex items-center gap-2.5 w-full">
               <button
-                onClick={onReadPiece}
-                className="bg-[#c96a42]/15 hover:bg-[#c96a42]/25 text-[#20070e] font-bold py-2 px-3 rounded-xl transition-colors flex items-center gap-1 text-[11px]"
-                title="Read full piece"
+                onClick={() => setIsFlipped(!isFlipped)}
+                className="flex-1 bg-white hover:bg-[#FBF7EE] text-[#20070e] border border-[#20070e]/20 font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs shadow-2xs cursor-pointer active:scale-[0.98]"
               >
-                <ExternalLink size={13} /> Read
+                <RotateCw size={13} /> {isFlipped ? 'View Laureate' : 'Flip Citation'}
               </button>
-            )}
-          </div>
 
-          {/* Social Copy Templates */}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => handleCopy('ig')}
-              className="bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 text-[10px] font-bold py-1.5 px-2.5 rounded-lg transition-colors flex items-center justify-center gap-1 shadow-2xs"
-            >
-              {copiedType === 'ig' ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
-              {copiedType === 'ig' ? 'Copied IG Post!' : 'Copy IG Caption'}
-            </button>
+              {onReadPiece && (
+                <button
+                  onClick={onReadPiece}
+                  className="flex-1 bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs shadow-sm cursor-pointer active:scale-[0.98]"
+                >
+                  <BookOpen size={13} /> Read Manuscript
+                </button>
+              )}
+            </div>
+          ) : (
+            /* Chief Editor Mode: Full Media Suite with Export & Copy Templates */
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <button
+                  onClick={() => handleDownloadPNG(isFlipped ? 'back' : 'front')}
+                  disabled={isDownloading}
+                  className="flex-1 bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] font-bold py-2 px-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 text-[11px]"
+                  title="Download high-res 1080x1350 PNG for Instagram / WhatsApp Status"
+                >
+                  <Download size={13} />
+                  {isDownloading ? 'Exporting...' : `Download ${isFlipped ? 'Citation' : 'Laureate'} PNG`}
+                </button>
 
-            <button
-              onClick={() => handleCopy('wa')}
-              className="bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold py-1.5 px-2.5 rounded-lg transition-colors flex items-center justify-center gap-1 shadow-2xs"
-            >
-              {copiedType === 'wa' ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
-              {copiedType === 'wa' ? 'Copied WhatsApp!' : 'Copy WhatsApp Post'}
-            </button>
-          </div>
+                <button
+                  onClick={() => setIsFlipped(!isFlipped)}
+                  className="bg-white hover:bg-[#FBF7EE] text-[#20070e] border border-[#20070e]/20 font-bold py-2 px-3 rounded-xl transition-colors flex items-center gap-1 text-[11px]"
+                  title="Flip between front and back"
+                >
+                  <RotateCw size={13} /> Flip
+                </button>
+
+                {onReadPiece && (
+                  <button
+                    onClick={onReadPiece}
+                    className="bg-[#c96a42]/15 hover:bg-[#c96a42]/25 text-[#20070e] font-bold py-2 px-3 rounded-xl transition-colors flex items-center gap-1 text-[11px]"
+                    title="Read full piece"
+                  >
+                    <BookOpen size={13} /> Read
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleCopy('ig')}
+                  className="bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 text-[10px] font-bold py-1.5 px-2.5 rounded-lg transition-colors flex items-center justify-center gap-1 shadow-2xs"
+                >
+                  {copiedType === 'ig' ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
+                  {copiedType === 'ig' ? 'Copied IG Post!' : 'Copy IG Caption'}
+                </button>
+
+                <button
+                  onClick={() => handleCopy('wa')}
+                  className="bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold py-1.5 px-2.5 rounded-lg transition-colors flex items-center justify-center gap-1 shadow-2xs"
+                >
+                  {copiedType === 'wa' ? <Check size={11} className="text-green-600" /> : <Copy size={11} />}
+                  {copiedType === 'wa' ? 'Copied WhatsApp!' : 'Copy WhatsApp Post'}
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 
     </div>
   );
 }
-
