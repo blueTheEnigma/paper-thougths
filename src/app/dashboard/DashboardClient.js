@@ -1752,41 +1752,72 @@ export default function DashboardClient({
                   </motion.div>
                 )}
 
+                {/* THE ARENA OF LAURELS: Full-Width Grand Monument */}
+                <motion.div 
+                  whileHover={{ scale: 1.004 }}
+                  className="mb-8 p-6 sm:p-8 rounded-[32px] bg-gradient-to-r from-[#20070e] via-[#3d111d] to-[#120308] text-[#FAF7F0] border border-[#c96a42]/40 shadow-xl relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-[500px] h-full bg-radial from-[#F2A98A]/15 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-[#c96a42]/20 rounded-full blur-3xl pointer-events-none" />
+
+                  <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                    <div className="space-y-3 max-w-2xl">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="bg-[#c96a42] text-white text-[10px] font-mono font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                          <Trophy size={12} className="text-amber-200" /> ₦18,000 Cash Pool Active
+                        </span>
+                        <span className="bg-white/10 text-[#F2A98A] text-[10px] font-mono font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-white/10">
+                          3-Tier Arena: Monthly Laurels · Annual Crucible · Hall of Lore
+                        </span>
+                      </div>
+
+                      <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-white font-normal leading-tight">
+                        The Arena of Laurels &amp; Scribes&apos; Monument
+                      </h2>
+
+                      <p className="text-xs sm:text-sm text-white/80 font-serif leading-relaxed">
+                        Compete for nine monthly ₦2,000 cash laurels across Fiction, Poetry, and Peer Critiques. Track your annual standings, unlock your Silver Bullet shield threshold, and immortalize your pen name.
+                      </p>
+
+                      {/* Mini Tier Highlights */}
+                      <div className="grid grid-cols-3 gap-2.5 sm:gap-3 pt-2">
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-center">
+                          <p className="text-[10px] font-mono uppercase text-[#F2A98A] font-bold">Fiction Podium</p>
+                          <p className="text-xs font-bold text-white mt-0.5">Top 3 (₦6k)</p>
+                        </div>
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-center">
+                          <p className="text-[10px] font-mono uppercase text-[#F2A98A] font-bold">Poetry Podium</p>
+                          <p className="text-xs font-bold text-white mt-0.5">Top 3 (₦6k)</p>
+                        </div>
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-center">
+                          <p className="text-[10px] font-mono uppercase text-[#F2A98A] font-bold">Review Bounty</p>
+                          <p className="text-xs font-bold text-white mt-0.5">Top 3 (₦6k)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative z-10 flex flex-col sm:flex-row lg:flex-col gap-3 w-full lg:w-auto shrink-0">
+                      <Link
+                        href="/leaderboard"
+                        className="inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#c96a42] to-[#d8764e] hover:from-[#d8764e] hover:to-[#e0855e] text-white font-bold text-xs uppercase tracking-widest px-8 py-4 rounded-2xl shadow-xl hover:scale-105 transition-all text-center cursor-pointer border border-[#F2A98A]/30"
+                      >
+                        <Trophy size={16} className="text-amber-200" />
+                        <span>Enter The Arena 🏆</span>
+                      </Link>
+                      <Link
+                        href="/anthology"
+                        className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white/90 text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-xl border border-white/15 transition-all text-center cursor-pointer"
+                      >
+                        <span>Living Anthology 🌿</span>
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start">
                   {/* Left Column (Stats & Economy Guide) */}
                   <div className="lg:col-span-2 space-y-6 sm:space-y-8">
-                    {/* 3-Tier Arena & Monthly Laurels Teaser Banner */}
-                    <motion.div 
-                      whileHover={{ scale: 1.008 }}
-                      className="p-5 sm:p-6 rounded-[28px] bg-gradient-to-r from-[#20070e] via-[#3d111d] to-[#20070e] text-[#FAF7F0] border border-[#c96a42]/35 shadow-lg relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-                    >
-                      <div className="absolute top-0 right-0 w-80 h-full bg-radial from-[#F2A98A]/15 to-transparent pointer-events-none" />
-                      <div className="space-y-1.5 relative z-10 max-w-xl">
-                        <div className="flex items-center gap-2">
-                          <span className="bg-[#c96a42] text-white text-[9px] font-mono font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                            ₦18,000 Cash Pool Active
-                          </span>
-                          <span className="text-[10px] font-mono text-[#F2A98A]">
-                            Top 10 Silver Bullet Zone
-                          </span>
-                        </div>
-                        <h3 className="font-display font-extrabold text-xl sm:text-2xl text-white">
-                          The Arena of Laurels & Scribes&apos; Monument
-                        </h3>
-                        <p className="text-xs text-white/75 font-serif leading-relaxed">
-                          Compete for nine monthly ₦2,000 cash laurels across Fiction, Poetry, and Peer Critiques. Track your annual standing and secure the Veteran Shield.
-                        </p>
-                      </div>
-                      <div className="relative z-10 self-start md:self-center flex-shrink-0">
-                        <Link
-                          href="/leaderboard"
-                          className="inline-flex items-center gap-2 bg-[#c96a42] hover:bg-[#d8764e] text-white text-xs font-bold uppercase tracking-wider px-5 py-3 rounded-2xl shadow-md transition-all cursor-pointer"
-                        >
-                          <Trophy size={14} className="text-amber-200" />
-                          <span>Enter The Arena 🏆</span>
-                        </Link>
-                      </div>
-                    </motion.div>
+                    
 
                     {/* User Stats Grid (Membership, Milestone Tokens, Spendable Leaves, Streak if active) */}
                     <div className={`grid grid-cols-1 sm:grid-cols-2 ${profile.streak > 0 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4 sm:gap-6`}>

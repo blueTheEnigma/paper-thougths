@@ -6,12 +6,11 @@ import NotificationBell from './NotificationBell';
 import { usePathname } from 'next/navigation';
 import { 
   BookOpen, Compass, ShoppingBag, Feather, Sparkles, 
-  User, Settings, ShieldCheck, Flame, Trophy
+  User, Settings, ShieldCheck, Flame
 } from 'lucide-react';
 import { useAuth, useUser, UserButton } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
 import PanguinAvatar from '@/components/PanguinAvatar';
-import InstallAppButton from './InstallAppButton';
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -84,7 +83,6 @@ export default function Navigation() {
     { name: "Anthology", href: "/anthology", icon: BookOpen, mobileLabel: "Anthology" },
     { name: "Bookstore", href: "/bookstore", icon: ShoppingBag, mobileLabel: "Books" },
     { name: "Village", href: "/village", icon: Feather, mobileLabel: "Village" },
-    { name: "Book Zodiac", href: "/zodiac", icon: Sparkles, mobileLabel: "Zodiac" },
   ];
 
   return (
@@ -133,22 +131,10 @@ export default function Navigation() {
               </Link>
             );
           })}
-          <Link 
-            href="/leaderboard" 
-            className={`relative px-3 py-1.5 transition-all rounded-xl flex items-center gap-1.5 whitespace-nowrap border text-xs font-bold ${
-              isActive('/leaderboard')
-                ? "bg-[#20070e] text-[#FAF7F0] border-[#c96a42] shadow-xs"
-                : "bg-[#20070e]/5 text-[#20070e] hover:bg-[#20070e]/10 border-[#20070e]/10"
-            }`}
-          >
-            <Trophy size={13} className="text-[#c96a42]" />
-            <span>Arena 🏆</span>
-          </Link>
         </div>
         
         {/* Right side auth */}
         <div className="flex items-center gap-3 sm:gap-4">
-          <InstallAppButton variant="nav" />
           {isLoaded && !isSignedIn && (
             <div className="flex items-center gap-4">
               <Link href="/join" className="bg-burgundy hover:bg-ink text-cream text-xs px-5 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-colors shadow-sm">
@@ -169,12 +155,6 @@ export default function Navigation() {
                 >
                   <Flame size={13} className="text-red-600 animate-pulse" />
                   <span className="hidden sm:inline">Exile Crossing</span>
-                </Link>
-              )}
-              {isAdmin && (
-                <Link href="/admin" className="hidden md:flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border border-accent/20">
-                  <ShieldCheck size={14} />
-                  <span>Admin</span>
                 </Link>
               )}
               <Link 
@@ -224,17 +204,6 @@ export default function Navigation() {
             </Link>
           );
         })}
-        {isLoaded && isSignedIn && isAdmin && (
-          <Link 
-            href="/admin" 
-            className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all ${
-              isActive('/admin') ? "text-burgundy scale-105 font-extrabold" : "text-accent"
-            }`}
-          >
-            <ShieldCheck size={18} className={isActive('/admin') ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
-            <span className="text-[9px] font-sans font-bold mt-0.5 tracking-tight truncate max-w-full text-center">Admin</span>
-          </Link>
-        )}
         {isLoaded && isSignedIn && (
           <Link 
             href="/dashboard" 
