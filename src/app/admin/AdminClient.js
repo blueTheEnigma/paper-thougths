@@ -1700,7 +1700,7 @@ export default function AdminClient({
                   {
                     key: 'manage_crucible',
                     title: 'Crucible Officer',
-                    desc: 'Grants access to adjudicate probation strikes, execute evictions, and payout monthly cash laurels.',
+                    desc: 'Grants access to adjudicate probation strikes, execute evictions, and award monthly laurels and bounties.',
                     color: 'border-red-400'
                   }
                 ].map((role) => {

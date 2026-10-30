@@ -7,10 +7,10 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: "The Scribes' Monument & Leaderboard - Paper Thoughts",
-  description: "The 3-Tier Arena of Laurels: Compete for the ₦18,000 Monthly Cash Laurels, race for the Veteran Silver Bullet Shield, and inscribe your legacy in the Hall of Lore.",
+  description: "The 3-Tier Arena of Laurels: Compete for the Monthly Council of Ten Laurels, earn Spendable Leaves and Milestone Tokens, race for the Veteran Silver Bullet Shield, and inscribe your legacy in the Hall of Lore.",
   openGraph: {
     title: "Paper Thoughts • The Scribes' Monument",
-    description: "Compete for the ₦18,000 monthly laurels pool and race for the annual Silver Bullet shield.",
+    description: "Compete for the Monthly Council of Ten laurels, earn Leaves and Tokens, and race for the annual Silver Bullet shield.",
   }
 };
 

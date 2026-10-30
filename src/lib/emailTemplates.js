@@ -395,51 +395,62 @@ export function getSanctuaryCodexAnnouncementEmail({ userName }) {
     <!-- Pillar 2 -->
     <div style="margin-bottom: 22px;">
       <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
-        🏆 2. The 3-Tier Leaderboard & ₦18,000 Monthly Laurels
+        🏆 2. The Monthly Council of Ten & Living Anthology Honors
       </div>
       <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
-        Every month, nine outstanding scribes are crowned on our new 3-Tier Leaderboard across three distinct podiums: 
-        <strong>Fiction & Prose Top 3</strong> (₦2,000 each), 
-        <strong>Poetry & Verses Top 3</strong> (₦2,000 each), and 
-        <strong>Reviewers of the Month Top 3</strong> (₦2,000 each). 
-        Consistently drafting drops builds your weekly streak and earns permanent Laurel insignias.
+        Every month, Paper Thoughts celebrates the <strong>Monthly Council of Ten</strong>—honoring our 3 Top Inquisitors (Reviewers), 6 Anthology Inductees (Top 3 Fiction & Top 3 Poetry), and our Sanctuary Bookie with substantial <strong>Spendable Leaves, Milestone Tokens, and Lore Badges</strong>:
       </p>
+      <ul style="font-size: 13px; color: #2C1A0E; margin: 8px 0 0 18px; padding: 0; line-height: 1.6;">
+        <li><strong>The Critique Guild (Inquisitors):</strong> 🥇 1st: +150 Leaves • +2.0 Tokens | 🥈 2nd: +100 Leaves • +1.2 Tokens | 🥉 3rd: +50 Leaves • +0.8 Tokens.</li>
+        <li><strong>The Living Anthology:</strong> On the final Thursday of every cycle, the editorial board inducts the month’s finest short stories and poems into the permanent Anthology with up to +100 Leaves, +1.5 Tokens, and official social media laureate cards.</li>
+        <li><strong>Sanctuary Bookie:</strong> Crowned discussion leader for the Book of the Month receives +50 Leaves & +1.0 Token.</li>
+      </ul>
     </div>
 
-    <!-- Pillar 3 -->
+    <!-- Pillar 3: Event Attendance -->
     <div style="margin-bottom: 22px;">
       <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
-        ⚖️ 3. Sanctuary Standing & Inactivity Strikes
+        🏛️ 3. Event Attendance & The Keeper Tier Journey
       </div>
       <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
-        To ensure our community remains vibrant, members are asked to participate in at least one writing drop or book critique every 30 days. Missing a month records a probation strike. If a member accumulates 3 strikes without grace, their seat is locked to preserve guild standards.
+        Showing up for community gatherings now directly powers your literary rank. Every verified check-in to a physical or virtual Salon meeting awards <strong>+0.5 Milestone Tokens</strong> toward the coveted <strong>Keeper Tier</strong> (10.0 tokens), alongside punctuality Leaves (up to +25 Leaves for the first arrival).
       </p>
     </div>
 
     <!-- Pillar 4 -->
     <div style="margin-bottom: 22px;">
       <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
-        🎓 4. Academic & Exam Sabbatical Shield
+        ⚖️ 4. Sanctuary Standing & Inactivity Strikes
       </div>
       <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
-        We know life and university exams demand focus. Any student or member undergoing exams, thesis defenses, or demanding transitions can activate a <strong>30-Day or 60-Day Sabbatical Shield</strong> directly in their dashboard settings once per calendar year. While active, all review quotas and strikes are paused.
+        To ensure our community remains vibrant, members are asked to participate in at least one writing drop or book critique every 30 days. Missing a month records a probation strike. If a member accumulates 3 strikes without grace, their seat is locked to preserve guild standards.
       </p>
     </div>
 
     <!-- Pillar 5 -->
     <div style="margin-bottom: 22px;">
       <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
-        🕯️ 5. The Returner’s Crossing (Preserved Wallets)
+        🎓 5. Academic & Exam Sabbatical Shield
+      </div>
+      <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
+        We know life and university exams demand focus. Any student or member undergoing exams, thesis defenses, or demanding transitions can activate a <strong>30-Day or 60-Day Sabbatical Shield</strong> directly in their dashboard settings once per calendar year. While active, all review quotas and strikes are paused.
+      </p>
+    </div>
+
+    <!-- Pillar 6 -->
+    <div style="margin-bottom: 22px;">
+      <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
+        🕯️ 6. The Returner’s Crossing (Preserved Wallets)
       </div>
       <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
         If you are ever locked out due to inactivity, <strong>your leaves and milestone tokens are NEVER erased</strong>. They remain safely frozen in the sanctuary vault. When you are ready to rekindle your seat, simply walk <em>The Returner’s Crossing</em> to restore your active key.
       </p>
     </div>
 
-    <!-- Pillar 6 -->
+    <!-- Pillar 7 -->
     <div style="margin-bottom: 20px;">
       <div style="font-size: 14px; font-weight: bold; color: #5C1A2E;">
-        🔔 6. Native PWA Lock-Screen Notifications
+        🔔 7. Native PWA Lock-Screen Notifications
       </div>
       <p style="font-size: 13.5px; color: #2C1A0E; margin: 6px 0 0 0; line-height: 1.6;">
         No app store download is required. Simply visit your dashboard on mobile or desktop and tap the <strong>Bell Icon</strong> beside your profile to enable real-time lock-screen alerts for critique feedback, prompt drops, and book arrivals.

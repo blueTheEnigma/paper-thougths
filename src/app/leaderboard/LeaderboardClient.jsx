@@ -79,8 +79,8 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
           <div className="pt-2 flex flex-wrap justify-center items-center gap-3 sm:gap-6 text-xs font-mono">
             <div className="flex items-center gap-2 bg-white/70 backdrop-blur-md px-4 py-2 rounded-xl border border-[#20070e]/10 shadow-xs">
               <span className="w-2.5 h-2.5 rounded-full bg-[#c96a42] animate-pulse" />
-              <span className="text-[#20070e] font-bold">₦18,000</span>
-              <span className="text-[#120308]/50">Monthly Laurels Pool</span>
+              <span className="text-[#20070e] font-bold">Council of Ten</span>
+              <span className="text-[#120308]/50">10 Monthly Laureates</span>
             </div>
             <div className="flex items-center gap-2 bg-white/70 backdrop-blur-md px-4 py-2 rounded-xl border border-[#20070e]/10 shadow-xs">
               <Shield size={13} className="text-amber-600" />
@@ -130,7 +130,7 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
                     )}
                     {userStanding.isWinningMonthlyLaurel && (
                       <span className="bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-mono px-2 py-0.5 rounded-full font-bold">
-                        👑 ₦2k Laurel Track
+                        👑 Monthly Laureate Track
                       </span>
                     )}
                   </div>
@@ -170,7 +170,7 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
               }`}
             >
               <Calendar size={15} className={activeTab === 'monthly' ? 'text-[#F2A98A]' : ''} />
-              <span>Monthly Laurels (₦18k Pool)</span>
+              <span>Monthly Laurels (Council of Ten)</span>
             </button>
 
             <button
@@ -212,58 +212,32 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
               transition={{ duration: 0.3 }}
               className="space-y-10"
             >
-              {/* Explanatory Banner */}
+              {/* Explanatory Banner: The Council of Ten */}
               <div className="bg-white/80 backdrop-blur-md rounded-2xl p-5 border border-[#20070e]/10 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="font-display font-bold text-lg text-[#20070e]">
-                      {monthly.cycleName || 'Active Cycle'} Laurels Race
+                      {monthly.cycleName || 'Active Cycle'} • The Council of Ten
                     </span>
                     <span className="bg-emerald-500/10 text-emerald-800 text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border border-emerald-500/20">
                       Active
                     </span>
                   </div>
-                  <p className="text-xs text-[#120308]/70 leading-relaxed font-sans">
-                    Nine distinct laurels of <strong>₦2,000 each</strong> are minted at month&apos;s end to celebrate our 3 Top Fiction Writers, 3 Top Poets, and 3 Top Intentional Reviewers.
+                  <p className="text-xs text-[#120308]/70 leading-relaxed font-sans max-w-2xl">
+                    Ten distinct monthly laureates are celebrated at month&apos;s end: our <strong>3 Inquisitors of the Month</strong> (live Critique Guild race), <strong>6 Living Anthology Inductees</strong> (3 Fiction & 3 Poetry), and our <strong>Sanctuary Bookie</strong>, rewarded with spendable Leaves, Milestone Tokens, and Lore badges.
                   </p>
                 </div>
                 <div className="flex items-center gap-2 bg-[#FAF7F0] px-4 py-2.5 rounded-xl border border-[#20070e]/10 flex-shrink-0 text-xs font-mono">
-                  <Flame size={14} className="text-[#c96a42]" />
-                  <span className="text-[#120308]/70">Streak Rule:</span>
-                  <span className="font-bold text-[#20070e]">4/4 Weekly Prompts</span>
+                  <Sparkles size={14} className="text-[#c96a42]" />
+                  <span className="text-[#120308]/70">Critique Bounties:</span>
+                  <span className="font-bold text-[#20070e]">Up to 150 🍃 • 2.0 🪙</span>
                 </div>
               </div>
 
-              {/* PODIUM SECTION 1: Fiction & Prose Authors */}
+              {/* PODIUM SECTION: Inquisitors of the Month (Live Critique Guild Race) */}
               <PodiumSection 
-                title="Fiction & Prose Laurels"
-                subtitle="Top 3 short story & flash fiction writers of the active monthly cycle."
-                icon={BookOpen}
-                iconColor="text-[#20070e]"
-                badgeIcon="🔥"
-                items={prosePodium}
-                metricLabel="Stories"
-                streakLabel="Prompt Streak"
-                currentUserId={currentUserId}
-              />
-
-              {/* PODIUM SECTION 2: Poetry & Verses Authors */}
-              <PodiumSection 
-                title="Poetry & Verses Laurels"
-                subtitle="Top 3 poets, sonneteers, and lyrical crafters of the active monthly cycle."
-                icon={Feather}
-                iconColor="text-[#c96a42]"
-                badgeIcon="🪶"
-                items={poetryPodium}
-                metricLabel="Poems"
-                streakLabel="Verse Streak"
-                currentUserId={currentUserId}
-              />
-
-              {/* PODIUM SECTION 3: Reviewers of the Month */}
-              <PodiumSection 
-                title="Reviewers of the Month"
-                subtitle="Top 3 critique corner champions ranked by genuine author helpfulness confirmations."
+                title="Inquisitors of the Month (The Critique Guild)"
+                subtitle="Top 3 critique corner champions ranked live by author-confirmed helpful reviews and thoughtful feedback."
                 icon={Award}
                 iconColor="text-amber-600"
                 badgeIcon="✨"
@@ -273,6 +247,48 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
                 isReviewer={true}
                 currentUserId={currentUserId}
               />
+
+              {/* SECTION 2: The Living Anthology Consecration (6 Authors & Poets) */}
+              <div className="bg-gradient-to-br from-[#20070e] via-[#330a17] to-[#120308] text-[#FAF7F0] p-6 sm:p-8 rounded-3xl border border-[#c96a42]/30 shadow-xl relative overflow-hidden space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
+                  <div className="space-y-1.5">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c96a42]/20 border border-[#c96a42]/40 text-[#F2A98A] text-xs font-mono uppercase tracking-widest font-bold">
+                      <BookOpen size={12} />
+                      <span>The Living Anthology • 6 Monthly Inductees</span>
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-display font-extrabold text-white">
+                      Authors & Poets of the Month
+                    </h3>
+                    <p className="text-xs sm:text-sm text-white/75 font-serif italic max-w-2xl leading-relaxed">
+                      Our authors and poets are not ranked by a word-count sprint. Instead, every month on the final Thursday, the Chief Editorial Board and peer reviewer consensus consecrate the Top 3 Short Stories and Top 3 Poems into the permanent Living Anthology.
+                    </p>
+                  </div>
+                  <Link
+                    href="/anthology"
+                    className="self-start md:self-center px-5 py-2.5 bg-[#c96a42] hover:bg-[#b05832] text-cream text-xs font-sans font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-2 shrink-0 cursor-pointer"
+                  >
+                    <span>Read Anthology Manuscripts →</span>
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#F2A98A] font-bold block">🥇 1st Place Laureates (Prose & Poetry)</span>
+                    <p className="text-sm font-display font-bold text-white">+100 Leaves • +1.5 Tokens</p>
+                    <p className="text-[11px] text-white/60 font-serif leading-relaxed">Living Anthology induction, official social media laureate card, and permanent year-end compendium print inclusion.</p>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-white/60 font-bold block">🥈 2nd Place Laureates</span>
+                    <p className="text-sm font-display font-bold text-white">+60 Leaves • +1.0 Tokens</p>
+                    <p className="text-[11px] text-white/60 font-serif leading-relaxed">Living Anthology induction, editorial citation, and official social media feature card.</p>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-white/60 font-bold block">🥉 3rd Place Laureates</span>
+                    <p className="text-sm font-display font-bold text-white">+40 Leaves • +0.5 Tokens</p>
+                    <p className="text-[11px] text-white/60 font-serif leading-relaxed">Living Anthology induction and official editorial commendation.</p>
+                  </div>
+                </div>
+              </div>
 
               {/* Published Editorial Honors (If Available) */}
               {editorialHonors && (
@@ -669,8 +685,8 @@ function PodiumSection({
           </div>
         </div>
 
-        <div className="text-xs font-mono font-bold text-emerald-800 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 self-start sm:self-auto">
-          3x ₦2,000 Cash Laurels
+        <div className="text-xs font-mono font-bold text-emerald-800 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 self-start sm:self-auto flex items-center gap-1.5">
+          <span>🍃 Inquisitor Bounties</span>
         </div>
       </div>
 
@@ -680,7 +696,7 @@ function PodiumSection({
           <h4 className="font-display font-bold text-sm text-[#20070e]">The Laurels Await Your Quill</h4>
           <p className="text-xs text-[#120308]/60 font-serif italic max-w-md mx-auto mt-1">
             {isReviewer 
-              ? "No critiques have been submitted yet in this cycle. Visit the Critique Corner to earn leaves and claim the 1st laurel!"
+              ? "No critiques have been submitted yet in this cycle. Visit the Critique Corner to earn leaves and claim the Grand Inquisitor laurel!"
               : "No manuscripts have been submitted yet for this stream. Respond to the weekly prompt to lead the podium!"}
           </p>
           <div className="mt-4">
@@ -714,10 +730,10 @@ function PodiumSection({
               {/* Laurel Prize Header Badge */}
               <div className="flex items-center justify-between gap-2 pb-3 border-b border-black/5">
                 <div className="flex items-center gap-1.5 text-xs font-mono font-bold">
-                  <span>{isFirst ? '👑 1st Laurel' : isSecond ? '🥈 2nd Laurel' : '🥉 3rd Laurel'}</span>
+                  <span>{isFirst ? '👑 Grand Inquisitor' : isSecond ? '🥈 Master Inquisitor' : '🥉 Scribe Inquisitor'}</span>
                 </div>
-                <div className="bg-emerald-600 text-white font-mono font-bold text-[11px] px-2.5 py-0.5 rounded-full shadow-xs">
-                  ₦2,000
+                <div className="bg-[#20070e] text-[#F2A98A] font-mono font-bold text-[10px] px-2.5 py-0.5 rounded-full shadow-xs border border-[#F2A98A]/30">
+                  {scribe.laurelPrize || (isFirst ? '+150 🍃 • +2.0 🪙' : isSecond ? '+100 🍃 • +1.2 🪙' : '+50 🍃 • +0.8 🪙')}
                 </div>
               </div>
 

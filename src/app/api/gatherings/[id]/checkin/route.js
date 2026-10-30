@@ -181,27 +181,31 @@ export async function POST(request, { params }) {
         leavesAwarded = 10;
         honorTitle = `🛡️ Punctual Vanguard (Arrival #${arrivalOrder})`;
       } else {
-        // Standard attendance: 0 Leaves as mandated by merit-only policy
-        leavesAwarded = 0;
+        // Standard attendance: 5 Leaves + 0.5 Milestone Tokens for presence
+        leavesAwarded = 5;
         honorTitle = 'Kindred Attendee';
       }
 
-      // Credit leaves to user account if applicable
-      if (leavesAwarded > 0 && userId) {
+      // Credit tokens and leaves to user account if applicable
+      if (userId) {
         await client.query(`
           UPDATE users 
-          SET spendable_leaves = spendable_leaves + $1, lifetime_leaves = lifetime_leaves + $1
+          SET milestone_tokens = milestone_tokens + 0.5,
+              spendable_leaves = spendable_leaves + $1,
+              lifetime_leaves = lifetime_leaves + $1
           WHERE id = $2
         `, [leavesAwarded, userId]);
 
-        await client.query(`
-          INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
-          VALUES ($1, $2, 'attendance_punctuality_award', $3)
-        `, [
-          userId,
-          leavesAwarded,
-          `${honorTitle} for ${gathering.title}`
-        ]);
+        if (leavesAwarded > 0) {
+          await client.query(`
+            INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
+            VALUES ($1, $2, 'attendance_punctuality_award', $3)
+          `, [
+            userId,
+            leavesAwarded,
+            `${honorTitle} (+0.5 Tokens) for ${gathering.title}`
+          ]);
+        }
       }
 
       // Record attendance

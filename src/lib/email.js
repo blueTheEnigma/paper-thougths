@@ -4,7 +4,7 @@ export async function sendEmail({ to, subject, html }) {
   const resendApiKey = process.env.RESEND_API_KEY;
 
   const senderName = process.env.EMAIL_SENDER_NAME || 'Paper Thoughts';
-  const senderEmail = process.env.EMAIL_SENDER_ADDRESS || 'notifications@paperthoughts.org';
+  const senderEmail = process.env.EMAIL_SENDER_ADDRESS || 'umorgan2001@gmail.com';
 
   // 1. Try Brevo (Sendinblue) REST API if BREVO_API_KEY is configured (300 free emails/day)
   if (brevoApiKey) {

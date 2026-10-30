@@ -177,8 +177,28 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
     helpfulCount: row.helpfulCount,
     totalReviews: row.totalReviews,
     isLaurelWinner: idx < 3,
-    laurelPrize: idx < 3 ? '₦2,000' : null,
+    inquisitorTitle: idx === 0 ? '👑 Grand Inquisitor' : idx === 1 ? '🥈 Master Inquisitor' : idx === 2 ? '🥉 Scribe Inquisitor' : 'Inquisitor',
+    laurelPrize: idx === 0 ? '+150 🍃 • +2.0 🪙' : idx === 1 ? '+100 🍃 • +1.2 🪙' : idx === 2 ? '+50 🍃 • +0.8 🪙' : null,
   }));
+
+  // Fetch inducted Anthology Laureates for the active/recent cycle
+  const anthologyInductees = await Database.query(`
+    SELECT 
+      s.id, 
+      s.title, 
+      s.genre, 
+      s.author_id as "authorId", 
+      COALESCE(s.anthology_rank, 1)::int as "anthologyRank",
+      s.created_at as "createdAt",
+      u.full_name as "authorName",
+      u.avatar_url as "avatarUrl",
+      u.reader_archetype as "archetype"
+    FROM submissions s
+    JOIN users u ON u.id = s.author_id
+    WHERE s.anthology_inducted = TRUE
+    ORDER BY s.created_at DESC, s.anthology_rank ASC
+    LIMIT 6
+  `);
 
   // Published Editorial Honors from monthly_leaderboard
   const publishedHonors = await Database.queryOne(`
@@ -369,9 +389,8 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
         silverBullets: dbUser.silver_bullets || 0,
         probationStrikes: dbUser.probation_strikes_this_year || 0,
         isInsideSilverBulletZone: userAnnualRank !== null && userAnnualRank <= 10,
-        isWinningMonthlyLaurel: (userProseRank && userProseRank <= 3) || 
-                                (userPoetryRank && userPoetryRank <= 3) || 
-                                (userReviewRank && userReviewRank <= 3)
+        isWinningMonthlyLaurel: (userReviewRank !== null && userReviewRank <= 3) || 
+                                anthologyInductees.some(a => a.authorId === dbUser.id)
       };
     }
   }
@@ -379,12 +398,10 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
   return {
     cycleName,
     year: currentYear,
-    poolTotal: '₦18,000',
-    laurelAmount: '₦2,000',
+    bountyPool: 'Spendable Leaves & Tokens',
     monthly: {
       cycleName,
-      prosePodium,
-      poetryPodium,
+      anthologyInductees: anthologyInductees || [],
       reviewerPodium,
       editorialHonors: publishedHonors ? {
         monthYear: publishedHonors.monthYear,
