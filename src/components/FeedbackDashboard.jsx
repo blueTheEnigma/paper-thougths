@@ -168,6 +168,7 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
 
   // Format steps of the pivot response
   const formatPivotSteps = (text) => {
+    if (!text || typeof text !== 'string') return [];
     // LLM response synthesized_pivot can contain list markers (e.g. 1., 2., 3., -)
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     const steps = [];
@@ -184,7 +185,7 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
     return steps;
   };
 
-  const pivotSteps = formatPivotSteps(synthesizedPivot);
+  const pivotSteps = synthesizedPivot ? formatPivotSteps(synthesizedPivot) : [];
 
   return (
     <motion.div 

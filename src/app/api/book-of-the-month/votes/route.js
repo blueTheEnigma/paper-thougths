@@ -5,14 +5,23 @@ import { syncOrCreateUser } from '@/lib/permissions';
 
 function getVotingMonthYear() {
   const now = new Date();
+  const day = now.getDate();
+  if (day <= 3) {
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    return `${months[now.getMonth()]} ${now.getFullYear()}`;
+  }
+  let nextMonth = now.getMonth() + 1;
+  let nextYear = now.getFullYear();
+  if (nextMonth > 11) {
+    nextMonth = 0;
+    nextYear += 1;
+  }
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  return `${months[now.getMonth()]} ${now.getFullYear()}`;
+  return `${months[nextMonth]} ${nextYear}`;
 }
 
 function isVotingPeriod() {
-  const now = new Date();
-  const day = now.getDate();
-  return day <= 3; // First 3 days of the month
+  return true;
 }
 
 // GET: Fetch voting results / suggestions with vote counts
@@ -27,6 +36,7 @@ export async function GET(request) {
     // Fetch suggestions with their vote counts
     const suggestions = await Database.query(`
       SELECT s.id, s.title, s.author, s.teaser, s.month_year as "monthYear",
+             s.user_id as "userId",
              u.full_name as "suggestedBy",
              COALESCE(v.votes_count, 0)::int as "votesCount"
       FROM botm_suggestions s
@@ -79,7 +89,7 @@ export async function GET(request) {
       FROM botm_cycles 
       WHERE month_year = $1
     `, [targetMonthYear]);
-    const isVotingOpen = cycle ? cycle.voting_open : false;
+    const isVotingOpen = cycle ? cycle.voting_open : true;
 
     return NextResponse.json({
       success: true,
@@ -116,7 +126,7 @@ export async function POST(request) {
       FROM botm_cycles 
       WHERE month_year = $1
     `, [currentVotingCycle]);
-    const isVotingOpen = cycle ? cycle.voting_open : false;
+    const isVotingOpen = cycle ? cycle.voting_open : true;
 
     if (!isVotingOpen) {
       return NextResponse.json({ success: false, error: 'Voting is not currently open for this cycle.' }, { status: 403 });

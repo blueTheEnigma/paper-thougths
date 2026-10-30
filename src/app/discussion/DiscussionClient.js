@@ -48,6 +48,7 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
   const [submittingVote, setSubmittingVote] = useState(false);
   const [hasReviewedPastBotm, setHasReviewedPastBotm] = useState(false);
   const [qualifyingBotm, setQualifyingBotm] = useState(null);
+  const [botmTab, setBotmTab] = useState('ballot'); // 'ballot' | 'suggest'
 
   // Comments / Replies states (nested under reviews)
   const [expandedComments, setExpandedComments] = useState({}); // reviewId -> boolean
@@ -91,18 +92,12 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
     }
   }, []);
 
-  const isVotingPeriodActive = () => {
-    return new Date().getDate() <= 3;
-  };
-
   // Fetch suggestions for unified sanctuary stream and cycle
   const fetchSuggestions = useCallback(async () => {
     if (!activeBook?.id) return;
     setSuggestionsLoading(true);
     try {
-      const endpoint = isVotingPeriodActive()
-        ? `/api/book-of-the-month/votes?chapterId=null`
-        : `/api/book-of-the-month/suggestions?chapterId=null`;
+      const endpoint = `/api/book-of-the-month/votes?chapterId=null`;
       
       const res = await fetch(endpoint);
       const data = await res.json();
@@ -144,7 +139,8 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
         setSuggestTitle("");
         setSuggestAuthor("");
         setSuggestTeaser("");
-        fetchSuggestions();
+        await fetchSuggestions();
+        setBotmTab('ballot');
       } else {
         setSuggestError(data.error || 'Failed to submit suggestion.');
       }
@@ -167,8 +163,8 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
       });
       const data = await res.json();
       if (data.success) {
-        alert(data.message);
-        fetchSuggestions();
+        setUserVotedSuggestionId(suggestionId);
+        await fetchSuggestions();
       } else {
         alert(data.error || 'Failed to submit vote.');
       }
@@ -514,38 +510,81 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
             </div>
 
             {/* Book of the Month Suggestions / Voting Card */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-sage/20 shadow-sm space-y-4">
-              {isVotingOpen ? (
-                <div className="space-y-4">
-                  <div className="border-b border-sage/10 pb-3">
-                    <h3 className="text-lg font-display font-bold text-burgundy flex items-center gap-1.5">
-                      <span>🗳️ Vote for Next BOTM</span>
-                    </h3>
-                    <p className="text-[10px] text-ink/50 font-serif leading-relaxed mt-1">
-                      Voting is open for the first 3 days of the month. Choose the {votingMonthYear} selection!
-                    </p>
-                  </div>
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-sage/20 shadow-sm space-y-5">
+              <div className="border-b border-sage/10 pb-4">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-[#c96a42]">
+                    {votingMonthYear || 'Next Cycle'} Selection
+                  </span>
+                  {suggestions.length > 0 && (
+                    <span className="text-[9px] font-sans font-bold uppercase tracking-wider bg-burgundy/10 text-burgundy px-2.5 py-0.5 rounded-full border border-burgundy/15">
+                      {suggestions.length} {suggestions.length === 1 ? 'Nominee' : 'Nominees'}
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-xl font-display font-extrabold text-burgundy leading-snug">
+                  Elect Next Book of the Month
+                </h3>
+                <p className="text-xs text-ink/60 font-serif leading-relaxed mt-1">
+                  Every voice shapes our reading sanctuary. Reviewers of &ldquo;{qualifyingBotm?.title || activeBook?.title}&rdquo; nominate candidates and vote for the next collective journey.
+                </p>
 
+                {/* Segmented Tab Control */}
+                <div className="flex bg-cream/50 p-1 rounded-2xl border border-sage/15 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setBotmTab('ballot')}
+                    className={`flex-1 py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      botmTab === 'ballot'
+                        ? 'bg-burgundy text-cream shadow-sm'
+                        : 'text-ink/50 hover:text-ink'
+                    }`}
+                  >
+                    <span>🗳️ Ballot</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-sans ${
+                      botmTab === 'ballot' ? 'bg-white/20 text-cream' : 'bg-black/5 text-ink/60'
+                    }`}>
+                      {suggestions.length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBotmTab('suggest')}
+                    className={`flex-1 py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      botmTab === 'suggest'
+                        ? 'bg-burgundy text-cream shadow-sm'
+                        : 'text-ink/50 hover:text-ink'
+                    }`}
+                  >
+                    <span>💡 Nominate a Book</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Tab 1: Candidate Ballot */}
+              {botmTab === 'ballot' && (
+                <div className="space-y-4">
                   {!profile ? (
-                    <div className="bg-cream/40 p-4 rounded-xl text-center border border-sage/15">
-                      <p className="text-[11px] text-ink/75 font-serif mb-2">
-                        You must be signed in to cast your vote.
+                    <div className="bg-cream/40 p-5 rounded-2xl text-center border border-sage/15">
+                      <p className="text-xs text-ink/75 font-serif mb-3">
+                        Sign in to view candidate books and cast your vote for the next cycle.
                       </p>
                       <Link
                         href="/sign-in?redirect_url=/discussion"
-                        className="bg-burgundy text-cream text-[9px] font-sans font-bold uppercase tracking-widest px-4 py-2.5 rounded-lg inline-block hover:bg-ink hover:text-white transition-colors cursor-pointer"
+                        className="bg-burgundy text-cream text-[10px] font-sans font-bold uppercase tracking-widest px-5 py-2.5 rounded-xl inline-block hover:bg-ink hover:text-white transition-colors cursor-pointer shadow-sm"
                       >
-                        Sign In
+                        Sign In to Vote
                       </Link>
                     </div>
                   ) : !hasReviewedPastBotm ? (
                     <div className="bg-[#FAF7F0] border border-[#c96a42]/30 p-5 rounded-2xl text-center space-y-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#c96a42]/15 text-[#c96a42] flex items-center justify-center mx-auto text-base">
+                      <div className="w-10 h-10 rounded-full bg-[#c96a42]/15 text-[#c96a42] flex items-center justify-center mx-auto text-base">
                         🔒
                       </div>
                       <h4 className="font-display text-sm font-bold text-burgundy">Merit Ballot Locked</h4>
                       <p className="text-xs text-ink/75 font-serif leading-relaxed max-w-sm mx-auto">
-                        To participate in choosing the next Book of the Month, submit your review for <strong>&ldquo;{qualifyingBotm?.title || activeBook?.title || 'the current Book of the Month'}&rdquo;</strong> above first.
+                        To cast your vote for next month&apos;s Book of the Month, submit your review for <strong>&ldquo;{qualifyingBotm?.title || activeBook?.title || 'the current Book of the Month'}&rdquo;</strong> above first.
                       </p>
                       <button
                         type="button"
@@ -560,47 +599,70 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
                   ) : (
                     <div className="space-y-3">
                       {suggestionsLoading ? (
-                        <div className="flex items-center justify-center py-4 text-xs font-bold text-ink/40">
-                          <Loader2 size={14} className="animate-spin mr-2" /> Loading candidates...
+                        <div className="flex items-center justify-center py-6 text-xs font-bold text-ink/40">
+                          <Loader2 size={16} className="animate-spin mr-2 text-burgundy" /> Loading candidate books...
                         </div>
                       ) : suggestions.length === 0 ? (
-                        <p className="text-xs text-ink/50 font-serif italic text-center py-4">
-                          No suggestions submitted in the previous cycle.
-                        </p>
+                        <div className="p-6 bg-cream/30 border border-dashed border-sage/30 rounded-2xl text-center space-y-3">
+                          <p className="text-xs text-ink/60 font-serif italic">
+                            No candidate books have been nominated yet for {votingMonthYear || 'next month'}.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setBotmTab('suggest')}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-burgundy hover:bg-ink text-cream text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm"
+                          >
+                            <span>💡 Be the First to Nominate a Book</span>
+                          </button>
+                        </div>
                       ) : (
                         <div className="space-y-3">
                           {suggestions.map((sug) => {
                             const hasVotedThis = userVotedSuggestionId === sug.id;
                             const hasVotedAny = userVotedSuggestionId !== null;
                             return (
-                              <div key={sug.id} className={`p-4 rounded-2xl border transition-all ${
-                                hasVotedThis ? 'bg-primary/5 border-primary/25 shadow-inner' : 'bg-cream/10 border-sage/15'
-                              }`}>
-                                <div className="flex justify-between items-start gap-2">
-                                  <div className="space-y-1 flex-1">
-                                    <h4 className="font-sans font-bold text-xs text-ink leading-tight">{sug.title}</h4>
-                                    <p className="text-[10px] text-burgundy font-sans italic">by {sug.author}</p>
-                                    <p className="text-[10px] text-ink/65 font-serif line-clamp-2 mt-1">{sug.teaser}</p>
-                                    <div className="text-[9px] text-ink/40 font-sans mt-1">
-                                      Suggested by {sug.suggestedBy}
+                              <div 
+                                key={sug.id} 
+                                className={`p-4 rounded-2xl border transition-all ${
+                                  hasVotedThis 
+                                    ? 'bg-emerald-50/60 border-emerald-300 shadow-sm ring-1 ring-emerald-300' 
+                                    : 'bg-[#FBF7EE]/80 border-sage/20 hover:border-burgundy/30'
+                                }`}
+                              >
+                                <div className="flex justify-between items-start gap-3">
+                                  <div className="space-y-1.5 flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <h4 className="font-display font-extrabold text-sm text-burgundy leading-tight">
+                                        &ldquo;{sug.title}&rdquo;
+                                      </h4>
+                                      <span className="text-[11px] text-[#c96a42] font-serif italic">
+                                        by {sug.author}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-ink/75 font-serif line-clamp-3 leading-relaxed">
+                                      {sug.teaser}
+                                    </p>
+                                    <div className="text-[10px] text-ink/45 font-sans pt-1">
+                                      Nominated by <span className="font-semibold text-ink/70">{sug.suggestedBy}</span>
                                     </div>
                                   </div>
                                   
-                                  <div className="flex flex-col items-end gap-2">
-                                    <span className="text-[10px] font-bold text-burgundy bg-burgundy/5 px-2 py-0.5 rounded border border-burgundy/10 shrink-0">
-                                      {sug.votesCount} {sug.votesCount === 1 ? 'vote' : 'votes'}
+                                  <div className="flex flex-col items-end gap-2 shrink-0">
+                                    <span className="text-[11px] font-display font-bold text-burgundy bg-burgundy/10 px-2.5 py-1 rounded-xl border border-burgundy/15">
+                                      {sug.votesCount || 0} {sug.votesCount === 1 ? 'vote' : 'votes'}
                                     </span>
                                     {hasVotedThis ? (
-                                      <span className="bg-emerald-500 text-cream font-bold text-[8px] px-2 py-1 rounded uppercase tracking-wider shadow-sm">
-                                        My Pick ✓
+                                      <span className="bg-emerald-600 text-cream font-bold text-[9px] px-3 py-1.5 rounded-xl uppercase tracking-wider shadow-sm flex items-center gap-1">
+                                        <CheckCircle2 size={12} /> My Pick ✓
                                       </span>
                                     ) : (
                                       <button
+                                        type="button"
                                         disabled={hasVotedAny || submittingVote}
                                         onClick={() => handleVote(sug.id)}
-                                        className="bg-burgundy hover:bg-ink text-cream disabled:opacity-50 text-[8px] font-bold uppercase tracking-wider px-3 py-1 rounded transition-colors cursor-pointer"
+                                        className="bg-burgundy hover:bg-ink text-cream disabled:opacity-40 text-[9px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-xl transition-all cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
                                       >
-                                        Vote
+                                        {submittingVote ? 'Voting...' : 'Vote'}
                                       </button>
                                     )}
                                   </div>
@@ -613,37 +675,31 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="border-b border-sage/10 pb-3">
-                    <h3 className="text-lg font-display font-bold text-burgundy flex items-center gap-1.5">
-                      <span>💡 Suggest Next Book</span>
-                    </h3>
-                    <p className="text-[10px] text-ink/50 font-serif leading-relaxed mt-1">
-                      Submit your candidate for the next monthly showcase! Only active reviewers can suggest a book.
-                    </p>
-                  </div>
+              )}
 
+              {/* Tab 2: Nominate a Candidate */}
+              {botmTab === 'suggest' && (
+                <div className="space-y-4">
                   {!profile ? (
-                    <div className="bg-cream/40 p-4 rounded-xl text-center border border-sage/15">
-                      <p className="text-[11px] text-ink/75 font-serif mb-2">
-                        You must be signed in to suggest a book.
+                    <div className="bg-cream/40 p-5 rounded-2xl text-center border border-sage/15">
+                      <p className="text-xs text-ink/75 font-serif mb-3">
+                        Sign in to nominate a book for the next Book of the Month cycle.
                       </p>
                       <Link
                         href="/sign-in?redirect_url=/discussion"
-                        className="bg-burgundy text-cream text-[9px] font-sans font-bold uppercase tracking-widest px-4 py-2.5 rounded-lg inline-block hover:bg-ink hover:text-white transition-colors cursor-pointer"
+                        className="bg-burgundy text-cream text-[10px] font-sans font-bold uppercase tracking-widest px-5 py-2.5 rounded-xl inline-block hover:bg-ink hover:text-white transition-colors cursor-pointer shadow-sm"
                       >
                         Sign In
                       </Link>
                     </div>
                   ) : !hasReviewedPastBotm ? (
                     <div className="bg-[#FAF7F0] border border-[#c96a42]/30 p-5 rounded-2xl text-center space-y-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#c96a42]/15 text-[#c96a42] flex items-center justify-center mx-auto text-base">
+                      <div className="w-10 h-10 rounded-full bg-[#c96a42]/15 text-[#c96a42] flex items-center justify-center mx-auto text-base">
                         🔒
                       </div>
                       <h4 className="font-display text-sm font-bold text-burgundy">Nominations Locked</h4>
                       <p className="text-xs text-ink/75 font-serif leading-relaxed max-w-sm mx-auto">
-                        Only active reviewers can suggest candidate books for the next cycle. Submit your review for <strong>&ldquo;{qualifyingBotm?.title || activeBook?.title || 'the current Book of the Month'}&rdquo;</strong> above to unlock.
+                        Only active reviewers can nominate candidate books. Submit your review for <strong>&ldquo;{qualifyingBotm?.title || activeBook?.title || 'the current Book of the Month'}&rdquo;</strong> above to unlock.
                       </p>
                       <button
                         type="button"
@@ -652,81 +708,102 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
                         }}
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#c96a42] hover:bg-[#b05832] text-cream text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm"
                       >
-                        <span>Review &ldquo;{qualifyingBotm?.title || activeBook?.title}&rdquo; to Unlock Suggestions ✍️</span>
+                        <span>Review &ldquo;{qualifyingBotm?.title || activeBook?.title}&rdquo; to Unlock ✍️</span>
                       </button>
                     </div>
-                  ) : suggestions.some(sug => sug.suggestedBy === profile.name) ? (
-                    <div className="bg-emerald-55 border border-emerald-200/50 p-4 rounded-2xl flex items-start gap-2.5 text-emerald-800">
-                      <CheckCircle2 size={16} className="text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <span className="text-xs font-sans font-bold block uppercase tracking-wider">Candidate Suggested</span>
-                        <p className="text-[11px] text-emerald-700/80 font-serif leading-relaxed">
-                          You have successfully submitted your book suggestion. Voting for next month's selection starts on the first day of the month!
-                        </p>
-                      </div>
-                    </div>
+                  ) : suggestions.some(sug => (profile.id && sug.userId === profile.id) || sug.suggestedBy === profile.name || sug.suggestedBy === profile.fullName) ? (
+                    (() => {
+                      const mySug = suggestions.find(sug => (profile.id && sug.userId === profile.id) || sug.suggestedBy === profile.name || sug.suggestedBy === profile.fullName);
+                      return (
+                        <div className="bg-emerald-50/70 border border-emerald-200 p-5 rounded-2xl space-y-3">
+                          <div className="flex items-center gap-2 text-emerald-800">
+                            <CheckCircle2 size={18} className="text-emerald-600 flex-shrink-0" />
+                            <span className="text-xs font-sans font-bold uppercase tracking-wider">Candidate Nominated</span>
+                          </div>
+                          {mySug && (
+                            <div className="bg-white/80 p-3.5 rounded-xl border border-emerald-200 space-y-1">
+                              <p className="font-display font-bold text-sm text-burgundy">&ldquo;{mySug.title}&rdquo; <span className="text-xs font-serif text-[#c96a42] italic">by {mySug.author}</span></p>
+                              <p className="text-xs text-ink/70 font-serif line-clamp-2">{mySug.teaser}</p>
+                              <div className="text-[10px] text-ink/50 pt-1 font-sans">
+                                Current votes: <strong>{mySug.votesCount || 0}</strong>
+                              </div>
+                            </div>
+                          )}
+                          <p className="text-xs text-emerald-900/80 font-serif leading-relaxed">
+                            You have submitted your candidate for {votingMonthYear || 'the next cycle'}. You can now view the ballot and cast your vote!
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setBotmTab('ballot')}
+                            className="w-full py-2.5 bg-burgundy hover:bg-ink text-cream text-xs font-sans font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                          >
+                            <span>View Ballot & Cast Your Vote ({suggestions.length} {suggestions.length === 1 ? 'Nominee' : 'Nominees'}) →</span>
+                          </button>
+                        </div>
+                      );
+                    })()
                   ) : (
-                    <form onSubmit={handleSuggestBook} className="space-y-3">
+                    <form onSubmit={handleSuggestBook} className="space-y-3.5">
                       {suggestError && (
-                        <div className="bg-red-50 border border-red-200 p-2.5 rounded-xl text-red-650 text-xs font-sans font-semibold">
+                        <div className="bg-red-50 border border-red-200 p-3 rounded-xl text-red-700 text-xs font-sans font-semibold">
                           {suggestError}
                         </div>
                       )}
                       {suggestSuccess && (
-                        <div className="bg-emerald-50 border border-emerald-250 p-2.5 rounded-xl text-emerald-750 text-xs font-sans font-semibold">
+                        <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-emerald-800 text-xs font-sans font-semibold">
                           {suggestSuccess}
                         </div>
                       )}
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[9px] font-bold uppercase tracking-wider text-ink/40">Book Title</label>
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Book Title</label>
                           <input
                             type="text"
                             required
                             value={suggestTitle}
                             onChange={(e) => setSuggestTitle(e.target.value)}
                             placeholder="e.g. Skin of the Sea"
-                            className="w-full bg-cream/40 border border-sage/20 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-burgundy text-ink font-medium"
+                            className="w-full bg-cream/40 border border-sage/20 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-burgundy text-ink font-medium"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[9px] font-bold uppercase tracking-wider text-ink/40">Author</label>
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Author</label>
                           <input
                             type="text"
                             required
                             value={suggestAuthor}
                             onChange={(e) => setSuggestAuthor(e.target.value)}
                             placeholder="e.g. Natasha Bowen"
-                            className="w-full bg-cream/40 border border-sage/20 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-burgundy text-ink font-medium"
+                            className="w-full bg-cream/40 border border-sage/20 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-burgundy text-ink font-medium"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-bold uppercase tracking-wider text-ink/40">Teaser / Description</label>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Teaser / Pitch</label>
                         <textarea
                           required
                           rows={3}
                           value={suggestTeaser}
                           onChange={(e) => setSuggestTeaser(e.target.value)}
-                          placeholder="Brief description explaining why the clubhouse should read this book next..."
-                          className="w-full bg-cream/40 border border-sage/20 rounded-xl p-3 text-xs focus:outline-none focus:border-burgundy text-ink resize-none leading-relaxed font-serif"
+                          placeholder="Share an evocative excerpt or why our community should read this next..."
+                          className="w-full bg-cream/40 border border-sage/20 rounded-xl p-3.5 text-xs focus:outline-none focus:border-burgundy text-ink resize-none leading-relaxed font-serif"
                         />
                       </div>
 
                       <button
                         type="submit"
                         disabled={submittingSuggestion}
-                        className="w-full bg-burgundy hover:bg-ink text-cream hover:text-white py-2.5 rounded-xl text-[9px] font-sans font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
+                        className="w-full bg-burgundy hover:bg-ink text-cream hover:text-white py-3 rounded-xl text-xs font-sans font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
                       >
                         {submittingSuggestion ? (
                           <>
-                            <Loader2 size={11} className="animate-spin" />
-                            <span>Submitting...</span>
+                            <Loader2 size={13} className="animate-spin" />
+                            <span>Submitting Nomination...</span>
                           </>
                         ) : (
-                          <span>Submit Suggestion</span>
+                          <span>Submit Nomination</span>
                         )}
                       </button>
                     </form>

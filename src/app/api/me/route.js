@@ -66,6 +66,8 @@ export async function GET() {
 
     // Merge DB stats
     if (dbUser) {
+      profile.id = dbUser.id;
+      profile.fullName = dbUser.full_name;
       profile.spendableLeaves = parseInt(dbUser.spendable_leaves || 0);
       profile.lifetimeLeaves = parseInt(dbUser.lifetime_leaves || 0);
       profile.lkid = dbUser.lk_id || profile.lkid || 'Guest';

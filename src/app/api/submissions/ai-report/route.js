@@ -26,7 +26,7 @@ export async function GET(request) {
 
     // 1. Fetch submission details to ensure this user is the author
     const submission = await Database.queryOne(`
-      SELECT id, author_id, title, is_revised as "isRevised" 
+      SELECT id, author_id, title, genre, logline, is_revised as "isRevised", created_at as "createdAt"
       FROM submissions 
       WHERE id = $1
     `, [submissionId]);
@@ -69,20 +69,16 @@ export async function GET(request) {
       ORDER BY created_at ASC
     `, [submissionId]);
 
-    if (!report && (!reviews || reviews.length === 0)) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No critiques or synthesis reports have been recorded for this manuscript yet.' 
-      }, { status: 404 });
-    }
-
     return NextResponse.json({
       success: true,
       report: report || null,
       submission: {
         id: submission.id,
         title: submission.title,
-        isRevised: submission.isRevised
+        genre: submission.genre,
+        logline: submission.logline,
+        isRevised: submission.isRevised,
+        createdAt: submission.createdAt
       },
       reviews: reviews || []
     });
