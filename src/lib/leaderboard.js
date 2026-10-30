@@ -182,23 +182,30 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
   }));
 
   // Fetch inducted Anthology Laureates for the active/recent cycle
-  const anthologyInductees = await Database.query(`
-    SELECT 
-      s.id, 
-      s.title, 
-      s.genre, 
-      s.author_id as "authorId", 
-      COALESCE(s.anthology_rank, 1)::int as "anthologyRank",
-      s.created_at as "createdAt",
-      u.full_name as "authorName",
-      u.avatar_url as "avatarUrl",
-      u.reader_archetype as "archetype"
-    FROM submissions s
-    JOIN users u ON u.id = s.author_id
-    WHERE s.anthology_inducted = TRUE
-    ORDER BY s.created_at DESC, s.anthology_rank ASC
-    LIMIT 6
-  `);
+  let anthologyInductees = [];
+  try {
+    anthologyInductees = await Database.query(`
+      SELECT 
+        s.id, 
+        s.title, 
+        s.genre, 
+        s.author_id as "authorId", 
+        mae.placement_rank as "anthologyRank",
+        mae.category,
+        s.created_at as "createdAt",
+        u.full_name as "authorName",
+        u.avatar_url as "avatarUrl",
+        u.reader_archetype as "archetype"
+      FROM monthly_anthology_entries mae
+      JOIN submissions s ON s.id = mae.submission_id
+      JOIN users u ON u.id = s.author_id
+      ORDER BY mae.issue_id DESC, mae.category ASC, mae.placement_rank ASC
+      LIMIT 6
+    `);
+  } catch (err) {
+    console.error("Failed to fetch anthology inductees for leaderboard:", err);
+    anthologyInductees = [];
+  }
 
   // Published Editorial Honors from monthly_leaderboard
   const publishedHonors = await Database.queryOne(`
@@ -402,7 +409,9 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
     monthly: {
       cycleName,
       anthologyInductees: anthologyInductees || [],
-      reviewerPodium,
+      prosePodium: prosePodium || [],
+      poetryPodium: poetryPodium || [],
+      reviewerPodium: reviewerPodium || [],
       editorialHonors: publishedHonors ? {
         monthYear: publishedHonors.monthYear,
         generalBookie: publishedHonors.generalBookieName ? {

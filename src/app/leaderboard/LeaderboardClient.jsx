@@ -817,7 +817,7 @@ function PodiumSection({
                     #{runner.rank}
                   </span>
                   <span className="font-bold text-[#20070e] truncate">
-                    {runner.name.split(' ')[0]}
+                    {(runner.name || 'Scribe').split(' ')[0]}
                   </span>
                 </div>
                 <span className="font-mono text-[10px] text-[#120308]/70 flex-shrink-0">
