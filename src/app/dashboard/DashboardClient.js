@@ -2684,42 +2684,22 @@ export default function DashboardClient({
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-5xl mx-auto">
                     
-                    {/* General Bookie card */}
-                    {activeLeaderboard.generalBookieName && (
-                      <div className="bg-white border border-sage/15 p-5 sm:p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden hover:shadow-md transition-shadow">
+                    {/* Unified Sanctuary Bookie card */}
+                    {(activeLeaderboard.generalBookieName || activeLeaderboard.bookieName) && (
+                      <div className="bg-white border border-sage/15 p-5 sm:p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden hover:shadow-md transition-shadow max-w-xl mx-auto col-span-full">
                         <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
                         <div className="space-y-4 relative z-10">
                           <span className="bg-primary/10 text-burgundy text-[9px] font-bold px-3 py-1 rounded-full border border-primary/20 uppercase tracking-widest inline-block">
-                            🌍 General Bookie
+                            📖 Sanctuary Bookie of the Month
                           </span>
-                          <h3 className="text-2xl font-display font-bold text-burgundy">{activeLeaderboard.generalBookieName}</h3>
+                          <h3 className="text-2xl font-display font-bold text-burgundy">{activeLeaderboard.generalBookieName || activeLeaderboard.bookieName}</h3>
                           <p className="text-xs sm:text-sm text-ink/80 font-serif leading-relaxed italic font-medium">
-                            "{activeLeaderboard.generalBookieText || 'First to finish and submit an in-depth review for the General Book of the Month!'}"
+                            "{activeLeaderboard.generalBookieText || activeLeaderboard.bookieText || 'First to finish and submit an in-depth review for the Book of the Month!'}"
                           </p>
                         </div>
                         <div className="border-t border-sage/10 pt-4 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/40">
-                          <span>Status: Crowned 🏆</span>
-                          <span className="text-accent">+50 Leaves Bonus</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Abuja Bookie card */}
-                    {activeLeaderboard.abujaBookieName && (
-                      <div className="bg-white border border-sage/15 p-5 sm:p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden hover:shadow-md transition-shadow">
-                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-accent/5 rounded-full blur-2xl"></div>
-                        <div className="space-y-4 relative z-10">
-                          <span className="bg-accent/15 text-accent text-[9px] font-bold px-3 py-1 rounded-full border border-accent/20 uppercase tracking-widest inline-block">
-                            📍 Abuja Bookie
-                          </span>
-                          <h3 className="text-2xl font-display font-bold text-burgundy">{activeLeaderboard.abujaBookieName}</h3>
-                          <p className="text-xs sm:text-sm text-ink/80 font-serif leading-relaxed italic font-medium">
-                            "{activeLeaderboard.abujaBookieText || 'First to finish and submit an in-depth review for the Abuja Book of the Month!'}"
-                          </p>
-                        </div>
-                        <div className="border-t border-sage/10 pt-4 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/40">
-                          <span>Status: Crowned 🏆</span>
-                          <span className="text-accent">+50 Leaves Bonus</span>
+                          <span>Council of Ten • Crowned 🏆</span>
+                          <span className="text-accent">+50 Leaves • +1.0 Token</span>
                         </div>
                       </div>
                     )}

@@ -301,20 +301,12 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {editorialHonors.generalBookie && (
+                    {(editorialHonors.bookie || editorialHonors.generalBookie) && (
                       <EditorialCard 
-                        title="Bookie of the Month (General)"
-                        name={editorialHonors.generalBookie.name}
-                        blurb={editorialHonors.generalBookie.text}
-                        badge="General BOTM"
-                      />
-                    )}
-                    {editorialHonors.abujaBookie && (
-                      <EditorialCard 
-                        title="Bookie of the Month (Abuja)"
-                        name={editorialHonors.abujaBookie.name}
-                        blurb={editorialHonors.abujaBookie.text}
-                        badge="Abuja BOTM"
+                        title="Sanctuary Bookie of the Month"
+                        name={(editorialHonors.bookie || editorialHonors.generalBookie).name}
+                        blurb={(editorialHonors.bookie || editorialHonors.generalBookie).text}
+                        badge="Council of Ten • BOTM"
                       />
                     )}
                     {editorialHonors.reviewOfTheMonth && (

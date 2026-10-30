@@ -414,13 +414,13 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
       reviewerPodium: reviewerPodium || [],
       editorialHonors: publishedHonors ? {
         monthYear: publishedHonors.monthYear,
-        generalBookie: publishedHonors.generalBookieName ? {
+        bookie: publishedHonors.generalBookieName ? {
           name: publishedHonors.generalBookieName,
           text: publishedHonors.generalBookieText
         } : null,
-        abujaBookie: publishedHonors.abujaBookieName ? {
-          name: publishedHonors.abujaBookieName,
-          text: publishedHonors.abujaBookieText
+        generalBookie: publishedHonors.generalBookieName ? {
+          name: publishedHonors.generalBookieName,
+          text: publishedHonors.generalBookieText
         } : null,
         reviewOfTheMonth: publishedHonors.reviewWinnerName ? {
           name: publishedHonors.reviewWinnerName,

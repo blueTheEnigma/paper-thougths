@@ -1248,26 +1248,15 @@ export default function AdminClient({
                       </h4>
 
                       <div className="space-y-5">
-                        {/* Bookies of the Month (Ready-Only Stats) */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/50 p-4 rounded-2xl border border-sage/10">
-                          <div>
-                            <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy block">General Bookie (Dynamic)</span>
-                            <span className="font-sans font-bold text-xs text-ink block mt-0.5">
-                              {leaderboardData.generalBookieName || 'No bookie crowned yet.'}
-                            </span>
-                            <p className="text-[10px] text-ink/50 font-serif italic mt-1 leading-relaxed">
-                              {leaderboardData.generalBookieBook ? `Determined as first to finish and review "${leaderboardData.generalBookieBook}".` : 'No active General book reviews found.'}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy block">Abuja Bookie (Dynamic)</span>
-                            <span className="font-sans font-bold text-xs text-ink block mt-0.5">
-                              {leaderboardData.abujaBookieName || 'No bookie crowned yet.'}
-                            </span>
-                            <p className="text-[10px] text-ink/50 font-serif italic mt-1 leading-relaxed">
-                              {leaderboardData.abujaBookieBook ? `Determined as first to finish and review "${leaderboardData.abujaBookieBook}".` : 'No active Abuja book reviews found.'}
-                            </p>
-                          </div>
+                        {/* Sanctuary Bookie of the Month (Ready-Only Stats) */}
+                        <div className="bg-white/50 p-4 rounded-2xl border border-sage/10">
+                          <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy block">Sanctuary Bookie (Dynamic)</span>
+                          <span className="font-sans font-bold text-xs text-ink block mt-0.5">
+                            {leaderboardData.generalBookieName || 'No bookie crowned yet.'}
+                          </span>
+                          <p className="text-[10px] text-ink/50 font-serif italic mt-1 leading-relaxed">
+                            {leaderboardData.generalBookieBook ? `Determined as first to finish and review "${leaderboardData.generalBookieBook}".` : 'No active Book of the Month reviews found.'}
+                          </p>
                         </div>
 
                         {/* Nominee 1: Reviewer of the Month */}
@@ -1410,24 +1399,13 @@ export default function AdminClient({
                           </div>
 
                           <div className="space-y-4">
-                            {/* General Bookie */}
+                            {/* Sanctuary Bookie */}
                             {leaderboardData.generalBookieName && (
                               <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
-                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy/85 flex items-center gap-1">🌍 General Bookie</span>
+                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy/85 flex items-center gap-1">📖 Sanctuary Bookie</span>
                                 <span className="font-sans font-bold text-xs text-ink block">{leaderboardData.generalBookieName}</span>
                                 <p className="text-[11px] text-ink/65 font-serif leading-normal italic">
-                                  "{leaderboardData.generalBookieText || `First to complete Natasha Bowen's '${leaderboardData.generalBookieBook || 'Skin of the Sea'}' and submit a review.`}"
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Abuja Bookie */}
-                            {leaderboardData.abujaBookieName && (
-                              <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
-                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-burgundy/85 flex items-center gap-1">📍 Abuja Bookie</span>
-                                <span className="font-sans font-bold text-xs text-ink block">{leaderboardData.abujaBookieName}</span>
-                                <p className="text-[11px] text-ink/65 font-serif leading-normal italic">
-                                  "{leaderboardData.abujaBookieText || `First to complete '${leaderboardData.abujaBookieBook || 'Red Rising'}' and submit a review.`}"
+                                  "{leaderboardData.generalBookieText || `First to complete '${leaderboardData.generalBookieBook || 'Book of the Month'}' and submit a review.`}"
                                 </p>
                               </div>
                             )}

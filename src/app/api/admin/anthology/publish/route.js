@@ -111,7 +111,7 @@ export async function POST(request) {
       }
 
       // 3. Upsert into monthly_leaderboard for unified honors synchronization
-      const cleanGeneralBookieId = generalBookieUserId ? parseInt(generalBookieUserId, 10) : null;
+      const cleanGeneralBookieId = (body.bookieUserId || generalBookieUserId) ? parseInt(body.bookieUserId || generalBookieUserId, 10) : null;
       const cleanAbujaBookieId = abujaBookieUserId ? parseInt(abujaBookieUserId, 10) : null;
       const cleanReviewerId = reviewOfTheMonthUserId ? parseInt(reviewOfTheMonthUserId, 10) : null;
 
@@ -134,8 +134,8 @@ export async function POST(request) {
           created_at = NOW()
       `, [
         monthYear,
-        cleanGeneralBookieId, generalBookieText || null,
-        cleanAbujaBookieId, abujaBookieText || null,
+        cleanGeneralBookieId, (body.bookieText || generalBookieText) || null,
+        null, null,
         cleanReviewerId, reviewOfTheMonthText || null,
         published
       ]);

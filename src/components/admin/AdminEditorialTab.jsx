@@ -37,10 +37,8 @@ export default function AdminEditorialTab({ isSuperadmin }) {
   const [citations, setCitations] = useState({});
 
   // Honors
-  const [generalBookieUserId, setGeneralBookieUserId] = useState('');
-  const [generalBookieText, setGeneralBookieText] = useState('For unmatched reading zeal and sanctuary devotion.');
-  const [abujaBookieUserId, setAbujaBookieUserId] = useState('');
-  const [abujaBookieText, setAbujaBookieText] = useState('Leading the vanguard in the Abuja Chapter book banter.');
+  const [bookieUserId, setBookieUserId] = useState('');
+  const [bookieText, setBookieText] = useState('For unmatched reading zeal and sanctuary devotion.');
   const [reviewOfTheMonthUserId, setReviewOfTheMonthUserId] = useState('');
   const [reviewOfTheMonthText, setReviewOfTheMonthText] = useState('Crafted critiques that gave authors wings instead of wounds.');
 
@@ -89,10 +87,8 @@ export default function AdminEditorialTab({ isSuperadmin }) {
         // Load existing honors
         if (data.leaderboardHonors) {
           const h = data.leaderboardHonors;
-          if (h.general_bookie_user_id) setGeneralBookieUserId(String(h.general_bookie_user_id));
-          if (h.general_bookie_text) setGeneralBookieText(h.general_bookie_text);
-          if (h.abuja_bookie_user_id) setAbujaBookieUserId(String(h.abuja_bookie_user_id));
-          if (h.abuja_bookie_text) setAbujaBookieText(h.abuja_bookie_text);
+          if (h.general_bookie_user_id || h.bookie_user_id) setBookieUserId(String(h.general_bookie_user_id || h.bookie_user_id));
+          if (h.general_bookie_text || h.bookie_text) setBookieText(h.general_bookie_text || h.bookie_text);
           if (h.review_of_the_month_user_id) setReviewOfTheMonthUserId(String(h.review_of_the_month_user_id));
           if (h.review_of_the_month_text) setReviewOfTheMonthText(h.review_of_the_month_text);
         }
@@ -188,10 +184,12 @@ export default function AdminEditorialTab({ isSuperadmin }) {
         curatorForeword,
         stories: storyEntries,
         poems: poemEntries,
-        generalBookieUserId: generalBookieUserId ? parseInt(generalBookieUserId, 10) : null,
-        generalBookieText,
-        abujaBookieUserId: abujaBookieUserId ? parseInt(abujaBookieUserId, 10) : null,
-        abujaBookieText,
+        generalBookieUserId: bookieUserId ? parseInt(bookieUserId, 10) : null,
+        generalBookieText: bookieText,
+        abujaBookieUserId: null,
+        abujaBookieText: null,
+        bookieUserId: bookieUserId ? parseInt(bookieUserId, 10) : null,
+        bookieText: bookieText,
         reviewOfTheMonthUserId: reviewOfTheMonthUserId ? parseInt(reviewOfTheMonthUserId, 10) : null,
         reviewOfTheMonthText,
         published: true
@@ -260,7 +258,7 @@ export default function AdminEditorialTab({ isSuperadmin }) {
     text += `━━━━━━━━━━━━━━━━━━━━\n`;
     text += `📖 Read all winning manuscripts freely on the Living Anthology:\n`;
     text += `https://paperthoughts.org/anthology\n\n`;
-    text += `_Winners will receive payouts directly via transfer. Join us in celebrating our literary warriors!_ 🥂`;
+    text += `_Conferred with Leaves, Milestone Tokens, and permanent Living Anthology Consecration. Join us in celebrating our literary warriors!_ 🥂`;
 
     return text;
   };
@@ -763,61 +761,47 @@ export default function AdminEditorialTab({ isSuperadmin }) {
             </div>
           </div>
 
-          {/* Bookie Honors Configuration */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* General Bookie */}
-            <div className="bg-white border border-[#20070e]/10 rounded-2xl p-6 space-y-4 shadow-2xs">
-              <h4 className="font-bold text-sm text-[#20070e] flex items-center gap-1.5 uppercase tracking-wider">
-                <Award size={15} className="text-[#c96a42]" /> General Bookie of the Month
-              </h4>
-              <div className="space-y-1">
+          {/* Unified Sanctuary Bookie Honors Configuration */}
+          <div className="bg-white border border-[#20070e]/10 rounded-2xl p-6 sm:p-7 space-y-4 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#20070e]/10 pb-3">
+              <div className="flex items-center gap-2">
+                <Award size={18} className="text-[#c96a42]" />
+                <div>
+                  <h4 className="font-bold text-sm text-[#20070e] uppercase tracking-wider">
+                    Sanctuary Bookie of the Month
+                  </h4>
+                  <p className="text-[11px] text-[#20070e]/60 font-serif">
+                    Unified discussion leader crowned for the Book of the Month (+50 🍃 • +1.0 🪙). Part of the Council of Ten.
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-[#c96a42]/10 text-[#c96a42] border border-[#c96a42]/20 shrink-0 self-start sm:self-auto">
+                Council of Ten • BOTM
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+              <div className="space-y-1 md:col-span-1">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-[#20070e]/50">Winner User ID</label>
                 <input
                   type="text"
-                  value={generalBookieUserId}
-                  onChange={(e) => setGeneralBookieUserId(e.target.value)}
+                  value={bookieUserId}
+                  onChange={(e) => setBookieUserId(e.target.value)}
                   className="w-full bg-[#FBF7EE] border border-[#20070e]/15 rounded-xl px-3 py-2 text-xs font-bold text-[#20070e] focus:outline-none focus:border-[#c96a42]"
                   placeholder="e.g. 1"
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 md:col-span-2">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-[#20070e]/50">Citation / Praise</label>
                 <textarea
                   rows={2}
-                  value={generalBookieText}
-                  onChange={(e) => setGeneralBookieText(e.target.value)}
+                  value={bookieText}
+                  onChange={(e) => setBookieText(e.target.value)}
                   className="w-full bg-[#FBF7EE] border border-[#20070e]/15 rounded-xl px-3 py-2 text-xs text-[#20070e] focus:outline-none focus:border-[#c96a42]"
+                  placeholder="For unmatched reading zeal and sanctuary devotion."
                 />
               </div>
             </div>
-
-            {/* Abuja Bookie */}
-            <div className="bg-white border border-[#20070e]/10 rounded-2xl p-6 space-y-4 shadow-2xs">
-              <h4 className="font-bold text-sm text-[#20070e] flex items-center gap-1.5 uppercase tracking-wider">
-                <Award size={15} className="text-[#c96a42]" /> Abuja Bookie of the Month
-              </h4>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#20070e]/50">Winner User ID</label>
-                <input
-                  type="text"
-                  value={abujaBookieUserId}
-                  onChange={(e) => setAbujaBookieUserId(e.target.value)}
-                  className="w-full bg-[#FBF7EE] border border-[#20070e]/15 rounded-xl px-3 py-2 text-xs font-bold text-[#20070e] focus:outline-none focus:border-[#c96a42]"
-                  placeholder="e.g. 5"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#20070e]/50">Citation / Praise</label>
-                <textarea
-                  rows={2}
-                  value={abujaBookieText}
-                  onChange={(e) => setAbujaBookieText(e.target.value)}
-                  className="w-full bg-[#FBF7EE] border border-[#20070e]/15 rounded-xl px-3 py-2 text-xs text-[#20070e] focus:outline-none focus:border-[#c96a42]"
-                />
-              </div>
-            </div>
-
           </div>
 
         </div>
