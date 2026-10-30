@@ -46,7 +46,7 @@ export default function LiteraryReaderModal({
       }
 
       return () => {
-        document.body.style.overflow = originalOverflow;
+        document.body.style.overflow = originalOverflow === 'hidden' ? '' : originalOverflow;
         document.body.style.paddingRight = originalPaddingRight;
       };
     }
@@ -120,7 +120,10 @@ export default function LiteraryReaderModal({
           </div>
 
           {/* Scrollable Parchment Reader Body */}
-          <div className="p-5 sm:p-8 md:p-10 overflow-y-auto paper-scrollbar space-y-6 sm:space-y-7 text-center">
+          <div 
+            className="p-5 sm:p-8 md:p-10 overflow-y-auto overscroll-contain paper-scrollbar space-y-6 sm:space-y-7 text-center"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             
             {/* Header: Brand & Title */}
             <div className="space-y-2 max-w-xl mx-auto">

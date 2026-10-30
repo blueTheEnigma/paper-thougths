@@ -46,6 +46,8 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
   const [suggestSuccess, setSuggestSuccess] = useState(null);
   const [suggestError, setSuggestError] = useState(null);
   const [submittingVote, setSubmittingVote] = useState(false);
+  const [hasReviewedPastBotm, setHasReviewedPastBotm] = useState(false);
+  const [qualifyingBotm, setQualifyingBotm] = useState(null);
 
   // Comments / Replies states (nested under reviews)
   const [expandedComments, setExpandedComments] = useState({}); // reviewId -> boolean
@@ -109,6 +111,8 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
         setUserVotedSuggestionId(data.userVotedSuggestionId || null);
         setIsVotingOpen(!!data.isVotingOpen);
         setVotingMonthYear(data.targetMonthYear || '');
+        setHasReviewedPastBotm(Boolean(data.hasReviewedPastBotm));
+        setQualifyingBotm(data.qualifyingBotm || null);
       }
     } catch (err) {
       console.error("Failed to load suggestions/votes", err);
@@ -534,6 +538,25 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
                         Sign In
                       </Link>
                     </div>
+                  ) : !hasReviewedPastBotm ? (
+                    <div className="bg-[#FAF7F0] border border-[#c96a42]/30 p-5 rounded-2xl text-center space-y-2.5">
+                      <div className="w-9 h-9 rounded-full bg-[#c96a42]/15 text-[#c96a42] flex items-center justify-center mx-auto text-base">
+                        🔒
+                      </div>
+                      <h4 className="font-display text-sm font-bold text-burgundy">Merit Ballot Locked</h4>
+                      <p className="text-xs text-ink/75 font-serif leading-relaxed max-w-sm mx-auto">
+                        To participate in choosing the next Book of the Month, submit your review for <strong>&ldquo;{qualifyingBotm?.title || activeBook?.title || 'the current Book of the Month'}&rdquo;</strong> above first.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          window.scrollTo({ top: 350, behavior: 'smooth' });
+                        }}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#c96a42] hover:bg-[#b05832] text-cream text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm"
+                      >
+                        <span>Review &ldquo;{qualifyingBotm?.title || activeBook?.title}&rdquo; to Unlock Ballot ✍️</span>
+                      </button>
+                    </div>
                   ) : (
                     <div className="space-y-3">
                       {suggestionsLoading ? (
@@ -613,11 +636,24 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
                         Sign In
                       </Link>
                     </div>
-                  ) : !reviews.some(r => r.reviewerName === profile.name) ? (
-                    <div className="bg-[#FAF6F0] p-4 rounded-xl text-center border border-sage/15">
-                      <p className="text-xs text-ink/60 font-serif leading-relaxed">
-                        You have not reviewed this Book of the Month yet. Submit your critique above to unlock candidate suggestions.
+                  ) : !hasReviewedPastBotm ? (
+                    <div className="bg-[#FAF7F0] border border-[#c96a42]/30 p-5 rounded-2xl text-center space-y-2.5">
+                      <div className="w-9 h-9 rounded-full bg-[#c96a42]/15 text-[#c96a42] flex items-center justify-center mx-auto text-base">
+                        🔒
+                      </div>
+                      <h4 className="font-display text-sm font-bold text-burgundy">Nominations Locked</h4>
+                      <p className="text-xs text-ink/75 font-serif leading-relaxed max-w-sm mx-auto">
+                        Only active reviewers can suggest candidate books for the next cycle. Submit your review for <strong>&ldquo;{qualifyingBotm?.title || activeBook?.title || 'the current Book of the Month'}&rdquo;</strong> above to unlock.
                       </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          window.scrollTo({ top: 350, behavior: 'smooth' });
+                        }}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#c96a42] hover:bg-[#b05832] text-cream text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm"
+                      >
+                        <span>Review &ldquo;{qualifyingBotm?.title || activeBook?.title}&rdquo; to Unlock Suggestions ✍️</span>
+                      </button>
                     </div>
                   ) : suggestions.some(sug => sug.suggestedBy === profile.name) ? (
                     <div className="bg-emerald-55 border border-emerald-200/50 p-4 rounded-2xl flex items-start gap-2.5 text-emerald-800">

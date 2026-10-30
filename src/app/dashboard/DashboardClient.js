@@ -412,17 +412,19 @@ export default function DashboardClient({
     }
   };
 
-  // Lock Body Scroll when any Modal is open
+  // Lock Body Scroll when any modal is open
   useEffect(() => {
-    const isAnyModalOpen = selectedSubForRead || selectedSubForEdit || selectedReportId || showBuyLeavesModal || showSabbaticalModal;
+    const isAnyModalOpen = selectedSubForEdit || showBuyLeavesModal || showSabbaticalModal;
     if (isAnyModalOpen) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
+      const originalStyle = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       return () => {
-        document.body.style.overflow = originalStyle;
+        document.body.style.overflow = originalStyle === 'hidden' ? '' : originalStyle;
       };
+    } else if (!selectedSubForRead) {
+      document.body.style.overflow = '';
     }
-  }, [selectedSubForRead, selectedSubForEdit, selectedReportId, showBuyLeavesModal, showSabbaticalModal]);
+  }, [selectedSubForRead, selectedSubForEdit, showBuyLeavesModal, showSabbaticalModal]);
 
   // 1-Click Copy Manuscript Quote / Logline
   const [copiedSubId, setCopiedSubId] = useState(null);
@@ -2840,11 +2842,25 @@ export default function DashboardClient({
                             <p className="text-xs text-ink/70 font-serif leading-relaxed line-clamp-3 italic">"{sub.logline}"</p>
                           </div>
 
-                          <div className="border-t border-sage/10 pt-4 space-y-2">
-                            <div className="flex justify-between items-center text-[10px] text-ink/40 font-sans font-bold">
-                              <span>Critiques Received: {sub.reviewCount || 0}</span>
+                          <div className="border-t border-sage/10 pt-4 space-y-2.5">
+                            <div className="flex justify-between items-center text-[10px] font-sans">
+                              {sub.reviewCount > 0 || sub.hasReport ? (
+                                <button
+                                  onClick={() => setSelectedReportId(sub.id)}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-burgundy/10 hover:bg-burgundy text-burgundy hover:text-cream font-bold transition-all cursor-pointer border border-burgundy/15"
+                                  title="Read all critiques and reflections received for this manuscript"
+                                >
+                                  <MessageSquare size={12} />
+                                  <span>Read Critiques ({sub.reviewCount || 1})</span>
+                                  <span className="text-[9px]">→</span>
+                                </button>
+                              ) : (
+                                <span className="text-ink/40 font-bold flex items-center gap-1">
+                                  <MessageSquare size={12} /> Critiques Received: 0
+                                </span>
+                              )}
                               {sub.isRevised && (
-                                <span className="text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Revised 📝</span>
+                                <span className="text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-bold">Revised 📝</span>
                               )}
                             </div>
 
@@ -2903,11 +2919,11 @@ export default function DashboardClient({
                                 <Download size={13} />
                               </button>
 
-                              {sub.hasReport && (
+                              {(sub.reviewCount > 0 || sub.hasReport) && (
                                 <button
                                   onClick={() => setSelectedReportId(sub.id)}
-                                  className="bg-green-500/5 hover:bg-green-600 text-green-700 hover:text-white border border-green-600/10 rounded-xl p-2 flex items-center justify-center transition-all cursor-pointer"
-                                  title="View Synthesis Feedback"
+                                  className="bg-burgundy/10 hover:bg-burgundy text-burgundy hover:text-cream border border-burgundy/20 rounded-xl p-2 flex items-center justify-center transition-all cursor-pointer shadow-sm"
+                                  title="Read Critiques & Synthesis"
                                 >
                                   <MessageSquare size={13} />
                                 </button>

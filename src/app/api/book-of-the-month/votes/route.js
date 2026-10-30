@@ -41,8 +41,14 @@ export async function GET(request) {
       ORDER BY "votesCount" DESC, s.created_at ASC
     `, [targetMonthYear, chapterId]);
 
-    // Check if the current user has voted in this stream for this cycle
+    // Check if the current user has voted in this stream for this cycle & check review gate
     let userVotedSuggestionId = null;
+    let hasReviewedPastBotm = false;
+
+    const qualifyingBotm = await Database.queryOne(`
+      SELECT id, title FROM book_of_the_month ORDER BY active DESC, id DESC LIMIT 1
+    `);
+
     const clerkUser = await currentUser();
     if (clerkUser) {
       const dbUser = await syncOrCreateUser(clerkUser);
@@ -56,9 +62,18 @@ export async function GET(request) {
         if (userVote) {
           userVotedSuggestionId = userVote.suggestionId;
         }
+
+        if (qualifyingBotm) {
+          const userReview = await Database.queryOne(`
+            SELECT id FROM book_of_the_month_reviews
+            WHERE user_id = $1 AND book_of_the_month_id = $2
+            LIMIT 1
+          `, [dbUser.id, qualifyingBotm.id]);
+          hasReviewedPastBotm = !!userReview;
+        }
       }
     }
-    
+
     const cycle = await Database.queryOne(`
       SELECT voting_open 
       FROM botm_cycles 
@@ -71,7 +86,9 @@ export async function GET(request) {
       suggestions,
       userVotedSuggestionId,
       isVotingOpen,
-      targetMonthYear
+      targetMonthYear,
+      hasReviewedPastBotm,
+      qualifyingBotm: qualifyingBotm ? { id: qualifyingBotm.id, title: qualifyingBotm.title } : null
     });
   } catch (error) {
     console.error('Failed to fetch voting status:', error);
@@ -103,6 +120,25 @@ export async function POST(request) {
 
     if (!isVotingOpen) {
       return NextResponse.json({ success: false, error: 'Voting is not currently open for this cycle.' }, { status: 403 });
+    }
+
+    // 0. Merit Gate: Verify user reviewed the active or most recent past BOTM
+    const qualifyingBotm = await Database.queryOne(`
+      SELECT id, title FROM book_of_the_month ORDER BY active DESC, id DESC LIMIT 1
+    `);
+    if (qualifyingBotm) {
+      const userReview = await Database.queryOne(`
+        SELECT id FROM book_of_the_month_reviews
+        WHERE user_id = $1 AND book_of_the_month_id = $2
+        LIMIT 1
+      `, [dbUser.id, qualifyingBotm.id]);
+
+      if (!userReview) {
+        return NextResponse.json({
+          success: false,
+          error: `Merit Gate: To cast a vote for the next Book of the Month, you must first submit your review for "${qualifyingBotm.title}" in the Salon.`
+        }, { status: 403 });
+      }
     }
 
     const body = await request.json();

@@ -55,7 +55,11 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
       if (data.success) {
         setReport(data.report);
         setSubmission(data.submission);
-        setReviews(data.reviews || []);
+        const fetchedReviews = data.reviews || [];
+        setReviews(fetchedReviews);
+        if (!data.report && fetchedReviews.length > 0) {
+          setActiveSubTab('critiques');
+        }
       } else {
         setError(data.error || 'Failed to retrieve synthesis report.');
       }
@@ -141,7 +145,7 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
     );
   }
 
-  const { intentMetrics, structuralMetrics, synthesizedMirror, synthesizedHighwater, synthesizedPivot, createdAt } = report;
+  const { intentMetrics, structuralMetrics, synthesizedMirror, synthesizedHighwater, synthesizedPivot, createdAt } = report || {};
 
   // Process data for charts
   const titleWeight = intentMetrics?.title_weight ?? 0;
@@ -249,6 +253,7 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
 
       <AnimatePresence mode="wait">
         {activeSubTab === 'summary' ? (
+          report ? (
           <motion.div
             key="summary-tab"
             initial={{ opacity: 0, y: 10 }}
@@ -494,6 +499,33 @@ export default function FeedbackDashboard({ submissionId, onClose }) {
 
             </div>
           </motion.div>
+          ) : (
+            <motion.div
+              key="no-report-summary"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="bg-white border border-sage/15 p-8 sm:p-12 rounded-[32px] text-center max-w-xl mx-auto shadow-sm space-y-4"
+            >
+              <div className="w-12 h-12 bg-accent/15 text-accent rounded-full flex items-center justify-center mx-auto text-xl">
+                ⏳
+              </div>
+              <h3 className="font-display text-xl text-burgundy font-bold">Synthesis In Progress</h3>
+              <p className="text-xs sm:text-sm text-ink/70 font-serif leading-relaxed">
+                The collective AI Synthesis Report compiles every Friday at midnight once all batch reviews are gathered. 
+                In the meantime, your readers' raw peer reviews are available right now.
+              </p>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab('critiques')}
+                  className="px-6 py-2.5 bg-burgundy hover:bg-ink text-cream font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm"
+                >
+                  Read {reviews.length} Peer {reviews.length === 1 ? 'Critique' : 'Critiques'} 💬
+                </button>
+              </div>
+            </motion.div>
+          )
         ) : (
           <motion.div
             key="critiques-tab"

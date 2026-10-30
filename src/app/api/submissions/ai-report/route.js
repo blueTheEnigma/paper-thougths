@@ -39,7 +39,7 @@ export async function GET(request) {
       return NextResponse.json({ success: false, error: 'Unauthorized. You are not the author of this submission.' }, { status: 403 });
     }
 
-    // 2. Fetch AI Report
+    // 2. Fetch AI Report (optional if not compiled yet)
     const report = await Database.queryOne(`
       SELECT intent_metrics as "intentMetrics", 
              structural_metrics as "structuralMetrics",
@@ -51,12 +51,8 @@ export async function GET(request) {
       WHERE submission_id = $1
     `, [submissionId]);
 
-    if (!report) {
-      return NextResponse.json({ success: false, error: 'No feedback report compiled for this submission yet.' }, { status: 404 });
-    }
-
     // 3. Fetch anonymous reviews with helpful evaluation status
-    const reviewsRes = await Database.query(`
+    const reviews = await Database.query(`
       SELECT id,
              pacing_rating as "pacingRating",
              strengths_array as "strengthsArray",
@@ -73,15 +69,22 @@ export async function GET(request) {
       ORDER BY created_at ASC
     `, [submissionId]);
 
+    if (!report && (!reviews || reviews.length === 0)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'No critiques or synthesis reports have been recorded for this manuscript yet.' 
+      }, { status: 404 });
+    }
+
     return NextResponse.json({
       success: true,
-      report,
+      report: report || null,
       submission: {
         id: submission.id,
         title: submission.title,
         isRevised: submission.isRevised
       },
-      reviews: reviewsRes.rows
+      reviews: reviews || []
     });
 
   } catch (error) {

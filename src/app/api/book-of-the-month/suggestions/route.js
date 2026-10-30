@@ -44,7 +44,31 @@ export async function GET(request) {
       ORDER BY s.created_at DESC
     `, [targetMonthYear, chapterId]);
 
-    return NextResponse.json({ success: true, suggestions, targetMonthYear });
+    const qualifyingBotm = await Database.queryOne(`
+      SELECT id, title FROM book_of_the_month ORDER BY active DESC, id DESC LIMIT 1
+    `);
+
+    let hasReviewedPastBotm = false;
+    const clerkUser = await currentUser();
+    if (clerkUser) {
+      const dbUser = await syncOrCreateUser(clerkUser);
+      if (dbUser && qualifyingBotm) {
+        const userReview = await Database.queryOne(`
+          SELECT id FROM book_of_the_month_reviews
+          WHERE user_id = $1 AND book_of_the_month_id = $2
+          LIMIT 1
+        `, [dbUser.id, qualifyingBotm.id]);
+        hasReviewedPastBotm = !!userReview;
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      suggestions, 
+      targetMonthYear,
+      hasReviewedPastBotm,
+      qualifyingBotm: qualifyingBotm ? { id: qualifyingBotm.id, title: qualifyingBotm.title } : null
+    });
   } catch (error) {
     console.error('Failed to fetch suggestions:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch suggestions' }, { status: 500 });
@@ -74,7 +98,7 @@ export async function POST(request) {
 
     // 1. Fetch current BOTM info
     const botm = await Database.queryOne(`
-      SELECT id, chapter_id as "chapterId"
+      SELECT id, title, chapter_id as "chapterId"
       FROM book_of_the_month
       WHERE id = $1
     `, [parsedBookId]);
@@ -90,7 +114,10 @@ export async function POST(request) {
     `, [dbUser.id, parsedBookId]);
 
     if (!review) {
-      return NextResponse.json({ success: false, error: 'You must review this Book of the Month before submitting a suggestion.' }, { status: 403 });
+      return NextResponse.json({ 
+        success: false, 
+        error: `Merit Gate: You must review "${botm.title}" in the Salon before submitting a candidate suggestion.` 
+      }, { status: 403 });
     }
 
     // 3. Check if user already submitted a suggestion for this BOTM
