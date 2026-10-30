@@ -522,7 +522,7 @@ export function getAnthologyLaureateAnnouncementEmail({
         <strong>Bi-Token Economy Rewards:</strong> 100 Spendable Leaves & 100 Lifetime Leaves have been credited to your Sanctuary account.
       </li>
       <li style="margin-bottom: 8px;">
-        <strong>Monthly Cash Laurels:</strong> Ufuoma Morgan will reach out on the WhatsApp community group to collect account details for your cash transfer prize and post the receipt on the group.
+        <strong>Council of Ten Honors:</strong> You are officially crowned on the Clubhouse Honors and your winning manuscript is consecrated in the Paper Thoughts Living Anthology!
       </li>
       <li style="margin-bottom: 8px;">
         <strong>Annual Anthology Inclusion:</strong> Your winning piece has been automatically shortlisted for the inaugural <em>Paper Thoughts Anthology: Volume 1 (2026)</em> collector's edition print and e-book!

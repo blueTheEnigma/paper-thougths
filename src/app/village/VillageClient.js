@@ -563,7 +563,7 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
                   <ul className="space-y-1.5 list-disc pl-4 font-medium">
                     <li>Unlimited reviews: Earn <strong>5 Leaves</strong> per critique.</li>
                     <li>Author Helpful Bonus: Earn <strong>+10 Leaves</strong> when confirmed.</li>
-                    <li>Compete for <strong>Reviewer of the Month</strong> (₦2,000 cash prize).</li>
+                    <li>Compete for <strong>Inquisitor of the Month</strong> (+150 🍃 & +2.0 🪙 podium laurels).</li>
                   </ul>
                 </div>
               </div>

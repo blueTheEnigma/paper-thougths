@@ -200,7 +200,7 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
         </div>
 
         {/* ========================================================= */}
-        {/* TAB 1: MONTHLY LAURELS (₦18k Cash Pool & 3 Podiums)      */}
+        {/* TAB 1: MONTHLY LAURELS (Council of Ten & Inquisitors)      */}
         {/* ========================================================= */}
         <AnimatePresence mode="wait">
           {activeTab === 'monthly' && (

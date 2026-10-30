@@ -226,7 +226,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
     let text = `🏆 *PAPER THOUGHTS — MONTHLY LAURELS OF VALOR* 🏆\n`;
     text += `_Honoring the Ink & Critiques of ${cycle}_\n\n`;
 
-    text += `📖 *FICTION & PROSE PODIUM (₦2,000 Cash Laurel each)*\n`;
+    text += `📖 *FICTION & PROSE (Living Anthology Consecration)*\n`;
     prose.slice(0, 3).forEach((p, idx) => {
       const medals = ['🥇 1st', '🥈 2nd', '🥉 3rd'];
       text += `${medals[idx]}: *${p.name}* (${p.submissionsCount} submissions)\n`;
@@ -234,7 +234,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
     if (prose.length === 0) text += `_No qualifying storytellers this cycle_\n`;
     text += `\n`;
 
-    text += `🪶 *POETRY & VERSES PODIUM (₦2,000 Cash Laurel each)*\n`;
+    text += `🪶 *POETRY & VERSES (Living Anthology Consecration)*\n`;
     poetry.slice(0, 3).forEach((p, idx) => {
       const medals = ['🥇 1st', '🥈 2nd', '🥉 3rd'];
       text += `${medals[idx]}: *${p.name}* (${p.submissionsCount} verses)\n`;
@@ -242,7 +242,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
     if (poetry.length === 0) text += `_No qualifying poets this cycle_\n`;
     text += `\n`;
 
-    text += `🔍 *REVIEWERS OF THE MONTH (₦2,000 Cash Laurel each)*\n`;
+    text += `🔍 *INQUISITORS OF THE MONTH (Critique Guild)*\n`;
     reviewers.slice(0, 3).forEach((r, idx) => {
       const medals = ['🥇 1st', '🥈 2nd', '🥉 3rd'];
       text += `${medals[idx]}: *${r.name}* (${r.helpfulCount || 0} helpful critiques)\n`;
@@ -250,7 +250,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
     if (reviewers.length === 0) text += `_No qualifying reviewers this cycle_\n`;
     text += `\n`;
 
-    text += `💰 *Total Cash Laurels Awarded:* ₦18,000 🍃\n`;
+    text += `🏛️ *Council of Ten Consecrated:* 6 Anthology Inductees & 3 Inquisitors 🍃\n`;
     text += `_"To write is to remember. To critique is to sharpen."_\n`;
     text += `Congratulations to all our laureled scribes! 🥂✨`;
 
@@ -306,7 +306,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
             </h1>
             <p className="text-[#F2A98A]/80 text-sm md:text-base mt-2 max-w-2xl font-serif">
               Real-time member probation radar, one-click Nigerian WhatsApp eviction notices, 
-              ₦18,000 monthly laurels payout terminal, and Returner’s Crossing petition adjudication.
+              Monthly Council of Ten laurels terminal, and Returner’s Crossing petition adjudication.
             </p>
           </div>
 
@@ -344,13 +344,13 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
 
           <div className="bg-[#120308]/60 rounded-2xl p-4 border border-amber-900/30">
             <div className="flex items-center justify-between text-xs text-[#F2A98A] font-serif">
-              <span>Monthly Laurels Pool</span>
+              <span>Council of Ten Laurels</span>
               <TrophyIcon className="w-4 h-4 text-[#F2A98A]" />
             </div>
             <div className="text-2xl font-serif font-bold text-[#FBF7EE] mt-1">
-              ₦18,000
+              10 Laureates
             </div>
-            <div className="text-[11px] text-[#F2A98A]/80 mt-1">9 Monthly Laurels (₦2k each)</div>
+            <div className="text-[11px] text-[#F2A98A]/80 mt-1">6 Anthology · 3 Inquisitors · 1 Bookie</div>
           </div>
 
           <div className="bg-[#120308]/60 rounded-2xl p-4 border border-[#c96a42]/30">
@@ -586,7 +586,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
       )}
 
       {/* ========================================================================= */}
-      {/* SUB-TAB 2: MONTHLY LAURELS PAYOUT TERMINAL (₦18,000) */}
+      {/* SUB-TAB 2: MONTHLY LAURELS TERMINAL (COUNCIL OF TEN) */}
       {/* ========================================================================= */}
       {activeSubTab === 'laurels' && (
         <div className="space-y-6">
@@ -599,7 +599,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
                 </h2>
               </div>
               <p className="text-xs text-[#F2A98A]/70 font-serif mt-1">
-                ₦18,000 monthly cash honors awarded to the Top 3 Fiction Writers, Top 3 Poets, and Top 3 Reviewers (₦2,000 each).
+                Council of Ten honors: 6 Living Anthology inductees, 3 Inquisitors of the Month (+300 🍃 • 4.0 🪙 total), and 1 Sanctuary Bookie.
               </p>
             </div>
 
@@ -621,7 +621,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
                   <h3 className="font-serif font-bold text-[#FBF7EE]">Fiction & Prose</h3>
                 </div>
                 <span className="text-xs font-serif text-amber-300 font-bold bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-500/30">
-                  ₦6,000 Total
+                  Anthology Inductees
                 </span>
               </div>
 
@@ -633,7 +633,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
                 <div className="space-y-3">
                   {monthlyLaurels.prose.slice(0, 3).map((w, idx) => {
                     const medals = ['🥇', '🥈', '🥉'];
-                    const waUrl = getNigerianWhatsAppUrl(w.whatsapp, `Congratulations ${w.name}! You have won a ₦2,000 Monthly Cash Laurel on Paper Thoughts for Fiction & Prose in ${monthlyLaurels.cycleName}! Please confirm your account details for transfer.`);
+                    const waUrl = getNigerianWhatsAppUrl(w.whatsapp, `Congratulations ${w.name}! Your manuscript has been consecrated into the Living Anthology for Fiction & Prose in ${monthlyLaurels.cycleName}! Your work is officially shortlisted for the inaugural print anthology!`);
                     return (
                       <div key={w.id || idx} className="bg-black/30 rounded-xl p-3 border border-white/5 space-y-2">
                         <div className="flex items-center justify-between">
@@ -641,7 +641,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
                             <span className="text-base">{medals[idx]}</span>
                             <span className="font-serif font-bold text-[#FBF7EE] text-sm">{w.name}</span>
                           </div>
-                          <span className="text-xs font-mono font-bold text-amber-300">₦2,000</span>
+                          <span className="text-xs font-mono font-bold text-amber-300">Inductee</span>
                         </div>
                         <div className="flex items-center justify-between text-xs text-[#F2A98A]/60 font-serif">
                           <span>{w.submissionsCount} submissions</span>
@@ -666,7 +666,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
                   <h3 className="font-serif font-bold text-[#FBF7EE]">Poetry & Verses</h3>
                 </div>
                 <span className="text-xs font-serif text-amber-300 font-bold bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-500/30">
-                  ₦6,000 Total
+                  Anthology Inductees
                 </span>
               </div>
 
@@ -678,7 +678,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
                 <div className="space-y-3">
                   {monthlyLaurels.poetry.slice(0, 3).map((w, idx) => {
                     const medals = ['🥇', '🥈', '🥉'];
-                    const waUrl = getNigerianWhatsAppUrl(w.whatsapp, `Congratulations ${w.name}! You have won a ₦2,000 Monthly Cash Laurel on Paper Thoughts for Poetry & Verses in ${monthlyLaurels.cycleName}! Please confirm your account details for transfer.`);
+                    const waUrl = getNigerianWhatsAppUrl(w.whatsapp, `Congratulations ${w.name}! Your poetry has been consecrated into the Living Anthology for Poetry & Verses in ${monthlyLaurels.cycleName}! Please confirm your account details for transfer.`);
                     return (
                       <div key={w.id || idx} className="bg-black/30 rounded-xl p-3 border border-white/5 space-y-2">
                         <div className="flex items-center justify-between">
@@ -686,7 +686,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
                             <span className="text-base">{medals[idx]}</span>
                             <span className="font-serif font-bold text-[#FBF7EE] text-sm">{w.name}</span>
                           </div>
-                          <span className="text-xs font-mono font-bold text-amber-300">₦2,000</span>
+                          <span className="text-xs font-mono font-bold text-amber-300">Inductee</span>
                         </div>
                         <div className="flex items-center justify-between text-xs text-[#F2A98A]/60 font-serif">
                           <span>{w.submissionsCount} verses</span>
@@ -708,10 +708,10 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
               <div className="flex items-center justify-between border-b border-[#c96a42]/20 pb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">🔍</span>
-                  <h3 className="font-serif font-bold text-[#FBF7EE]">Reviewers of Month</h3>
+                  <h3 className="font-serif font-bold text-[#FBF7EE]">Inquisitors of Month</h3>
                 </div>
                 <span className="text-xs font-serif text-amber-300 font-bold bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-500/30">
-                  ₦6,000 Total
+                  300 🍃 • 4.0 🪙
                 </span>
               </div>
 
@@ -723,7 +723,8 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
                 <div className="space-y-3">
                   {monthlyLaurels.reviewers.slice(0, 3).map((w, idx) => {
                     const medals = ['🥇', '🥈', '🥉'];
-                    const waUrl = getNigerianWhatsAppUrl(w.whatsapp, `Congratulations ${w.name}! You have won a ₦2,000 Monthly Cash Laurel on Paper Thoughts as Reviewer of the Month in ${monthlyLaurels.cycleName}! Please confirm your account details for transfer.`);
+                    const bounties = ['+150 🍃 • +2.0 🪙', '+100 🍃 • +1.2 🪙', '+50 🍃 • +0.8 🪙'];
+                    const waUrl = getNigerianWhatsAppUrl(w.whatsapp, `Congratulations ${w.name}! You have been crowned Inquisitor of the Month on Paper Thoughts in ${monthlyLaurels.cycleName}! Your leaf & milestone token honors have been conferred!`);
                     return (
                       <div key={w.id || idx} className="bg-black/30 rounded-xl p-3 border border-white/5 space-y-2">
                         <div className="flex items-center justify-between">
@@ -731,7 +732,7 @@ export default function AdminCrucibleTab({ initialData, allMembers = [] }) {
                             <span className="text-base">{medals[idx]}</span>
                             <span className="font-serif font-bold text-[#FBF7EE] text-sm">{w.name}</span>
                           </div>
-                          <span className="text-xs font-mono font-bold text-amber-300">₦2,000</span>
+                          <span className="text-xs font-mono font-bold text-amber-300">{bounties[idx]}</span>
                         </div>
                         <div className="flex items-center justify-between text-xs text-[#F2A98A]/60 font-serif">
                           <span>{w.helpfulCount || 0} helpful critiques</span>

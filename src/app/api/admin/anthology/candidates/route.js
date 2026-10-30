@@ -196,7 +196,7 @@ export async function GET(request) {
         eligibleSubmissions: eligibleForReviewer,
         completionPercentage: Math.round(completionRate * 100),
         qualifiesForCash,
-        cashPrizeLabel: qualifiesForCash ? '₦2,000 Cash Eligible (90%+ Met)' : 'Honorary Reviewer (Leaves Only)'
+        cashPrizeLabel: qualifiesForCash ? 'Inquisitor Laurel Eligible (90%+ Met)' : 'Honorary Reviewer (Standard Leaves)'
       };
     });
 

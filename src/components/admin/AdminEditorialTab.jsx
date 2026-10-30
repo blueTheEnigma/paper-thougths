@@ -690,9 +690,9 @@ export default function AdminEditorialTab({ isSuperadmin }) {
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold uppercase tracking-wider mb-2">
                 <ShieldCheck size={13} className="text-emerald-600" /> The Master Critic 90% Completion Gate
               </div>
-              <h3 className="font-serif text-2xl text-[#20070e]">Reviewer Cash Bounty Eligibility</h3>
+              <h3 className="font-serif text-2xl text-[#20070e]">Inquisitor Guild Podium Eligibility (90%+ Gate)</h3>
               <p className="text-xs text-[#20070e]/60 mt-1">
-                To unlock the ₦2,000 cash pool prize for Reviewer of the Month, members must review ≥ 90% of eligible village submissions. Members below 90% qualify for Honorary Reviewer status and bi-token leaves.
+                To unlock the Inquisitor of the Month podium laurels (+150 🍃 / +2.0 🪙), members must review ≥ 90% of eligible village submissions. Members below 90% qualify for standard critique leaves.
               </p>
             </div>
 
@@ -704,7 +704,7 @@ export default function AdminEditorialTab({ isSuperadmin }) {
                     <th className="py-3 px-6">Total Reviews</th>
                     <th className="py-3 px-6">Helpful Votes</th>
                     <th className="py-3 px-6">Completion %</th>
-                    <th className="py-3 px-6">Cash Bounty Status</th>
+                    <th className="py-3 px-6">Inquisitor Status</th>
                     <th className="py-3 px-6 text-right">Award Honor</th>
                   </tr>
                 </thead>

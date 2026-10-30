@@ -1783,10 +1783,10 @@ export default function DashboardClient({
                     <div className="space-y-3 max-w-2xl">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="bg-[#c96a42] text-white text-[10px] font-mono font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1.5">
-                          <Trophy size={12} className="text-amber-200" /> ₦18,000 Cash Pool Active
+                          <Trophy size={12} className="text-amber-200" /> Council of Ten · Active Laurels
                         </span>
                         <span className="bg-white/10 text-[#F2A98A] text-[10px] font-mono font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-white/10">
-                          3-Tier Arena: Monthly Laurels · Annual Crucible · Hall of Lore
+                          Leaves & Tokens · Living Anthology · Annual Crucible
                         </span>
                       </div>
 
@@ -1795,22 +1795,22 @@ export default function DashboardClient({
                       </h2>
 
                       <p className="text-xs sm:text-sm text-white/80 font-serif leading-relaxed">
-                        Compete for nine monthly ₦2,000 cash laurels across Fiction, Poetry, and Peer Critiques. Track your annual standings, unlock your Silver Bullet shield threshold, and immortalize your pen name.
+                        Celebrate the Monthly Council of Ten: race for Inquisitor of the Month bounties, earn Living Anthology consecration, unlock your Silver Bullet shield threshold, and immortalize your pen name.
                       </p>
 
                       {/* Mini Tier Highlights */}
                       <div className="grid grid-cols-3 gap-2.5 sm:gap-3 pt-2">
                         <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-center">
-                          <p className="text-[10px] font-mono uppercase text-[#F2A98A] font-bold">Fiction Podium</p>
-                          <p className="text-xs font-bold text-white mt-0.5">Top 3 (₦6k)</p>
+                          <p className="text-[10px] font-mono uppercase text-[#F2A98A] font-bold">Inquisitors</p>
+                          <p className="text-xs font-bold text-white mt-0.5">Top 3 (300 🍃 • 4.0 🪙)</p>
                         </div>
                         <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-center">
-                          <p className="text-[10px] font-mono uppercase text-[#F2A98A] font-bold">Poetry Podium</p>
-                          <p className="text-xs font-bold text-white mt-0.5">Top 3 (₦6k)</p>
+                          <p className="text-[10px] font-mono uppercase text-[#F2A98A] font-bold">Living Anthology</p>
+                          <p className="text-xs font-bold text-white mt-0.5">6 Monthly Inductees</p>
                         </div>
                         <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-center">
-                          <p className="text-[10px] font-mono uppercase text-[#F2A98A] font-bold">Review Bounty</p>
-                          <p className="text-xs font-bold text-white mt-0.5">Top 3 (₦6k)</p>
+                          <p className="text-[10px] font-mono uppercase text-[#F2A98A] font-bold">Sanctuary Bookie</p>
+                          <p className="text-xs font-bold text-white mt-0.5">1 Laureate (+50 🍃 • 1.0 🪙)</p>
                         </div>
                       </div>
                     </div>
@@ -2669,7 +2669,7 @@ export default function DashboardClient({
                         className="inline-flex items-center gap-2 bg-[#20070e] hover:bg-[#3d111d] text-[#FAF7F0] text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl shadow-md transition-all cursor-pointer border border-[#c96a42]/30"
                       >
                         <Trophy size={14} className="text-amber-300" />
-                        <span>Explore Full 3-Tier Leaderboard & ₦18k Arena →</span>
+                        <span>Explore Council of Ten & Leaderboard →</span>
                       </Link>
                     </div>
                   </div>

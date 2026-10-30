@@ -3,10 +3,10 @@ import { Database } from './db.js';
 /**
  * Paper Thoughts 3-Tier Leaderboard Service
  * 
- * Tier 1: Monthly Laurels (₦18,000 Cash Pool)
- *   - Top 3 Fiction & Prose Authors (₦2,000 each) with 4/4 streak indicators
- *   - Top 3 Poets & Verses Authors (₦2,000 each) with 4/4 streak indicators
- *   - Top 3 Reviewers of the Month (₦2,000 each) ranked by helpful reviews
+ * Tier 1: Monthly Laurels & Inquisitors Guild
+ *   - Top 3 Fiction & Prose Authors (Living Anthology Induction) with 4/4 streak indicators
+ *   - Top 3 Poets & Verses Authors (Living Anthology Induction) with 4/4 streak indicators
+ *   - Top 3 Inquisitors of the Month (Leaves & Tokens) ranked by helpful reviews
  *   - Published Monthly Editorial Honors (Bookies, AI nominations)
  * 
  * Tier 2: Annual Crucible (January 1 - December 31)
@@ -150,7 +150,7 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
     streak: Math.min(4, row.submissionCount),
     hasFullStreak: row.submissionCount >= 4,
     isLaurelWinner: idx < 3,
-    laurelPrize: idx < 3 ? '₦2,000' : null,
+    laurelPrize: idx < 3 ? 'Anthology Inductee' : null,
   }));
 
   const poetryPodium = poetryRows.map((row, idx) => ({
@@ -164,7 +164,7 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
     streak: Math.min(4, row.submissionCount),
     hasFullStreak: row.submissionCount >= 4,
     isLaurelWinner: idx < 3,
-    laurelPrize: idx < 3 ? '₦2,000' : null,
+    laurelPrize: idx < 3 ? 'Anthology Inductee' : null,
   }));
 
   const reviewerPodium = reviewerRows.map((row, idx) => ({
