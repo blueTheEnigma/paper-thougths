@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Star, Heart, Feather, Sparkles, Send, Loader2, 
-  MessageSquare, Gift, Check, ChevronDown, ChevronUp, AlertCircle
+  MessageSquare, Gift, Check, AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -40,21 +40,18 @@ export default function LiteraryEngagementBar({
   const isPoem = (category || '').toLowerCase().includes('poem');
   const availableTags = isPoem ? POEM_TAGS : STORY_TAGS;
 
-  // Active view toggle: 'none' | 'rate' | 'tip' | 'comments'
-  const [activeTab, setActiveTab] = useState('none');
-
   // Ratings state
   const [ratingsStats, setRatingsStats] = useState({ totalRatings: 0, averageRating: 0, topTags: [] });
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
-  const [reviewText, setReviewText] = useState('');
   const [submittingRating, setSubmittingRating] = useState(false);
   const [ratingMessage, setRatingMessage] = useState(null);
 
   // Tipping state
   const [tipAmount, setTipAmount] = useState(10);
   const [tipNote, setTipNote] = useState('');
+  const [showTipNote, setShowTipNote] = useState(false);
   const [submittingTip, setSubmittingTip] = useState(false);
   const [tipMessage, setTipMessage] = useState(null);
   const [tipError, setTipError] = useState(null);
@@ -65,7 +62,7 @@ export default function LiteraryEngagementBar({
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
 
-  // Fetch initial ratings and comments count
+  // Fetch initial ratings and comments
   useEffect(() => {
     if (!submissionId) return;
 
@@ -78,13 +75,13 @@ export default function LiteraryEngagementBar({
           if (data.userRating) {
             setUserRating(data.userRating.rating);
             setSelectedTags(data.userRating.tags || []);
-            setReviewText(data.userRating.reviewText || '');
           }
         }
       })
       .catch(err => console.error("Ratings fetch error:", err));
 
     // 2. Fetch comments
+    setLoadingComments(true);
     fetch(`/api/submissions/${submissionId}/comments`)
       .then(res => res.json())
       .then(data => {
@@ -92,12 +89,14 @@ export default function LiteraryEngagementBar({
           setComments(data.comments);
         }
       })
-      .catch(err => console.error("Comments fetch error:", err));
+      .catch(err => console.error("Comments fetch error:", err))
+      .finally(() => setLoadingComments(false));
   }, [submissionId]);
 
-  // Handle rating submission
-  const handleRatingSubmit = async (scoreToSubmit) => {
+  // Handle rating submission (click on star or update tags)
+  const handleRatingSubmit = async (scoreToSubmit, tagsToSubmit) => {
     const finalScore = scoreToSubmit || userRating;
+    const finalTags = tagsToSubmit !== undefined ? tagsToSubmit : selectedTags;
     if (!finalScore) return;
 
     setSubmittingRating(true);
@@ -108,16 +107,18 @@ export default function LiteraryEngagementBar({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           rating: finalScore,
-          tags: selectedTags,
-          reviewText: reviewText.trim()
+          tags: finalTags,
+          reviewText: ''
         })
       });
       const data = await res.json();
       if (data.success) {
         setUserRating(finalScore);
         if (data.stats) setRatingsStats(data.stats);
-        setRatingMessage('Rating recorded in the Archives!');
-        confetti({ particleCount: 30, spread: 60, origin: { y: 0.85 } });
+        setRatingMessage('Rating recorded!');
+        if (finalScore === 5) {
+          confetti({ particleCount: 30, spread: 60, origin: { y: 0.85 } });
+        }
         setTimeout(() => setRatingMessage(null), 3000);
       } else {
         setRatingMessage(data.error || 'Failed to submit rating.');
@@ -129,9 +130,24 @@ export default function LiteraryEngagementBar({
     }
   };
 
+  const handleStarClick = (score) => {
+    setUserRating(score);
+    handleRatingSubmit(score, selectedTags);
+  };
+
+  const toggleTag = (tag) => {
+    const updated = selectedTags.includes(tag)
+      ? selectedTags.filter(t => t !== tag)
+      : [...selectedTags, tag].slice(0, 4);
+    setSelectedTags(updated);
+    if (userRating > 0) {
+      handleRatingSubmit(userRating, updated);
+    }
+  };
+
   // Handle tipping submission
   const handleTipSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!tipAmount || tipAmount <= 0) return;
 
     setSubmittingTip(true);
@@ -150,14 +166,17 @@ export default function LiteraryEngagementBar({
       if (data.success) {
         setTipMessage(`Tipped ${tipAmount} Leaves to ${authorName}!`);
         setTipNote('');
+        setShowTipNote(false);
         if (onBalanceUpdate && data.newBalance !== undefined) {
           onBalanceUpdate(data.newBalance);
         }
-        confetti({ particleCount: 50, spread: 80, origin: { y: 0.8 } });
-        // Refresh comments since note is added as comment
+        confetti({ particleCount: 40, spread: 70, origin: { y: 0.8 } });
+        
+        // Refresh comments if patron note was added
         const cRes = await fetch(`/api/submissions/${submissionId}/comments`);
         const cData = await cRes.json();
-        if (cData.success) setComments(cData.comments);
+        if (cData.success && cData.comments) setComments(cData.comments);
+        setTimeout(() => setTipMessage(null), 4000);
       } else {
         setTipError(data.error || 'Failed to tip leaves.');
       }
@@ -192,312 +211,264 @@ export default function LiteraryEngagementBar({
     }
   };
 
-  const toggleTag = (tag) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag].slice(0, 4)
-    );
-  };
-
   return (
-    <div className="w-full bg-[#FAF5EE] border border-[#20070e]/15 rounded-2xl p-4 sm:p-5 text-[#20070e] space-y-4 my-6 shadow-sm">
+    <div className="w-full bg-[#FAF5EE] border border-[#20070e]/15 rounded-3xl p-5 sm:p-7 text-[#20070e] space-y-6 my-6 shadow-sm">
       
-      {/* 1. Master Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#20070e]/10 pb-4">
+      {/* ─────────────────────────────────────────────────────────────
+          1. TOP ROW: RATING STARS (LEFT) & LEAF TIPPING PILLS (RIGHT)
+          ───────────────────────────────────────────────────────────── */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-[#20070e]/10 pb-5">
         
-        {/* Rating Summary Display */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center text-[#c96a42]">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star 
-                key={star} 
-                size={16} 
-                className={star <= Math.round(ratingsStats.averageRating) ? 'fill-[#c96a42]' : 'text-[#20070e]/20'} 
-              />
-            ))}
-          </div>
-          <span className="font-display font-bold text-sm text-[#20070e]">
-            {ratingsStats.averageRating > 0 ? ratingsStats.averageRating : 'New Piece'}
-          </span>
-          <span className="text-xs text-[#20070e]/50 font-serif">
-            ({ratingsStats.totalRatings} {ratingsStats.totalRatings === 1 ? 'rating' : 'ratings'})
-          </span>
-        </div>
-
-        {/* Action Pills: Rate · Tip · Comments */}
-        <div className="flex items-center gap-2">
-          {/* Rate Button */}
-          <button
-            onClick={() => setActiveTab(prev => prev === 'rate' ? 'none' : 'rate')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold font-sans transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'rate' ? 'bg-[#20070e] text-[#FBF7EE]' : 'bg-white border border-[#20070e]/15 hover:border-[#c96a42] text-[#20070e]'}`}
-          >
-            <Star size={13} className={userRating > 0 ? 'fill-[#c96a42] text-[#c96a42]' : ''} />
-            <span>{userRating > 0 ? `Your Rating: ${userRating}★` : 'Rate Piece'}</span>
-          </button>
-
-          {/* Tip Leaves Button */}
-          <button
-            onClick={() => setActiveTab(prev => prev === 'tip' ? 'none' : 'tip')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold font-sans transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'tip' ? 'bg-[#c96a42] text-[#120308]' : 'bg-[#c96a42]/10 hover:bg-[#c96a42]/20 text-[#c96a42] border border-[#c96a42]/20'}`}
-          >
-            <Gift size={13} />
-            <span>Tip Leaves</span>
-          </button>
-
-          {/* Comments Button */}
-          <button
-            onClick={() => setActiveTab(prev => prev === 'comments' ? 'none' : 'comments')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold font-sans transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'comments' ? 'bg-[#20070e] text-[#FBF7EE]' : 'bg-white border border-[#20070e]/15 text-[#20070e]'}`}
-          >
-            <MessageSquare size={13} />
-            <span>Notes ({comments.length})</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Top Consensus Tags Display (if any exist) */}
-      {ratingsStats.topTags && ratingsStats.topTags.length > 0 && activeTab === 'none' && (
-        <div className="flex items-center gap-1.5 flex-wrap pt-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#c96a42]">Reader Impressions:</span>
-          {ratingsStats.topTags.map(({ tag, count }) => (
-            <span key={tag} className="text-[10px] bg-white border border-[#20070e]/10 px-2 py-0.5 rounded-full text-[#20070e]/80 font-serif">
-              {tag} <strong className="text-[#c96a42]">+{count}</strong>
+        {/* Left: 5-Quill Literary Rating */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#c96a42] font-bold">
+              Literary Rating
             </span>
-          ))}
-        </div>
-      )}
+            {ratingMessage && (
+              <span className="text-[10px] font-sans font-bold text-[#c96a42] animate-pulse">
+                • {ratingMessage}
+              </span>
+            )}
+          </div>
 
-      {/* 2. Interactive Drawer Views */}
-      <AnimatePresence mode="wait">
-        
-        {/* DRAWER: RATE THIS PIECE */}
-        {activeTab === 'rate' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-4 pt-2 overflow-hidden"
-          >
-            <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#20070e]/10 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#20070e]">
-                  {isPoem ? 'Rate this Poem (1–5 Quills)' : 'Rate this Short Story (1–5 Quills)'}
-                </span>
-                <span className="text-[11px] text-[#c96a42] font-serif italic">
-                  {userRating > 0 ? `Selected: ${userRating} Quills` : 'Select your score'}
-                </span>
-              </div>
-
-              {/* Star Selector */}
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((score) => (
-                  <button
-                    key={score}
-                    type="button"
-                    onMouseEnter={() => setHoverRating(score)}
-                    onMouseLeave={() => setHoverRating(0)}
-                    onClick={() => {
-                      setUserRating(score);
-                      handleRatingSubmit(score);
-                    }}
-                    className="p-1 text-[#c96a42] hover:scale-125 transition-transform cursor-pointer"
-                  >
-                    <Star 
-                      size={24} 
-                      className={(hoverRating || userRating) >= score ? 'fill-[#c96a42]' : 'text-[#20070e]/20'} 
-                    />
-                  </button>
-                ))}
-              </div>
-
-              {/* Category-Specific Literary Tags */}
-              <div className="space-y-1.5 pt-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#20070e]/60 block">
-                  Select {isPoem ? 'Poetic Elements' : 'Narrative Strengths'} (up to 4):
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {availableTags.map((tag) => {
-                    const isSelected = selectedTags.includes(tag);
-                    return (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => toggleTag(tag)}
-                        className={`text-[11px] px-2.5 py-1 rounded-lg border font-serif transition-colors cursor-pointer ${isSelected ? 'bg-[#20070e] text-[#FBF7EE] border-[#20070e]' : 'bg-[#FAF5EE] text-[#20070e]/75 border-[#20070e]/10 hover:border-[#c96a42]'}`}
-                      >
-                        {isSelected ? '✓ ' : ''}{tag}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Optional Reader Review Note */}
-              <div className="pt-2 space-y-2">
-                <textarea
-                  value={reviewText}
-                  onChange={(e) => setReviewText(e.target.value)}
-                  placeholder="Optional: What moment in this piece stayed with you?"
-                  maxLength={500}
-                  className="w-full bg-[#FAF5EE] border border-[#20070e]/15 rounded-xl p-2.5 text-xs text-[#20070e] placeholder-[#20070e]/30 focus:outline-none focus:border-[#c96a42] font-serif"
-                  rows={2}
-                />
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-[#20070e]/40 font-serif">
-                    Your critique helps authors earn honors.
-                  </span>
-                  <button
-                    onClick={() => handleRatingSubmit(userRating)}
-                    disabled={submittingRating || !userRating}
-                    className="bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] text-xs font-bold px-4 py-1.5 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
-                  >
-                    {submittingRating ? 'Recording...' : 'Save Rating & Tags'}
-                  </button>
-                </div>
-              </div>
-
-              {ratingMessage && (
-                <p className="text-xs font-bold text-[#c96a42] pt-1">
-                  {ratingMessage}
-                </p>
-              )}
+          <div className="flex items-center gap-3">
+            {/* Interactive Stars */}
+            <div className="flex items-center gap-1 cursor-pointer">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  disabled={submittingRating}
+                  onClick={() => handleStarClick(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  className="p-1 hover:scale-120 transition-transform focus:outline-none"
+                  aria-label={`Rate ${star} stars`}
+                >
+                  <Star 
+                    size={22} 
+                    className={`transition-colors ${
+                      star <= (hoverRating || userRating)
+                        ? 'fill-[#c96a42] text-[#c96a42]'
+                        : star <= Math.round(ratingsStats.averageRating)
+                          ? 'fill-[#c96a42]/30 text-[#c96a42]/40'
+                          : 'text-[#20070e]/20'
+                    }`} 
+                  />
+                </button>
+              ))}
             </div>
-          </motion.div>
-        )}
 
-        {/* DRAWER: TIP LEAVES */}
-        {activeTab === 'tip' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-3 pt-2 overflow-hidden"
-          >
-            <form onSubmit={handleTipSubmit} className="bg-white p-4 sm:p-5 rounded-xl border border-[#20070e]/10 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#20070e] block">
-                    Tip Leaves to {authorName}
-                  </span>
-                  <span className="text-[11px] text-[#20070e]/60 font-serif">
-                    Rewarding literary mastery directly from your Paper Leaves balance.
-                  </span>
-                </div>
-                {currentUser && (
-                  <span className="text-xs font-bold text-[#c96a42] bg-[#c96a42]/10 px-2.5 py-1 rounded-lg">
-                    Balance: {currentUser.spendableLeaves || 0} 🍂
-                  </span>
-                )}
-              </div>
+            {/* Score & Counter */}
+            <div className="flex items-baseline gap-1.5 font-mono">
+              <span className="font-bold text-base text-[#20070e]">
+                {ratingsStats.averageRating > 0 ? Number(ratingsStats.averageRating).toFixed(1) : '—'}
+              </span>
+              <span className="text-xs text-[#20070e]/50">
+                ({ratingsStats.totalRatings} {ratingsStats.totalRatings === 1 ? 'review' : 'reviews'})
+              </span>
+            </div>
+          </div>
 
-              {/* Preset Leaf Options */}
-              <div className="flex gap-2">
-                {[5, 10, 25, 50].map((amt) => (
-                  <button
-                    key={amt}
-                    type="button"
-                    onClick={() => setTipAmount(amt)}
-                    className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${tipAmount === amt ? 'bg-[#c96a42] text-[#120308] border-[#c96a42] shadow-sm' : 'bg-[#FAF5EE] text-[#20070e] border-[#20070e]/15 hover:border-[#c96a42]'}`}
-                  >
-                    {amt} 🍂
-                  </button>
-                ))}
-              </div>
+          <p className="text-[11px] text-[#20070e]/60 font-serif italic">
+            {userRating > 0 ? `Your assessment: ${userRating} Stars. Click tags below to refine.` : 'Tap a star to rate this manuscript.'}
+          </p>
+        </div>
 
-              {/* Patron Note */}
+        {/* Right: Direct Leaf Tipping Drawer */}
+        <div className="w-full md:w-auto space-y-2 border-t md:border-t-0 md:border-l border-[#20070e]/10 pt-4 md:pt-0 md:pl-6">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-[#c96a42] font-bold flex items-center gap-1">
+              <span>🍃</span> Patron Leaves Tip
+            </span>
+            {tipMessage && (
+              <span className="text-[10px] font-sans font-bold text-emerald-700">
+                {tipMessage}
+              </span>
+            )}
+            {tipError && (
+              <span className="text-[10px] font-sans font-bold text-rose-600">
+                {tipError}
+              </span>
+            )}
+          </div>
+
+          {/* Amount Pills + Send Button */}
+          <div className="flex flex-wrap items-center gap-2">
+            {[5, 10, 25, 50].map((amt) => (
+              <button
+                key={amt}
+                type="button"
+                onClick={() => setTipAmount(amt)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                  tipAmount === amt
+                    ? 'bg-[#c96a42] text-[#FBF7EE] shadow-sm'
+                    : 'bg-white border border-[#20070e]/15 text-[#20070e]/80 hover:border-[#c96a42]'
+                }`}
+              >
+                +{amt} 🍂
+              </button>
+            ))}
+
+            <button
+              type="button"
+              disabled={submittingTip || !tipAmount}
+              onClick={handleTipSubmit}
+              className="bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              {submittingTip ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Gift size={12} />
+              )}
+              <span>Tip {tipAmount} Leaves</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowTipNote(!showTipNote)}
+              className="text-[11px] text-[#c96a42] hover:underline font-serif italic pl-1"
+            >
+              {showTipNote ? 'Hide note' : '+ Add patron note'}
+            </button>
+          </div>
+
+          {/* Optional Patron Note Field */}
+          {showTipNote && (
+            <div className="pt-1.5">
               <input
                 type="text"
                 value={tipNote}
                 onChange={(e) => setTipNote(e.target.value)}
-                placeholder="Add a congratulatory patron note (optional)..."
-                maxLength={200}
-                className="w-full bg-[#FAF5EE] border border-[#20070e]/15 rounded-xl px-3 py-2 text-xs text-[#20070e] placeholder-[#20070e]/30 focus:outline-none focus:border-[#c96a42] font-serif"
+                placeholder="Attach a personal encouragement note..."
+                className="w-full bg-white border border-[#20070e]/20 rounded-xl px-3 py-1.5 text-xs text-[#20070e] placeholder-[#20070e]/35 focus:outline-none focus:border-[#c96a42]"
               />
-
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-[10px] text-[#20070e]/50 font-serif">
-                  Leaves transfer immediately to author's permanent archive ledger.
-                </span>
-                <button
-                  type="submit"
-                  disabled={submittingTip || !tipAmount}
-                  className="bg-[#c96a42] hover:bg-[#e07a5f] text-[#120308] text-xs font-bold uppercase tracking-wider px-5 py-2 rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
-                >
-                  {submittingTip ? <Loader2 size={13} className="animate-spin" /> : <Gift size={13} />}
-                  <span>Send {tipAmount} Leaves</span>
-                </button>
-              </div>
-
-              {tipMessage && <p className="text-xs font-bold text-[#25D366]">{tipMessage}</p>}
-              {tipError && <p className="text-xs font-bold text-red-500">{tipError}</p>}
-            </form>
-          </motion.div>
-        )}
-
-        {/* DRAWER: READER NOTES / COMMENTS */}
-        {activeTab === 'comments' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-3 pt-2 overflow-hidden"
-          >
-            <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#20070e]/10 space-y-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#20070e] block">
-                Reader Notes & Margins ({comments.length})
-              </span>
-
-              {/* Comments list */}
-              <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-                {comments.length === 0 ? (
-                  <p className="text-xs text-[#20070e]/50 font-serif italic py-2">
-                    No notes left yet. Be the first reader to leave your margin thoughts.
-                  </p>
-                ) : (
-                  comments.map((comment, idx) => (
-                    <div key={comment.id || idx} className="bg-[#FAF5EE] p-3 rounded-xl border border-[#20070e]/10 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#20070e]">
-                          {comment.displayName || 'Reader'}
-                        </span>
-                        {comment.userArchetype && (
-                          <span className="text-[9px] font-mono text-[#c96a42] bg-[#c96a42]/10 px-1.5 rounded">
-                            {comment.userArchetype}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-[#20070e]/85 font-serif leading-relaxed">
-                        {comment.content}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Post note input */}
-              <form onSubmit={handleCommentSubmit} className="flex gap-2 pt-2 border-t border-[#20070e]/10">
-                <input 
-                  type="text"
-                  required
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Leave a thoughtful note for the author..."
-                  className="flex-1 bg-[#FAF5EE] border border-[#20070e]/15 rounded-xl px-3 py-2 text-xs text-[#20070e] placeholder-[#20070e]/30 focus:outline-none focus:border-[#c96a42] font-serif"
-                />
-                <button
-                  type="submit"
-                  disabled={submittingComment || !newComment.trim()}
-                  className="bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] px-4 rounded-xl text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center"
-                >
-                  {submittingComment ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
-                </button>
-              </form>
             </div>
-          </motion.div>
+          )}
+        </div>
+
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          2. MIDDLE ROW: CATEGORY CRAFT TAGS (PLOT, DIALOGUE, METAPHOR)
+          ───────────────────────────────────────────────────────────── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-[#20070e]/50 font-semibold">
+            {isPoem ? 'Poetic Elements' : 'Narrative Craft Elements'} (Tap to Endorse)
+          </span>
+          <span className="text-[10px] text-[#20070e]/40 font-mono">
+            {selectedTags.length}/4 selected
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {availableTags.map((tag) => {
+            const isSelected = selectedTags.includes(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-sans transition-all cursor-pointer flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-[#20070e] text-[#FBF7EE] font-bold shadow-xs'
+                    : 'bg-white/80 border border-[#20070e]/15 text-[#20070e]/75 hover:border-[#c96a42]'
+                }`}
+              >
+                {isSelected && <Check size={11} className="text-[#F2A98A]" />}
+                <span>{tag}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          3. BOTTOM ROW: READER REFLECTIONS & NOTES STREAM
+          ───────────────────────────────────────────────────────────── */}
+      <div className="border-t border-[#20070e]/10 pt-5 space-y-4">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageSquare size={15} className="text-[#c96a42]" />
+            <h4 className="font-serif font-bold text-sm sm:text-base text-[#20070e]">
+              Reader Reflections &amp; Notes
+            </h4>
+            <span className="text-xs text-[#20070e]/50 font-mono">
+              ({comments.length})
+            </span>
+          </div>
+          <span className="text-[10px] text-[#20070e]/40 font-mono">
+            Clubhouse Scribe Thread
+          </span>
+        </div>
+
+        {/* Comment Input Box (Always Visible) */}
+        <form onSubmit={handleCommentSubmit} className="flex gap-2">
+          <input
+            type="text"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder={`Leave a note of reflection for ${authorName}...`}
+            className="flex-1 bg-white border border-[#20070e]/20 rounded-xl px-4 py-2.5 text-xs text-[#20070e] placeholder-[#20070e]/40 focus:outline-none focus:border-[#c96a42] font-serif"
+          />
+          <button
+            type="submit"
+            disabled={submittingComment || !newComment.trim()}
+            className="bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-40 shrink-0"
+          >
+            {submittingComment ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <Send size={13} />
+            )}
+            <span className="hidden sm:inline">Send Note</span>
+          </button>
+        </form>
+
+        {/* Comments Feed */}
+        {loadingComments ? (
+          <div className="space-y-2 pt-1">
+            <div className="h-10 bg-white/60 rounded-xl animate-pulse" />
+            <div className="h-10 bg-white/60 rounded-xl animate-pulse" />
+          </div>
+        ) : comments.length === 0 ? (
+          <p className="text-xs text-[#20070e]/50 font-serif italic bg-white/40 border border-dashed border-[#20070e]/15 p-4 rounded-xl text-center">
+            No notes left yet. Be the first reader to share a reflection!
+          </p>
+        ) : (
+          <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1 paper-scrollbar">
+            {comments.map((c) => (
+              <div 
+                key={c.id} 
+                className="bg-white border border-[#20070e]/10 p-3.5 rounded-2xl space-y-1 shadow-xs"
+              >
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-[#20070e] font-sans flex items-center gap-1.5">
+                    <span>{c.displayName || 'Reader'}</span>
+                    {c.userArchetype && (
+                      <span className="text-[9px] font-mono text-[#c96a42] uppercase tracking-wider bg-[#c96a42]/10 px-1.5 py-0.5 rounded-md font-normal">
+                        {c.userArchetype}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-[#20070e]/40 font-mono text-[10px]">
+                    {c.createdAt ? new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}
+                  </span>
+                </div>
+                <p className="text-xs text-[#20070e]/85 font-serif leading-relaxed">
+                  {c.content}
+                </p>
+              </div>
+            ))}
+          </div>
         )}
 
-      </AnimatePresence>
+      </div>
 
     </div>
   );
 }
-

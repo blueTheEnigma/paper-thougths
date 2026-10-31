@@ -48,6 +48,53 @@ export default async function Home() {
     LIMIT 1
   `).catch(() => null);
 
+  // Fetch next upcoming Gathering / Assembly Event
+  let nextGathering = await Database.queryOne(`
+    SELECT 
+      g.id,
+      g.title,
+      g.gathering_type as "gatheringType",
+      g.event_date as "eventDate",
+      g.start_time as "startTime",
+      g.meet_url as "meetUrl",
+      g.venue_name as "venueName",
+      g.description,
+      g.cover_url as "coverUrl",
+      g.status,
+      g.moderator_name as "moderatorName",
+      g.moderator_avatar_url as "moderatorAvatarUrl",
+      COALESCE(g.co_hosts, '[]'::jsonb) as "coHosts",
+      (SELECT COUNT(*) FROM gathering_rsvps gr WHERE gr.gathering_id = g.id)::int as "rsvpCount"
+    FROM gatherings g
+    WHERE g.status IN ('published', 'live')
+      AND g.event_date >= CURRENT_DATE - INTERVAL '1 day'
+    ORDER BY g.event_date ASC, g.start_time ASC
+    LIMIT 1
+  `).catch(() => null);
+
+  if (!nextGathering) {
+    nextGathering = await Database.queryOne(`
+      SELECT 
+        g.id,
+        g.title,
+        g.gathering_type as "gatheringType",
+        g.event_date as "eventDate",
+        g.start_time as "startTime",
+        g.meet_url as "meetUrl",
+        g.venue_name as "venueName",
+        g.description,
+        g.cover_url as "coverUrl",
+        g.status,
+        g.moderator_name as "moderatorName",
+        g.moderator_avatar_url as "moderatorAvatarUrl",
+        COALESCE(g.co_hosts, '[]'::jsonb) as "coHosts",
+        (SELECT COUNT(*) FROM gathering_rsvps gr WHERE gr.gathering_id = g.id)::int as "rsvpCount"
+      FROM gatherings g
+      ORDER BY g.event_date DESC, g.start_time DESC
+      LIMIT 1
+    `).catch(() => null);
+  }
+
   return (
     <>
       <Landing 
@@ -58,6 +105,7 @@ export default async function Home() {
         botmBook={botmBook}
         generalBotm={botmBook}
         latestAnthology={latestAnthology}
+        nextGathering={nextGathering}
       />
       <ContactUs />
     </>
