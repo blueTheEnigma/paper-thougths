@@ -121,31 +121,33 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Col 2: Navigation (2.5 cols) */}
+        {/* Col 2: Navigation & The Lore (2.5 cols) */}
         <div className="lg:col-span-2 lg:col-start-6 space-y-4">
-          <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Quick Links</h4>
-          <ul className="space-y-2.5 text-xs text-cream/75 font-bold">
+          <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">The Lore & Library</h4>
+          <ul className="space-y-2.5 text-xs text-cream/75 font-medium">
             <li><Link href="/" className="hover:text-primary transition-colors">Home</Link></li>
-            <li><Link href="/podcasts" className="hover:text-primary transition-colors flex items-center gap-1.5"><span className="text-[#F2A98A]">🎙️</span> Spoken Lore (Podcasts)</Link></li>
-            <li><Link href="/soundscapes" className="hover:text-primary transition-colors flex items-center gap-1.5"><span className="text-[#F2A98A]">🎵</span> Soundscapes</Link></li>
-            <li><Link href="/bookstore" className="hover:text-primary transition-colors">Bookstore</Link></li>
-            <li><Link href="/events" className="hover:text-primary transition-colors">Events</Link></li>
+            <li><Link href="/bookstore" className="hover:text-primary transition-colors">Hardcopy Bookstore</Link></li>
             <li><Link href="/village" className="hover:text-primary transition-colors">Writers' Village</Link></li>
-            <li><Link href="/clubs" className="hover:text-primary transition-colors">Clubs</Link></li>
-            <li><Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link></li>
+            <li><Link href="/events" className="hover:text-primary transition-colors">Assembly Events</Link></li>
+            <li><Link href="/discussion" className="hover:text-primary transition-colors">Sanctuary Reading</Link></li>
+            <li><Link href="/crossing" className="hover:text-primary transition-colors">The Crossing (Passage)</Link></li>
+            <li><Link href="/zodiac" className="hover:text-primary transition-colors">The Book Zodiac</Link></li>
+            <li><Link href="/archetype" className="hover:text-primary transition-colors">Reader Archetypes</Link></li>
+            <li><Link href="/podcasts" className="hover:text-primary transition-colors">Spoken Lore</Link></li>
+            <li><Link href="/soundscapes" className="hover:text-primary transition-colors">Literary Soundscapes</Link></li>
           </ul>
         </div>
 
-        {/* Col 3: Chapters (2 cols) */}
+        {/* Col 3: Physical Gathering Cities (2 cols) */}
         <div className="lg:col-span-2 space-y-4">
-          <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Chapters</h4>
-          <ul className="space-y-2.5 text-xs text-cream/70">
-            <li><Link href="/clubs" className="hover:text-primary transition-colors">Zaria (ABU)</Link></li>
-            <li><Link href="/clubs" className="hover:text-primary transition-colors">Kaduna</Link></li>
-            <li><Link href="/clubs" className="hover:text-primary transition-colors">Abuja</Link></li>
+          <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Assembly Cities</h4>
+          <ul className="space-y-2.5 text-xs text-cream/70 font-medium">
+            <li><Link href="/events" className="hover:text-primary transition-colors">Zaria Chapter</Link></li>
+            <li><Link href="/events" className="hover:text-primary transition-colors">Kaduna Chapter</Link></li>
+            <li><Link href="/events" className="hover:text-primary transition-colors">Abuja Chapter</Link></li>
+            <li className="pt-2 text-[11px] text-cream/40 italic">RSVP for all city gatherings on the Events calendar.</li>
           </ul>
         </div>
-
         {/* Col 4: Newsletter (3.5 cols) */}
         <div className="lg:col-span-3 space-y-4">
           <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary font-bold">The Weekly Dispatch</h4>

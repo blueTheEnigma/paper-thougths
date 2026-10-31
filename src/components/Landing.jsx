@@ -1,46 +1,16 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Star, Feather, Sparkles, Send, Loader2, X, CheckCircle2, ShieldAlert, BookOpen } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { 
+  ArrowRight, Feather, Sparkles, Send, Loader2, 
+  BookOpen, Calendar, MapPin, CheckCircle2, ShieldCheck
+} from 'lucide-react';
 
-const QUOTES = [
-  { text: "There is no agony like bearing an untold story inside you.", author: "Zora Neale Hurston" },
-  { text: "We loved with a love that was more than love.", author: "Edgar Allan Poe" },
-  { text: "I am a part of all that I have met.", author: "Alfred Lord Tennyson" },
-  { text: "The scariest moment is always just before you start.", author: "Stephen King" },
-  { text: "Grief is the price we pay for love.", author: "Queen Elizabeth II" },
-  { text: "I have loved the stars too fondly to be fearful of the night.", author: "Sarah Williams" }
-];
-
-export default function Landing({ images, books = [], storyPrompt, poemPrompt, botmBook, generalBotm, abujaBotm }) {
-  const [quoteIndex, setQuoteIndex] = useState(0);
+export default function Landing({ images, books = [], storyPrompt, poemPrompt, botmBook, generalBotm }) {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterLoading, setNewsletterLoading] = useState(false);
   const [newsletterStatus, setNewsletterStatus] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [profileLoading, setProfileLoading] = useState(true);
-
-
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await fetch('/api/me');
-        const data = await res.json();
-        if (data.success) {
-          setProfile(data.profile);
-        }
-      } catch (e) {
-        console.error("Auth check failed", e);
-      } finally {
-        setProfileLoading(false);
-      }
-    };
-    fetchProfile();
-  }, []);
-
-
 
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
@@ -86,8 +56,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
       author: "Akwaeke Emezi",
       genre: "Fiction",
       price: "6500",
-      imageUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&h=600&fit=crop",
-      rating: 4.8
+      imageUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&h=600&fit=crop"
     },
     {
       id: "2",
@@ -95,8 +64,7 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
       author: "Ayobami Adebayo",
       genre: "Fiction",
       price: "5500",
-      imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400&h=600&fit=crop",
-      rating: 4.6
+      imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400&h=600&fit=crop"
     },
     {
       id: "3",
@@ -104,28 +72,19 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
       author: "Nnedi Okorafor",
       genre: "Fantasy",
       price: "6000",
-      imageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=400&h=600&fit=crop",
-      rating: 4.5
+      imageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=400&h=600&fit=crop"
     },
     {
       id: "4",
-      title: "Chronicles from the Land of the Happiest People on Earth",
+      title: "Chronicles from the Happiest People",
       author: "Wole Soyinka",
       genre: "Satire",
       price: "8500",
-      imageUrl: "https://images.unsplash.com/photo-1495640388908-05fa85288e61?q=80&w=400&h=600&fit=crop",
-      rating: 4.7
+      imageUrl: "https://images.unsplash.com/photo-1495640388908-05fa85288e61?q=80&w=400&h=600&fit=crop"
     }
   ];
 
   const bookstoreList = books && books.length > 0 ? books.slice(0, 4) : fallbackFeaturedBooks;
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setQuoteIndex(prev => (prev + 1) % QUOTES.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
 
   const fallbackBotm = {
     id: 17,
@@ -137,258 +96,192 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
 
   const activeBotm = botmBook || generalBotm || fallbackBotm;
 
-  // Scroll animations variants
-  const fadeInReveal = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
+  // Refined scroll animation variants
+  const fadeIn = {
+    hidden: { opacity: 0, y: 25 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }
   };
 
-  const staggerContainer = {
+  const stagger = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.15
-      }
+      transition: { staggerChildren: 0.12 }
     }
   };
 
   return (
-    <div className="w-full bg-cream selection:bg-accent/30 overflow-x-hidden">
+    <div className="w-full bg-[#FBF7EE] text-[#120308] selection:bg-[#c96a42]/30 overflow-x-hidden font-sans">
       
-      {/* 1. Full-Bleed Cinematic Hero */}
-      <section className="relative w-full min-h-screen flex items-center justify-center bg-ink overflow-hidden text-cream -mt-24 md:-mt-32">
-        {/* Parallax / Slowly Scaling Background Image */}
+      {/* =========================================================================
+          1. CINEMATIC HERO (Singular Undisputed Anchor — Things 1, 5, 40, 45)
+          ========================================================================= */}
+      <section className="relative w-full min-h-[90vh] flex items-center justify-center bg-[#120308] overflow-hidden text-[#FBF7EE] -mt-20 md:-mt-32">
+        {/* Ambient Dark Parchment Texture & Subtle Vignette */}
         <div className="absolute inset-0 z-0">
           <motion.div
-            initial={{ scale: 1.15, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.60 }}
-            transition={{ duration: 2.2, ease: "easeOut" }}
+            initial={{ scale: 1.1, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.45 }}
+            transition={{ duration: 1.8, ease: "easeOut" }}
             className="w-full h-full"
           >
             <img 
               src={fallbackImages[0]} 
               className="w-full h-full object-cover filter grayscale contrast-125 saturate-50"
-              alt="Community Gatherings"
+              alt="Paper Thoughts Clubhouse Atmosphere"
             />
           </motion.div>
-          {/* Rich Vignette and Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/60 to-ink/20" />
-          <div className="absolute inset-0 bg-radial-vignette opacity-60" />
-          {/* Subtle gold ambient glow behind typography */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(242,169,138,0.08)_0%,transparent_50%)]" />
+          {/* Layered Vignette */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#120308] via-[#120308]/75 to-[#120308]/40" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(201,106,66,0.15)_0%,transparent_65%)]" />
         </div>
         
-        {/* Layered Serif Typography and Animated Entrance */}
-        <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-8 text-center space-y-8 pt-20">
+        {/* Content Container */}
+        <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-8 text-center space-y-8 pt-24 pb-16">
+          
+          {/* Eyebrow: Explicit Cultural & Geographic Anchor (Thing 14) */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
           >
-            <span className="text-primary uppercase tracking-[0.3em] font-sans font-bold text-xs sm:text-sm bg-white/5 border border-white/10 px-4 py-2 rounded-full inline-block backdrop-blur-sm animate-pulse-subtle">
-              The Literary Clubhouse
+            <span className="inline-flex items-center gap-2 text-[#F2A98A] uppercase tracking-[0.25em] font-sans font-bold text-xs bg-white/5 border border-white/10 px-4 py-2 rounded-full backdrop-blur-sm">
+              <span className="w-2 h-2 rounded-full bg-[#c96a42] animate-pulse" />
+              The Physical Literary Clubhouse · Zaria · Kaduna · Abuja
             </span>
           </motion.div>
 
+          {/* Master Headline: Iconic Literary Thesis */}
           <motion.h1 
-            initial={{ opacity: 0, y: 35 }}
+            initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-5xl sm:text-7xl md:text-8xl font-display leading-[1.05] tracking-tight font-extrabold text-cream"
+            transition={{ delay: 0.4, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="text-4xl sm:text-6xl md:text-7xl font-display leading-[1.08] tracking-tight font-extrabold text-[#FBF7EE]"
           >
-            We came for <span className="italic text-primary font-bold">the books.</span><br/>
-            We stayed for <span className="text-[#FF8D5C] italic font-bold">the chaos.</span>
+            We came for <span className="italic text-[#c96a42]">the books.</span><br/>
+            We stayed for <span className="text-[#F2A98A] italic">the chaos.</span>
           </motion.h1>
 
+          {/* Subtitle: High-Contrast Clarity */}
           <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.1, duration: 1 }}
-            className="text-base sm:text-lg md:text-xl text-cream/95 max-w-2xl mx-auto font-sans font-medium"
+            transition={{ delay: 0.7, duration: 0.8 }}
+            className="text-base sm:text-lg text-[#FBF7EE]/90 max-w-2xl mx-auto font-serif leading-relaxed"
           >
-            An opinionated reading community spanning Zaria, Kaduna, and Abuja. 
+            An opinionated reading community spanning Northern Nigeria. 
             We read heavily, debate fiercely, and never use PDFs.
           </motion.p>
           
+          {/* Action Row: ONE Dominant Copper Button + Subtle Secondary Route (Things 5, 40, 92) */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.3, duration: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center pt-6"
+            transition={{ delay: 0.9, duration: 0.7 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-5 pt-4"
           >
             <Link 
-              href="/village" 
-              className="bg-primary hover:bg-white text-ink hover:text-burgundy px-8 py-4 uppercase tracking-widest text-xs font-bold transition-all shadow-lg rounded-xl flex items-center justify-center gap-3 hover:-translate-y-0.5"
+              href="/bookstore" 
+              className="w-full sm:w-auto bg-[#c96a42] hover:bg-[#e07a5f] text-[#120308] px-9 py-4 uppercase tracking-widest text-xs font-bold transition-all shadow-xl rounded-xl flex items-center justify-center gap-3 hover:-translate-y-0.5 active:scale-95 cursor-pointer font-sans"
             >
-              <span>Enter The Village</span>
+              <span>Browse Physical Hardcopies</span>
               <ArrowRight size={16} />
             </Link>
+
             <Link 
-              href="/bookstore" 
-              className="border border-cream/30 hover:border-cream text-cream hover:bg-cream/10 px-8 py-4 uppercase tracking-widest text-xs font-bold transition-all rounded-xl flex items-center justify-center hover:-translate-y-0.5"
+              href="/village" 
+              className="text-xs uppercase tracking-widest font-bold text-[#FBF7EE]/80 hover:text-[#F2A98A] transition-colors py-3 px-4 inline-flex items-center gap-2 group font-sans"
             >
-              Browse The Lore
+              <span>or join the weekly critique cycle</span>
+              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
             </Link>
           </motion.div>
         </div>
         
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 opacity-40 animate-float text-cream">
-          <span className="text-[9px] uppercase tracking-[0.25em] font-sans font-bold">Scroll to Enter</span>
-          <div className="w-[1px] h-6 bg-gradient-to-b from-cream to-transparent" />
+        {/* Subtle Scroll Cue */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 opacity-50 text-[#FBF7EE]">
+          <span className="text-[9px] uppercase tracking-[0.25em] font-sans font-bold">Scroll to Enter Library</span>
+          <div className="w-[1px] h-5 bg-gradient-to-b from-[#FBF7EE] to-transparent" />
         </div>
       </section>
 
-      {/* NEW FEATURE BANNER: THE LITERARY ECOSYSTEM */}
-      <section 
-        className="py-20 px-6 border-b border-white/5 relative overflow-hidden"
-        style={{ background: 'radial-gradient(ellipse at 50% 50%, #20070e 0%, #0d0205 70%, #050002 100%)' }}
-      >
-        {/* Ambient star speck particles */}
-        <div className="absolute top-10 left-10 w-1 h-1 bg-white rounded-full opacity-30 animate-pulse"></div>
-        <div className="absolute bottom-10 right-10 w-1 h-1.5 bg-[#F2A98A] rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
-
-        <div className="max-w-6xl mx-auto space-y-12 relative z-10">
-          <div className="text-center space-y-3">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#F2A98A] font-bold">
-              ✨ Discover Your Literary Essence
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-cream tracking-tight">
-              Who Are You in the Literary Universe?
-            </h2>
-            <p className="text-sm sm:text-base text-cream/70 max-w-xl mx-auto italic font-serif">
-              Explore the core pillars of the Paper Thoughts sensory and identity universe.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* CARD 1: BOOK ZODIAC */}
-            <div className="p-6 rounded-2xl bg-[#FFF5EC] border border-[#2C1A0E]/15 space-y-5 hover:border-[#5C1A2E]/30 transition-all flex flex-col justify-between group shadow-md relative">
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 h-4.5 bg-[#C5A059]/15 transform rotate-1 border-l border-r border-[#C5A059]/25" />
-              <div className="space-y-3 pt-2">
-                <span className="text-4xl block">🔮</span>
-                <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
-                  The Book Zodiac
-                </h3>
-                <p className="text-xs text-[#2C1A0E]/80 leading-relaxed font-serif">
-                  A 12-question astrological identity test. Discover your <strong>Sun</strong>, <strong>Moon</strong>, and <strong>Rising</strong> literary signs.
-                </p>
-              </div>
-              <Link
-                href="/zodiac"
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#5C1A2E] to-[#C96A42] hover:from-[#7A2040] hover:to-[#e07a5f] text-cream font-bold text-xs text-center transition-all shadow-md active:scale-95"
-              >
-                Discover Zodiac →
-              </Link>
-            </div>
-
-            {/* CARD 2: READER ARCHETYPES */}
-            <div className="p-6 rounded-2xl bg-[#FFF5EC] border border-[#2C1A0E]/15 space-y-5 hover:border-[#5C1A2E]/30 transition-all flex flex-col justify-between group shadow-md relative">
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 h-4.5 bg-[#C5A059]/15 transform -rotate-1 border-l border-r border-[#C5A059]/25" />
-              <div className="space-y-3 pt-2">
-                <span className="text-4xl block">🎭</span>
-                <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
-                  Reader Archetypes
-                </h3>
-                <p className="text-xs text-[#2C1A0E]/80 leading-relaxed font-serif">
-                  Explore 21 celebrated habits and identities—from the <em>Marathon Reader</em> to the <em>DNF Champion</em>.
-                </p>
-              </div>
-              <Link
-                href="/archetype"
-                className="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-[#5C1A2E] text-[#F2A98A] hover:text-cream border border-[#F2A98A]/25 font-bold text-xs text-center transition-all shadow-md active:scale-95"
-              >
-                Browse 21 Signs →
-              </Link>
-            </div>
-
-            {/* CARD 3: LITERARY SOUNDSCAPES */}
-            <div className="p-6 rounded-2xl bg-[#FFF5EC] border border-[#2C1A0E]/15 space-y-5 hover:border-[#5C1A2E]/30 transition-all flex flex-col justify-between group shadow-md relative">
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 h-4.5 bg-[#C5A059]/15 transform rotate-2 border-l border-r border-[#C5A059]/25" />
-              <div className="space-y-3 pt-2">
-                <span className="text-4xl block">🎧</span>
-                <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
-                  Soundscapes
-                </h3>
-                <p className="text-xs text-[#2C1A0E]/80 leading-relaxed font-serif">
-                  9 Spotify reading playlists crafted to match the mood of every page, from <em>The Still Hour</em> to <em>The Forest Cabin</em>.
-                </p>
-              </div>
-              <Link
-                href="/soundscapes"
-                className="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-[#5C1A2E] text-[#F2A98A] hover:text-cream border border-[#F2A98A]/25 font-bold text-xs text-center transition-all shadow-md active:scale-95"
-              >
-                Listen to Playlists →
-              </Link>
-            </div>
-
-            {/* CARD 4: SPOKEN LORE & PODCASTS */}
-            <div className="p-6 rounded-2xl bg-[#FFF5EC] border border-[#2C1A0E]/15 space-y-5 hover:border-[#5C1A2E]/30 transition-all flex flex-col justify-between group shadow-md relative">
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 h-4.5 bg-[#C5A059]/15 transform -rotate-2 border-l border-r border-[#C5A059]/25" />
-              <div className="space-y-3 pt-2">
-                <span className="text-4xl block">🎙️</span>
-                <h3 className="text-2xl font-serif font-bold text-[#5C1A2E]">
-                  Spoken Lore
-                </h3>
-                <p className="text-xs text-[#2C1A0E]/80 leading-relaxed font-serif">
-                  Curated literary audio and short stories, featuring <strong>LIFELORE</strong> by Debbie Doowuese Ajom.
-                </p>
-              </div>
-              <Link
-                href="/podcasts"
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#5C1A2E] to-[#C96A42] hover:from-[#7A2040] hover:to-[#e07a5f] text-cream font-bold text-xs text-center transition-all shadow-md active:scale-95"
-              >
-                Enter Audio Lore →
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Light Theme: The Bookstore Showcase */}
-      <section className="py-24 px-6 md:px-8 bg-cream relative border-b border-ink/5">
+      {/* =========================================================================
+          BLOCK 1: THE CURATED BOOKSTORE (Tactile Physicality — Things 74, 92, 100)
+          ========================================================================= */}
+      <section className="py-24 px-6 md:px-8 bg-[#FBF7EE] border-b border-[#20070e]/10 relative">
         <motion.div 
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={staggerContainer}
-          className="max-w-7xl mx-auto space-y-16"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={stagger}
+          className="max-w-7xl mx-auto space-y-14"
         >
-          <div className="text-center space-y-3">
-            <span className="text-accent uppercase tracking-[0.25em] font-sans font-bold text-xs block">Featured Collection</span>
-            <h2 className="text-4xl md:text-5xl font-display text-burgundy font-bold">The Bookstore</h2>
-            <p className="text-sm md:text-base text-ink/75 max-w-xl mx-auto font-sans font-medium">
-              We finally bring hardcopies to you. A rigorously curated selection. And absolutely none of them are PDFs.
+          {/* Editorial Header */}
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <span className="text-[#c96a42] uppercase tracking-[0.25em] font-sans font-bold text-xs block">
+              Curated Physical Editions · No PDFs
+            </span>
+            <h2 className="text-3xl md:text-5xl font-display text-[#20070e] font-bold tracking-tight">
+              The Bookstore
+            </h2>
+            <p className="text-sm md:text-base text-[#120308]/75 font-serif leading-relaxed">
+              Every book on our shelf is an authentic physical volume. Hand-delivered across Zaria, Kaduna, and Abuja. We do not stock PDFs.
             </p>
           </div>
 
+          {/* 3D Tactile Book Cards Grid (Invariant Compliance: Inline Perspective & Transform) */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {bookstoreList.map((book) => (
-              <motion.div key={book.id} variants={fadeInReveal} className="flex">
+              <motion.div 
+                key={book.id} 
+                variants={fadeIn} 
+                className="flex"
+                style={{ perspective: '1200px', WebkitPerspective: '1200px' }}
+              >
                 <Link 
                   href="/bookstore" 
-                  className="group flex flex-col justify-between w-full hover:-translate-y-1 transition-transform duration-300"
+                  className="group flex flex-col justify-between w-full transition-transform duration-300"
+                  style={{ transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d' }}
                 >
                   <div className="space-y-4 w-full">
-                    <div className="aspect-[2/3] w-full rounded-2xl overflow-hidden shadow-md border border-sage/15 bg-card relative">
+                    {/* Book Cover with Tactile Spine & Drop Shadow */}
+                    <div className="aspect-[2/3] w-full rounded-xl overflow-hidden shadow-lg border border-[#20070e]/10 bg-white relative group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-1.5">
                       <img 
                         src={book.imageUrl || 'https://placehold.co/400x600?text=No+Cover'} 
                         alt={book.title} 
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
                       />
-                      <div className="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <span className="bg-cream text-burgundy text-[9px] font-sans font-bold uppercase tracking-widest px-4 py-2 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                      {/* Tactile Book Spine Gradient */}
+                      <div className="absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-black/30 via-white/10 to-transparent pointer-events-none" />
+                      
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-[#20070e]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span className="bg-[#FBF7EE] text-[#20070e] text-[10px] font-sans font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-md">
                           View Details
                         </span>
                       </div>
                     </div>
-                    <div>
-                      <span className="text-[9px] font-bold text-accent uppercase tracking-widest block mb-1">{book.genre}</span>
-                      <h4 className="font-bold text-ink leading-tight group-hover:text-accent transition-colors line-clamp-1 mb-1 font-display">{book.title}</h4>
-                      <p className="text-xs text-ink/60 mb-2 truncate">by {book.author}</p>
-                      <span className="font-display font-bold text-burgundy text-sm">₦{parseInt(book.price || 0).toLocaleString()}</span>
+
+                    {/* Book Metadata */}
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-[#c96a42] uppercase tracking-wider block">
+                        {book.genre || 'Physical Hardcopy'}
+                      </span>
+                      <h4 className="font-display font-bold text-[#20070e] leading-snug line-clamp-1 group-hover:text-[#c96a42] transition-colors">
+                        {book.title}
+                      </h4>
+                      <p className="text-xs text-[#120308]/65 truncate font-serif italic">
+                        by {book.author}
+                      </p>
+                      <div className="pt-1 flex items-baseline justify-between">
+                        <span className="font-display font-bold text-[#20070e] text-sm">
+                          ₦{parseInt(book.price || 0).toLocaleString()}
+                        </span>
+                        <span className="text-[10px] text-[#120308]/50 uppercase tracking-widest font-sans font-semibold">
+                          In Stock
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Link>
@@ -396,430 +289,342 @@ export default function Landing({ images, books = [], storyPrompt, poemPrompt, b
             ))}
           </div>
 
-          <div className="text-center pt-4">
+          {/* Bookstore CTA */}
+          <div className="text-center pt-2">
             <Link 
               href="/bookstore" 
-              className="bg-burgundy hover:bg-ink text-cream hover:text-white px-8 py-4 uppercase tracking-widest text-xs font-bold transition-all shadow-md rounded-xl inline-flex items-center gap-3 hover:-translate-y-0.5"
+              className="bg-[#20070e] hover:bg-[#120308] text-[#FBF7EE] px-8 py-3.5 uppercase tracking-widest text-xs font-bold transition-all shadow-md rounded-xl inline-flex items-center gap-3 hover:-translate-y-0.5 active:scale-95"
             >
-              <span>Explore the Bookstore</span>
-              <ArrowRight size={16} />
+              <span>Explore All Hardcopies in Catalog</span>
+              <ArrowRight size={14} />
             </Link>
           </div>
         </motion.div>
       </section>
 
-      {/* 3. Light Theme: Asymmetric Split (7/5 layout) */}
-      <section className="py-24 px-6 md:px-8 bg-cream/40 relative border-b border-ink/5">
+      {/* =========================================================================
+          BLOCK 2: THE SANCTUARY READING LOUNGE (Book of the Month — Things 56, 65)
+          ========================================================================= */}
+      <section className="py-24 px-6 md:px-8 bg-[#F5EDE0] border-b border-[#20070e]/10 relative">
         <motion.div 
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={staggerContainer}
-          className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={fadeIn}
+          className="max-w-5xl mx-auto space-y-10"
         >
-          {/* Left: Writers' Village Entrance Card (5 Columns) */}
-          <motion.div 
-            variants={fadeInReveal}
-            className="lg:col-span-5 bg-gradient-to-br from-[#20070e] via-[#2A0B14] to-[#120308] text-cream p-8 md:p-10 rounded-[32px] shadow-xl flex flex-col justify-between relative overflow-hidden border border-[#c96a42]/20 group min-h-[440px]"
-          >
-            {/* Background Ambient Circles */}
-            <div className="absolute -top-10 -right-10 w-64 h-64 bg-[#c96a42]/15 rounded-full blur-3xl -z-10 group-hover:scale-110 transition-transform duration-1000" />
-            <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-[#20070e]/40 rounded-full blur-3xl -z-10" />
-            
-            {/* Header: Balanced Top Bar Rhythm */}
-            <div className="flex border-b border-white/10 pb-4 mb-6 justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#F2A98A] animate-pulse" />
-                <span className="text-[#F2A98A] uppercase tracking-[0.2em] font-bold text-[10px]">Creative Haven</span>
-              </div>
-              <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-cream/70 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
-                Writers' Sanctuary
-              </span>
+          {/* Section Eyebrow */}
+          <div className="text-center space-y-2">
+            <span className="text-[#c96a42] uppercase tracking-[0.25em] font-sans font-bold text-xs block">
+              Synchronous Reading Cycle · All Chapters
+            </span>
+            <h2 className="text-3xl md:text-5xl font-display text-[#20070e] font-bold tracking-tight">
+              The Sanctuary Reading Lounge
+            </h2>
+          </div>
+
+          {/* Unified Reading Spotlight Card */}
+          <div className="bg-[#FAF5EE] border border-[#20070e]/15 rounded-3xl p-8 md:p-12 shadow-xl relative overflow-hidden flex flex-col md:flex-row gap-8 md:gap-12 items-center">
+            {/* Ambient Background Warmth */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[#c96a42]/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+            {/* Book Cover */}
+            <div 
+              className="w-44 sm:w-52 aspect-[2/3] overflow-hidden rounded-2xl shadow-2xl relative flex-shrink-0 border border-[#20070e]/15 group"
+              style={{ perspective: '1000px', WebkitPerspective: '1000px' }}
+            >
+              <img 
+                src={activeBotm.imageUrl || '/images/red_rising.jpg'} 
+                alt={activeBotm.title} 
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/images/red_rising.jpg';
+                }}
+                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
+              />
+              <div className="absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-black/40 via-white/10 to-transparent pointer-events-none" />
             </div>
 
-            <div className="space-y-4 my-auto">
-              <div className="space-y-1">
-                <span className="text-[#c96a42] text-[10px] font-mono uppercase tracking-widest block font-bold">Weekly Critique & Drops</span>
-                <h3 className="text-3xl md:text-4xl font-display text-cream font-bold leading-tight tracking-tight">Writers' Village</h3>
-              </div>
-              <p className="text-xs sm:text-sm text-cream/75 font-serif leading-relaxed font-light">
-                Step into our dedicated creative portal. Submit your drafts to the weekly critique cycle, exchange constructive feedback on peer manuscripts, and track your milestone tokens. A sanctuary designed for Zaria, Kaduna, and Abuja scribes.
-              </p>
-            </div>
-            
-            <div className="pt-6 border-t border-white/5">
-              <Link 
-                href="/village" 
-                className="w-full sm:w-auto bg-[#c96a42] hover:bg-cream text-[#20070e] hover:text-[#120308] px-7 py-3.5 rounded-xl uppercase tracking-widest text-xs font-bold transition-all shadow-md inline-flex items-center justify-center gap-3 hover:-translate-y-0.5"
-              >
-                <span>Enter The Village</span>
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* Right: Book of the Month Spotlight (7 Columns) - Pure Community Focus */}
-          <motion.div 
-            variants={fadeInReveal}
-            className="lg:col-span-7 bg-white border border-sage/15 rounded-[32px] shadow-xl p-8 md:p-10 flex flex-col relative overflow-hidden group justify-between"
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-burgundy/5 rounded-full blur-3xl -z-10" />
-            
-            {/* Header: Unified Sanctuary Badge */}
-            <div className="flex border-b border-sage/10 pb-4 mb-6 justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                <span className="text-accent uppercase tracking-[0.2em] font-bold text-[10px]">Book of the Month</span>
-              </div>
-              <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-burgundy bg-burgundy/5 border border-burgundy/15 px-3 py-1 rounded-full">
-                All Chapters United
-              </span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-6 md:gap-8 items-center flex-1">
-              {/* Book Cover (Responsive Aspect Ratio) */}
-              <div className="w-36 sm:w-2/5 max-w-[200px] aspect-[2/3] overflow-hidden bg-cream shadow-xl relative group rounded-2xl flex-shrink-0 border border-ink/10">
-                <img 
-                  src={activeBotm.imageUrl || '/images/red_rising.jpg'} 
-                  alt={activeBotm.title} 
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/images/red_rising.jpg';
-                  }}
-                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
-                />
-              </div>
-
-              {/* Book Info */}
-              <div className="flex-1 flex flex-col justify-between h-full space-y-4 text-center sm:text-left">
-                <div className="space-y-2">
-                  <span className="text-burgundy/80 uppercase tracking-widest text-[9px] font-bold block">
-                    🔥 Sanctuary Reading Lounge
-                  </span>
-                  <h3 className="text-2xl md:text-3xl font-display text-ink leading-tight font-extrabold">{activeBotm.title}</h3>
-                  <p className="text-xs font-bold text-burgundy/85 font-sans italic">— by {activeBotm.author}</p>
-                </div>
-
-                <p className="text-xs sm:text-sm text-ink/75 leading-relaxed font-serif italic whitespace-pre-wrap font-medium">
-                  "{activeBotm.teaser || "A magnificent masterwork handpicked by the community editors. Available for checkout and discussions across all physical chapters."}"
+            {/* Book & Discussion Overview */}
+            <div className="flex-1 space-y-5 text-center md:text-left">
+              <div className="space-y-2">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c96a42] uppercase tracking-wider bg-[#c96a42]/10 px-3 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#c96a42] animate-pulse" />
+                  Active Book of the Month
+                </span>
+                <h3 className="text-2xl sm:text-4xl font-display text-[#20070e] font-bold leading-tight">
+                  {activeBotm.title}
+                </h3>
+                <p className="text-sm font-semibold text-[#c96a42] font-sans">
+                  by {activeBotm.author}
                 </p>
+              </div>
 
-                <div className="pt-2">
-                  <Link
-                    href="/discussion"
-                    className="w-full bg-burgundy hover:bg-ink text-cream hover:text-white px-5 py-3 uppercase tracking-widest text-[10px] font-bold transition-all shadow-md rounded-xl inline-flex items-center justify-center gap-2 hover:-translate-y-0.5 cursor-pointer text-center"
-                  >
-                    <span>Enter Discussion & Reviews</span>
-                    <ArrowRight size={12} />
-                  </Link>
-                </div>
+              {/* Literary Teaser Quote (Thing 18: optimal line length) */}
+              <p className="text-sm md:text-base text-[#120308]/80 font-serif italic leading-relaxed max-w-xl">
+                "{activeBotm.teaser || "A magnificent masterwork handpicked by the community editors. Available for checkout and discussions across all physical chapters."}"
+              </p>
+
+              {/* Community Pulse & CTA */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center gap-4">
+                <Link
+                  href="/discussion"
+                  className="w-full sm:w-auto bg-[#20070e] hover:bg-[#120308] text-[#FBF7EE] px-8 py-3.5 uppercase tracking-widest text-xs font-bold transition-all shadow-md rounded-xl inline-flex items-center justify-center gap-2 hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                >
+                  <span>Enter Discussion & Reviews</span>
+                  <ArrowRight size={14} />
+                </Link>
+
+                <span className="text-xs text-[#120308]/60 font-serif italic">
+                  Read synchronously with members in Zaria, Kaduna & Abuja.
+                </span>
               </div>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
       </section>
 
-      {/* 4. Strategic Dark Theme: Weekly Prompts & Critique Section */}
-      <section className="py-28 px-6 md:px-8 bg-ink text-cream relative border-b border-white/5 overflow-hidden">
-        {/* Ambient lighting */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-burgundy/10 rounded-full blur-[120px] -z-10" />
-        
-        <div className="max-w-7xl mx-auto space-y-16">
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeInReveal}
-            className="text-center space-y-3"
-          >
-            <span className="text-primary uppercase tracking-[0.2em] font-sans font-bold text-xs block">Active Prompts</span>
-            <h2 className="text-4xl md:text-5xl font-display text-cream font-bold">Weekly Writing Prompts</h2>
-            <p className="text-sm text-cream/60 max-w-md mx-auto font-sans font-medium">Select a prompt below, write your manuscript in the portal, and queue it for Saturday's drop.</p>
-          </motion.div>
+      {/* =========================================================================
+          BLOCK 3: THE SCRIBE'S DESK (Unified Village & Prompts — Things 17, 34, 50)
+          ========================================================================= */}
+      <section className="py-24 px-6 md:px-8 bg-[#120308] text-[#FBF7EE] border-b border-white/10 relative overflow-hidden">
+        {/* Ambient Warm Burgundy Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#20070e]/40 rounded-full blur-[140px] pointer-events-none -z-10" />
 
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto"
-          >
-            {/* Story Prompt Card - Deep brown parchment tone */}
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={stagger}
+          className="max-w-7xl mx-auto space-y-14"
+        >
+          {/* Section Header */}
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <span className="text-[#F2A98A] uppercase tracking-[0.25em] font-sans font-bold text-xs block">
+              The Creative Portal
+            </span>
+            <h2 className="text-3xl md:text-5xl font-display text-[#FBF7EE] font-bold tracking-tight">
+              Writers' Village & Active Prompts
+            </h2>
+            <p className="text-sm md:text-base text-[#FBF7EE]/70 font-serif leading-relaxed">
+              Every week, Northern Nigerian scribes submit anonymous drafts to our peer review circle. Queue your draft before Saturday 8:00 PM WAT.
+            </p>
+          </div>
+
+          {/* Consolidated 2-Column Split: Village Sanctuary on Left, 2 Prompts on Right */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            
+            {/* Left: The Village Portal Card (5 Columns) */}
             <motion.div 
-              variants={fadeInReveal}
-              whileHover={{ y: -4 }}
-              className="bg-[#1E110A] border border-primary/20 p-8 rounded-[32px] shadow-lg flex flex-col justify-between space-y-6 relative overflow-hidden group transition-all"
+              variants={fadeIn}
+              className="lg:col-span-5 bg-gradient-to-br from-[#20070e] via-[#2A0B14] to-[#120308] border border-[#c96a42]/30 p-8 md:p-10 rounded-3xl shadow-xl flex flex-col justify-between space-y-6"
             >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-burgundy/10 rounded-full blur-xl" />
-              <div className="space-y-4 flex-1 flex flex-col">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full uppercase tracking-wider">The Story prompt</span>
-                  <Feather size={16} className="text-primary" />
+              <div className="space-y-5">
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <span className="text-[#F2A98A] text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Feather size={14} className="text-[#c96a42]" />
+                    Weekly Critique Cycle
+                  </span>
+                  <span className="text-[10px] bg-white/10 border border-white/10 text-[#FBF7EE] px-3 py-1 rounded-full uppercase tracking-wider font-bold">
+                    Saturday Drops
+                  </span>
                 </div>
-                <h3 className="text-2xl font-display text-cream font-bold border-b border-white/10 pb-3">Prose & Narrative</h3>
-                <p className="text-xs sm:text-sm text-cream/80 leading-relaxed font-serif italic min-h-[95px] bg-white/5 p-4 rounded-xl border border-white/5 flex-1 flex items-center justify-center">
-                  "{storyPrompt}"
+
+                <h3 className="text-2xl sm:text-3xl font-display text-[#FBF7EE] font-bold leading-tight">
+                  The Scribe's Sanctuary
+                </h3>
+
+                <p className="text-sm text-[#FBF7EE]/80 font-serif leading-relaxed">
+                  Submit prose or verse under an anonymous pen name. Our 3-lens peer review system ensures unvarnished, constructive critique. Earn Leaves and Milestone Tokens with every review you give.
                 </p>
+
+                {/* Scannable Micro-Rules (Thing 17) */}
+                <div className="space-y-2 pt-2 text-xs font-sans text-[#FBF7EE]/75">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-[#c96a42]" />
+                    <span>Double-blind anonymous peer feedback</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-[#c96a42]" />
+                    <span>Earn 10 Leaves per thoughtful critique</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-[#c96a42]" />
+                    <span>Unlock physical clubhouse publishing honors</span>
+                  </div>
+                </div>
               </div>
-              <Link 
-                href={`/village?redirect=${encodeURIComponent('/dashboard/write?type=story')}`}
-                className="bg-primary hover:bg-white text-ink text-center font-sans font-bold text-xs py-3.5 px-6 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
-              >
-                <span>Write Story Draft</span>
-                <ArrowRight size={14} />
-              </Link>
+
+              <div className="pt-4 border-t border-white/10">
+                <Link 
+                  href="/village" 
+                  className="w-full bg-[#c96a42] hover:bg-[#e07a5f] text-[#120308] py-3.5 px-6 rounded-xl uppercase tracking-widest text-xs font-bold transition-all shadow-md inline-flex items-center justify-center gap-3 hover:-translate-y-0.5 active:scale-95 cursor-pointer font-sans"
+                >
+                  <span>Enter The Writers' Village</span>
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
             </motion.div>
 
-            {/* Poem Prompt Card - Deep purple parchment tone */}
-            <motion.div 
-              variants={fadeInReveal}
-              whileHover={{ y: -4 }}
-              className="bg-[#160B18] border border-accent/20 p-8 rounded-[32px] shadow-lg flex flex-col justify-between space-y-6 relative overflow-hidden group transition-all"
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-accent/10 rounded-full blur-xl" />
-              <div className="space-y-4 flex-1 flex flex-col">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full uppercase tracking-wider">The Poem prompt</span>
-                  <Sparkles size={16} className="text-accent" />
-                </div>
-                <h3 className="text-2xl font-display text-cream font-bold border-b border-white/10 pb-3">Verse & Poetry</h3>
-                <p className="text-xs sm:text-sm text-cream/80 leading-relaxed font-serif italic min-h-[95px] bg-white/5 p-4 rounded-xl border border-white/5 flex-1 flex items-center justify-center">
-                  "{poemPrompt}"
-                </p>
-              </div>
-              <Link 
-                href={`/village?redirect=${encodeURIComponent('/dashboard/write?type=poem')}`}
-                className="bg-accent hover:bg-white text-burgundy hover:text-ink text-center font-sans font-bold text-xs py-3.5 px-6 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
+            {/* Right: The 2 Active Prompts (7 Columns) */}
+            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              
+              {/* Story Prompt */}
+              <motion.div 
+                variants={fadeIn}
+                className="bg-[#1E110A] border border-[#c96a42]/25 p-7 rounded-3xl shadow-lg flex flex-col justify-between space-y-5"
               >
-                <span>Compose Poem Draft</span>
-                <ArrowRight size={14} />
-              </Link>
-            </motion.div>
-          </motion.div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-[#F2A98A] bg-[#F2A98A]/10 border border-[#F2A98A]/20 px-3 py-1 rounded-full uppercase tracking-wider">
+                      Story Prompt
+                    </span>
+                    <Feather size={14} className="text-[#F2A98A]" />
+                  </div>
+                  <h4 className="text-xl font-display text-[#FBF7EE] font-bold">
+                    Prose & Narrative
+                  </h4>
+                  <p className="text-xs sm:text-sm text-[#FBF7EE]/80 font-serif italic bg-white/5 p-4 rounded-xl border border-white/5 min-h-[110px] flex items-center">
+                    "{storyPrompt}"
+                  </p>
+                </div>
 
-          {/* Immersive CTA to Village */}
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeInReveal}
-            className="max-w-4xl mx-auto bg-gradient-to-r from-burgundy/50 to-ink p-10 md:p-12 rounded-[32px] shadow-xl text-center space-y-6 relative overflow-hidden border border-white/10 group"
-          >
-            <div className="absolute top-0 right-0 w-80 h-80 bg-accent/5 rounded-full blur-3xl -z-10 group-hover:scale-110 transition-transform duration-1000" />
-            <div className="absolute bottom-0 left-0 w-80 h-80 bg-burgundy/10 rounded-full blur-3xl -z-10" />
+                <Link 
+                  href={`/village?redirect=${encodeURIComponent('/dashboard/write?type=story')}`}
+                  className="w-full bg-[#F2A98A] hover:bg-white text-[#120308] text-center font-sans font-bold text-xs py-3 px-4 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+                >
+                  <span>Draft Story Manuscript</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </motion.div>
 
-            <div className="max-w-2xl mx-auto space-y-4">
-              <span className="text-accent uppercase tracking-[0.25em] font-sans font-bold text-[9px] block">Weekly Critique Cycle</span>
-              <h3 className="text-3xl md:text-4xl font-display text-cream font-bold">Ready to Share or Critique?</h3>
-              <p className="text-sm text-cream/70 font-sans leading-relaxed">
-                Step into the **Writers' Village**. Read and review anonymous peer manuscripts, earn leaves and Milestone Tokens, or manage your ongoing drafts.
+              {/* Poem Prompt */}
+              <motion.div 
+                variants={fadeIn}
+                className="bg-[#1A0C16] border border-[#F2A98A]/25 p-7 rounded-3xl shadow-lg flex flex-col justify-between space-y-5"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-[#F2A98A] bg-[#F2A98A]/10 border border-[#F2A98A]/20 px-3 py-1 rounded-full uppercase tracking-wider">
+                      Poem Prompt
+                    </span>
+                    <Sparkles size={14} className="text-[#F2A98A]" />
+                  </div>
+                  <h4 className="text-xl font-display text-[#FBF7EE] font-bold">
+                    Verse & Poetry
+                  </h4>
+                  <p className="text-xs sm:text-sm text-[#FBF7EE]/80 font-serif italic bg-white/5 p-4 rounded-xl border border-white/5 min-h-[110px] flex items-center">
+                    "{poemPrompt}"
+                  </p>
+                </div>
+
+                <Link 
+                  href={`/village?redirect=${encodeURIComponent('/dashboard/write?type=poem')}`}
+                  className="w-full bg-[#c96a42] hover:bg-white text-[#120308] text-center font-sans font-bold text-xs py-3 px-4 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+                >
+                  <span>Compose Verse Draft</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </motion.div>
+
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* =========================================================================
+          BLOCK 4: PHYSICAL GATHERINGS & DISPATCH (Assembly & Newsletter)
+          ========================================================================= */}
+      <section className="py-24 px-6 md:px-8 bg-[#FBF7EE] relative">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={stagger}
+          className="max-w-6xl mx-auto space-y-16"
+        >
+          {/* Part A: The Assembly Events Spotlight (Replaces Separate Chapters) */}
+          <div className="bg-[#FAF5EE] border border-[#20070e]/15 rounded-3xl p-8 md:p-12 shadow-lg flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-3 max-w-xl text-center md:text-left">
+              <span className="text-[#c96a42] uppercase tracking-[0.25em] font-sans font-bold text-xs block flex items-center justify-center md:justify-start gap-2">
+                <Calendar size={14} />
+                In-Person Fellowship & Debates
+              </span>
+              <h3 className="text-2xl sm:text-4xl font-display text-[#20070e] font-bold tracking-tight">
+                The Assembly & City Readings
+              </h3>
+              <p className="text-sm md:text-base text-[#120308]/75 font-serif leading-relaxed">
+                Step beyond the screen. We meet monthly in quiet cafes, libraries, and book parlors across Zaria, Kaduna, and Abuja. No separate club fees—simply RSVP on the Events calendar and join the table.
               </p>
             </div>
 
-            <div className="pt-4">
+            <div className="flex-shrink-0">
               <Link 
-                href="/village" 
-                className="bg-accent hover:bg-white text-burgundy hover:text-ink px-10 py-4 rounded-xl uppercase tracking-widest text-xs font-bold transition-all shadow-md inline-flex items-center gap-3 hover:-translate-y-0.5"
+                href="/events" 
+                className="bg-[#20070e] hover:bg-[#120308] text-[#FBF7EE] px-8 py-4 uppercase tracking-widest text-xs font-bold transition-all shadow-md rounded-xl inline-flex items-center gap-3 hover:-translate-y-0.5 active:scale-95 font-sans"
               >
-                <span>Enter The Writers' Village</span>
-                <ArrowRight size={16} />
+                <span>View Events & RSVP</span>
+                <ArrowRight size={15} />
               </Link>
             </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* 5. Strategic Dark Theme: Polaroid Exhibition Slider */}
-      <section className="py-32 px-6 md:px-8 bg-ink border-b border-white/5">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16 px-4">
-            <h2 className="text-4xl md:text-5xl font-display text-cream mb-4 font-bold">Bookstore in the wild</h2>
-            <p className="uppercase tracking-[0.25em] text-primary text-xs font-bold leading-relaxed font-sans">Capturing the moments that build our community.</p>
           </div>
 
-          {/* Polaroid Card frame */}
-          <div className="bg-white p-5 md:p-8 rounded-[4px] shadow-2xl mx-auto max-w-4xl rotate-1 border border-ink/5">
-            <div className="relative w-full aspect-[4/3] overflow-hidden bg-sage/5 mb-8 border border-ink/10 rounded-[2px]">
-               <AnimatePresence mode="wait">
-                  <motion.img 
-                    key={quoteIndex}
-                    src={fallbackImages[quoteIndex % fallbackImages.length]}
-                    initial={{ opacity: 0, scale: 1.04 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 1.2, ease: "easeInOut" }}
-                    className="absolute inset-0 w-full h-full object-cover filter contrast-[1.02] sepia-[0.05]"
-                    alt="Exhibition Capture"
-                  />
-               </AnimatePresence>
+          {/* Part B: The Weekly Dispatch (Newsletter) */}
+          <div className="max-w-3xl mx-auto text-center space-y-8 bg-[#120308] text-[#FBF7EE] p-8 md:p-12 rounded-3xl border border-white/10 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#c96a42]/15 rounded-full blur-3xl pointer-events-none -z-10" />
+
+            <div className="space-y-3">
+              <span className="text-[#F2A98A] uppercase tracking-[0.25em] font-sans font-bold text-xs block">
+                Stay in the Loop
+              </span>
+              <h3 className="text-2xl sm:text-4xl font-display text-[#FBF7EE] font-bold leading-tight">
+                Join The Weekly Dispatch
+              </h3>
+              <p className="text-xs sm:text-sm text-[#FBF7EE]/70 max-w-md mx-auto font-serif leading-relaxed">
+                Weekly prompt releases, curated book arrivals, and city meetup alerts delivered straight to your inbox. No spam. Ever.
+              </p>
             </div>
-            
-            <div className="text-center px-4">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={quoteIndex}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.8 }}
-                  className="min-h-[110px] flex flex-col justify-center"
+
+            <form onSubmit={handleNewsletterSubmit} className="max-w-md mx-auto space-y-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input 
+                  type="email" 
+                  required 
+                  disabled={newsletterLoading}
+                  placeholder="Enter your email address..." 
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  className="flex-1 bg-white/5 border border-white/15 rounded-xl px-4 py-3.5 text-xs focus:outline-none focus:border-[#F2A98A] text-[#FBF7EE] placeholder-[#FBF7EE]/30 transition-all font-sans"
+                />
+                <button 
+                  type="submit" 
+                  disabled={newsletterLoading}
+                  className="bg-[#c96a42] hover:bg-[#e07a5f] text-[#120308] font-sans font-bold text-xs uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-md active:scale-95 flex-shrink-0"
                 >
-                  <p className="font-quote text-2xl md:text-3xl italic text-ink mb-4">"{QUOTES[quoteIndex].text}"</p>
-                  <p className="uppercase tracking-widest text-[10px] font-bold text-accent font-sans">— {QUOTES[quoteIndex].author}</p>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Polaroid Progress Bar */}
-            <div className="h-[2px] w-full bg-ink/10 mt-8 relative overflow-hidden">
-               {QUOTES.map((_, i) => (
-                 i === quoteIndex && (
-                   <motion.div 
-                     key={`prog-${i}`}
-                     initial={{ width: "0%" }} 
-                     animate={{ width: "100%" }} 
-                     transition={{ duration: 6, ease: "linear" }}
-                     className="absolute top-0 left-0 h-full bg-ink"
-                   />
-                 )
-               ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. Light Theme: The Assembly & The Chapters (Community at Bottom) */}
-      <section className="py-24 px-6 md:px-8 bg-cream/70 relative border-b border-ink/5 overflow-hidden">
-        {/* Background visual detail */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -z-10" />
-
-        <div className="max-w-7xl mx-auto space-y-16">
-          <div className="text-center space-y-3">
-            <span className="text-accent uppercase tracking-[0.2em] font-sans font-bold text-xs block">Our Collective</span>
-            <h2 className="text-4xl md:text-5xl font-display text-burgundy font-bold">The Assembly & The Chapters</h2>
-            <p className="text-sm text-ink/75 max-w-md mx-auto font-sans font-medium">
-              Step beyond the page. Meet the minds that read fiercely and write with passion across our physical chapters.
-            </p>
-          </div>
-
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto"
-          >
-            {/* Card 1: The Assembly (Events) */}
-            <motion.div 
-              variants={fadeInReveal}
-              className="bg-white border border-sage/15 p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-sage/5 rounded-full blur-xl" />
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-sage bg-sage/10 border border-sage/20 px-3 py-1 rounded-full uppercase tracking-wider">The Assembly</span>
-                  <span className="text-4xl font-display text-sage/20 font-black">01</span>
-                </div>
-                <h3 className="text-2xl font-display text-burgundy border-b border-sage/10 pb-3 font-bold">Events & Readings</h3>
-                <p className="text-sm text-ink leading-relaxed font-sans font-medium">
-                  Check out our next event and hang with the gang. People actually show up. Monthly events, readings, and fierce debates spanning Zaria, Kaduna, and Abuja.
-                </p>
+                  {newsletterLoading ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Inking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Subscribe</span>
+                      <Send size={13} />
+                    </>
+                  )}
+                </button>
               </div>
-              <Link 
-                href="/events"
-                className="bg-sage hover:bg-burgundy text-cream hover:text-white text-center font-sans font-bold text-xs py-3.5 px-6 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
-              >
-                <span>View Events Calendar</span>
-                <ArrowRight size={14} />
-              </Link>
-            </motion.div>
-
-            {/* Card 2: The Chapters (Clubs) */}
-            <motion.div 
-              variants={fadeInReveal}
-              className="bg-white border border-primary/15 p-8 rounded-[32px] shadow-md flex flex-col justify-between space-y-6 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-xl" />
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full uppercase tracking-wider">The Chapters</span>
-                  <span className="text-4xl font-display text-primary/20 font-black">02</span>
-                </div>
-                <h3 className="text-2xl font-display text-burgundy border-b border-primary/10 pb-3 font-bold">Local Chapters</h3>
-                <p className="text-sm text-ink leading-relaxed font-sans font-medium">
-                  Connect with like minds in Zaria, Kaduna, and Abuja bound by one very opinionated reading list. Join a local group for weekly check-ins.
+              
+              {newsletterStatus && (
+                <p className={`text-xs font-bold pt-1 ${newsletterStatus.type === 'success' ? 'text-[#F2A98A]' : 'text-red-400'}`}>
+                  {newsletterStatus.message}
                 </p>
-              </div>
-              <Link 
-                href="/clubs"
-                className="bg-accent hover:bg-burgundy text-cream hover:text-white text-center font-sans font-bold text-xs py-3.5 px-6 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm"
-              >
-                <span>Find Your Chapter</span>
-                <ArrowRight size={14} />
-              </Link>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* 7. The Weekly Dispatch (Prominent Newsletter Signup Section) */}
-      <section className="py-24 px-6 md:px-8 bg-ink text-cream relative overflow-hidden">
-        {/* Background ambient highlights */}
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-burgundy/15 rounded-full blur-[120px] -z-10" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[120px] -z-10" />
-        
-        <div className="max-w-4xl mx-auto text-center space-y-8 relative z-10">
-          <div className="space-y-3">
-            <span className="text-primary uppercase tracking-[0.25em] font-sans font-bold text-xs block">Stay in the Loop</span>
-            <h2 className="text-3xl md:text-5xl font-display text-cream font-bold leading-tight">Join The Weekly Dispatch</h2>
-            <p className="text-sm sm:text-base text-cream/70 max-w-xl mx-auto font-serif leading-relaxed">
-              Subscribe to receive weekly prompt releases, curated book summaries, physical meetups notifications, and local chapter highlights straight to your inbox.
-            </p>
+              )}
+            </form>
           </div>
 
-          <form onSubmit={handleNewsletterSubmit} className="max-w-md mx-auto space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input 
-                type="email" 
-                required 
-                disabled={newsletterLoading}
-                placeholder="Enter your email address..." 
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-                className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-primary text-cream placeholder-cream/35 transition-all"
-              />
-              <button 
-                type="submit" 
-                disabled={newsletterLoading}
-                className="bg-primary hover:bg-cream text-ink font-sans font-bold text-xs uppercase tracking-widest px-8 py-4 rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-md active:scale-95 flex-shrink-0"
-              >
-                {newsletterLoading ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    <span>Subscribing...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Subscribe</span>
-                    <Send size={14} />
-                  </>
-                )}
-              </button>
-            </div>
-            
-            {newsletterStatus && (
-              <motion.p 
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`text-xs font-bold ${newsletterStatus.type === 'success' ? 'text-primary' : 'text-red-400'}`}
-              >
-                {newsletterStatus.message}
-              </motion.p>
-            )}
-          </form>
-        </div>
+        </motion.div>
       </section>
-
 
     </div>
   );

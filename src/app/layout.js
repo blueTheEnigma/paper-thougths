@@ -6,7 +6,6 @@ import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import ServiceWorkerRegister from "../components/ServiceWorkerRegister";
 import SmartInstallPrompt from "../components/onboarding/SmartInstallPrompt";
-import GuidedLoreModal from "../components/onboarding/GuidedLoreModal";
 import QuoteHighlightListener from "../components/quotes/QuoteHighlightListener";
 
 const playfair = Playfair_Display({
@@ -93,7 +92,6 @@ export default function RootLayout({ children }) {
             {children}
           </div>
           <SmartInstallPrompt />
-          <GuidedLoreModal />
           <QuoteHighlightListener />
           <Footer />
           <Analytics />
