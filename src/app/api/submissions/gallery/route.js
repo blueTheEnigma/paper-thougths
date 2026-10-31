@@ -52,6 +52,9 @@ export async function GET(request) {
         COALESCE(s.pen_name, u.full_name, 'Anonymous Writer') as "displayName",
         (SELECT COUNT(*) FROM submission_likes l WHERE l.submission_id = s.id)::int as "likeCount",
         (SELECT COUNT(*) FROM submission_comments c WHERE c.submission_id = s.id)::int as "commentCount",
+        (SELECT COUNT(*) FROM submission_ratings r WHERE r.submission_id = s.id)::int as "ratingCount",
+        (SELECT COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0.0) FROM submission_ratings r WHERE r.submission_id = s.id)::float as "averageRating",
+        (SELECT r.rating FROM submission_ratings r WHERE r.submission_id = s.id AND r.user_id = $1) as "userRating",
         EXISTS(SELECT 1 FROM submission_likes l WHERE l.submission_id = s.id AND l.user_id = $1) as "userLiked"
       FROM submissions s
       JOIN users u ON u.id = s.author_id

@@ -8,6 +8,7 @@ import {
   Share2, Award, ChevronDown, BookMarked, Check, Heart
 } from 'lucide-react';
 import ShareableLaureateCard from '@/components/anthology/ShareableLaureateCard';
+import LiteraryEngagementBar from '@/components/common/LiteraryEngagementBar';
 
 export default function AnthologyClient() {
   const [loading, setLoading] = useState(true);
@@ -211,6 +212,8 @@ export default function AnthologyClient() {
                   chapterName={work.chapterName}
                   monthYear={issue?.monthYear}
                   editorCitation={work.editorCitation}
+                  averageRating={work.averageRating}
+                  ratingsCount={work.ratingsCount}
                   isEditor={false}
                   onReadPiece={() => setReadingPiece(work)}
                 />
@@ -305,6 +308,15 @@ export default function AnthologyClient() {
                 {/* Manuscript Full Body */}
                 <div className="font-serif text-base sm:text-lg leading-relaxed text-[#20070e]/90 whitespace-pre-line selection:bg-[#F2A98A]/30">
                   {readingPiece.bodyText}
+                </div>
+
+                {/* Literary Engagement Bar (5-Quill Literary Ratings, Leaves Tipping Drawer, Reader Notes) */}
+                <div className="pt-6 border-t border-[#20070e]/10">
+                  <LiteraryEngagementBar
+                    submissionId={readingPiece.submissionId}
+                    category={readingPiece.category}
+                    authorName={readingPiece.penName || readingPiece.authorName}
+                  />
                 </div>
               </div>
 

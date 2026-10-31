@@ -39,6 +39,15 @@ export default async function Home() {
     LIMIT 1
   `);
 
+  // Fetch latest published Anthology issue
+  const latestAnthology = await Database.queryOne(`
+    SELECT id, month_year as "monthYear", display_title as "displayTitle"
+    FROM monthly_anthology_issues
+    WHERE published = TRUE
+    ORDER BY month_year DESC
+    LIMIT 1
+  `).catch(() => null);
+
   return (
     <>
       <Landing 
@@ -48,6 +57,7 @@ export default async function Home() {
         poemPrompt={poemPrompt ? poemPrompt.promptText : "Write freely about any theme or subject that inspires you today."}
         botmBook={botmBook}
         generalBotm={botmBook}
+        latestAnthology={latestAnthology}
       />
       <ContactUs />
     </>

@@ -40,7 +40,8 @@ export default function AdminGatheringsTab({ initialGatherings = [], chapters = 
     moderatorLkid: '',
     moderatorBio: '',
     moderatorLeavesBounty: 50,
-    isGuestModerator: false
+    isGuestModerator: false,
+    coHosts: []
   });
 
   // Edit Gathering State
@@ -333,7 +334,8 @@ The next gathering card drops this weekend on the Archive. Be ready.
       moderatorBio: g.moderatorBio || '',
       moderatorLeavesBounty: g.moderatorLeavesBounty !== undefined && g.moderatorLeavesBounty !== null ? g.moderatorLeavesBounty : 50,
       moderatorBountyAwarded: !!g.moderatorBountyAwarded,
-      isGuestModerator: !g.moderatorUserId && !!g.moderatorName
+      isGuestModerator: !g.moderatorUserId && !!g.moderatorName,
+      coHosts: Array.isArray(g.coHosts) ? g.coHosts : []
     });
     setIsEditOpen(true);
   };
@@ -1570,6 +1572,70 @@ The next gathering card drops this weekend on the Archive. Be ready.
                     <span className="text-[10px] font-bold text-[#c96a42]">Leaves</span>
                   </div>
                 </div>
+                {/* Co-Hosts / Moderator Circle */}
+                <div className="pt-2 border-t border-black/5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-[#20070e] uppercase tracking-wider">
+                      Co-Hosts Circle ({editFormData.coHosts?.length || 0})
+                    </label>
+                    <span className="text-[9px] text-[#120308]/50 italic">Add additional table moderators</span>
+                  </div>
+
+                  {editFormData.coHosts?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pb-1">
+                      {editFormData.coHosts.map((ch, idx) => (
+                        <span key={idx} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-[#c96a42]/30 text-[10px] font-bold text-[#20070e] shadow-xs">
+                          <span>🎙️</span>
+                          <span>{ch.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => setEditFormData(prev => ({
+                              ...prev,
+                              coHosts: prev.coHosts.filter((_, i) => i !== idx)
+                            }))}
+                            className="w-3.5 h-3.5 rounded-full bg-black/5 hover:bg-black/15 flex items-center justify-center text-[9px] cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <select
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      if (!selectedId) return;
+                      const member = members.find(m => String(m.id) === selectedId);
+                      if (member) {
+                        setEditFormData(prev => ({
+                          ...prev,
+                          coHosts: [
+                            ...(prev.coHosts || []),
+                            {
+                              id: member.id,
+                              name: member.name || member.full_name || 'Kin',
+                              avatarUrl: member.avatarUrl || member.avatar_url || '',
+                              lkid: member.lkId || member.lk_id || ''
+                            }
+                          ]
+                        }));
+                      }
+                      e.target.value = '';
+                    }}
+                    className="w-full px-3 py-2 rounded-xl border border-black/10 focus:border-[#c96a42] text-xs bg-white cursor-pointer"
+                  >
+                    <option value="">+ Add Registered Member as Co-Host...</option>
+                    {members
+                      .filter(m => String(m.id) !== String(editFormData.moderatorUserId) && !(editFormData.coHosts || []).some(ch => String(ch.id) === String(m.id)))
+                      .map(m => (
+                        <option key={m.id} value={m.id}>
+                          {m.name || m.full_name} ({m.lkId || m.lk_id || 'Kin'})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
               </div>
 
               <div>
@@ -1915,6 +1981,70 @@ The next gathering card drops this weekend on the Archive. Be ready.
                     <span className="text-[10px] font-bold text-[#c96a42]">Leaves</span>
                   </div>
                 </div>
+                {/* Co-Hosts / Moderator Circle */}
+                <div className="pt-2 border-t border-black/5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-[#20070e] uppercase tracking-wider">
+                      Co-Hosts Circle ({formData.coHosts?.length || 0})
+                    </label>
+                    <span className="text-[9px] text-[#120308]/50 italic">Add additional table moderators</span>
+                  </div>
+
+                  {formData.coHosts?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pb-1">
+                      {formData.coHosts.map((ch, idx) => (
+                        <span key={idx} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-[#c96a42]/30 text-[10px] font-bold text-[#20070e] shadow-xs">
+                          <span>🎙️</span>
+                          <span>{ch.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({
+                              ...prev,
+                              coHosts: prev.coHosts.filter((_, i) => i !== idx)
+                            }))}
+                            className="w-3.5 h-3.5 rounded-full bg-black/5 hover:bg-black/15 flex items-center justify-center text-[9px] cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <select
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      if (!selectedId) return;
+                      const member = members.find(m => String(m.id) === selectedId);
+                      if (member) {
+                        setFormData(prev => ({
+                          ...prev,
+                          coHosts: [
+                            ...(prev.coHosts || []),
+                            {
+                              id: member.id,
+                              name: member.name || member.full_name || 'Kin',
+                              avatarUrl: member.avatarUrl || member.avatar_url || '',
+                              lkid: member.lkId || member.lk_id || ''
+                            }
+                          ]
+                        }));
+                      }
+                      e.target.value = '';
+                    }}
+                    className="w-full px-3 py-2 rounded-xl border border-black/10 focus:border-[#c96a42] text-xs bg-white cursor-pointer"
+                  >
+                    <option value="">+ Add Registered Member as Co-Host...</option>
+                    {members
+                      .filter(m => String(m.id) !== String(formData.moderatorUserId) && !(formData.coHosts || []).some(ch => String(ch.id) === String(m.id)))
+                      .map(m => (
+                        <option key={m.id} value={m.id}>
+                          {m.name || m.full_name} ({m.lkId || m.lk_id || 'Kin'})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
               </div>
 
               <div>

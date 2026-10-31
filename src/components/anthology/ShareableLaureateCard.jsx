@@ -31,6 +31,8 @@ export default function ShareableLaureateCard({
   monthYear = "October 2026",
   editorCitation = "A masterclass in narrative tension and evocative sentence craft.",
   editorName = "Ufuoma Morgan",
+  averageRating = 0,
+  ratingsCount = 0,
   isEditor = false,
   showControls = true,
   onReadPiece = null
@@ -298,6 +300,15 @@ export default function ShareableLaureateCard({
                 <p className="text-[11px] text-[#c96a42] italic">
                   {chapterByline}
                 </p>
+                {averageRating > 0 && (
+                  <div className="pt-1.5 flex items-center justify-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#c96a42]/10 border border-[#c96a42]/20 text-[#c96a42] text-[10px] font-mono font-bold">
+                      <span>★</span>
+                      <span>{Number(averageRating).toFixed(1)}</span>
+                      <span className="text-[9px] text-[#20070e]/50 font-normal">({ratingsCount})</span>
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

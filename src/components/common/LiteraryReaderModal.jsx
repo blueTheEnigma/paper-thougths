@@ -1,5 +1,7 @@
 "use client";
 
+import LiteraryEngagementBar from '@/components/common/LiteraryEngagementBar';
+
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -212,85 +214,15 @@ export default function LiteraryReaderModal({
               </div>
             </div>
 
-            {/* Comments & Reader Reactions (Parchment Notes) */}
-            {comments !== null && (
-              <div className="border-t border-[#EADFC9]/80 pt-5 space-y-4 text-left max-w-xl mx-auto">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-display font-bold text-base sm:text-lg text-burgundy flex items-center gap-1.5">
-                    <MessageSquare size={15} className="text-accent" />
-                    <span>Parchment Notes ({comments.length})</span>
-                  </h3>
-                  <span className="text-[9px] text-ink/40 font-mono">Reader Reflections</span>
-                </div>
-
-                {/* Comments Stream */}
-                {loadingComments ? (
-                  <div className="space-y-2">
-                    <div className="h-10 bg-white/60 rounded-xl animate-pulse" />
-                    <div className="h-10 bg-white/60 rounded-xl animate-pulse" />
-                  </div>
-                ) : comments.length === 0 ? (
-                  <p className="text-xs text-ink/50 font-serif italic bg-white/40 border border-dashed border-sage/20 p-3.5 rounded-xl text-center">
-                    No notes left for this piece yet. Leave the author some encouragement!
-                  </p>
-                ) : (
-                  <div className="space-y-2.5">
-                    {comments.map((c) => (
-                      <div key={c.id} className="bg-white border border-sage/15 p-3 sm:p-3.5 rounded-2xl space-y-1">
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="font-bold text-burgundy font-sans">{c.displayName}</span>
-                          <span className="text-ink/35 font-mono">
-                            {c.createdAt ? new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}
-                          </span>
-                        </div>
-                        <p className="text-xs text-ink/80 font-serif leading-relaxed">{c.content}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Comment Form */}
-                {currentUser ? (
-                  <form onSubmit={handleCommentSubmit} className="space-y-2 pt-1">
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <input
-                        type="text"
-                        value={commentPenName}
-                        onChange={(e) => setCommentPenName(e.target.value)}
-                        placeholder="Pen Name (Optional)"
-                        className="sm:w-1/3 bg-white border border-sage/25 rounded-xl py-2 px-3 text-xs text-ink placeholder-ink/35 focus:outline-none focus:border-burgundy"
-                      />
-                      <div className="flex-1 flex gap-1.5">
-                        <input
-                          type="text"
-                          value={commentText}
-                          onChange={(e) => setCommentText(e.target.value)}
-                          placeholder="Leave a warm note for the author..."
-                          className="flex-1 bg-white border border-sage/25 rounded-xl py-2 px-3 text-xs text-ink placeholder-ink/35 focus:outline-none focus:border-burgundy"
-                        />
-                        <button
-                          type="submit"
-                          disabled={submittingComment || !commentText.trim()}
-                          className="bg-burgundy hover:bg-ink text-cream px-3.5 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-40 cursor-pointer flex items-center gap-1 flex-shrink-0"
-                        >
-                          <Send size={11} />
-                          <span>Send</span>
-                        </button>
-                      </div>
-                    </div>
-                    {commentError && (
-                      <p className="text-[10px] text-burgundy font-bold">{commentError}</p>
-                    )}
-                  </form>
-                ) : (
-                  <div className="bg-white/70 border border-sage/20 p-2.5 rounded-xl text-center">
-                    <Link href="/sign-in?redirect_url=/village/gallery" className="text-xs font-bold text-burgundy hover:underline">
-                      Sign in to leave a note for the author ✍️
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Literary Engagement Bar (5-Quill Literary Ratings, Leaves Tipping Drawer, Reader Notes) */}
+            <div className="max-w-xl mx-auto w-full text-left pt-2">
+              <LiteraryEngagementBar
+                submissionId={piece.id}
+                category={piece.genre}
+                authorName={authorDisplayName}
+                currentUser={currentUser}
+              />
+            </div>
 
           </div>
 

@@ -681,6 +681,17 @@ export default function GalleryClient({ currentUser }) {
                         <MessageSquare size={13} />
                         <span>{sub.commentCount || 0}</span>
                       </div>
+
+                      {/* Literary Rating Badge */}
+                      {(sub.averageRating > 0 || sub.ratingCount > 0) && (
+                        <div className={`inline-flex items-center gap-1 text-xs font-mono font-bold ${
+                          isPoem ? 'text-[#F2A98A]' : 'text-[#c96a42]'
+                        }`} title={`${sub.ratingCount || 0} reader reviews`}>
+                          <span>★</span>
+                          <span>{Number(sub.averageRating || 0).toFixed(1)}</span>
+                          <span className="text-[10px] font-normal opacity-70">({sub.ratingCount || 0})</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Read CTA */}

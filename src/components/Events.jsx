@@ -294,34 +294,61 @@ export default function Events({ initialEvents = [] }) {
                         </span>
                       </div>
 
-                      {/* Session Anchor Chip */}
-                      {gathering.moderatorName && (
-                        <div 
-                          onClick={() => setModalGathering(gathering)}
-                          className="flex items-center gap-1.5 mb-1.5 py-0.5 px-2 rounded-lg bg-[#20070e]/5 hover:bg-[#20070e]/10 border border-[#c96a42]/15 w-fit max-w-full cursor-pointer transition-colors"
-                          title="Click to view Anchor profile"
-                        >
-                          {gathering.moderatorAvatarUrl ? (
-                            <img
-                              src={gathering.moderatorAvatarUrl}
-                              alt={gathering.moderatorName}
-                              className="w-3.5 h-3.5 rounded-full object-cover border border-[#c96a42]/40 shrink-0"
-                            />
-                          ) : (
-                            <div className="w-3.5 h-3.5 rounded-full bg-[#20070e] text-[#FBF7EE] flex items-center justify-center text-[7px] font-bold shrink-0">
-                              {gathering.moderatorName.charAt(0)}
-                            </div>
-                          )}
-                          <span className="text-[9px] sm:text-[10px] font-bold text-[#20070e] truncate">
-                            <span className="text-[#c96a42]">🎙️</span> {gathering.moderatorName}
-                          </span>
-                          {gathering.moderatorLkid && (
-                            <span className="text-[8px] font-mono font-bold text-[#c96a42] bg-[#c96a42]/10 px-1 rounded shrink-0 hidden xs:inline">
-                              {gathering.moderatorLkid}
+                      {/* Session Anchor & Host Circle Chip */}
+                      {(() => {
+                        const hosts = [
+                          ...(gathering.moderatorName ? [{
+                            name: gathering.moderatorName,
+                            avatarUrl: gathering.moderatorAvatarUrl,
+                            lkid: gathering.moderatorLkid,
+                            bio: gathering.moderatorBio
+                          }] : []),
+                          ...((Array.isArray(gathering.coHosts) ? gathering.coHosts : []))
+                        ];
+                        if (hosts.length === 0) return null;
+                        
+                        return (
+                          <div 
+                            onClick={() => setModalGathering(gathering)}
+                            className="flex items-center gap-1.5 mb-1.5 py-0.5 px-2 rounded-lg bg-[#20070e]/5 hover:bg-[#20070e]/10 border border-[#c96a42]/15 w-fit max-w-full cursor-pointer transition-colors"
+                            title="Click to view Host Circle profile"
+                          >
+                            {hosts.length > 1 ? (
+                              <div className="flex -space-x-1.5 overflow-hidden shrink-0">
+                                {hosts.slice(0, 3).map((h, idx) => (
+                                  h.avatarUrl ? (
+                                    <img key={idx} src={h.avatarUrl} alt={h.name} className="inline-block w-3.5 h-3.5 rounded-full ring-1 ring-[#FBF7EE] object-cover" />
+                                  ) : (
+                                    <div key={idx} className="inline-block w-3.5 h-3.5 rounded-full bg-[#20070e] text-[#FBF7EE] ring-1 ring-[#FBF7EE] text-[6px] font-bold flex items-center justify-center">
+                                      {h.name?.charAt(0) || 'H'}
+                                    </div>
+                                  )
+                                ))}
+                              </div>
+                            ) : (
+                              hosts[0].avatarUrl ? (
+                                <img
+                                  src={hosts[0].avatarUrl}
+                                  alt={hosts[0].name}
+                                  className="w-3.5 h-3.5 rounded-full object-cover border border-[#c96a42]/40 shrink-0"
+                                />
+                              ) : (
+                                <div className="w-3.5 h-3.5 rounded-full bg-[#20070e] text-[#FBF7EE] flex items-center justify-center text-[7px] font-bold shrink-0">
+                                  {hosts[0].name?.charAt(0) || 'H'}
+                                </div>
+                              )
+                            )}
+                            <span className="text-[9px] sm:text-[10px] font-bold text-[#20070e] truncate">
+                              <span className="text-[#c96a42]">🎙️</span> {hosts.length > 1 ? `Host Circle (${hosts.length})` : hosts[0].name}
                             </span>
-                          )}
-                        </div>
-                      )}
+                            {hosts.length === 1 && hosts[0].lkid && (
+                              <span className="text-[8px] font-mono font-bold text-[#c96a42] bg-[#c96a42]/10 px-1 rounded shrink-0 hidden xs:inline">
+                                {hosts[0].lkid}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* Gathering Title */}
                       <h2 
@@ -452,40 +479,65 @@ export default function Events({ initialEvents = [] }) {
                 Enter your details or Lore Keeper ID to claim your seat for <span className="font-bold text-[#20070e]">{modalGathering.title}</span>.
               </p>
 
-              {/* Session Anchor Showcase */}
-              {modalGathering.moderatorName && (
-                <div className="mb-4 p-3 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/25 flex items-start gap-3">
-                  {modalGathering.moderatorAvatarUrl ? (
-                    <img
-                      src={modalGathering.moderatorAvatarUrl}
-                      alt={modalGathering.moderatorName}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-[#c96a42]/30 shrink-0 mt-0.5"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-[#20070e] text-[#FBF7EE] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                      {modalGathering.moderatorName.charAt(0)}
+              {/* Session Anchor & Unified Host Circle Showcase */}
+              {(() => {
+                const modalHosts = [
+                  ...(modalGathering.moderatorName ? [{
+                    name: modalGathering.moderatorName,
+                    avatarUrl: modalGathering.moderatorAvatarUrl,
+                    lkid: modalGathering.moderatorLkid,
+                    bio: modalGathering.moderatorBio
+                  }] : []),
+                  ...((Array.isArray(modalGathering.coHosts) ? modalGathering.coHosts : []))
+                ];
+                if (modalHosts.length === 0) return null;
+
+                return (
+                  <div className="mb-4 p-3.5 rounded-2xl bg-[#FBF7EE] border border-[#c96a42]/25 space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#20070e]/10 pb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#c96a42] flex items-center gap-1.5">
+                        <span>🎙️</span> {modalHosts.length > 1 ? 'Unified Host Circle' : 'Session Anchor'}
+                      </span>
+                      <span className="text-[9px] text-[#120308]/50 font-serif italic">
+                        {modalHosts.length > 1 ? `${modalHosts.length} Co-Moderators` : 'Ritual Moderator'}
+                      </span>
                     </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-bold text-[#20070e]">{modalGathering.moderatorName}</span>
-                      {modalGathering.moderatorLkid && (
-                        <span className="text-[9px] font-mono text-[#c96a42] bg-[#c96a42]/10 px-1.5 py-0.5 rounded font-bold">
-                          {modalGathering.moderatorLkid}
-                        </span>
-                      )}
+
+                    <div className="space-y-2.5">
+                      {modalHosts.map((host, idx) => (
+                        <div key={idx} className="flex items-start gap-3">
+                          {host.avatarUrl ? (
+                            <img
+                              src={host.avatarUrl}
+                              alt={host.name}
+                              className="w-8 h-8 rounded-full object-cover border-2 border-[#c96a42]/30 shrink-0 mt-0.5"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-[#20070e] text-[#FBF7EE] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                              {host.name?.charAt(0) || 'H'}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs font-bold text-[#20070e]">{host.name}</span>
+                              {host.lkid && (
+                                <span className="text-[9px] font-mono text-[#c96a42] bg-[#c96a42]/10 px-1.5 py-0.5 rounded font-bold">
+                                  {host.lkid}
+                                </span>
+                              )}
+                            </div>
+                            {host.bio && (
+                              <p className="text-[10px] text-[#120308]/70 italic mt-0.5 font-serif leading-relaxed">
+                                &ldquo;{host.bio}&rdquo;
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <span className="text-[10px] text-[#120308]/60 font-serif block">
-                      Session Anchor & Ritual Moderator
-                    </span>
-                    {modalGathering.moderatorBio && (
-                      <p className="text-[11px] text-[#120308]/75 italic mt-1 font-serif leading-relaxed">
-                        &ldquo;{modalGathering.moderatorBio}&rdquo;
-                      </p>
-                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               <form
                 onSubmit={(e) => {

@@ -46,6 +46,7 @@ export async function GET(request) {
         g.magic_token as "magicToken",
         g.gate_code as "gateCode",
         g.cover_url as "coverUrl",
+        COALESCE(g.co_hosts, '[]'::jsonb) as "coHosts",
         g.moderator_user_id as "moderatorUserId",
         g.moderator_name as "moderatorName",
         g.moderator_avatar_url as "moderatorAvatarUrl",
@@ -127,7 +128,8 @@ export async function POST(request) {
       moderatorAvatarUrl = null,
       moderatorLkid = null,
       moderatorBio = null,
-      moderatorLeavesBounty = 50
+      moderatorLeavesBounty = 50,
+      coHosts = []
     } = body;
 
     if (!title || !eventDate) {
@@ -159,9 +161,9 @@ export async function POST(request) {
         title, gathering_type, chapter_id, event_date, start_time,
         meet_url, venue_name, description, status, magic_token, gate_code, cover_url,
         moderator_user_id, moderator_name, moderator_avatar_url, moderator_lkid, moderator_bio,
-        moderator_leaves_bounty, created_by_id
+        moderator_leaves_bounty, co_hosts, created_by_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'published', $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'published', $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
       RETURNING *
     `;
 
@@ -183,6 +185,7 @@ export async function POST(request) {
       moderatorLkid || null,
       moderatorBio || null,
       parseInt(moderatorLeavesBounty || 50, 10),
+      JSON.stringify(coHosts || []),
       dbUser.id
     ]);
 

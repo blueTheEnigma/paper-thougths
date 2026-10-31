@@ -29,6 +29,7 @@ export async function GET(request, { params }) {
         g.magic_token as "magicToken",
         g.gate_code as "gateCode",
         g.cover_url as "coverUrl",
+        COALESCE(g.co_hosts, '[]'::jsonb) as "coHosts",
         g.moderator_user_id as "moderatorUserId",
         g.moderator_name as "moderatorName",
         g.moderator_avatar_url as "moderatorAvatarUrl",
@@ -148,7 +149,8 @@ export async function PATCH(request, { params }) {
       moderatorAvatarUrl,
       moderatorLkid,
       moderatorBio,
-      moderatorLeavesBounty
+      moderatorLeavesBounty,
+      coHosts
     } = body;
 
     const allowedUpdates = [];
@@ -251,6 +253,10 @@ export async function PATCH(request, { params }) {
     if (moderatorLeavesBounty !== undefined) {
       allowedUpdates.push(`moderator_leaves_bounty = $${idx++}`);
       values.push(parseInt(moderatorLeavesBounty || 50, 10));
+    }
+    if (coHosts !== undefined) {
+      allowedUpdates.push(`co_hosts = $${idx++}`);
+      values.push(JSON.stringify(coHosts || []));
     }
 
     if (allowedUpdates.length === 0) {

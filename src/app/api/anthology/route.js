@@ -64,7 +64,10 @@ export async function GET(request) {
         u.avatar_url as author_avatar,
         u.reader_archetype as author_archetype,
         c.name as chapter_name,
-        (SELECT COUNT(*) FROM submission_likes sl WHERE sl.submission_id = s.id)::int as likes_count
+        (SELECT COUNT(*) FROM submission_likes sl WHERE sl.submission_id = s.id)::int as likes_count,
+        (SELECT COUNT(*) FROM submission_ratings sr WHERE sr.submission_id = s.id)::int as ratings_count,
+        (SELECT COALESCE(ROUND(AVG(rating)::numeric, 1), 0.0) FROM submission_ratings sr WHERE sr.submission_id = s.id)::float as average_rating,
+        (SELECT COUNT(*) FROM submission_comments sc WHERE sc.submission_id = s.id)::int as comments_count
       FROM monthly_anthology_entries mae
       JOIN submissions s ON s.id = mae.submission_id
       JOIN users u ON u.id = s.author_id
@@ -94,6 +97,9 @@ export async function GET(request) {
         authorArchetype: e.author_archetype,
         chapterName: e.chapter_name || 'Paper Thoughts Sanctuary',
         likesCount: e.likes_count || 0,
+        ratingsCount: e.ratings_count || 0,
+        averageRating: e.average_rating || 0.0,
+        commentsCount: e.comments_count || 0,
         submissionDate: e.submission_date
       };
     }
