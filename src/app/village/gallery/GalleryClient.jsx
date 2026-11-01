@@ -10,6 +10,33 @@ import Link from 'next/link';
 import confetti from 'canvas-confetti';
 import LiteraryReaderModal from '@/components/common/LiteraryReaderModal';
 
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+function getCurrentCycleInfo() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const cycleMonth = `${year}-${String(month).padStart(2, '0')}`;
+  const monthName = MONTH_NAMES[now.getMonth()];
+  return { year, month, cycleMonth, monthName };
+}
+
+function formatCycleTag(cycle) {
+  if (!cycle) return 'Sanctuary';
+  const parts = cycle.split('-');
+  if (parts.length === 2) {
+    const monthIdx = parseInt(parts[1], 10) - 1;
+    const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (shortMonths[monthIdx]) {
+      return `${shortMonths[monthIdx]} ${parts[0]}`;
+    }
+  }
+  return cycle;
+}
+
 export default function GalleryClient({ currentUser }) {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,9 +48,12 @@ export default function GalleryClient({ currentUser }) {
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
 
+  const currentInfo = getCurrentCycleInfo();
   const [activeCategory, setActiveCategory] = useState('all'); // 'all' | 'stories' | 'poetry'
-  const [availableMonths, setAvailableMonths] = useState([]);
-  const [selectedCycleMonth, setSelectedCycleMonth] = useState('');
+  const [selectedCycleMonth, setSelectedCycleMonth] = useState(currentInfo.cycleMonth);
+  const [filterOptions, setFilterOptions] = useState([
+    { value: currentInfo.cycleMonth, label: currentInfo.monthName }
+  ]);
 
   // Filter submissions by category and genre
   const filteredSubmissions = submissions.filter((sub) => {
@@ -55,8 +85,9 @@ export default function GalleryClient({ currentUser }) {
       const data = await res.json();
       if (data.success) {
         setSubmissions(data.submissions || []);
-        if (data.availableMonths) setAvailableMonths(data.availableMonths);
-        if (data.selectedCycle && !selectedCycleMonth) setSelectedCycleMonth(data.selectedCycle);
+        if (data.filterOptions && data.filterOptions.length > 0) {
+          setFilterOptions(data.filterOptions);
+        }
       }
     } catch (err) {
       console.error('Failed to load gallery:', err);
@@ -432,22 +463,20 @@ export default function GalleryClient({ currentUser }) {
 
           {/* Cycle Archive Selector & Search Bar */}
           <div className="flex items-center gap-2">
-            {availableMonths.length > 0 && (
-              <div className="flex items-center gap-1.5 bg-white border border-[#20070e]/10 rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#20070e] shadow-2xs">
-                <span className="text-[10px] uppercase font-mono tracking-wider text-[#20070e]/40">Cycle:</span>
-                <select
-                  value={selectedCycleMonth}
-                  onChange={(e) => setSelectedCycleMonth(e.target.value)}
-                  className="bg-transparent focus:outline-none cursor-pointer"
-                >
-                  <option value="">Current ({availableMonths[0]})</option>
-                  {availableMonths.map((m) => (
-                    <option key={m} value={m}>{m} Archive</option>
-                  ))}
-                  <option value="all">All Archives</option>
-                </select>
-              </div>
-            )}
+            <div className="flex items-center gap-1.5 bg-white border border-[#20070e]/10 rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#20070e] shadow-2xs">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-[#20070e]/40">Month:</span>
+              <select
+                value={selectedCycleMonth}
+                onChange={(e) => setSelectedCycleMonth(e.target.value)}
+                className="bg-transparent focus:outline-none cursor-pointer font-serif font-bold text-[#20070e] pr-1"
+              >
+                {filterOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value} className="font-sans text-neutral-800 font-normal">
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="relative min-w-[200px] sm:min-w-[240px]">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#20070e]/40" />
@@ -478,23 +507,51 @@ export default function GalleryClient({ currentUser }) {
             ))}
           </div>
         ) : filteredSubmissions.length === 0 ? (
-          <div className="py-16 text-center bg-white/40 border border-dashed border-[#20070e]/15 rounded-2xl max-w-lg mx-auto p-6 space-y-3">
-            <BookOpen className="opacity-20 mx-auto text-[#20070e]" size={40} />
-            <div className="space-y-1">
-              <h3 className="font-serif font-bold text-lg text-[#20070e]">The Salon is Quiet</h3>
-              <p className="text-xs text-[#20070e]/60 font-serif leading-relaxed">
+          <div className="py-16 text-center bg-white/40 border border-dashed border-[#20070e]/15 rounded-2xl max-w-lg mx-auto p-6 space-y-4">
+            <BookOpen className="opacity-25 mx-auto text-[#20070e]" size={42} />
+            <div className="space-y-1.5">
+              <h3 className="font-serif font-bold text-xl text-[#20070e]">
+                {selectedCycleMonth === currentInfo.cycleMonth
+                  ? `The Salon is Quiet this ${currentInfo.monthName}`
+                  : 'The Salon is Quiet'}
+              </h3>
+              <p className="text-xs sm:text-sm text-[#20070e]/70 font-serif leading-relaxed max-w-sm mx-auto">
                 {searchQuery || activeCategory !== 'all'
                   ? 'No manuscripts match your active search. Try clearing your search.'
-                  : 'Be the first to submit a manuscript to this weekly prompt cycle and grace the gallery!'}
+                  : selectedCycleMonth === currentInfo.cycleMonth
+                    ? `A new monthly cycle has opened for ${currentInfo.monthName}. Be the first author to ink a manuscript and take the floor!`
+                    : 'No manuscripts are archived in this cycle yet.'}
               </p>
             </div>
-            {(searchQuery || activeCategory !== 'all') && (
+
+            {searchQuery || activeCategory !== 'all' ? (
               <button
                 onClick={() => { setSearchQuery(''); setActiveCategory('all'); }}
                 className="text-xs font-bold text-[#c96a42] underline uppercase tracking-wider cursor-pointer"
               >
                 Reset Search &amp; Filters
               </button>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1">
+                <Link
+                  href="/dashboard/write"
+                  className="inline-flex items-center gap-1.5 bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs"
+                >
+                  <Feather size={12} />
+                  <span>Submit a Manuscript</span>
+                </Link>
+                {filterOptions.some(f => f.value !== currentInfo.cycleMonth && f.value !== 'all') && (
+                  <button
+                    onClick={() => {
+                      const prev = filterOptions.find(f => f.value !== currentInfo.cycleMonth && f.value !== 'all');
+                      if (prev) setSelectedCycleMonth(prev.value);
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#c96a42] hover:text-[#20070e] transition-colors py-2 px-3 cursor-pointer"
+                  >
+                    <span>Read {filterOptions.find(f => f.value !== currentInfo.cycleMonth && f.value !== 'all')?.label} Archive →</span>
+                  </button>
+                )}
+              </div>
             )}
           </div>
         ) : (
@@ -540,7 +597,7 @@ export default function GalleryClient({ currentUser }) {
                       </div>
 
                       <span className="text-[10px] font-mono text-[#20070e]/40">
-                        {sub.cycleMonth || 'Sanctuary'}
+                        {formatCycleTag(sub.cycleMonth)}
                       </span>
                     </div>
 
