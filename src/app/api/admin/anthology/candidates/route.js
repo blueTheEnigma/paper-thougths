@@ -205,6 +205,20 @@ export async function GET(request) {
       SELECT * FROM monthly_anthology_issues WHERE month_year = $1
     `, [monthYear]);
 
+    // Fetch all available issues so admin can easily switch cycles
+    const allIssues = await Database.query(`
+      SELECT 
+        mai.id,
+        mai.month_year,
+        mai.display_title,
+        mai.published,
+        mai.published_at,
+        mai.created_at,
+        (SELECT COUNT(*) FROM monthly_anthology_entries mae WHERE mae.issue_id = mai.id)::int as inducted_count
+      FROM monthly_anthology_issues mai
+      ORDER BY mai.month_year DESC
+    `);
+
     let inductedEntries = [];
     if (currentIssue) {
       inductedEntries = await Database.query(`
@@ -221,10 +235,12 @@ export async function GET(request) {
           s.pen_name,
           u.full_name as author_name,
           u.avatar_url as author_avatar,
-          u.reader_archetype as author_archetype
+          u.reader_archetype as author_archetype,
+          c.name as chapter_name
         FROM monthly_anthology_entries mae
         JOIN submissions s ON s.id = mae.submission_id
         JOIN users u ON u.id = s.author_id
+        LEFT JOIN chapters c ON c.id = u.chapter_id
         WHERE mae.issue_id = $1
         ORDER BY mae.category ASC, mae.placement_rank ASC
       `, [currentIssue.id]);
@@ -251,6 +267,7 @@ export async function GET(request) {
       submissions: candidateSubmissions,
       reviewers: reviewerAnalytics,
       anthologyIssue: currentIssue || null,
+      allIssues: allIssues || [],
       inductedEntries,
       leaderboardHonors: leaderboardHonors || null
     });

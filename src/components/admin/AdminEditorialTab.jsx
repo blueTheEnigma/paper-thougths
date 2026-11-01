@@ -8,7 +8,7 @@ import {
   ExternalLink, ChevronRight, User, ShieldCheck, RefreshCw, Send
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import ShareableLaureateCard from '@/components/anthology/ShareableLaureateCard';
+import ShareableLaureateCard, { exportLaureateCardPNG } from '@/components/anthology/ShareableLaureateCard';
 
 export default function AdminEditorialTab({ isSuperadmin }) {
   const [loading, setLoading] = useState(true);
@@ -21,6 +21,14 @@ export default function AdminEditorialTab({ isSuperadmin }) {
   const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const [monthYear, setMonthYear] = useState(defaultMonth);
   const [allEligible, setAllEligible] = useState(true);
+  const [allIssues, setAllIssues] = useState([]);
+  const [inductedEntries, setInductedEntries] = useState([]);
+  const [hasInitializedCycle, setHasInitializedCycle] = useState(false);
+
+  // Media Suite Controls
+  const [cardViewMode, setCardViewMode] = useState('flip'); // 'flip' | 'side-by-side'
+  const [isExportingAll, setIsExportingAll] = useState(false);
+  const [exportProgress, setExportProgress] = useState(null);
 
   // Data from API
   const [candidates, setCandidates] = useState([]);
@@ -57,6 +65,22 @@ export default function AdminEditorialTab({ isSuperadmin }) {
       if (data.success) {
         setCandidates(data.submissions || []);
         setReviewers(data.reviewers || []);
+        setInductedEntries(data.inductedEntries || []);
+
+        if (data.allIssues) {
+          setAllIssues(data.allIssues);
+
+          // Auto-default on initial load: If current month has 0 laureates, but there is a published issue with laurels (like 2026-10), auto-switch so the editor isn't left staring at a blank screen!
+          if (!hasInitializedCycle && (!data.inductedEntries || data.inductedEntries.length === 0)) {
+            const latestIssueWithLaurels = data.allIssues.find(i => (i.inducted_count || 0) > 0);
+            if (latestIssueWithLaurels && latestIssueWithLaurels.month_year !== monthYear) {
+              setHasInitializedCycle(true);
+              setMonthYear(latestIssueWithLaurels.month_year);
+              return;
+            }
+          }
+          setHasInitializedCycle(true);
+        }
 
         // Load existing issue metadata if already saved
         if (data.anthologyIssue) {
@@ -143,6 +167,111 @@ export default function AdminEditorialTab({ isSuperadmin }) {
       if (subId === submissionId) return parseInt(rank, 10);
     }
     return null;
+  };
+
+  // Robust laureate resolution helper (merges current UI placements with database inducted entries)
+  const getLaureateData = (category, rank) => {
+    const isPoem = category === 'poem' || category === 'Poetry';
+    const catKey = isPoem ? 'poem' : 'story';
+    const placements = isPoem ? poemPlacements : storyPlacements;
+    const subId = placements[rank];
+
+    // Find in candidates list
+    const sub = subId ? candidates.find(c => c.id === subId) : null;
+
+    // Find in inducted entries (from database)
+    const entry = inductedEntries.find(e => e.category === catKey && Number(e.placement_rank) === Number(rank));
+
+    if (!sub && !entry) return null;
+
+    return {
+      id: sub?.id || entry?.submission_id,
+      title: sub?.title || entry?.submission_title || 'Untitled Manuscript',
+      category: isPoem ? 'Poetry' : 'Short Story',
+      genre: sub?.genre || entry?.submission_genre || (isPoem ? 'Poetry' : 'Fiction'),
+      penName: sub?.penName || entry?.pen_name || sub?.authorName || entry?.author_name || 'Sanctuary Author',
+      authorArchetype: sub?.authorArchetype || entry?.author_archetype || null,
+      chapterName: sub?.chapterName || entry?.chapter_name || 'Sanctuary',
+      editorCitation: citations[sub?.id || entry?.submission_id] || entry?.editor_citation || (isPoem ? 'Exquisite cadence and profound emotional resonance.' : 'A masterclass in quiet tension and evocative sentence craft.')
+    };
+  };
+
+  const storyCount = [1, 2, 3].filter(r => !!getLaureateData('story', r)).length;
+  const poemCount = [1, 2, 3].filter(r => !!getLaureateData('poem', r)).length;
+  const totalLaureatesCount = storyCount + poemCount;
+
+  // Batch download handler: Exports all 6 cards for a category or all 12 for the entire issue
+  const handleBatchDownload = async (targetCategory = null) => {
+    setIsExportingAll(true);
+    try {
+      const categoriesToExport = targetCategory ? [targetCategory] : ['story', 'poem'];
+      const ranks = [1, 2, 3];
+      let exportedCards = 0;
+      let totalToExport = 0;
+
+      categoriesToExport.forEach(cat => {
+        ranks.forEach(r => {
+          if (getLaureateData(cat, r)) totalToExport += 2;
+        });
+      });
+
+      if (totalToExport === 0) {
+        setErrorMsg('No laureates available to export.');
+        return;
+      }
+
+      for (const cat of categoriesToExport) {
+        const catLabel = cat === 'story' ? 'Short Story' : 'Poetry';
+        for (const rank of ranks) {
+          const data = getLaureateData(cat, rank);
+          if (!data) continue;
+
+          // 1. Export Winner Card (Front)
+          exportedCards++;
+          setExportProgress(`Exporting (${exportedCards}/${totalToExport}): "${data.title}" Winner Card...`);
+          await exportLaureateCardPNG({
+            face: 'front',
+            category: catLabel,
+            rank,
+            title: data.title,
+            authorName: data.penName,
+            authorArchetype: data.authorArchetype,
+            chapterName: data.chapterName,
+            monthYear,
+            editorCitation: data.editorCitation,
+            editorName: 'Ufuoma Morgan'
+          });
+          await new Promise(r => setTimeout(r, 320));
+
+          // 2. Export Editor's Remark (Back)
+          exportedCards++;
+          setExportProgress(`Exporting (${exportedCards}/${totalToExport}): "${data.title}" Editor's Remark...`);
+          await exportLaureateCardPNG({
+            face: 'back',
+            category: catLabel,
+            rank,
+            title: data.title,
+            authorName: data.penName,
+            authorArchetype: data.authorArchetype,
+            chapterName: data.chapterName,
+            monthYear,
+            editorCitation: data.editorCitation,
+            editorName: 'Ufuoma Morgan'
+          });
+          await new Promise(r => setTimeout(r, 320));
+        }
+      }
+
+      confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 } });
+      setSuccessMsg(`Successfully exported ${exportedCards} Instagram-ready PNG cards to your Downloads!`);
+      setTimeout(() => setSuccessMsg(null), 5000);
+    } catch (err) {
+      console.error('Batch export error:', err);
+      setErrorMsg('Failed during batch card export.');
+    } finally {
+      setIsExportingAll(false);
+      setExportProgress(null);
+    }
   };
 
   // Compile full publish payload
@@ -304,15 +433,40 @@ export default function AdminEditorialTab({ isSuperadmin }) {
 
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-[#FBF7EE] border border-[#20070e]/10 px-3 py-1.5 rounded-xl text-xs">
-            <span className="font-mono text-[#20070e]/50 uppercase">Cycle:</span>
-            <input
-              type="text"
-              value={monthYear}
-              onChange={(e) => setMonthYear(e.target.value)}
-              className="bg-transparent font-bold text-[#20070e] w-20 focus:outline-none"
-              placeholder="YYYY-MM"
-            />
+          <div className="flex items-center gap-2 bg-[#FBF7EE] border border-[#20070e]/15 px-3 py-1.5 rounded-xl text-xs shadow-2xs">
+            <span className="font-mono text-[#20070e]/60 uppercase font-bold text-[10px]">Cycle:</span>
+            {allIssues.length > 0 ? (
+              <select
+                value={monthYear}
+                onChange={(e) => {
+                  setHasInitializedCycle(true);
+                  setMonthYear(e.target.value);
+                }}
+                className="bg-transparent font-bold text-[#20070e] focus:outline-none cursor-pointer pr-1"
+              >
+                {allIssues.map(issue => (
+                  <option key={issue.id} value={issue.month_year}>
+                    {issue.month_year} · {issue.display_title ? (issue.display_title.length > 26 ? issue.display_title.slice(0, 26) + '...' : issue.display_title) : 'Issue'} {issue.inducted_count > 0 ? `(${issue.inducted_count} Laureates)` : '(Draft)'}
+                  </option>
+                ))}
+                {!allIssues.some(i => i.month_year === defaultMonth) && (
+                  <option value={defaultMonth}>
+                    {defaultMonth} · Active Cycle (New)
+                  </option>
+                )}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={monthYear}
+                onChange={(e) => {
+                  setHasInitializedCycle(true);
+                  setMonthYear(e.target.value);
+                }}
+                className="bg-transparent font-bold text-[#20070e] w-20 focus:outline-none"
+                placeholder="YYYY-MM"
+              />
+            )}
           </div>
 
           <label className="flex items-center gap-2 text-xs font-bold text-[#20070e]/80 cursor-pointer bg-[#FBF7EE] px-3 py-2 rounded-xl border border-[#20070e]/10">
@@ -870,64 +1024,215 @@ export default function AdminEditorialTab({ isSuperadmin }) {
 
           </div>
 
-          {/* Live Generated 3D Cards Suite for All 6 Laureates */}
-          <div className="space-y-4">
-            <h3 className="font-serif text-2xl text-[#20070e]">
-              Laureate 3D Cards Suite (Export to 1080x1350 PNG)
-            </h3>
-            <p className="text-xs text-[#20070e]/60">
-              Each card below updates dynamically. Tap or click any card to flip it, or click "Download PNG" to export high-res front and back graphics for your Instagram carousel and WhatsApp stories.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
-              
-              {/* Fiction Top 3 Cards */}
-              {[1, 2, 3].map(rank => {
-                const subId = storyPlacements[rank];
-                const sub = candidates.find(c => c.id === subId);
-                if (!sub) return null;
-
-                return (
-                  <div key={`story-${rank}`} className="space-y-2">
-                    <ShareableLaureateCard
-                      category="Short Story"
-                      rank={rank}
-                      title={sub.title}
-                      authorName={sub.penName}
-                      authorArchetype={sub.authorArchetype}
-                      chapterName={sub.chapterName}
-                      monthYear={monthYear}
-                      editorCitation={citations[sub.id] || 'A masterclass in quiet tension and evocative sentence craft.'}
-                      isEditor={true}
-                    />
+          {/* Live Generated Instagram Laureate Cards Suite (6 per category · 1080x1350 PNG) */}
+          <div className="space-y-8 pt-2">
+            
+            {/* Top Toolbar: Heading, Explainer, View Mode, Master Export Pack */}
+            <div className="bg-white border border-[#20070e]/10 rounded-3xl p-6 sm:p-7 space-y-4 shadow-2xs">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#20070e]/10 pb-5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={18} className="text-[#c96a42]" />
+                    <h3 className="font-serif text-2xl text-[#20070e] font-bold">
+                      Laureate Instagram Cards Suite (1080×1350 PNG)
+                    </h3>
                   </div>
-                );
-              })}
+                  <p className="text-xs text-[#20070e]/70 mt-1 max-w-2xl">
+                    6 cards per category (3 Winner Cards + 3 Chief Editor Remarks). Formatted to exact 4:5 Instagram carousel &amp; WhatsApp status dimensions with Paper Thoughts luxury borders and typography.
+                  </p>
+                </div>
 
-              {/* Poetry Top 3 Cards */}
-              {[1, 2, 3].map(rank => {
-                const subId = poemPlacements[rank];
-                const sub = candidates.find(c => c.id === subId);
-                if (!sub) return null;
-
-                return (
-                  <div key={`poem-${rank}`} className="space-y-2">
-                    <ShareableLaureateCard
-                      category="Poetry"
-                      rank={rank}
-                      title={sub.title}
-                      authorName={sub.penName}
-                      authorArchetype={sub.authorArchetype}
-                      chapterName={sub.chapterName}
-                      monthYear={monthYear}
-                      editorCitation={citations[sub.id] || 'Exquisite cadence and profound emotional resonance.'}
-                      isEditor={true}
-                    />
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* View Mode Switcher */}
+                  <div className="flex items-center bg-[#FBF7EE] p-1 rounded-xl border border-[#20070e]/10 text-xs font-bold">
+                    <button
+                      onClick={() => setCardViewMode('flip')}
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                        cardViewMode === 'flip'
+                          ? 'bg-[#20070e] text-[#FBF7EE] shadow-xs'
+                          : 'text-[#20070e]/60 hover:text-[#20070e]'
+                      }`}
+                    >
+                      🎴 3D Flip
+                    </button>
+                    <button
+                      onClick={() => setCardViewMode('side-by-side')}
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                        cardViewMode === 'side-by-side'
+                          ? 'bg-[#20070e] text-[#FBF7EE] shadow-xs'
+                          : 'text-[#20070e]/60 hover:text-[#20070e]'
+                      }`}
+                    >
+                      📄 Side-by-Side
+                    </button>
                   </div>
-                );
-              })}
 
+                  {/* Master Export All Button */}
+                  <button
+                    onClick={() => handleBatchDownload(null)}
+                    disabled={isExportingAll || totalLaureatesCount === 0}
+                    className="bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Download size={14} className="text-[#F2A98A]" />
+                    {isExportingAll ? (exportProgress || 'Exporting Pack...') : `Download All ${totalLaureatesCount * 2} Cards (Complete Pack)`}
+                  </button>
+                </div>
+              </div>
+
+              {/* Progress or active status banner if downloading */}
+              {isExportingAll && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3 text-xs flex items-center gap-2 animate-pulse">
+                  <RefreshCw size={13} className="animate-spin text-[#c96a42]" />
+                  <span className="font-bold">{exportProgress || 'Generating high-resolution 1080x1350 PNG cards...'}</span>
+                </div>
+              )}
             </div>
+
+            {/* Empty State Banner if no laureates are assigned for this cycle */}
+            {totalLaureatesCount === 0 && (
+              <div className="bg-[#FBF7EE] border border-[#c96a42]/30 rounded-3xl p-8 text-center space-y-4 shadow-sm">
+                <div className="w-14 h-14 rounded-full bg-[#c96a42]/10 flex items-center justify-center mx-auto text-[#c96a42]">
+                  <Award size={28} />
+                </div>
+                <h4 className="font-serif text-2xl text-[#20070e] font-bold">
+                  No Laureates Selected for Cycle {monthYear} Yet
+                </h4>
+                <p className="text-xs text-[#20070e]/70 max-w-lg mx-auto">
+                  To view and download Instagram cards, you can award 1st, 2nd, and 3rd place laurels in the <strong>Manuscript Curation</strong> tab, or view the published laureates from a previous cycle below.
+                </p>
+                <div className="flex flex-wrap justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => setActiveSubTab('curate')}
+                    className="bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] text-xs font-bold py-2.5 px-5 rounded-xl transition-colors cursor-pointer"
+                  >
+                    Go to Manuscript Curation →
+                  </button>
+                  {allIssues.filter(i => (i.inducted_count || 0) > 0).map(issue => (
+                    <button
+                      key={issue.id}
+                      onClick={() => {
+                        setHasInitializedCycle(true);
+                        setMonthYear(issue.month_year);
+                      }}
+                      className="bg-white hover:bg-[#FBF7EE] text-[#20070e] border border-[#20070e]/20 text-xs font-bold py-2.5 px-4 rounded-xl transition-colors cursor-pointer"
+                    >
+                      View {issue.display_title || issue.month_year} Cards ({issue.inducted_count} Laureates)
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Category 1: Fiction & Short Story Laureates */}
+            {storyCount > 0 && (
+              <div className="bg-white border border-[#20070e]/10 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#20070e]/10 pb-4">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🌿</span>
+                      <h4 className="font-serif text-xl sm:text-2xl text-[#20070e] font-bold">
+                        Short Story &amp; Fiction Laureates
+                      </h4>
+                      <span className="text-[10px] font-mono font-bold bg-[#c96a42]/10 text-[#c96a42] px-2.5 py-0.5 rounded-full border border-[#c96a42]/20">
+                        {storyCount} Winners · {storyCount * 2} Instagram Cards
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#20070e]/60">
+                      Download 1080×1350 PNGs for each winner's card and editor's remark.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => handleBatchDownload('story')}
+                    disabled={isExportingAll}
+                    className="bg-[#c96a42] hover:bg-[#b55832] text-white font-bold text-xs uppercase tracking-wider py-2 px-4 rounded-xl transition-all shadow-xs flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                  >
+                    <Download size={13} />
+                    <span>Download All 6 Short Story Cards</span>
+                  </button>
+                </div>
+
+                <div className={cardViewMode === 'side-by-side' ? "space-y-10 pt-2" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-2"}>
+                  {[1, 2, 3].map(rank => {
+                    const data = getLaureateData('story', rank);
+                    if (!data) return null;
+
+                    return (
+                      <div key={`story-${rank}`} className="space-y-2">
+                        <ShareableLaureateCard
+                          category="Short Story"
+                          rank={rank}
+                          title={data.title}
+                          authorName={data.penName}
+                          authorArchetype={data.authorArchetype}
+                          chapterName={data.chapterName}
+                          monthYear={monthYear}
+                          editorCitation={data.editorCitation}
+                          viewMode={cardViewMode}
+                          isEditor={true}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Category 2: Poetry & Verses Laureates */}
+            {poemCount > 0 && (
+              <div className="bg-white border border-[#20070e]/10 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#20070e]/10 pb-4">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">✍️</span>
+                      <h4 className="font-serif text-xl sm:text-2xl text-[#20070e] font-bold">
+                        Poetry &amp; Verses Laureates
+                      </h4>
+                      <span className="text-[10px] font-mono font-bold bg-[#c96a42]/10 text-[#c96a42] px-2.5 py-0.5 rounded-full border border-[#c96a42]/20">
+                        {poemCount} Winners · {poemCount * 2} Instagram Cards
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#20070e]/60">
+                      Download 1080×1350 PNGs for each winner's card and editor's remark.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => handleBatchDownload('poem')}
+                    disabled={isExportingAll}
+                    className="bg-[#20070e] hover:bg-[#340c17] text-[#F2A98A] border border-[#c96a42]/30 font-bold text-xs uppercase tracking-wider py-2 px-4 rounded-xl transition-all shadow-xs flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                  >
+                    <Download size={13} />
+                    <span>Download All 6 Poetry Cards</span>
+                  </button>
+                </div>
+
+                <div className={cardViewMode === 'side-by-side' ? "space-y-10 pt-2" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-2"}>
+                  {[1, 2, 3].map(rank => {
+                    const data = getLaureateData('poem', rank);
+                    if (!data) return null;
+
+                    return (
+                      <div key={`poem-${rank}`} className="space-y-2">
+                        <ShareableLaureateCard
+                          category="Poetry"
+                          rank={rank}
+                          title={data.title}
+                          authorName={data.penName}
+                          authorArchetype={data.authorArchetype}
+                          chapterName={data.chapterName}
+                          monthYear={monthYear}
+                          editorCitation={data.editorCitation}
+                          viewMode={cardViewMode}
+                          isEditor={true}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
           </div>
 
         </div>
