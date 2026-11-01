@@ -90,7 +90,7 @@ export async function sendPushNotification(userId, { title, body, link, icon, ba
     title: title || 'Paper Thoughts',
     body: body || 'New notification in the Sanctuary.',
     link: link || 'https://www.paperthoughts.org/village',
-    icon: icon || '/apple-icon',
+    icon: icon || '/icon-192.png',
     badge: badge || '/icon',
     tag: tag || 'pt-notification',
     timestamp: Date.now()
@@ -152,7 +152,7 @@ export async function broadcastPushNotification({ title, body, link, icon, badge
     title: title || 'Paper Thoughts',
     body: body || 'New Sanctuary broadcast.',
     link: link || 'https://www.paperthoughts.org/village',
-    icon: icon || '/apple-icon',
+    icon: icon || '/icon-192.png',
     badge: badge || '/icon',
     tag: tag || 'pt-broadcast',
     timestamp: Date.now()
