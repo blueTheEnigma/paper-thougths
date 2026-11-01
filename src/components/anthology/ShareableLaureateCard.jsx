@@ -235,32 +235,38 @@ export const exportLaureateCardPNG = async ({
     ctx.fillText('paperthoughts.org/anthology', 540, 1255);
 
   } else {
-    // ================= BACK FACE: OBSIDIAN BURGUNDY CITATION =================
-    ctx.fillStyle = '#20070e';
+    // ================= BACK FACE: LUXURY WARM PARCHMENT CITATION =================
+    ctx.fillStyle = '#FBF7EE';
     ctx.fillRect(0, 0, 1080, 1350);
 
-    // Ambient burnt copper radial glow
-    const copperGlow = ctx.createRadialGradient(880, 1180, 20, 880, 1180, 600);
-    copperGlow.addColorStop(0, 'rgba(201, 106, 66, 0.28)');
-    copperGlow.addColorStop(1, 'rgba(32, 7, 14, 0)');
-    ctx.fillStyle = copperGlow;
+    // Subtle peach/amber & copper ambient radial glows
+    const peachGrad = ctx.createRadialGradient(920, 180, 20, 920, 180, 500);
+    peachGrad.addColorStop(0, 'rgba(242, 169, 138, 0.28)');
+    peachGrad.addColorStop(1, 'rgba(251, 247, 238, 0)');
+    ctx.fillStyle = peachGrad;
+    ctx.fillRect(0, 0, 1080, 1350);
+
+    const copperGrad = ctx.createRadialGradient(160, 1180, 20, 160, 1180, 500);
+    copperGrad.addColorStop(0, 'rgba(201, 106, 66, 0.16)');
+    copperGrad.addColorStop(1, 'rgba(251, 247, 238, 0)');
+    ctx.fillStyle = copperGrad;
     ctx.fillRect(0, 0, 1080, 1350);
 
     // Luxury ornamental frames
-    drawCardFrames('rgba(201, 106, 66, 0.55)', 'rgba(242, 169, 138, 0.22)', '#F2A98A');
+    drawCardFrames('#c96a42', 'rgba(32, 7, 14, 0.15)', '#c96a42');
 
     // Header Title
-    ctx.fillStyle = '#F2A98A';
+    ctx.fillStyle = '#c96a42';
     ctx.font = 'bold 24px Georgia, serif';
     ctx.textAlign = 'center';
-    ctx.fillText('❦   CHIEF EDITOR\'S CITATION   ❦', 540, 145);
+    ctx.fillText('❦   EDITOR\'S CITATION   ❦', 540, 145);
 
-    ctx.fillStyle = 'rgba(251, 247, 238, 0.6)';
+    ctx.fillStyle = 'rgba(32, 7, 14, 0.6)';
     ctx.font = '600 20px monospace';
     ctx.fillText(`LAUREATE CRITIQUE · ${monthDisplay.toUpperCase()}`, 540, 185);
 
     // Decorative line
-    ctx.strokeStyle = 'rgba(242, 169, 138, 0.35)';
+    ctx.strokeStyle = 'rgba(201, 106, 66, 0.35)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(380, 215);
@@ -268,27 +274,27 @@ export const exportLaureateCardPNG = async ({
     ctx.stroke();
 
     // Manuscript Context Banner (Essential for standalone social carousels)
-    ctx.fillStyle = '#F2A98A';
-    ctx.font = 'bold 18px monospace';
+    ctx.fillStyle = '#c96a42';
+    ctx.font = 'bold 20px monospace';
     const subheadUpper = `ON "${title.toUpperCase()}" · ${ordinalRank.toUpperCase()}`;
     ctx.fillText(subheadUpper, 540, 280);
 
-    ctx.fillStyle = 'rgba(251, 247, 238, 0.85)';
-    ctx.font = 'italic 22px Georgia, serif';
-    ctx.fillText(`By ${authorName}`, 540, 315);
+    ctx.fillStyle = 'rgba(32, 7, 14, 0.7)';
+    ctx.font = 'italic 24px Georgia, serif';
+    ctx.fillText(`By ${authorName}`, 540, 320);
 
     // Decorative Large Quotation Mark
-    ctx.fillStyle = 'rgba(201, 106, 66, 0.4)';
-    ctx.font = '110px Georgia, serif';
-    ctx.fillText('“', 540, 425);
+    ctx.fillStyle = 'rgba(201, 106, 66, 0.35)';
+    ctx.font = '120px Georgia, serif';
+    ctx.fillText('“', 540, 440);
 
-    // Dynamic Citation text wrapping
-    const citFont = 'italic 36px Georgia, serif';
-    const citLines = wrapLines(`"${editorCitation}"`, 820, citFont);
-    const citLineHeight = 54;
-    const citStartY = 490;
+    // Dynamic Citation text wrapping - generous size & leading for beautiful rendering
+    const citFont = 'italic 38px Georgia, serif';
+    const citLines = wrapLines(`"${editorCitation}"`, 840, citFont);
+    const citLineHeight = 58;
+    const citStartY = 510;
 
-    ctx.fillStyle = '#FBF7EE';
+    ctx.fillStyle = '#20070e';
     ctx.font = citFont;
     citLines.forEach((line, idx) => {
       ctx.fillText(line, 540, citStartY + idx * citLineHeight);
@@ -296,35 +302,28 @@ export const exportLaureateCardPNG = async ({
 
     const citEndY = citStartY + (citLines.length - 1) * citLineHeight;
 
-    // Chief Editor Sign-Off
-    const signOffY = Math.max(920, citEndY + 80);
-
-    ctx.fillStyle = '#F2A98A';
-    ctx.font = 'bold 34px Georgia, serif';
-    ctx.fillText(editorName, 540, signOffY);
-
-    ctx.fillStyle = 'rgba(251, 247, 238, 0.7)';
-    ctx.font = '22px Georgia, serif';
-    ctx.fillText('Chief Creative Director · Paper Thoughts', 540, signOffY + 38);
-
-    ctx.fillStyle = 'rgba(201, 106, 66, 0.9)';
-    ctx.font = '16px monospace';
-    ctx.fillText('SANCTUARY ADJUDICATION COUNCIL', 540, signOffY + 70);
+    // Delicate decorative rule below quote instead of editor name
+    ctx.strokeStyle = 'rgba(201, 106, 66, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(480, citEndY + 70);
+    ctx.lineTo(600, citEndY + 70);
+    ctx.stroke();
 
     // Footer
-    ctx.strokeStyle = 'rgba(251, 247, 238, 0.15)';
+    ctx.strokeStyle = 'rgba(32, 7, 14, 0.12)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(120, 1170);
     ctx.lineTo(960, 1170);
     ctx.stroke();
 
-    ctx.fillStyle = 'rgba(251, 247, 238, 0.6)';
-    ctx.font = '18px monospace';
-    ctx.fillText('READ THE FULL MANUSCRIPT AT', 540, 1215);
+    ctx.fillStyle = 'rgba(32, 7, 14, 0.8)';
+    ctx.font = 'bold 20px monospace';
+    ctx.fillText('THE LIVING ANTHOLOGY', 540, 1215);
 
-    ctx.fillStyle = '#F2A98A';
-    ctx.font = 'bold 24px monospace';
+    ctx.fillStyle = '#c96a42';
+    ctx.font = '20px Georgia, serif';
     ctx.fillText('paperthoughts.org/anthology', 540, 1255);
   }
 
@@ -544,10 +543,10 @@ export default function ShareableLaureateCard({
     </div>
   );
 
-  // Render Card Back Face Component
+  // Render Card Back Face Component: Warm Parchment with Pure Literary Citation
   const renderBackFace = (standalone = false) => (
     <div 
-      className={`w-full aspect-[4/5] bg-[#20070e] text-[#FBF7EE] border border-[#c96a42]/40 rounded-3xl p-7 sm:p-9 flex flex-col justify-between shadow-xl overflow-hidden relative ${
+      className={`w-full aspect-[4/5] bg-[#FBF7EE] text-[#20070e] border border-[#c96a42]/30 rounded-3xl p-7 sm:p-9 flex flex-col justify-between shadow-xl overflow-hidden relative ${
         standalone ? '' : 'absolute inset-0'
       }`}
       style={standalone ? {} : { 
@@ -557,52 +556,42 @@ export default function ShareableLaureateCard({
         WebkitTransform: 'rotateY(180deg)'
       }}
     >
-      <div className="absolute -right-16 -bottom-16 w-48 h-48 bg-[#c96a42]/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -right-16 -top-16 w-48 h-48 bg-[#F2A98A]/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-[#c96a42]/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Bar */}
-      <div className="relative z-10 flex items-center justify-between border-b border-[#FBF7EE]/10 pb-3">
+      <div className="relative z-10 flex items-center justify-between border-b border-[#20070e]/10 pb-3">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-[#F2A98A]">❦</span>
-          <span className="font-serif text-[11px] tracking-[0.2em] uppercase font-bold text-[#F2A98A]">Chief Editor's Citation</span>
+          <span className="text-[#c96a42] text-xs">❦</span>
+          <span className="font-serif text-[11px] tracking-[0.2em] uppercase font-bold text-[#c96a42]">
+            Editor&rsquo;s Citation
+          </span>
         </div>
-        <span className="text-[10px] text-[#FBF7EE]/40 uppercase tracking-widest font-mono">
-          Anthology Verified
+        <span className="text-[10px] font-mono tracking-widest uppercase text-[#c96a42] font-semibold bg-[#c96a42]/10 px-2 py-0.5 rounded-full">
+          {ordinalRank}
         </span>
       </div>
 
-      {/* Center Area */}
-      <div className="relative z-10 my-auto space-y-3 px-2 text-center">
-        {/* Manuscript Context Byline */}
-        <div className="pb-1">
-          <p className="text-[10px] font-mono tracking-widest uppercase text-[#F2A98A]/80 font-bold">
-            On "{title}" · {ordinalRank}
-          </p>
-          <p className="text-[11px] italic text-[#FBF7EE]/70">
-            By {authorName}
-          </p>
-        </div>
+      {/* Center Area: Pure, Beautifully Rendered Literary Quote */}
+      <div className="relative z-10 my-auto text-center px-2 sm:px-4 space-y-3">
+        <span className="text-4xl sm:text-5xl font-serif text-[#c96a42]/30 leading-none select-none block -mb-2">
+          &ldquo;
+        </span>
 
-        <p className="font-serif italic text-sm sm:text-base leading-relaxed text-[#FBF7EE]/90 line-clamp-6">
-          "{editorCitation}"
+        <p className="font-serif italic text-sm sm:text-base lg:text-lg text-[#20070e] leading-relaxed line-clamp-6 font-medium">
+          {editorCitation}
         </p>
 
-        <div className="pt-2">
-          <p className="text-xs font-semibold text-[#F2A98A] uppercase tracking-wider">
-            {editorName}
-          </p>
-          <p className="text-[10px] text-[#FBF7EE]/40 uppercase tracking-widest">
-            Chief Creative Director
-          </p>
-        </div>
+        <div className="w-10 h-0.5 bg-[#c96a42]/30 mx-auto rounded-full mt-2" />
       </div>
 
       {/* Bottom Bar */}
-      <div className="relative z-10 pt-3 border-t border-[#FBF7EE]/10 flex items-center justify-between text-xs">
-        <div>
-          <p className="text-[9px] text-[#FBF7EE]/50 uppercase tracking-wider">Read Manuscript At</p>
-          <p className="text-[11px] font-mono text-[#F2A98A]">paperthoughts.org/anthology</p>
+      <div className="relative z-10 pt-3 border-t border-[#20070e]/10 flex items-center justify-between text-xs text-[#20070e]/50">
+        <div className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#c96a42]"></span>
+          <span className="text-[10px] tracking-wide uppercase font-semibold">Living Anthology</span>
         </div>
-        <span className="text-[10px] italic text-[#F2A98A] flex items-center gap-1">
+        <span className="text-[10px] italic text-[#c96a42] flex items-center gap-1">
           {standalone ? '1080×1350 Editor Remark' : <>Tap to flip <RotateCw size={10} /></>}
         </span>
       </div>

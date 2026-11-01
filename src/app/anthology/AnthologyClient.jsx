@@ -88,11 +88,11 @@ export default function AnthologyClient() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FBF7EE] text-[#20070e] pt-24 pb-24 px-4 sm:px-6 lg:px-8 selection:bg-[#F2A98A]/30">
-      <div className="max-w-6xl mx-auto space-y-12">
+    <main className="min-h-screen bg-[#FBF7EE] text-[#20070e] pt-16 sm:pt-20 pb-16 px-4 sm:px-6 lg:px-8 selection:bg-[#F2A98A]/30">
+      <div className="max-w-6xl mx-auto space-y-7 sm:space-y-8">
         
         {/* Navigation & Archive Selector Bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#20070e]/10 pb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-[#20070e]/10 pb-3 sm:pb-4">
           <Link 
             href="/village/gallery" 
             className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#20070e]/70 hover:text-[#c96a42] transition-colors"
@@ -119,27 +119,24 @@ export default function AnthologyClient() {
         </div>
 
         {/* Hero Title & Literary Foreword */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#c96a42]/30 bg-[#c96a42]/5 text-[#c96a42] text-xs font-bold uppercase tracking-widest">
-            <Sparkles size={13} /> The Living Anthology
+        <div className="text-center max-w-3xl mx-auto space-y-2.5">
+          <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full border border-[#c96a42]/30 bg-[#c96a42]/5 text-[#c96a42] text-[11px] font-bold uppercase tracking-widest">
+            <Sparkles size={12} /> The Living Anthology
           </div>
 
-          <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-[#20070e] leading-tight">
+          <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-[#20070e] leading-snug">
             {issue?.displayTitle || "Monthly Laureates & Sanctuary Honors"}
           </h1>
 
-          <p className="text-xs font-mono tracking-widest uppercase text-[#c96a42] font-semibold">
+          <p className="text-[11px] font-mono tracking-widest uppercase text-[#c96a42] font-semibold">
             {formatMonthName(issue?.monthYear)} Edition · Curated by the Chief Editorial Desk
           </p>
 
           {issue?.curatorForeword && (
-            <div className="relative mt-6 pt-6 border-t border-[#20070e]/10 max-w-2xl mx-auto">
-              <span className="text-3xl text-[#c96a42]/40 font-serif absolute -top-3 left-1/2 -translate-x-1/2">❦</span>
-              <p className="font-serif italic text-base sm:text-lg text-[#20070e]/80 leading-relaxed pt-2">
-                "{issue.curatorForeword}"
-              </p>
-              <p className="text-xs font-bold tracking-wider uppercase text-[#20070e]/60 mt-3">
-                — Ufuoma Morgan, Chief Creative Director
+            <div className="relative mt-3 pt-3 border-t border-[#20070e]/10 max-w-xl mx-auto">
+              <span className="text-2xl text-[#c96a42]/40 font-serif absolute -top-2.5 left-1/2 -translate-x-1/2">❦</span>
+              <p className="font-serif italic text-sm sm:text-base text-[#20070e]/80 leading-relaxed pt-1">
+                &ldquo;{issue.curatorForeword}&rdquo;
               </p>
             </div>
           )}
@@ -223,7 +220,7 @@ export default function AnthologyClient() {
         )}
 
         {/* Commercial Engine: Year-End Anthology Teaser */}
-        <div className="mt-16 bg-[#20070e] text-[#FBF7EE] rounded-3xl p-8 sm:p-12 relative overflow-hidden shadow-xl">
+        <div className="mt-10 sm:mt-14 bg-[#20070e] text-[#FBF7EE] border border-[#c96a42]/30 rounded-3xl p-8 sm:p-12 relative overflow-hidden shadow-xl">
           <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#c96a42]/20 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 max-w-2xl space-y-4">
