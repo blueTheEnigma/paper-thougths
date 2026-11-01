@@ -481,8 +481,8 @@ export default function ShareableLaureateCard({
   // Render Card Front Face Component
   const renderFrontFace = (standalone = false) => (
     <div 
-      className={`w-full aspect-[4/5] bg-[#FBF7EE] text-[#20070e] border border-[#c96a42]/30 rounded-3xl p-7 sm:p-9 flex flex-col justify-between shadow-xl overflow-hidden relative ${
-        standalone ? '' : 'absolute inset-0'
+      className={`w-full aspect-[4/5] bg-[#FBF7EE] text-[#20070e] border border-[#c96a42]/30 rounded-3xl p-7 sm:p-9 flex flex-col justify-between shadow-xl overflow-hidden ${
+        standalone ? 'relative' : 'absolute inset-0'
       }`}
       style={standalone ? {} : { backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
     >
@@ -546,8 +546,8 @@ export default function ShareableLaureateCard({
   // Render Card Back Face Component: Warm Parchment with Pure Literary Citation
   const renderBackFace = (standalone = false) => (
     <div 
-      className={`w-full aspect-[4/5] bg-[#FBF7EE] text-[#20070e] border border-[#c96a42]/30 rounded-3xl p-7 sm:p-9 flex flex-col justify-between shadow-xl overflow-hidden relative ${
-        standalone ? '' : 'absolute inset-0'
+      className={`w-full aspect-[4/5] bg-[#FBF7EE] text-[#20070e] border border-[#c96a42]/30 rounded-3xl p-7 sm:p-9 flex flex-col justify-between shadow-xl overflow-hidden ${
+        standalone ? 'relative' : 'absolute inset-0'
       }`}
       style={standalone ? {} : { 
         backfaceVisibility: 'hidden', 
