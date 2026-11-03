@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, Feather, Sparkles, Send, Loader2, 
-  Calendar, MapPin, Users
+  Calendar, MapPin, Users, BookOpen
 } from 'lucide-react';
 
 export default function Landing({ 
