@@ -112,22 +112,21 @@ export default function AdminClient({
   // Prompt states
   const [newPromptText, setNewPromptText] = useState('');
   const [newPromptDate, setNewPromptDate] = useState('');
-  const [newPromptType, setNewPromptType] = useState('story');
+  const [newPromptType, setNewPromptType] = useState('writing');
   const [isPromptBank, setIsPromptBank] = useState(false);
   const [isSubmittingPrompt, setIsSubmittingPrompt] = useState(false);
   const [modalPrompt, setModalPrompt] = useState(null);
   const [exportingHistoryId, setExportingHistoryId] = useState(null);
 
-  // Active Story & Poem Prompts for Social Suite
-  const activeStoryPrompt = prompts.find(p => p.promptType === 'story' && p.activeDate) || prompts.find(p => p.promptType === 'story');
-  const activePoemPrompt = prompts.find(p => p.promptType === 'poem' && p.activeDate) || prompts.find(p => p.promptType === 'poem');
+  // Active Unified Writing Prompt for Social Suite
+  const activePrompt = prompts.find(p => p.activeDate) || prompts[0];
 
   const handleDownloadHistoryCard = async (pr) => {
     setExportingHistoryId(pr.id);
     try {
       await exportPromptCardPNG({
         promptText: pr.promptText,
-        promptType: pr.promptType,
+        promptType: pr.promptType || 'writing',
         activeDate: pr.activeDate,
         promptId: pr.id,
         theme: 'parchment'
@@ -970,65 +969,36 @@ export default function AdminClient({
                       <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full border border-accent/30 bg-accent/5 text-accent text-[10px] font-bold uppercase tracking-widest mb-1.5">
                         <Sparkles size={11} /> Community &amp; Social Cards Suite
                       </div>
-                      <h4 className="font-display text-xl text-burgundy">Active Weekly Prompt Cards (Square 1080×1080)</h4>
+                      <h4 className="font-display text-xl text-burgundy">Active Weekly Writing Prompt Card (Square 1080×1080)</h4>
                       <p className="text-xs text-ink/65">
-                        High-resolution 1080×1080 graphics ready to download for Instagram feeds, WhatsApp broadcasts, and Discord community announcements.
+                        Unified writing prompt for both short stories and poems. High-resolution 1080×1080 graphics ready for Instagram feeds and WhatsApp broadcasts.
                       </p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-                    {/* Active Story Prompt Card */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-ink/75 flex items-center gap-1.5">
-                          <BookOpen size={14} className="text-accent" /> Active Story Prompt (Fiction &amp; Prose)
-                        </span>
-                        {activeStoryPrompt?.id && (
-                          <span className="text-[10px] font-mono text-ink/40">#{activeStoryPrompt.id}</span>
-                        )}
-                      </div>
-                      {activeStoryPrompt ? (
-                        <ShareablePromptCard
-                          promptText={activeStoryPrompt.promptText || ''}
-                          promptType="story"
-                          activeDate={activeStoryPrompt.activeDate}
-                          promptId={activeStoryPrompt.id}
-                        />
-                      ) : (
-                        <div className="aspect-square bg-cream/10 border border-dashed border-sage/25 rounded-3xl flex flex-col items-center justify-center p-6 text-center text-ink/40 text-xs">
-                          <BookOpen size={32} className="mb-2 opacity-30 text-burgundy" />
-                          <p className="font-bold">No active story prompt found.</p>
-                          <p className="text-[10px] mt-1">Publish one below or activate from bank.</p>
-                        </div>
+                  <div className="flex flex-col items-center justify-center max-w-xl mx-auto space-y-3">
+                    <div className="flex items-center justify-between w-full max-w-sm sm:max-w-md">
+                      <span className="text-xs font-bold uppercase tracking-wider text-ink/75 flex items-center gap-1.5">
+                        <Sparkles size={14} className="text-accent" /> Active Writing Prompt (Stories &amp; Poems)
+                      </span>
+                      {activePrompt?.id && (
+                        <span className="text-[10px] font-mono text-ink/40">#{activePrompt.id}</span>
                       )}
                     </div>
-
-                    {/* Active Poetry Prompt Card */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-ink/75 flex items-center gap-1.5">
-                          <Feather size={14} className="text-accent" /> Active Poetry Prompt (Poetry &amp; Verses)
-                        </span>
-                        {activePoemPrompt?.id && (
-                          <span className="text-[10px] font-mono text-ink/40">#{activePoemPrompt.id}</span>
-                        )}
+                    {activePrompt ? (
+                      <ShareablePromptCard
+                        promptText={activePrompt.promptText || ''}
+                        promptType={activePrompt.promptType || 'writing'}
+                        activeDate={activePrompt.activeDate}
+                        promptId={activePrompt.id}
+                      />
+                    ) : (
+                      <div className="w-full max-w-sm sm:max-w-md aspect-square bg-cream/10 border border-dashed border-sage/25 rounded-3xl flex flex-col items-center justify-center p-6 text-center text-ink/40 text-xs">
+                        <Sparkles size={32} className="mb-2 opacity-30 text-burgundy" />
+                        <p className="font-bold">No active writing prompt found.</p>
+                        <p className="text-[10px] mt-1">Publish one below or activate from bank.</p>
                       </div>
-                      {activePoemPrompt ? (
-                        <ShareablePromptCard
-                          promptText={activePoemPrompt.promptText || ''}
-                          promptType="poem"
-                          activeDate={activePoemPrompt.activeDate}
-                          promptId={activePoemPrompt.id}
-                        />
-                      ) : (
-                        <div className="aspect-square bg-cream/10 border border-dashed border-sage/25 rounded-3xl flex flex-col items-center justify-center p-6 text-center text-ink/40 text-xs">
-                          <Feather size={32} className="mb-2 opacity-30 text-burgundy" />
-                          <p className="font-bold">No active poetry prompt found.</p>
-                          <p className="text-[10px] mt-1">Publish one below or activate from bank.</p>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
 
@@ -1040,14 +1010,15 @@ export default function AdminClient({
                     
                     <form onSubmit={handleCreatePrompt} className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Prompt Type</label>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Prompt Category</label>
                         <select
                           value={newPromptType}
                           onChange={(e) => setNewPromptType(e.target.value)}
                           className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink font-bold"
                         >
-                          <option value="story">Story Prompt (Fiction &amp; Prose)</option>
-                          <option value="poem">Poetry Prompt (Poetry &amp; Verses)</option>
+                          <option value="writing">Writing Prompt (Stories, Prose &amp; Poetry)</option>
+                          <option value="story">Prose / Story Focus (Legacy)</option>
+                          <option value="poem">Poetry Focus (Legacy)</option>
                         </select>
                       </div>
 
@@ -1121,9 +1092,11 @@ export default function AdminClient({
                                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
                                   pr.promptType === 'poem' 
                                     ? 'bg-accent/15 text-burgundy border border-accent/20' 
-                                    : 'bg-sage/15 text-sage-800 border border-sage/20'
+                                    : pr.promptType === 'story'
+                                      ? 'bg-sage/15 text-sage-800 border border-sage/20'
+                                      : 'bg-burgundy/10 text-burgundy border border-burgundy/20'
                                 }`}>
-                                  {pr.promptType === 'poem' ? 'Poetry' : 'Story'}
+                                  {pr.promptType === 'poem' ? 'Poetry' : pr.promptType === 'story' ? 'Story' : 'Writing'}
                                 </span>
                                 {pr.activeDate && (
                                   <span className="text-ink/60">Active: {formatDate(pr.activeDate)}</span>
@@ -1184,7 +1157,7 @@ export default function AdminClient({
                               Prompt #{modalPrompt.id}
                             </span>
                             <span className="text-xs font-bold uppercase tracking-wider text-ink/70">
-                              {modalPrompt.promptType === 'poem' ? 'Poetry & Verses' : 'Fiction & Prose'}
+                              {modalPrompt.promptType === 'poem' ? 'Poetry & Verses' : modalPrompt.promptType === 'story' ? 'Fiction & Prose' : 'Writing Prompt'}
                             </span>
                           </div>
                           <button

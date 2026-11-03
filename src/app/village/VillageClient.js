@@ -292,7 +292,7 @@ const itemVariants = {
 
 // ─── Main VillageClient ───────────────────────────────────────────────────────
 
-export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSignedIn: serverIsSignedIn, isRegistered: serverIsRegistered }) {
+export default function VillageClient({ weeklyPrompt, storyPrompt, poemPrompt, userStats, isSignedIn: serverIsSignedIn, isRegistered: serverIsRegistered }) {
   const [showEntrance, setShowEntrance] = useState(false);
   const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
@@ -506,19 +506,15 @@ export default function VillageClient({ storyPrompt, poemPrompt, userStats, isSi
                 </p>
 
                 <div className="border-t border-sage/10 pt-4 space-y-2 bg-cream/35 -mx-6 sm:-mx-7 px-6 sm:px-7 pb-2">
-                  <div className="flex items-center gap-1.5 text-[9px] font-bold text-ink/40 uppercase tracking-widest font-sans">
-                    <Clock size={12} />
-                    <span>Active Weekly Prompts</span>
+                  <div className="flex items-center justify-between text-[9px] font-bold text-ink/40 uppercase tracking-widest font-sans">
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={12} />
+                      <span>Active Weekly Prompt</span>
+                    </div>
+                    <span className="text-[8px] text-accent font-semibold lowercase">stories &amp; poems</span>
                   </div>
-                  <div className="space-y-2">
-                    <div className="p-2.5 bg-white border border-sage/10 rounded-xl space-y-1 shadow-sm">
-                      <span className="text-[8px] font-bold text-burgundy bg-burgundy/5 px-2 py-0.5 rounded-full uppercase tracking-wider">Story Prompt</span>
-                      <p className="text-[10px] text-ink/85 font-serif line-clamp-2 italic leading-relaxed">&ldquo;{storyPrompt}&rdquo;</p>
-                    </div>
-                    <div className="p-2.5 bg-white border border-sage/10 rounded-xl space-y-1 shadow-sm">
-                      <span className="text-[8px] font-bold text-accent bg-accent/5 px-2 py-0.5 rounded-full uppercase tracking-wider">Poetry Prompt</span>
-                      <p className="text-[10px] text-ink/85 font-serif line-clamp-2 italic leading-relaxed">&ldquo;{poemPrompt}&rdquo;</p>
-                    </div>
+                  <div className="p-3 bg-white border border-sage/10 rounded-xl space-y-1 shadow-sm">
+                    <p className="text-[11px] text-ink/85 font-serif line-clamp-3 italic leading-relaxed">&ldquo;{weeklyPrompt || storyPrompt || poemPrompt}&rdquo;</p>
                   </div>
                 </div>
               </div>

@@ -15,35 +15,21 @@ export async function POST(request) {
     console.log('Running Weekly Prompt Rotation from bank...');
 
     const result = await Database.transaction(async (client) => {
-      // 1. Promote next story prompt
-      const storyRes = await client.query(`
+      // Promote next writing prompt from bank
+      const promptRes = await client.query(`
         UPDATE prompts
         SET active_date = CURRENT_DATE
         WHERE id = (
           SELECT id FROM prompts 
-          WHERE active_date IS NULL AND prompt_type = 'story'
+          WHERE active_date IS NULL
           ORDER BY id ASC
           LIMIT 1
         )
-        RETURNING id, prompt_text as "promptText"
-      `);
-
-      // 2. Promote next poetry prompt
-      const poemRes = await client.query(`
-        UPDATE prompts
-        SET active_date = CURRENT_DATE
-        WHERE id = (
-          SELECT id FROM prompts 
-          WHERE active_date IS NULL AND prompt_type = 'poem'
-          ORDER BY id ASC
-          LIMIT 1
-        )
-        RETURNING id, prompt_text as "promptText"
+        RETURNING id, prompt_text as "promptText", prompt_type as "promptType"
       `);
 
       return {
-        story: storyRes.rows[0] || null,
-        poem: poemRes.rows[0] || null
+        prompt: promptRes.rows[0] || null
       };
     });
 

@@ -102,28 +102,25 @@ function renderBaseLayout({ title, subtitle, contentHtml, ctaText, ctaUrl }) {
 }
 
 // 1. Monday 08:00 AM: New Prompt Release Call
-export function getMondayPromptReleaseEmail({ userName, storyPrompt, poemPrompt }) {
+export function getMondayPromptReleaseEmail({ userName, weeklyPrompt, storyPrompt, poemPrompt }) {
   const firstName = getFirstName(userName);
+  const prompt = weeklyPrompt || storyPrompt || poemPrompt || 'Write about an unexpected meeting. Two strangers cross paths and something changes.';
   const content = `
     <p style="margin-top: 0;">Good morning, <strong>${firstName}</strong>,</p>
     <p>A new week opens across Zaria, Kaduna, and Abuja, and the gates of <strong>The Writers' Village</strong> are officially thrown wide for a new literary quest.</p>
-    <p>Every great story begins with an unexpected knock at the door or a sudden scent in the air. Here are your active prompts for this week’s expedition:</p>
+    <p>Every great story begins with an unexpected knock at the door or a sudden scent in the air. Here is your active writing prompt for this week’s expedition:</p>
     
-    <div style="background-color: #FAF7F2; border-left: 4px solid #C96A42; padding: 16px; border-radius: 8px; margin: 20px 0; border-top: 1px solid rgba(44, 26, 14, 0.08); border-right: 1px solid rgba(44, 26, 14, 0.08); border-bottom: 1px solid rgba(44, 26, 14, 0.08);">
-      <div style="font-size: 11px; font-weight: bold; color: #5C1A2E; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">📜 Weekly Story Prompt</div>
-      <div style="font-size: 15px; font-style: italic; color: #2C1A0E; line-height: 1.5;">"${storyPrompt || 'A fire at night and a whisper'}"</div>
-    </div>
-
-    <div style="background-color: #FAF7F2; border-left: 4px solid #5C1A2E; padding: 16px; border-radius: 8px; margin: 20px 0; border-top: 1px solid rgba(44, 26, 14, 0.08); border-right: 1px solid rgba(44, 26, 14, 0.08); border-bottom: 1px solid rgba(44, 26, 14, 0.08);">
-      <div style="font-size: 11px; font-weight: bold; color: #5C1A2E; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">✍️ Weekly Poetry Prompt</div>
-      <div style="font-size: 15px; font-style: italic; color: #2C1A0E; line-height: 1.5;">"${poemPrompt || 'When it rains...'}"</div>
+    <div style="background-color: #FAF7F2; border-left: 4px solid #C96A42; padding: 18px; border-radius: 8px; margin: 20px 0; border-top: 1px solid rgba(44, 26, 14, 0.08); border-right: 1px solid rgba(44, 26, 14, 0.08); border-bottom: 1px solid rgba(44, 26, 14, 0.08);">
+      <div style="font-size: 11px; font-weight: bold; color: #5C1A2E; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">📜 Weekly Writing Prompt · Stories &amp; Poetry</div>
+      <div style="font-size: 16px; font-style: italic; color: #2C1A0E; line-height: 1.5;">"${prompt}"</div>
+      <div style="font-size: 12px; color: #C96A42; margin-top: 8px; font-weight: 500;">Let how the prompt makes you feel guide your pen — submit as short fiction, prose, or a poem.</div>
     </div>
 
     <p>Step into the Village early. Draft your lines, submit your manuscript to the critique cycle, and claim your milestone tokens for the weekly ledger!</p>
   `;
 
   return {
-    subject: `✨ Step Into the Village: New Weekly Prompts Unlocked! | Paper Thoughts`,
+    subject: `✨ Step Into the Village: New Weekly Prompt Unlocked! | Paper Thoughts`,
     html: renderBaseLayout({
       title: `The Monday Call to Write`,
       subtitle: `The Writers' Village is open for the new weekly drop`,
@@ -135,8 +132,9 @@ export function getMondayPromptReleaseEmail({ userName, storyPrompt, poemPrompt 
 }
 
 // 2. Wednesday 08:00 AM: Mid-Week Writing Draft Nudge
-export function getWednesdayDraftNudgeEmail({ userName, storyPrompt, poemPrompt }) {
+export function getWednesdayDraftNudgeEmail({ userName, weeklyPrompt, storyPrompt, poemPrompt }) {
   const firstName = getFirstName(userName);
+  const prompt = weeklyPrompt || storyPrompt || poemPrompt;
   const content = `
     <p style="margin-top: 0;">Hello <strong>${firstName}</strong>,</p>
     <p>We are officially at the mid-week mark. The ink is drying on desk pages across the chapter towns, and the Writers' Village is alive with early drafts.</p>
@@ -146,9 +144,9 @@ export function getWednesdayDraftNudgeEmail({ userName, storyPrompt, poemPrompt 
       <div style="font-size: 15px; font-weight: bold; color: #5C1A2E; margin-top: 5px; font-style: italic;">"Drafting is simply you telling yourself the story for the first time."</div>
     </div>
 
-    ${storyPrompt ? `
-      <p style="font-size: 13px; color: #2C1A0E; margin-bottom: 4px;"><strong>Active Story Prompt:</strong></p>
-      <p style="font-size: 13px; font-style: italic; color: #5C1A2E; margin-top: 0; padding-left: 10px; border-left: 2px solid #C96A42;">"${storyPrompt}"</p>
+    ${prompt ? `
+      <p style="font-size: 13px; color: #2C1A0E; margin-bottom: 4px;"><strong>Active Writing Prompt (Stories &amp; Poetry):</strong></p>
+      <p style="font-size: 13px; font-style: italic; color: #5C1A2E; margin-top: 0; padding-left: 10px; border-left: 2px solid #C96A42;">"${prompt}"</p>
     ` : ''}
 
     <p>Don't wait for Friday night pressure. Pop open your draft editor in the Village today and bring your thoughts into the light!</p>

@@ -96,19 +96,19 @@ async function handleReminderCron(request) {
       return NextResponse.json({ success: true, message: 'No recipients found', sentCount: 0 });
     }
 
-    // 2. Fetch dynamic context (active prompts & BOTM)
-    const storyPromptObj = await Database.queryOne(`
-      SELECT prompt_text as "promptText" FROM prompts WHERE prompt_type = 'story' ORDER BY created_at DESC LIMIT 1
+    // 2. Fetch dynamic context (active prompt & BOTM)
+    const activePromptObj = await Database.queryOne(`
+      SELECT prompt_text as "promptText" FROM prompts WHERE active_date IS NOT NULL ORDER BY active_date DESC, created_at DESC LIMIT 1
+    `) || await Database.queryOne(`
+      SELECT prompt_text as "promptText" FROM prompts ORDER BY created_at DESC LIMIT 1
     `);
-    const poemPromptObj = await Database.queryOne(`
-      SELECT prompt_text as "promptText" FROM prompts WHERE prompt_type = 'poem' ORDER BY created_at DESC LIMIT 1
-    `);
+    const weeklyPrompt = activePromptObj ? activePromptObj.promptText : '';
+    const storyPrompt = weeklyPrompt;
+    const poemPrompt = weeklyPrompt;
     const botmObj = await Database.queryOne(`
       SELECT title, author, teaser FROM book_of_the_month WHERE active = TRUE ORDER BY created_at DESC LIMIT 1
     `);
 
-    const storyPrompt = storyPromptObj ? storyPromptObj.promptText : '';
-    const poemPrompt = poemPromptObj ? poemPromptObj.promptText : '';
     const botmTitle = botmObj ? botmObj.title : '';
     const botmAuthor = botmObj ? botmObj.author : '';
     const botmTeaser = botmObj ? botmObj.teaser : '';

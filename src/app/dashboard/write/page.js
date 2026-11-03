@@ -29,34 +29,33 @@ export default async function WritePage({ searchParams }) {
     redirect('/returners-crossing');
   }
 
-  // Get active story prompt (within 7 days)
-  const storyPrompt = await Database.queryOne(`
+  // Get active unified writing prompt (within 7 days, or latest active)
+  const activePromptObj = await Database.queryOne(`
     SELECT prompt_text as "promptText", id
     FROM prompts
-    WHERE prompt_type = 'story'
-      AND active_date <= CURRENT_DATE
+    WHERE active_date <= CURRENT_DATE
       AND active_date >= CURRENT_DATE - INTERVAL '7 days'
+    ORDER BY active_date DESC, created_at DESC
+    LIMIT 1
+  `) || await Database.queryOne(`
+    SELECT prompt_text as "promptText", id
+    FROM prompts
+    WHERE active_date IS NOT NULL
     ORDER BY active_date DESC, created_at DESC
     LIMIT 1
   `);
 
-  // Get active poem prompt (within 7 days)
-  const poemPrompt = await Database.queryOne(`
-    SELECT prompt_text as "promptText", id
-    FROM prompts
-    WHERE prompt_type = 'poem'
-      AND active_date <= CURRENT_DATE
-      AND active_date >= CURRENT_DATE - INTERVAL '7 days'
-    ORDER BY active_date DESC, created_at DESC
-    LIMIT 1
-  `);
+  const activePromptText = activePromptObj ? activePromptObj.promptText : "Write freely about any theme or subject that inspires you today.";
+  const activePromptId = activePromptObj ? activePromptObj.id : null;
 
   return (
     <WriteClient
-      storyPrompt={storyPrompt ? storyPrompt.promptText : "Write freely about any theme or subject that inspires you today."}
-      storyPromptId={storyPrompt ? storyPrompt.id : null}
-      poemPrompt={poemPrompt ? poemPrompt.promptText : "Write freely about any theme or subject that inspires you today."}
-      poemPromptId={poemPrompt ? poemPrompt.id : null}
+      weeklyPrompt={activePromptText}
+      weeklyPromptId={activePromptId}
+      storyPrompt={activePromptText}
+      storyPromptId={activePromptId}
+      poemPrompt={activePromptText}
+      poemPromptId={activePromptId}
     />
   );
 }

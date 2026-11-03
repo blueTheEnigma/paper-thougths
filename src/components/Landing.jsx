@@ -11,6 +11,7 @@ import {
 export default function Landing({ 
   images, 
   books = [], 
+  weeklyPrompt,
   storyPrompt, 
   poemPrompt, 
   botmBook, 
@@ -499,67 +500,61 @@ export default function Landing({
               </div>
             </motion.div>
 
-            {/* Right: Active Prompts */}
-            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
-              
-              {/* Story Prompt */}
+            {/* Right: Active Unified Prompt */}
+            <div className="lg:col-span-7">
               <motion.div 
                 variants={glideUp}
-                className="bg-[#1E110A] border border-[#c96a42]/25 p-7 rounded-3xl shadow-lg flex flex-col justify-between space-y-5"
+                className="bg-gradient-to-br from-[#1E110A] to-[#14060c] border border-[#c96a42]/30 p-7 sm:p-9 rounded-3xl shadow-xl flex flex-col justify-between space-y-6 relative overflow-hidden"
               >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold text-[#F2A98A] bg-[#F2A98A]/10 border border-[#F2A98A]/20 px-3 py-1 rounded-full uppercase tracking-wider">
-                      Story Prompt
+                {/* Ambient glow */}
+                <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-[#F2A98A]/10 blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-[#c96a42]/15 blur-3xl pointer-events-none" />
+
+                <div className="space-y-4 relative z-10">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3.5">
+                    <span className="text-[10px] font-mono font-bold text-[#F2A98A] bg-[#F2A98A]/10 border border-[#F2A98A]/20 px-3.5 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5">
+                      <Sparkles size={11} className="text-[#F2A98A]" />
+                      Weekly Writing Prompt
                     </span>
-                    <Feather size={14} className="text-[#F2A98A]" />
+                    <span className="text-xs text-[#FBF7EE]/60 font-serif italic">
+                      Stories, Prose &amp; Poetry Welcome
+                    </span>
                   </div>
-                  <h4 className="text-xl font-display text-[#FBF7EE] font-bold">
-                    Prose &amp; Fiction
-                  </h4>
-                  <p className="text-xs sm:text-sm text-[#FBF7EE]/80 font-serif italic bg-white/5 p-4 rounded-xl border border-white/5 min-h-[110px] flex items-center">
-                    "{storyPrompt}"
+
+                  <div className="bg-white/5 border border-white/10 p-6 sm:p-7 rounded-2xl relative">
+                    <span className="text-4xl sm:text-5xl font-serif text-[#F2A98A]/35 leading-none block -mb-2">&ldquo;</span>
+                    <p className="text-base sm:text-xl text-[#FBF7EE] font-serif italic leading-relaxed">
+                      {weeklyPrompt || storyPrompt || poemPrompt}
+                    </p>
+                    <div className="w-12 h-0.5 bg-[#c96a42]/40 rounded-full mt-4" />
+                  </div>
+
+                  <p className="text-xs text-[#FBF7EE]/75 font-sans leading-relaxed">
+                    Write however this prompt moves you. Let the theme guide you into a short story, flash prose, or a poem — then submit to the Living Salon for anonymous peer critique.
                   </p>
                 </div>
 
-                <Link 
-                  href={`/village?redirect=${encodeURIComponent('/dashboard/write?type=story')}`}
-                  className="w-full bg-[#F2A98A] hover:bg-white text-[#120308] text-center font-sans font-bold text-xs py-3 px-4 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
-                >
-                  <span>Draft Story Manuscript</span>
-                  <ArrowRight size={13} />
-                </Link>
-              </motion.div>
+                {/* Two Dual Action Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 relative z-10">
+                  <Link 
+                    href={`/village?redirect=${encodeURIComponent('/dashboard/write?type=story')}`}
+                    className="w-full bg-[#F2A98A] hover:bg-white text-[#120308] text-center font-sans font-bold text-xs py-3.5 px-4 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+                  >
+                    <Feather size={14} />
+                    <span>Draft as Story / Prose</span>
+                    <ArrowRight size={13} />
+                  </Link>
 
-              {/* Poem Prompt */}
-              <motion.div 
-                variants={glideUp}
-                className="bg-[#1A0C16] border border-[#F2A98A]/25 p-7 rounded-3xl shadow-lg flex flex-col justify-between space-y-5"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold text-[#F2A98A] bg-[#F2A98A]/10 border border-[#F2A98A]/20 px-3 py-1 rounded-full uppercase tracking-wider">
-                      Poem Prompt
-                    </span>
-                    <Sparkles size={14} className="text-[#F2A98A]" />
-                  </div>
-                  <h4 className="text-xl font-display text-[#FBF7EE] font-bold">
-                    Verse &amp; Poetry
-                  </h4>
-                  <p className="text-xs sm:text-sm text-[#FBF7EE]/80 font-serif italic bg-white/5 p-4 rounded-xl border border-white/5 min-h-[110px] flex items-center">
-                    "{poemPrompt}"
-                  </p>
+                  <Link 
+                    href={`/village?redirect=${encodeURIComponent('/dashboard/write?type=poem')}`}
+                    className="w-full bg-[#c96a42] hover:bg-white text-[#120308] text-center font-sans font-bold text-xs py-3.5 px-4 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+                  >
+                    <BookOpen size={14} />
+                    <span>Compose as Poem</span>
+                    <ArrowRight size={13} />
+                  </Link>
                 </div>
-
-                <Link 
-                  href={`/village?redirect=${encodeURIComponent('/dashboard/write?type=poem')}`}
-                  className="w-full bg-[#c96a42] hover:bg-white text-[#120308] text-center font-sans font-bold text-xs py-3 px-4 rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
-                >
-                  <span>Compose Verse Draft</span>
-                  <ArrowRight size={13} />
-                </Link>
               </motion.div>
-
             </div>
           </div>
         </motion.div>

@@ -89,7 +89,7 @@ async function deleteDraftFromDB(mode) {
   }
 }
 
-export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, poemPromptId }) {
+export default function WriteClient({ weeklyPrompt, weeklyPromptId, storyPrompt, storyPromptId, poemPrompt, poemPromptId }) {
   const [writingMode, setWritingMode] = useState('story'); // 'story' or 'poem'
   const [title, setTitle] = useState('');
   const [penName, setPenName] = useState('');
@@ -293,7 +293,7 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
   };
 
   const wordCount = bodyText.trim() === '' ? 0 : bodyText.trim().split(/\s+/).length;
-  const activePromptText = writingMode === 'poem' ? poemPrompt : storyPrompt;
+  const activePromptText = weeklyPrompt || (writingMode === 'poem' ? poemPrompt : storyPrompt);
 
   return (
     <main className="min-h-screen bg-cream pt-24 pb-20 px-4 md:px-8">
@@ -380,13 +380,21 @@ export default function WriteClient({ storyPrompt, storyPromptId, poemPrompt, po
             {/* Weekly Prompt Card */}
             <div className="bg-white p-6 rounded-[32px] border border-sage/20 shadow-md relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-burgundy/5 rounded-full blur-xl"></div>
-              <h3 className="font-display text-lg text-burgundy mb-3 flex items-center gap-2">
-                <BookOpen size={18} className="text-sage" /> {writingMode === 'poem' ? 'Weekly Poetry Prompt' : 'Weekly Story Prompt'}
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-display text-lg text-burgundy flex items-center gap-2">
+                  <BookOpen size={18} className="text-sage" /> Weekly Writing Prompt
+                </h3>
+                <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-burgundy bg-burgundy/5 border border-burgundy/10 px-2 py-0.5 rounded-full">
+                  Stories &amp; Poems
+                </span>
+              </div>
               <p className="text-xs text-ink/75 leading-relaxed bg-cream/30 border border-sage/10 p-4 rounded-2xl italic whitespace-pre-wrap font-serif">
                 "{activePromptText}"
               </p>
-              <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-ink/40 uppercase tracking-widest">
+              <p className="mt-2 text-[10px] text-ink/50 italic">
+                Let how this prompt makes you feel guide your form — craft a short story, scene, or poem.
+              </p>
+              <div className="mt-3 flex items-center gap-2 text-[10px] font-bold text-ink/40 uppercase tracking-widest">
                 <span>Cycle Drop: Saturday 12:00 AM</span>
               </div>
             </div>

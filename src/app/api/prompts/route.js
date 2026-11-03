@@ -80,7 +80,7 @@ export async function POST(request) {
       INSERT INTO prompts (prompt_text, active_date, prompt_type)
       VALUES ($1, $2, $3)
       RETURNING id, prompt_text as "promptText", active_date as "activeDate", prompt_type as "promptType"
-    `, [promptText, dateVal, promptType || 'story']);
+    `, [promptText, dateVal, promptType || 'writing']);
 
     return NextResponse.json({
       success: true,

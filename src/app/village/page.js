@@ -27,26 +27,23 @@ export default async function VillagePage() {
   const user = await currentUser();
   const dbUser = user ? await syncOrCreateUser(user) : null;
 
-  // Get active prompts (within 7 days)
-  const storyPrompt = await Database.queryOne(`
+  // Get active writing prompt (within 7 days, or latest active)
+  const activePromptObj = await Database.queryOne(`
     SELECT id, prompt_text as "promptText"
     FROM prompts
-    WHERE prompt_type = 'story'
-      AND active_date <= CURRENT_DATE
+    WHERE active_date <= CURRENT_DATE
       AND active_date >= CURRENT_DATE - INTERVAL '7 days'
+    ORDER BY active_date DESC, created_at DESC
+    LIMIT 1
+  `) || await Database.queryOne(`
+    SELECT id, prompt_text as "promptText"
+    FROM prompts
+    WHERE active_date IS NOT NULL
     ORDER BY active_date DESC, created_at DESC
     LIMIT 1
   `);
 
-  const poemPrompt = await Database.queryOne(`
-    SELECT id, prompt_text as "promptText"
-    FROM prompts
-    WHERE prompt_type = 'poem'
-      AND active_date <= CURRENT_DATE
-      AND active_date >= CURRENT_DATE - INTERVAL '7 days'
-    ORDER BY active_date DESC, created_at DESC
-    LIMIT 1
-  `);
+  const weeklyPrompt = activePromptObj ? activePromptObj.promptText : "Write freely about any theme or subject that inspires you today.";
 
   let userStats = {
     spendableLeaves: 0,
@@ -81,8 +78,9 @@ export default async function VillagePage() {
 
   return (
     <VillageClient
-      storyPrompt={storyPrompt ? storyPrompt.promptText : "Write freely about any theme or subject that inspires you today."}
-      poemPrompt={poemPrompt ? poemPrompt.promptText : "Write freely about any theme or subject that inspires you today."}
+      weeklyPrompt={weeklyPrompt}
+      storyPrompt={weeklyPrompt}
+      poemPrompt={weeklyPrompt}
       userStats={userStats}
       isSignedIn={!!user}
       isRegistered={!!(dbUser && dbUser.whatsapp)}

@@ -9,7 +9,7 @@ import { Download, Copy, Check, Sparkles, BookOpen, Feather, Palette, CheckCircl
  */
 export const exportPromptCardPNG = async ({
   promptText = "Write about an unexpected meeting. Two strangers cross paths and something changes.",
-  promptType = "story", // 'story' | 'poem'
+  promptType = "writing", // 'writing' | 'story' | 'poem'
   activeDate = null,
   promptId = null,
   theme = "parchment" // 'parchment' | 'obsidian'
@@ -17,8 +17,20 @@ export const exportPromptCardPNG = async ({
   if (typeof document === 'undefined') return;
 
   const isPoem = promptType === 'poem';
-  const categoryLabel = isPoem ? 'Poetry & Verses' : 'Fiction & Prose';
-  const categoryBadge = isPoem ? '❦   POETRY & VERSES   ❦' : '✦   FICTION & PROSE   ✦';
+  const isStory = promptType === 'story';
+  const isUnified = !isPoem && !isStory;
+
+  const categoryLabel = isPoem 
+    ? 'Poetry & Verses' 
+    : isStory 
+      ? 'Fiction & Prose' 
+      : 'Fiction, Prose & Poetry';
+
+  const categoryBadge = isPoem 
+    ? '❦   POETRY & VERSES   ❦' 
+    : isStory 
+      ? '✦   FICTION & PROSE   ✦' 
+      : '✦   WEEKLY WRITING PROMPT   ✦';
 
   const formatDateLabel = (d) => {
     if (!d) return 'Active Weekly Prompt';
@@ -198,6 +210,12 @@ export const exportPromptCardPNG = async ({
     ctx.lineTo(600, promptEndY + 50);
     ctx.stroke();
 
+    if (isUnified) {
+      ctx.fillStyle = '#c96a42';
+      ctx.font = 'bold 16px Georgia, serif';
+      ctx.fillText('OPEN FOR SHORT STORIES, FLASH PROSE & POETRY', 540, Math.min(890, promptEndY + 85));
+    }
+
     // Footer
     ctx.strokeStyle = 'rgba(32, 7, 14, 0.12)';
     ctx.lineWidth = 1;
@@ -321,6 +339,12 @@ export const exportPromptCardPNG = async ({
     ctx.lineTo(600, promptEndY + 50);
     ctx.stroke();
 
+    if (isUnified) {
+      ctx.fillStyle = '#F2A98A';
+      ctx.font = 'bold 16px Georgia, serif';
+      ctx.fillText('OPEN FOR SHORT STORIES, FLASH PROSE & POETRY', 540, Math.min(890, promptEndY + 85));
+    }
+
     // Footer
     ctx.strokeStyle = 'rgba(251, 247, 238, 0.15)';
     ctx.lineWidth = 1;
@@ -342,7 +366,7 @@ export const exportPromptCardPNG = async ({
   const dataUrl = canvas.toDataURL('image/png');
   const link = document.createElement('a');
   const safeSnippet = cleanSnippet(promptText, 25);
-  const typeSlug = isPoem ? 'Poem' : 'Story';
+  const typeSlug = isPoem ? 'Poem' : isStory ? 'Story' : 'Writing';
   link.download = `PT-Prompt-${typeSlug}-${safeSnippet}-${theme}-1080x1080.png`;
   link.href = dataUrl;
   document.body.appendChild(link);
@@ -360,7 +384,7 @@ function cleanSnippet(text, max = 25) {
 
 export default function ShareablePromptCard({
   promptText = "Write about an unexpected meeting. Two strangers cross paths and something changes.",
-  promptType = "story", // 'story' | 'poem'
+  promptType = "writing", // 'writing' | 'story' | 'poem'
   activeDate = null,
   promptId = null,
   showControls = true,
@@ -372,7 +396,14 @@ export default function ShareablePromptCard({
   const [copiedType, setCopiedType] = useState(null); // 'ig' | 'wa' | null
 
   const isPoem = promptType === 'poem';
-  const categoryLabel = isPoem ? 'Poetry & Verses' : 'Fiction & Prose';
+  const isStory = promptType === 'story';
+  const isUnified = !isPoem && !isStory;
+
+  const categoryLabel = isPoem 
+    ? 'Poetry & Verses' 
+    : isStory 
+      ? 'Fiction & Prose' 
+      : 'Fiction, Prose & Poetry';
 
   const formatDateLabel = (d) => {
     if (!d) return 'Active Weekly Prompt';
@@ -392,10 +423,10 @@ export default function ShareablePromptCard({
   // Instagram Caption Generator
   const getInstagramCaption = () => {
     return `✦ WEEKLY WRITING PROMPT · PAPER THOUGHTS ✦\n\n` +
-      `Category: ${categoryLabel}\n` +
+      `Category: ${isUnified ? 'Open to Short Stories, Prose & Poetry' : categoryLabel}\n` +
       `Prompt: #${promptId || 'Active'} · ${dateLabel}\n\n` +
       `" ${safeText} "\n\n` +
-      `Take the floor. Ink your manuscript and submit to the Writers' Village this week on Paper Thoughts:\n` +
+      `Take the floor. Whether this evokes a short story, flash fiction, or a poem — ink your manuscript and submit to the Writers' Village this week on Paper Thoughts:\n` +
       `https://paperthoughts.org/village\n\n` +
       `The top manuscripts from this weekly cycle will be inducted into the permanent Living Anthology.\n\n` +
       `—\n` +
@@ -405,11 +436,11 @@ export default function ShareablePromptCard({
   // WhatsApp Broadcast Generator
   const getWhatsAppBroadcast = () => {
     return `🌿 *PAPER THOUGHTS WEEKLY WRITING PROMPT* 🌿\n\n` +
-      `✍️ *Category:* ${categoryLabel}\n` +
+      `✍️ *Open to:* Short Stories, Prose & Poetry\n` +
       `📅 *Cycle:* ${dateLabel}\n\n` +
       `❦ *This Week's Challenge:*\n` +
       `_"${safeText}"_\n\n` +
-      `📖 Write and submit your piece freely to the Living Salon:\n` +
+      `📖 Write however this prompt moves you. Submit your piece freely to the Living Salon:\n` +
       `https://paperthoughts.org/village\n\n` +
       `🏆 The finest 3 works are inducted into the Living Anthology with permanent author laurels!\n\n` +
       `#PaperThoughts #TheLivingSalon`;
@@ -489,8 +520,8 @@ export default function ShareablePromptCard({
         {/* Center Prompt Area */}
         <div className="relative z-10 my-auto text-center px-2 sm:px-4 space-y-2.5">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#c96a42]/30 text-xs font-semibold uppercase tracking-wider bg-[#c96a42]/10 text-[#c96a42]">
-            {isPoem ? <Feather size={12} /> : <BookOpen size={12} />}
-            <span>{categoryLabel}</span>
+            {isPoem ? <Feather size={12} /> : isStory ? <BookOpen size={12} /> : <Sparkles size={12} />}
+            <span>{isUnified ? 'Writing Prompt · Fiction & Poetry' : categoryLabel}</span>
           </div>
 
           <span className={`text-4xl sm:text-5xl font-serif leading-none select-none block -mb-1 ${
