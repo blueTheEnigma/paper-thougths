@@ -12,6 +12,7 @@ import AdminQuotesTab from '@/components/admin/AdminQuotesTab';
 import AdminCrucibleTab from '@/components/admin/AdminCrucibleTab';
 import AdminGatheringsTab from '@/components/admin/AdminGatheringsTab';
 import AdminEditorialTab from '@/components/admin/AdminEditorialTab';
+import ShareablePromptCard, { exportPromptCardPNG } from '@/components/admin/ShareablePromptCard';
 
 const formatDate = (dateVal) => {
   if (!dateVal) return 'N/A';
@@ -114,6 +115,29 @@ export default function AdminClient({
   const [newPromptType, setNewPromptType] = useState('story');
   const [isPromptBank, setIsPromptBank] = useState(false);
   const [isSubmittingPrompt, setIsSubmittingPrompt] = useState(false);
+  const [modalPrompt, setModalPrompt] = useState(null);
+  const [exportingHistoryId, setExportingHistoryId] = useState(null);
+
+  // Active Story & Poem Prompts for Social Suite
+  const activeStoryPrompt = prompts.find(p => p.promptType === 'story' && p.activeDate) || prompts.find(p => p.promptType === 'story');
+  const activePoemPrompt = prompts.find(p => p.promptType === 'poem' && p.activeDate) || prompts.find(p => p.promptType === 'poem');
+
+  const handleDownloadHistoryCard = async (pr) => {
+    setExportingHistoryId(pr.id);
+    try {
+      await exportPromptCardPNG({
+        promptText: pr.promptText,
+        promptType: pr.promptType,
+        activeDate: pr.activeDate,
+        promptId: pr.id,
+        theme: 'parchment'
+      });
+    } catch (e) {
+      console.error('Failed to export history prompt card:', e);
+    } finally {
+      setExportingHistoryId(null);
+    }
+  };
 
   // Loading indicator for action button
   const [actionLoadingId, setActionLoadingId] = useState(null);
@@ -918,19 +942,97 @@ export default function AdminClient({
               </motion.div>
             )}
 
-            {/* 5. WEEKLY PROMPTS */}
+            {/* 5. WEEKLY PROMPTS & SOCIAL SUITE */}
             {activeTab === 'prompts' && (
               <motion.div 
                 key="prompts"
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }} 
                 exit={{ opacity: 0 }}
-                className="space-y-6"
+                className="space-y-8"
               >
-                <div className="flex justify-between items-center">
-                  <h3 className="font-display text-2xl text-burgundy">Weekly Writing Prompts</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-sage/15 pb-4">
+                  <div>
+                    <h3 className="font-display text-2xl text-burgundy">Weekly Writing Prompts</h3>
+                    <p className="text-xs text-ink/60 mt-0.5">Manage weekly Salon writing prompts and export square 1080×1080 social media cards for Instagram & WhatsApp.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-ink/50 bg-cream/30 border border-sage/20 px-2.5 py-1 rounded-full">
+                      {prompts.length} Total Prompts Recorded
+                    </span>
+                  </div>
                 </div>
 
+                {/* FEATURED: Social Suite (Square 1080x1080 Downloadable Cards) */}
+                <div className="bg-cream/15 border border-sage/25 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sage/15 pb-4">
+                    <div>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full border border-accent/30 bg-accent/5 text-accent text-[10px] font-bold uppercase tracking-widest mb-1.5">
+                        <Sparkles size={11} /> Community &amp; Social Cards Suite
+                      </div>
+                      <h4 className="font-display text-xl text-burgundy">Active Weekly Prompt Cards (Square 1080×1080)</h4>
+                      <p className="text-xs text-ink/65">
+                        High-resolution 1080×1080 graphics ready to download for Instagram feeds, WhatsApp broadcasts, and Discord community announcements.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                    {/* Active Story Prompt Card */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-ink/75 flex items-center gap-1.5">
+                          <BookOpen size={14} className="text-accent" /> Active Story Prompt (Fiction &amp; Prose)
+                        </span>
+                        {activeStoryPrompt?.id && (
+                          <span className="text-[10px] font-mono text-ink/40">#{activeStoryPrompt.id}</span>
+                        )}
+                      </div>
+                      {activeStoryPrompt ? (
+                        <ShareablePromptCard
+                          promptText={activeStoryPrompt.promptText}
+                          promptType="story"
+                          activeDate={activeStoryPrompt.activeDate}
+                          promptId={activeStoryPrompt.id}
+                        />
+                      ) : (
+                        <div className="aspect-square bg-cream/10 border border-dashed border-sage/25 rounded-3xl flex flex-col items-center justify-center p-6 text-center text-ink/40 text-xs">
+                          <BookOpen size={32} className="mb-2 opacity-30 text-burgundy" />
+                          <p className="font-bold">No active story prompt found.</p>
+                          <p className="text-[10px] mt-1">Publish one below or activate from bank.</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Active Poetry Prompt Card */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-ink/75 flex items-center gap-1.5">
+                          <Feather size={14} className="text-accent" /> Active Poetry Prompt (Poetry &amp; Verses)
+                        </span>
+                        {activePoemPrompt?.id && (
+                          <span className="text-[10px] font-mono text-ink/40">#{activePoemPrompt.id}</span>
+                        )}
+                      </div>
+                      {activePoemPrompt ? (
+                        <ShareablePromptCard
+                          promptText={activePoemPrompt.promptText}
+                          promptType="poem"
+                          activeDate={activePoemPrompt.activeDate}
+                          promptId={activePoemPrompt.id}
+                        />
+                      ) : (
+                        <div className="aspect-square bg-cream/10 border border-dashed border-sage/25 rounded-3xl flex flex-col items-center justify-center p-6 text-center text-ink/40 text-xs">
+                          <Feather size={32} className="mb-2 opacity-30 text-burgundy" />
+                          <p className="font-bold">No active poetry prompt found.</p>
+                          <p className="text-[10px] mt-1">Publish one below or activate from bank.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form & Prompt History Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Left form column */}
                   <div className="lg:col-span-1 bg-cream/15 border border-sage/25 p-6 rounded-3xl space-y-4 h-fit">
@@ -944,8 +1046,8 @@ export default function AdminClient({
                           onChange={(e) => setNewPromptType(e.target.value)}
                           className="w-full bg-white border border-sage/25 rounded-xl p-3 focus:outline-none focus:border-burgundy text-xs text-ink font-bold"
                         >
-                          <option value="story">Story Prompt</option>
-                          <option value="poem">Poetry Prompt</option>
+                          <option value="story">Story Prompt (Fiction &amp; Prose)</option>
+                          <option value="poem">Poetry Prompt (Poetry &amp; Verses)</option>
                         </select>
                       </div>
 
@@ -991,7 +1093,7 @@ export default function AdminClient({
                       <button
                         type="submit"
                         disabled={isSubmittingPrompt}
-                        className="w-full bg-burgundy hover:bg-ink text-cream font-bold text-xs py-3 px-4 rounded-xl transition-all shadow-md disabled:opacity-50"
+                        className="w-full bg-burgundy hover:bg-ink text-cream font-bold text-xs py-3 px-4 rounded-xl transition-all shadow-md disabled:opacity-50 cursor-pointer"
                       >
                         {isSubmittingPrompt ? 'Adding...' : 'Publish Weekly Prompt'}
                       </button>
@@ -1000,17 +1102,20 @@ export default function AdminClient({
 
                   {/* Right history list column */}
                   <div className="lg:col-span-2 space-y-4">
-                    <h4 className="font-bold text-ink text-sm">Prompt History</h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-ink text-sm">Prompt History</h4>
+                      <span className="text-[10px] font-mono text-ink/40">Tap "Card" to preview or export any past prompt</span>
+                    </div>
                     
                     {prompts.length === 0 ? (
                       <div className="bg-sage/5 border border-dashed border-sage/20 p-8 rounded-3xl text-center text-ink/40 text-xs italic">
                         No writing prompts added yet.
                       </div>
                     ) : (
-                      <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                      <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
                         {prompts.map((pr) => (
-                          <div key={pr.id} className="bg-cream/10 border border-sage/10 p-5 rounded-2xl space-y-2 hover:bg-cream/20 transition-all">
-                            <div className="flex justify-between items-center text-[10px] text-ink/40 font-mono">
+                          <div key={pr.id} className="bg-cream/10 border border-sage/10 p-5 rounded-2xl space-y-2.5 hover:bg-cream/20 transition-all">
+                            <div className="flex flex-wrap justify-between items-center gap-2 text-[10px] text-ink/40 font-mono">
                               <div className="flex items-center gap-2">
                                 <span className="bg-burgundy/10 text-burgundy font-bold px-2 py-0.5 rounded">Prompt #{pr.id}</span>
                                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
@@ -1020,8 +1125,40 @@ export default function AdminClient({
                                 }`}>
                                   {pr.promptType === 'poem' ? 'Poetry' : 'Story'}
                                 </span>
+                                {pr.activeDate && (
+                                  <span className="text-ink/60">Active: {formatDate(pr.activeDate)}</span>
+                                )}
+                                {!pr.activeDate && (
+                                  <span className="bg-amber-100 text-amber-800 text-[9px] font-bold px-1.5 py-0.5 rounded">Prompt Bank</span>
+                                )}
                               </div>
-                              <span>Active Date: {formatDate(pr.activeDate)}</span>
+
+                              {/* Action Buttons for History Items: Preview & Download Card */}
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setModalPrompt(pr)}
+                                  className="inline-flex items-center gap-1 bg-white hover:bg-stone-50 text-burgundy border border-sage/20 text-[10px] font-bold py-1 px-2 rounded-lg transition-colors shadow-2xs cursor-pointer"
+                                  title="Open Square Card Preview & Captions"
+                                >
+                                  <span>🎴</span> Card
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadHistoryCard(pr)}
+                                  disabled={exportingHistoryId === pr.id}
+                                  className="inline-flex items-center gap-1 bg-burgundy hover:bg-ink text-cream text-[10px] font-bold py-1 px-2 rounded-lg transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+                                  title="Download 1080x1080 Square Graphic"
+                                >
+                                  {exportingHistoryId === pr.id ? (
+                                    <Loader2 size={10} className="animate-spin" />
+                                  ) : (
+                                    <Download size={10} />
+                                  )}
+                                  <span>PNG</span>
+                                </button>
+                              </div>
                             </div>
                             <p className="text-xs text-ink leading-relaxed whitespace-pre-wrap">{pr.promptText}</p>
                           </div>
@@ -1030,6 +1167,44 @@ export default function AdminClient({
                     )}
                   </div>
                 </div>
+
+                {/* Modal for Previewing & Exporting any Historical Prompt Card */}
+                <AnimatePresence>
+                  {modalPrompt && (
+                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-cream/95 text-ink border border-sage/30 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-4 shadow-2xl relative"
+                      >
+                        <div className="flex items-center justify-between border-b border-sage/15 pb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="bg-burgundy/10 text-burgundy font-bold text-xs px-2.5 py-1 rounded-lg">
+                              Prompt #{modalPrompt.id}
+                            </span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-ink/70">
+                              {modalPrompt.promptType === 'poem' ? 'Poetry & Verses' : 'Fiction & Prose'}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => setModalPrompt(null)}
+                            className="w-8 h-8 rounded-full bg-ink/5 hover:bg-ink/10 flex items-center justify-center text-ink/60 font-bold transition-colors cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        <ShareablePromptCard
+                          promptText={modalPrompt.promptText}
+                          promptType={modalPrompt.promptType}
+                          activeDate={modalPrompt.activeDate}
+                          promptId={modalPrompt.id}
+                        />
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             )}
 
