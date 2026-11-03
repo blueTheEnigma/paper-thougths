@@ -5,7 +5,7 @@ import {
   Users, BookOpen, ShoppingBag, MapPin, Search, ShieldAlert, 
   CheckCircle, ArrowLeft, RefreshCw, Star, Gift, Flame, AlertCircle, 
   TrendingUp, Settings, ExternalLink, Archive, FileText, Shield, X, Loader2,
-  Book, Cake, MessageCircle, Award, Quote, Calendar, Feather
+  Book, Cake, MessageCircle, Award, Quote, Calendar, Feather, Sparkles, Download
 } from 'lucide-react';
 import Link from 'next/link';
 import AdminQuotesTab from '@/components/admin/AdminQuotesTab';
@@ -990,7 +990,7 @@ export default function AdminClient({
                       </div>
                       {activeStoryPrompt ? (
                         <ShareablePromptCard
-                          promptText={activeStoryPrompt.promptText}
+                          promptText={activeStoryPrompt.promptText || ''}
                           promptType="story"
                           activeDate={activeStoryPrompt.activeDate}
                           promptId={activeStoryPrompt.id}
@@ -1016,7 +1016,7 @@ export default function AdminClient({
                       </div>
                       {activePoemPrompt ? (
                         <ShareablePromptCard
-                          promptText={activePoemPrompt.promptText}
+                          promptText={activePoemPrompt.promptText || ''}
                           promptType="poem"
                           activeDate={activePoemPrompt.activeDate}
                           promptId={activePoemPrompt.id}
@@ -1196,7 +1196,7 @@ export default function AdminClient({
                         </div>
 
                         <ShareablePromptCard
-                          promptText={modalPrompt.promptText}
+                          promptText={modalPrompt.promptText || ''}
                           promptType={modalPrompt.promptType}
                           activeDate={modalPrompt.activeDate}
                           promptId={modalPrompt.id}

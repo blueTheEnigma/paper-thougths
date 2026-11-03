@@ -162,7 +162,8 @@ export const exportPromptCardPNG = async ({
     ctx.fillText('“', 540, 370);
 
     // Dynamic Font Sizing for Prompt Text based on character count
-    const cleanText = promptText.trim().replace(/^["“]+|["”]+$/g, '');
+    const safePromptStr = String(promptText || '').trim();
+    const cleanText = safePromptStr.replace(/^["“]+|["”]+$/g, '');
     let promptFontSize = 44;
     let promptLineHeight = 64;
     if (cleanText.length > 220) {
@@ -285,7 +286,8 @@ export const exportPromptCardPNG = async ({
     ctx.fillText('“', 540, 370);
 
     // Dynamic Font Sizing for Prompt Text based on character count
-    const cleanText = promptText.trim().replace(/^["“]+|["”]+$/g, '');
+    const safePromptStr = String(promptText || '').trim();
+    const cleanText = safePromptStr.replace(/^["“]+|["”]+$/g, '');
     let promptFontSize = 44;
     let promptLineHeight = 64;
     if (cleanText.length > 220) {
@@ -385,12 +387,14 @@ export default function ShareablePromptCard({
 
   const dateLabel = formatDateLabel(activeDate);
 
+  const safeText = String(promptText || '').trim();
+
   // Instagram Caption Generator
   const getInstagramCaption = () => {
     return `✦ WEEKLY WRITING PROMPT · PAPER THOUGHTS ✦\n\n` +
       `Category: ${categoryLabel}\n` +
       `Prompt: #${promptId || 'Active'} · ${dateLabel}\n\n` +
-      `" ${promptText.trim()} "\n\n` +
+      `" ${safeText} "\n\n` +
       `Take the floor. Ink your manuscript and submit to the Writers' Village this week on Paper Thoughts:\n` +
       `https://paperthoughts.org/village\n\n` +
       `The top manuscripts from this weekly cycle will be inducted into the permanent Living Anthology.\n\n` +
@@ -404,7 +408,7 @@ export default function ShareablePromptCard({
       `✍️ *Category:* ${categoryLabel}\n` +
       `📅 *Cycle:* ${dateLabel}\n\n` +
       `❦ *This Week's Challenge:*\n` +
-      `_"${promptText.trim()}"_\n\n` +
+      `_"${safeText}"_\n\n` +
       `📖 Write and submit your piece freely to the Living Salon:\n` +
       `https://paperthoughts.org/village\n\n` +
       `🏆 The finest 3 works are inducted into the Living Anthology with permanent author laurels!\n\n` +
@@ -498,9 +502,9 @@ export default function ShareablePromptCard({
           <p className={`font-serif italic leading-relaxed font-medium line-clamp-6 ${
             isDark ? 'text-[#FBF7EE]' : 'text-[#20070e]'
           } ${
-            promptText.length > 200 ? 'text-xs sm:text-sm' : promptText.length > 120 ? 'text-sm sm:text-base' : 'text-base sm:text-lg'
+            safeText.length > 200 ? 'text-xs sm:text-sm' : safeText.length > 120 ? 'text-sm sm:text-base' : 'text-base sm:text-lg'
           }`}>
-            {promptText}
+            {safeText || 'No prompt content specified.'}
           </p>
 
           <div className={`w-12 h-0.5 mx-auto rounded-full mt-2 ${
