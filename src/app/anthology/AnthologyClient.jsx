@@ -244,7 +244,7 @@ export default function AnthologyClient() {
                 <BookMarked size={14} /> Explore The Bookstore
               </Link>
               <Link
-                href="/join"
+                href="/sign-up?callbackUrl=/dashboard"
                 className="border border-[#FBF7EE]/20 hover:border-[#FBF7EE] text-[#FBF7EE] font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-xl transition-colors inline-flex items-center gap-2"
               >
                 <Feather size={14} /> Submit Next Month

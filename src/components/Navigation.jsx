@@ -137,10 +137,10 @@ export default function Navigation() {
         <div className="flex items-center gap-3 sm:gap-4">
           {isLoaded && !isSignedIn && (
             <div className="flex items-center gap-4">
-              <Link href="/join" className="bg-burgundy hover:bg-ink text-cream text-xs px-5 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-colors shadow-sm">
-                Join Us
+              <Link href="/sign-up?callbackUrl=/dashboard" className="bg-burgundy hover:bg-ink text-cream text-xs px-5 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-colors shadow-sm">
+                Join the Club
               </Link>
-              <Link href="/sign-in?redirect_url=/dashboard" className="hidden sm:inline-block text-ink/70 hover:text-burgundy font-bold text-xs uppercase tracking-wider transition-colors">
+              <Link href="/sign-in?callbackUrl=/dashboard" className="hidden sm:inline-block text-ink/70 hover:text-burgundy font-bold text-xs uppercase tracking-wider transition-colors">
                 Sign In
               </Link>
             </div>
@@ -217,7 +217,7 @@ export default function Navigation() {
         )}
         {isLoaded && !isSignedIn && (
           <Link 
-            href="/sign-in?redirect_url=/dashboard" 
+            href="/sign-in?callbackUrl=/dashboard" 
             className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all ${
               isActive('/sign-in') ? "text-burgundy scale-105 font-extrabold" : "text-ink/50"
             }`}

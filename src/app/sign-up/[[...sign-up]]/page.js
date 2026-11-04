@@ -19,7 +19,17 @@ function SignUpForm() {
   const [success, setSuccess] = useState("");
 
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-  const refCode = searchParams.get("ref") || "";
+  const urlRef = searchParams.get("ref") || "";
+  const [refCode, setRefCode] = useState(urlRef);
+
+  useState(() => {
+    if (urlRef && typeof window !== "undefined") {
+      localStorage.setItem("pt_ref_code", urlRef);
+    } else if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("pt_ref_code");
+      if (stored && !refCode) setRefCode(stored);
+    }
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -139,7 +139,7 @@ export default function ContactUs() {
                   Ready to claim your LK-ID and start your journey from Reader to Keeper?
                 </p>
 
-                <Link href="/join" className="group relative inline-flex items-center gap-3 bg-cream text-burgundy font-bold py-5 px-10 rounded-full hover:bg-white transition-all shadow-xl hover:shadow-2xl">
+                <Link href="/sign-up?callbackUrl=/dashboard" className="group relative inline-flex items-center gap-3 bg-cream text-burgundy font-bold py-5 px-10 rounded-full hover:bg-white transition-all shadow-xl hover:shadow-2xl">
                   <Sparkles size={20} className="text-accent" />
                   <span className="uppercase tracking-[0.2em] text-sm">Join the Collective</span>
                 </Link>

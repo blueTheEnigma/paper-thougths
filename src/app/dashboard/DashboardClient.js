@@ -329,6 +329,7 @@ export default function DashboardClient({
   
   // Profile Form States
   const [fullName, setFullName] = useState(profile?.name || '');
+  const [alias, setAlias] = useState(profile?.alias || '');
   const [whatsapp, setWhatsapp] = useState(profile?.whatsapp || '');
   const [instagram, setInstagram] = useState(profile?.instagram || '');
   const [chapter, setChapter] = useState(profile?.chapter || 'Other');
@@ -756,6 +757,7 @@ export default function DashboardClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName,
+          alias: alias ? alias.replace(/^@+/, '').trim().toLowerCase() : null,
           whatsapp,
           instagram,
           chapter,
@@ -768,6 +770,7 @@ export default function DashboardClient({
       if (data.success) {
         setProfileSuccess(data.message);
         profile.name = fullName;
+        profile.alias = alias ? alias.replace(/^@+/, '').trim().toLowerCase() : null;
         profile.whatsapp = whatsapp;
         profile.instagram = instagram;
         profile.chapter = chapter;
@@ -1329,7 +1332,7 @@ export default function DashboardClient({
             Did you register using a different email address? If you haven't joined the Archive yet, you need to register first.
           </p>
           <div className="flex flex-col gap-3">
-            <Link href="/join" className="bg-burgundy text-cream py-3 rounded-xl font-bold hover:bg-ink transition-colors">
+            <Link href="/sign-up" className="bg-burgundy text-cream py-3 rounded-xl font-bold hover:bg-ink transition-colors">
               Join the Archive
             </Link>
             <SignOutButton>
@@ -1553,6 +1556,11 @@ export default function DashboardClient({
               </h1>
               <div className="flex flex-wrap items-center gap-2 md:gap-3 font-mono text-[10px] sm:text-xs">
                 <span className="bg-white px-2.5 py-1 border border-sage/20 rounded shadow-sm text-burgundy font-bold">{profile.lkid}</span>
+                {profile.alias && (
+                  <span className="bg-[#c96a42]/10 border border-[#c96a42]/20 px-2.5 py-1 rounded shadow-xs text-burgundy font-sans font-bold">
+                    @{profile.alias}
+                  </span>
+                )}
                 {profile.foundingBadge && (
                   <span className="bg-amber-500/15 border border-amber-500/30 text-amber-900 font-sans font-bold px-2.5 py-1 rounded shadow-xs uppercase tracking-wider text-[9px] sm:text-[10px]">
                     {profile.foundingBadge === 'founding_poet' 
@@ -1719,6 +1727,35 @@ export default function DashboardClient({
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-6 sm:space-y-8"
               >
+                {/* Claim Unique @Alias Banner (Shown for existing active members without an alias) */}
+                {!profile.alias && profile.membershipStatus !== 'evicted' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-burgundy via-[#2d0a15] to-[#120308] border border-[#c96a42]/30 shadow-lg relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-3.5 relative z-10">
+                      <div className="w-10 h-10 rounded-2xl bg-[#c96a42]/20 border border-[#c96a42]/40 flex items-center justify-center shrink-0 text-[#F2A98A]">
+                        <Sparkles size={20} />
+                      </div>
+                      <div>
+                        <h4 className="font-display font-bold text-base sm:text-lg text-cream">
+                          Consecrate Your Reader Alias
+                        </h4>
+                        <p className="text-xs font-serif text-cream/70 max-w-xl leading-relaxed">
+                          Claim your unique public <span className="font-mono text-[#F2A98A]">@alias</span> to represent your voice across salons, reviews, and debates before someone else claims it.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('settings')}
+                      className="shrink-0 px-5 py-2.5 rounded-xl bg-[#c96a42] hover:bg-[#F2A98A] text-[#20070e] font-bold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer whitespace-nowrap"
+                    >
+                      Claim Alias Now →
+                    </button>
+                  </motion.div>
+                )}
+
                 {/* Sealed Sanctuary Exile Gate Banner (Shown if member is evicted) */}
                 {profile.membershipStatus === 'evicted' && (
                   <motion.div
@@ -2953,6 +2990,25 @@ export default function DashboardClient({
                         </div>
 
                         <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Reader Alias</label>
+                            <span className="text-[9px] text-ink/40 font-mono">Public @handle</span>
+                          </div>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 font-bold text-xs">@</span>
+                            <input
+                              type="text"
+                              value={alias}
+                              onChange={(e) => setAlias(e.target.value)}
+                              placeholder="your_alias"
+                              className="w-full bg-cream/20 border border-sage/25 rounded-xl py-2.5 pl-7 pr-3 focus:outline-none focus:border-burgundy text-xs font-bold text-ink"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
                           <label className="text-[10px] font-bold uppercase tracking-wider text-ink/50">Chapter</label>
                           <select
                             value={chapter}
@@ -2965,7 +3021,6 @@ export default function DashboardClient({
                             ))}
                           </select>
                         </div>
-                      </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
@@ -3270,6 +3325,7 @@ export default function DashboardClient({
               key="onboarding-sequence"
               userName={profile.name.split(' ')[0]} 
               lkId={profile.lkid} 
+              profile={profile}
               onComplete={handleCompleteOnboarding} 
             />
           )}

@@ -1,9 +1,14 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
-import { PenTool, Flame, TreePine } from 'lucide-react';
+import { 
+  PenTool, Flame, TreePine, CheckCircle2, AlertCircle, 
+  Loader2, Sparkles, MapPin, Calendar, AtSign, 
+  BookOpen, ChevronRight, Gift
+} from 'lucide-react';
+import { FaWhatsapp, FaInstagram } from 'react-icons/fa6';
 
 // Simple deterministic LCG random generator to ensure hydration consistency and satisfy React purity rules.
 const createRandom = (seed) => {
@@ -14,8 +19,21 @@ const createRandom = (seed) => {
   };
 };
 
-export default function OnboardingSequence({ userName, lkId, onComplete }) {
-  // Acts: 1: Egg, 2: Hatching, 3: Naming, 4: Scrolls, 5: Doors
+const AVAILABLE_CHAPTERS = [
+  'Zaria (ABU)',
+  'Kaduna',
+  'Abuja',
+  'Other'
+];
+
+const AVAILABLE_GENRES = [
+  'Fiction', 'Non-Fiction', 'Literary Fiction', 'Memoir', 
+  'Self-Help', 'Fantasy', 'Science Fiction', 'Thriller', 
+  'Romance', 'Historical Fiction', 'Classic Fiction', 'Poetry', 'Humour'
+];
+
+export default function OnboardingSequence({ userName, lkId, profile, onComplete }) {
+  // Acts: 1: Egg, 2: Hatching, 3: Registry & Naming, 4: Scrolls, 5: Doors
   const [act, setAct] = useState(1);
   const [crackStage, setCrackStage] = useState(0); // 0, 1, 2, 3
   const [scrollsOpened, setScrollsOpened] = useState(new Set());
@@ -23,10 +41,101 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const [skipVisible, setSkipVisible] = useState(false);
 
+  // Registry Form State
+  const [alias, setAlias] = useState(profile?.alias || '');
+  const [aliasStatus, setAliasStatus] = useState('idle'); // 'idle' | 'checking' | 'available' | 'error'
+  const [aliasMessage, setAliasMessage] = useState('');
+  const [chapter, setChapter] = useState(profile?.chapter || 'Zaria (ABU)');
+  const [birthday, setBirthday] = useState(profile?.birthday || '');
+  const [whatsapp, setWhatsapp] = useState(profile?.whatsapp || '');
+  const [instagram, setInstagram] = useState(profile?.instagram || '');
+  const [selectedGenres, setSelectedGenres] = useState(profile?.preferredGenres || []);
+  const [referral, setReferral] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registryError, setRegistryError] = useState('');
+
+  const debounceTimerRef = useRef(null);
+
+  // Check URL / localStorage for referral code on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedRef = localStorage.getItem('pt_ref_code') || '';
+      if (storedRef && !referral) {
+        setReferral(storedRef);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => setSkipVisible(true), 3000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Real-time debounced Alias validation
+  useEffect(() => {
+    const clean = alias.replace(/^@+/, '').trim().toLowerCase();
+    if (!clean) {
+      setAliasStatus('idle');
+      setAliasMessage('');
+      return;
+    }
+
+    if (clean.length < 3) {
+      setAliasStatus('error');
+      setAliasMessage('Must be at least 3 characters.');
+      return;
+    }
+
+    if (clean.length > 25) {
+      setAliasStatus('error');
+      setAliasMessage('Must be 25 characters or less.');
+      return;
+    }
+
+    if (!/^[a-z0-9_]+$/.test(clean)) {
+      setAliasStatus('error');
+      setAliasMessage('Only letters, numbers, and underscores.');
+      return;
+    }
+
+    setAliasStatus('checking');
+    setAliasMessage('Verifying availability...');
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/me/check-alias?alias=${encodeURIComponent(clean)}`);
+        const data = await res.json();
+        if (data.available) {
+          setAliasStatus('available');
+          setAliasMessage(`@${clean} is available!`);
+        } else {
+          setAliasStatus('error');
+          setAliasMessage(data.reason || 'This alias is not available.');
+        }
+      } catch (err) {
+        setAliasStatus('error');
+        setAliasMessage('Could not verify alias.');
+      }
+    }, 400);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [alias]);
+
+  const toggleGenre = (genre) => {
+    setSelectedGenres(prev => 
+      prev.includes(genre)
+        ? prev.filter(g => g !== genre)
+        : [...prev, genre]
+    );
+  };
 
   const handleSkip = () => {
     setShowSkipConfirm(true);
@@ -60,10 +169,79 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
         });
       }, 300);
 
-      const timer = setTimeout(() => setAct(3), 3500); // 3.5s to admire the seedling
+      const timer = setTimeout(() => setAct(3), 3200);
       return () => clearTimeout(timer);
     }
   }, [crackStage]);
+
+  const handleRegistrySubmit = async (e) => {
+    e.preventDefault();
+    setRegistryError('');
+
+    const cleanAlias = alias.replace(/^@+/, '').trim().toLowerCase();
+    if (!cleanAlias) {
+      setRegistryError('Please choose a unique Alias (* mandatory).');
+      return;
+    }
+
+    if (aliasStatus === 'error') {
+      setRegistryError(aliasMessage || 'Please choose a valid and available Alias.');
+      return;
+    }
+
+    if (!chapter) {
+      setRegistryError('Please select your Sanctuary Chapter (* mandatory).');
+      return;
+    }
+
+    if (!birthday) {
+      setRegistryError('Please enter your Birthday (* mandatory for leaves honors).');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch('/api/me/onboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          alias: cleanAlias,
+          chapter,
+          birthday,
+          whatsapp,
+          instagram,
+          preferredGenres: selectedGenres,
+          referral: referral.trim()
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to consecrate registry. Please try again.');
+      }
+
+      // Success celebration!
+      confetti({
+        particleCount: 120,
+        spread: 90,
+        origin: { y: 0.5 },
+        colors: ['#C96A42', '#20070E', '#F2A98A', '#FFF']
+      });
+
+      // Clear referral storage if used
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('pt_ref_code');
+      }
+
+      // Transition to Act 4: The 3 Lore Scrolls
+      setAct(4);
+    } catch (err) {
+      setRegistryError(err.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleScrollTap = (index) => {
     setScrollsOpened(prev => new Set(prev).add(index));
@@ -74,10 +252,10 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
     // Fire final confetti
     setTimeout(() => {
       confetti({
-        particleCount: 200,
+        particleCount: 220,
         spread: 120,
         origin: { y: 0.5 },
-        colors: ['#F2A98A', '#FFF', '#C96A42']
+        colors: ['#F2A98A', '#FFF', '#C96A42', '#5C1A2E']
       });
     }, 400);
 
@@ -120,7 +298,7 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
   }, []);
 
   const bgStyle = act >= 3 && act < 5 
-    ? { backgroundColor: '#FFF5EC' } // Parchment
+    ? { backgroundColor: '#FFF5EC' } // Warm parchment
     : { background: 'radial-gradient(ellipse at 50% 60%, #1a0610 0%, #0d0406 60%, #060103 100%)' };
 
   return (
@@ -128,8 +306,8 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 1 }}
-      className="fixed inset-0 z-[10000] flex flex-col items-center justify-center overflow-hidden"
+      transition={{ duration: 0.8 }}
+      className="fixed inset-0 z-[10000] flex flex-col items-center justify-start overflow-y-auto py-8 px-4"
       style={bgStyle}
     >
       {/* Background Particles (Visible in acts 1, 2, 5) */}
@@ -152,7 +330,7 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
       {/* Parchment Noise Overlay (Visible in acts 3, 4) */}
       {(act === 3 || act === 4) && (
         <div 
-          className="absolute inset-0 pointer-events-none opacity-40 mix-blend-multiply"
+          className="fixed inset-0 pointer-events-none opacity-30 mix-blend-multiply"
           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 200 200\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}
         />
       )}
@@ -162,25 +340,33 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute top-6 right-6 text-cream/40 hover:text-cream/70 font-sans text-xs tracking-widest uppercase z-50 transition-colors cursor-pointer"
+          className="fixed top-6 right-6 text-ink/40 hover:text-burgundy font-sans text-xs tracking-widest uppercase z-50 transition-colors cursor-pointer"
           onClick={handleSkip}
         >
-          Skip
+          Skip Ritual
         </motion.button>
       )}
 
-      {/* Skip Confirmation */}
+      {/* Skip Confirmation Modal */}
       {showSkipConfirm && (
-        <div className="absolute inset-0 bg-ink/90 z-[10001] flex items-center justify-center p-4">
-          <div className="bg-cream p-8 rounded-2xl max-w-sm w-full text-center border border-sage/20 shadow-2xl">
-            <h3 className="font-display text-2xl text-burgundy mb-2 font-bold">Skip Onboarding?</h3>
-            <p className="text-sm font-sans text-ink/70 mb-6">Are you sure? You can replay this from your profile later.</p>
+        <div className="fixed inset-0 bg-black/75 z-[10001] flex items-center justify-center p-4">
+          <div className="bg-[#FAF7F2] p-8 rounded-3xl max-w-sm w-full text-center border-2 border-burgundy/20 shadow-2xl">
+            <h3 className="font-display text-2xl text-burgundy mb-2 font-bold">Skip Consecration?</h3>
+            <p className="text-sm font-sans text-ink/70 mb-6">
+              You can complete your Reader profile and choose your Alias anytime from Profile Settings.
+            </p>
             <div className="flex gap-4 justify-center">
-              <button onClick={cancelSkip} className="px-5 py-2.5 rounded-full border border-ink text-ink font-bold text-sm hover:bg-ink/5 transition-colors cursor-pointer">
+              <button 
+                onClick={cancelSkip} 
+                className="px-5 py-2.5 rounded-full border border-ink/30 text-ink font-bold text-xs uppercase tracking-wider hover:bg-ink/5 transition-colors cursor-pointer"
+              >
                 Never mind
               </button>
-              <button onClick={confirmSkip} className="px-5 py-2.5 rounded-full bg-burgundy text-cream font-bold text-sm hover:bg-ink transition-colors cursor-pointer">
-                Yes, skip
+              <button 
+                onClick={confirmSkip} 
+                className="px-5 py-2.5 rounded-full bg-burgundy text-cream font-bold text-xs uppercase tracking-wider hover:bg-ink transition-colors cursor-pointer shadow-md"
+              >
+                Yes, enter
               </button>
             </div>
           </div>
@@ -192,7 +378,7 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
         {(act === 1 || act === 2) && (
           <motion.div 
             key="act-1-2"
-            className="flex flex-col items-center justify-center relative w-full max-w-md mx-auto"
+            className="flex flex-col items-center justify-center relative w-full max-w-md mx-auto my-auto min-h-[80vh]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -213,7 +399,7 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
               <motion.div 
                 className="absolute inset-0 flex items-center justify-center z-50"
                 initial={{ scale: 0.3, opacity: 0 }}
-                animate={crackStage === 3 ? { scale: 2.5, opacity: 1 } : { scale: 0.3, opacity: 0 }}
+                animate={crackStage === 3 ? { scale: 2.2, opacity: 1 } : { scale: 0.3, opacity: 0 }}
                 transition={crackStage === 3 ? { type: "spring", stiffness: 100, damping: 12, delay: 0.4 } : { duration: 0 }}
               >
                 <div className="relative w-48 h-48 sm:w-56 sm:h-56">
@@ -247,14 +433,12 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
                       transition={{ duration: crackStage === 1 ? 0.3 : 0.5 }}
                       className="w-full h-full relative"
                     >
-                      {/* Inner Glow leak */}
                       <motion.div 
                         className="absolute inset-0 rounded-full blur-[30px] bg-primary/50 -z-10"
                         animate={{ opacity: crackStage === 0 ? 0 : crackStage === 1 ? 0.4 : 0.8 }}
                       />
                       <Image src="/images/panguin/egg.png" alt="Mysterious Egg" fill className="object-contain" priority />
                       
-                      {/* SVG Cracks Overlay */}
                       <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
                         {crackStage >= 1 && (
                           <motion.path 
@@ -295,7 +479,6 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
                 )}
               </AnimatePresence>
 
-              {/* Egg Shatter Animation Elements */}
               {crackStage === 3 && (
                 <>
                   <motion.div 
@@ -309,14 +492,13 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
                     return (
                       <motion.div
                         key={`shard-${i}`}
-                        className="absolute top-1/2 left-1/2 w-4 h-8 bg-cream/90 rounded-sm"
-                        initial={{ scale: 1, x: "-50%", y: "-50%", rotate: 0, opacity: 1 }}
+                        className="absolute top-1/2 left-1/2 w-4 h-4 rounded-sm bg-[#FFE4C4] border border-primary/40 pointer-events-none z-40"
+                        initial={{ x: 0, y: 0, opacity: 1, rotate: 0 }}
                         animate={{ 
-                          x: `calc(-50% + ${Math.cos((i * 30) * Math.PI / 180) * offset.distance}px)`, 
-                          y: `calc(-50% + ${Math.sin((i * 30) * Math.PI / 180) * offset.distance}px)`,
-                          rotate: offset.rotate,
+                          x: Math.cos(offset.rotate * Math.PI / 180) * offset.distance,
+                          y: Math.sin(offset.rotate * Math.PI / 180) * offset.distance,
                           opacity: 0,
-                          scale: 0.5
+                          rotate: offset.rotate * 2
                         }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
                       />
@@ -332,7 +514,7 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
               animate={{ opacity: crackStage < 3 ? 1 : 0 }}
               transition={{ delay: 1 }}
             >
-              <p className="font-sans text-xs tracking-[0.2em] uppercase text-primary animate-pulse">
+              <p className="font-sans text-xs tracking-[0.2em] uppercase text-primary animate-pulse font-bold">
                 {crackStage === 0 ? "Tap the egg" : crackStage === 1 ? "Again..." : "One more..."}
               </p>
             </motion.div>
@@ -342,106 +524,243 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
                 className="mt-12"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 2.5 }}
+                transition={{ delay: 2 }}
               >
-                <button onClick={() => setAct(3)} className="bg-primary/20 hover:bg-primary/30 text-cream px-8 py-3 rounded-full font-sans tracking-widest text-xs uppercase font-bold transition-colors cursor-pointer border border-primary/30">
-                  Continue
+                <button 
+                  onClick={() => setAct(3)} 
+                  className="bg-primary/20 hover:bg-primary/30 text-cream px-8 py-3 rounded-full font-sans tracking-widest text-xs uppercase font-bold transition-colors cursor-pointer border border-primary/30 shadow-lg"
+                >
+                  Step into the Registry →
                 </button>
               </motion.div>
             )}
           </motion.div>
         )}
 
-        {/* ACT 3: The Naming */}
+        {/* ACT 3: The Reader's Registry & Naming Ceremony */}
         {act === 3 && (
           <motion.div 
             key="act-3"
-            className="flex flex-col items-center justify-center relative w-full max-w-2xl mx-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-start relative w-full max-w-2xl mx-auto my-auto py-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <div className="absolute top-4 left-4 sm:top-12 sm:left-12">
-              <motion.div 
-                className="w-16 h-16 sm:w-24 sm:h-24 relative"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", delay: 0.2 }}
-              >
-                <Image src="/images/panguin/seedling.png" alt="Seedling Panguin" fill className="object-contain drop-shadow-md" />
-              </motion.div>
+            {/* Seedling Icon floating at top */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 relative drop-shadow-md">
+                <Image src="/images/panguin/seedling.png" alt="Seedling" fill className="object-contain" />
+              </div>
+              <span className="font-sans text-xs font-bold uppercase tracking-widest text-burgundy/70">
+                The Sacred Ledger
+              </span>
             </div>
 
-            <div className="text-center mt-20 sm:mt-0">
-              <motion.div 
-                className="font-quote italic text-ink/70 text-2xl sm:text-3xl mb-8 flex justify-center"
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.5 } }
-                }}
-              >
-                {"You are now a...".split('').map((char, index) => (
-                  <motion.span key={index} variants={{ hidden: { opacity: 0, y: 5 }, visible: { opacity: 1, y: 0 } }}>
-                    {char === ' ' ? '\u00A0' : char}
-                  </motion.span>
-                ))}
-              </motion.div>
+            <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-burgundy tracking-tight text-center mb-1">
+              Welcome, Reader
+            </h1>
+            <p className="font-quote italic text-ink/75 text-sm sm:text-base text-center mb-6 max-w-md">
+              &quot;Inscribe your unique Alias and consecrate your presence into the grand archive ledger.&quot;
+            </p>
 
-              <div className="relative">
-                <motion.h1 
-                  className="font-display font-extrabold text-6xl sm:text-8xl text-burgundy tracking-tight relative z-10"
-                  initial={{ scale: 1.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15, delay: 1.8 }}
-                >
-                  READER
-                </motion.h1>
-                
-                {/* Ink Splash */}
-                {Array.from({ length: 8 }).map((_, i) => {
-                  const splash = inkSplashes[i];
-                  return (
-                    <motion.div
-                      key={`ink-${i}`}
-                      className="absolute top-1/2 left-1/2 rounded-full bg-burgundy/80 z-0"
-                      initial={{ scale: 0, x: "-50%", y: "-50%", opacity: 1 }}
-                      animate={{ 
-                        x: `calc(-50% + ${Math.cos((i * 45) * Math.PI / 180) * splash.distanceX}px)`, 
-                        y: `calc(-50% + ${Math.sin((i * 45) * Math.PI / 180) * splash.distanceY}px)`,
-                        scale: splash.scale,
-                        opacity: 0
-                      }}
-                      transition={{ duration: 0.6, delay: 1.8, ease: "easeOut" }}
-                      style={{ width: `${splash.size}px`, height: `${splash.size}px` }}
-                    />
-                  );
-                })}
+            {/* Permanent LK-ID Serial Banner */}
+            <div className="bg-[#FAF7F2] border-2 border-[#C96A42]/30 rounded-2xl px-6 py-3 mb-6 flex flex-col sm:flex-row items-center gap-2 sm:gap-4 shadow-sm w-full max-w-lg justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-ink/50 block">Permanent Ledger Serial</span>
+                <span className="font-mono font-bold text-burgundy text-lg tracking-wider">{lkId || "CONSECRATING..."}</span>
               </div>
+              <span className="text-[11px] font-sans text-ink/60 italic">Your immutable membership token</span>
+            </div>
 
-              <motion.div 
-                className="mt-8 flex flex-col items-center gap-2"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 2.8, duration: 0.8 }}
-              >
-                <h2 className="font-sans font-bold text-ink text-xl">{userName}</h2>
-                <div className="bg-ink/5 px-4 py-1.5 rounded-full border border-ink/10">
-                  <span className="font-sans font-medium text-xs tracking-widest text-ink/60 uppercase">{lkId}</span>
+            {/* Registry Card Form */}
+            <div className="w-full max-w-lg bg-white/90 backdrop-blur-md border border-[#E6D5C3] rounded-3xl p-6 sm:p-8 shadow-xl">
+              <form onSubmit={handleRegistrySubmit} className="space-y-5">
+                
+                {/* 1. Alias (* Mandatory) */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-burgundy flex items-center gap-1.5">
+                      <AtSign size={13} className="text-primary" />
+                      Alias <span className="text-red-500 font-bold">*</span>
+                    </label>
+                    <span className="text-[10px] text-ink/50 font-sans">Your public clubhouse identity</span>
+                  </div>
+                  
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40 font-bold text-sm">@</span>
+                    <input 
+                      type="text"
+                      required
+                      placeholder="e.g. foluso_reads"
+                      value={alias}
+                      onChange={(e) => setAlias(e.target.value)}
+                      className="w-full pl-8 pr-10 py-2.5 bg-[#FAF8F5] border border-ink/15 rounded-xl text-ink font-sans text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/40"
+                    />
+                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                      {aliasStatus === 'checking' && <Loader2 size={16} className="text-ink/40 animate-spin" />}
+                      {aliasStatus === 'available' && <CheckCircle2 size={16} className="text-green-600" />}
+                      {aliasStatus === 'error' && <AlertCircle size={16} className="text-red-600" />}
+                    </div>
+                  </div>
+
+                  {aliasMessage && (
+                    <p className={`text-[11px] font-sans mt-1.5 ${aliasStatus === 'available' ? 'text-green-700' : 'text-red-600'}`}>
+                      {aliasMessage}
+                    </p>
+                  )}
                 </div>
-              </motion.div>
 
-              <motion.div 
-                className="mt-16"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 4 }}
-              >
-                <button onClick={() => setAct(4)} className="bg-burgundy hover:bg-ink text-cream px-8 py-3 rounded-full font-sans tracking-widest text-xs uppercase font-bold transition-colors cursor-pointer shadow-lg hover:-translate-y-1 transform duration-200">
-                  Continue
+                {/* 2. Chapter (* Mandatory) */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-burgundy mb-2 flex items-center gap-1.5">
+                    <MapPin size={13} className="text-primary" />
+                    Chapter <span className="text-red-500 font-bold">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {AVAILABLE_CHAPTERS.map((chap) => {
+                      const isSelected = chapter === chap;
+                      return (
+                        <button
+                          key={chap}
+                          type="button"
+                          onClick={() => setChapter(chap)}
+                          className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
+                            isSelected 
+                              ? 'bg-burgundy text-cream border-burgundy shadow-sm' 
+                              : 'bg-[#FAF8F5] text-ink/70 border-ink/10 hover:border-burgundy/40'
+                          }`}
+                        >
+                          {chap}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 3. Birthday (* Mandatory) */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-burgundy mb-1.5 flex items-center gap-1.5">
+                    <Calendar size={13} className="text-primary" />
+                    Birthday <span className="text-red-500 font-bold">*</span>
+                  </label>
+                  <input 
+                    type="date"
+                    required
+                    value={birthday}
+                    onChange={(e) => setBirthday(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-ink/15 rounded-xl text-ink font-sans text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/40"
+                  />
+                  <p className="text-[10px] text-ink/50 mt-1 italic font-sans">
+                    Sanctuary birthdays unlock honorary leaves and annual fellowship rewards.
+                  </p>
+                </div>
+
+                {/* 4. WhatsApp Number */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-burgundy mb-1.5 flex items-center gap-1.5">
+                    <FaWhatsapp size={14} className="text-green-600" />
+                    WhatsApp Number
+                  </label>
+                  <input 
+                    type="tel"
+                    placeholder="e.g. 08012345678"
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-ink/15 rounded-xl text-ink font-sans text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/40"
+                  />
+                  <p className="text-[10px] text-ink/50 mt-1 font-sans">
+                    For chapter gathering alerts and book reading circle dispatches.
+                  </p>
+                </div>
+
+                {/* 5. Instagram Handle (Optional) */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-burgundy mb-1.5 flex items-center gap-1.5">
+                    <FaInstagram size={14} className="text-pink-600" />
+                    Instagram <span className="text-[10px] font-normal text-ink/50 lowercase">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40 font-bold text-sm">@</span>
+                    <input 
+                      type="text"
+                      placeholder="username"
+                      value={instagram}
+                      onChange={(e) => setInstagram(e.target.value)}
+                      className="w-full pl-8 pr-3.5 py-2.5 bg-[#FAF8F5] border border-ink/15 rounded-xl text-ink font-sans text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/40"
+                    />
+                  </div>
+                </div>
+
+                {/* 6. Preferred Literary Genres */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-burgundy mb-2 flex items-center gap-1.5">
+                    <BookOpen size={13} className="text-primary" />
+                    Preferred Genres
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1 bg-[#FAF8F5] rounded-xl border border-ink/10">
+                    {AVAILABLE_GENRES.map((g) => {
+                      const isSelected = selectedGenres.includes(g);
+                      return (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => toggleGenre(g)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                            isSelected 
+                              ? 'bg-burgundy text-cream' 
+                              : 'bg-white text-ink/70 border border-ink/10 hover:border-burgundy/30'
+                          }`}
+                        >
+                          {g}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 7. Referred By (Optional) */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-burgundy mb-1.5 flex items-center gap-1.5">
+                    <Gift size={13} className="text-primary" />
+                    Referred By <span className="text-[10px] font-normal text-ink/50 lowercase">(optional)</span>
+                  </label>
+                  <input 
+                    type="text"
+                    placeholder="Friend's LK-ID or @alias"
+                    value={referral}
+                    onChange={(e) => setReferral(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-ink/15 rounded-xl text-ink font-sans text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/40"
+                  />
+                </div>
+
+                {/* Error Banner */}
+                {registryError && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl flex items-center gap-2">
+                    <AlertCircle size={15} className="shrink-0 text-red-600" />
+                    <span>{registryError}</span>
+                  </div>
+                )}
+
+                {/* Submit Action */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting || aliasStatus === 'checking'}
+                  className="w-full py-3.5 bg-burgundy hover:bg-ink text-cream font-bold text-xs uppercase tracking-widest rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Consecrating Ledger...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Consecrate Identity & Unfurl Lore</span>
+                      <ChevronRight size={16} />
+                    </>
+                  )}
                 </button>
-              </motion.div>
+              </form>
             </div>
           </motion.div>
         )}
@@ -450,7 +769,7 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
         {act === 4 && (
           <motion.div 
             key="act-4"
-            className="flex flex-col items-center justify-center relative w-full max-w-4xl mx-auto px-4"
+            className="flex flex-col items-center justify-center relative w-full max-w-4xl mx-auto px-4 my-auto min-h-[80vh]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -532,7 +851,7 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
             >
               <button 
                 onClick={() => setAct(5)} 
-                className="bg-burgundy hover:bg-ink text-cream px-10 py-3.5 rounded-full font-sans tracking-widest text-xs uppercase font-bold transition-all shadow-lg hover:-translate-y-1"
+                className="bg-burgundy hover:bg-ink text-cream px-10 py-3.5 rounded-full font-sans tracking-widest text-xs uppercase font-bold transition-all shadow-lg hover:-translate-y-1 cursor-pointer"
               >
                 Proceed to the Doors
               </button>
@@ -544,12 +863,16 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
         {act === 5 && (
           <motion.div 
             key="act-5"
-            className="flex flex-col items-center justify-center relative w-full h-full max-w-5xl mx-auto"
+            className="flex flex-col items-center justify-center relative w-full h-full max-w-5xl mx-auto my-auto min-h-[80vh]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="relative w-[300px] sm:w-[400px] h-[400px] sm:h-[500px] perspective-[1000px] cursor-pointer" onClick={handleEnterArchive}>
+            <div 
+              className="relative w-[300px] sm:w-[400px] h-[400px] sm:h-[500px] cursor-pointer" 
+              onClick={handleEnterArchive}
+              style={{ perspective: '1200px', WebkitPerspective: '1200px' }}
+            >
               {/* Golden light that pours out when open */}
               <motion.div 
                 className="absolute inset-0 bg-cream z-0 blur-[60px]"
@@ -564,9 +887,14 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
                 initial={{ rotateY: 0 }}
                 animate={{ rotateY: doorsOpen ? -85 : 0 }}
                 transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                style={{ backgroundImage: 'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.2) 100%)' }}
+                style={{ 
+                  transformStyle: 'preserve-3d', 
+                  WebkitTransformStyle: 'preserve-3d',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  backgroundImage: 'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.2) 100%)' 
+                }}
               >
-                {/* Door Panels */}
                 <div className="absolute inset-4 border border-[#C96A42]/20 rounded-sm pointer-events-none" />
                 <div className="absolute top-1/2 right-4 -translate-y-1/2 w-4 h-16 bg-[#C96A42] rounded-sm shadow-md" />
               </motion.div>
@@ -577,9 +905,14 @@ export default function OnboardingSequence({ userName, lkId, onComplete }) {
                 initial={{ rotateY: 0 }}
                 animate={{ rotateY: doorsOpen ? 85 : 0 }}
                 transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                style={{ backgroundImage: 'linear-gradient(-90deg, transparent 0%, rgba(0,0,0,0.2) 100%)' }}
+                style={{ 
+                  transformStyle: 'preserve-3d', 
+                  WebkitTransformStyle: 'preserve-3d',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  backgroundImage: 'linear-gradient(-90deg, transparent 0%, rgba(0,0,0,0.2) 100%)' 
+                }}
               >
-                {/* Door Panels */}
                 <div className="absolute inset-4 border border-[#C96A42]/20 rounded-sm pointer-events-none" />
               </motion.div>
             </div>

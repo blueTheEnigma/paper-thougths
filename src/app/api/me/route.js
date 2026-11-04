@@ -68,6 +68,11 @@ export async function GET() {
     if (dbUser) {
       profile.id = dbUser.id;
       profile.fullName = dbUser.full_name;
+      profile.alias = dbUser.alias || null;
+      profile.birthday = dbUser.birthday ? new Date(dbUser.birthday).toISOString().split('T')[0] : null;
+      profile.whatsapp = dbUser.whatsapp || null;
+      profile.instagram = dbUser.instagram || null;
+      profile.preferredGenres = dbUser.preferred_genres || [];
       profile.spendableLeaves = parseInt(dbUser.spendable_leaves || 0);
       profile.lifetimeLeaves = parseInt(dbUser.lifetime_leaves || 0);
       profile.lkid = dbUser.lk_id || profile.lkid || 'Guest';

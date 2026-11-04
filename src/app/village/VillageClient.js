@@ -203,7 +203,7 @@ function EntrancePortal({ onEnter, userName, isSignedIn, redirectUrl }) {
               {/* Primary CTA */}
               {!isSignedIn ? (
                 <Link
-                  href="/join"
+                  href="/sign-up?callbackUrl=/village"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-sans font-bold uppercase tracking-widest text-xs sm:text-sm cursor-pointer transition-all px-10 py-4 rounded-2xl"
                   style={{
                     background: 'linear-gradient(135deg, #5C1A2E 0%, #7A2040 100%)',

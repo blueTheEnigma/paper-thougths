@@ -18,6 +18,11 @@ const nextConfig = {
         destination: '/village/:path*',
         permanent: true,
       },
+      {
+        source: '/join',
+        destination: '/sign-up',
+        permanent: true,
+      },
     ];
   },
   turbopack: {

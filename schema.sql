@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS users (
     clerk_id VARCHAR(100) UNIQUE,              -- Nullable so users can register before sign-in
     email VARCHAR(255) UNIQUE NOT NULL,
     full_name VARCHAR(255),
+    alias VARCHAR(100) UNIQUE,                 -- Public @moniker across salons, reviews, and debates
+    password_hash VARCHAR(255),                -- bcrypt hash for credentials authentication
     instagram VARCHAR(100) UNIQUE,
     whatsapp VARCHAR(50),
     lk_id VARCHAR(50) UNIQUE,

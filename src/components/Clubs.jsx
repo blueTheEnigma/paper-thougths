@@ -154,7 +154,7 @@ export default function Clubs() {
                         </div>
                       ) : (
                         <p className="text-xs text-ink/40 leading-relaxed">
-                          Status: Unknown. <a href="/join" className="text-burgundy font-bold underline">Secure an LK-ID</a> to proceed.
+                          Status: Unknown. <a href="/sign-up?callbackUrl=/dashboard" className="text-burgundy font-bold underline">Secure an LK-ID</a> to proceed.
                         </p>
                       )}
                     </div>
