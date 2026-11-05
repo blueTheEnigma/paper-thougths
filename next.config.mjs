@@ -23,6 +23,11 @@ const nextConfig = {
         destination: '/sign-up',
         permanent: true,
       },
+      {
+        source: '/clubs',
+        destination: '/events',
+        permanent: true,
+      },
     ];
   },
   turbopack: {

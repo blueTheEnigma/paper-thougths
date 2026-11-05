@@ -292,7 +292,6 @@ function auditModalPortals() {
   const componentFiles = [
     'src/components/common/LiteraryReaderModal.jsx',
     'src/components/archetypes/ArchetypeCardModal.jsx',
-    'src/components/quotes/QuoteStudioModal.jsx',
     'src/app/convince-me/ConvinceMeClient.jsx',
     'src/app/village/gallery/GalleryClient.jsx'
   ];
