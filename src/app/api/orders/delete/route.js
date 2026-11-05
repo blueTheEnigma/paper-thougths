@@ -1,28 +1,30 @@
 import { NextResponse } from 'next/server';
+import { Database } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   try {
-    const gasUrl = process.env.GAS_WEBAPP_URL;
-    if (!gasUrl) {
-      return NextResponse.json({ success: false, error: 'Server configuration error' }, { status: 500 });
+    const body = await req.json().catch(() => ({}));
+    const { orderId } = body;
+
+    if (!orderId) {
+      return NextResponse.json({ success: false, error: 'Order ID is required' }, { status: 400 });
     }
 
-    const data = await req.json();
-    
-    const payload = {
-      action: 'deleteOrder',
-      orderId: data.orderId
-    };
+    const deleted = await Database.queryOne(`
+      DELETE FROM orders 
+      WHERE order_id = $1 OR id::text = $1
+      RETURNING id, order_id
+    `, [String(orderId)]);
 
-    const response = await fetch(gasUrl, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' },
-    });
+    if (!deleted) {
+      return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
+    }
 
-    const result = await response.json();
-    return NextResponse.json(result);
+    return NextResponse.json({ success: true, message: 'Order removed from Archive Ledger.' });
   } catch (error) {
+    console.error('Failed to delete order in PostgreSQL:', error);
     return NextResponse.json({ success: false, error: error.message || 'Failed to delete order' }, { status: 500 });
   }
 }

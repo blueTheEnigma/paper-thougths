@@ -22,26 +22,6 @@ export default function Events({ initialEvents = [] }) {
       const data = await res.json();
       if (data.success && data.gatherings) {
         setGatherings(data.gatherings);
-      } else {
-        // Fallback to legacy events if gatherings empty
-        const legacyRes = await fetch('/api/events');
-        const legacyData = await legacyRes.json();
-        if (legacyData.success && legacyData.events) {
-          setGatherings(legacyData.events.map((e, idx) => ({
-            id: idx + 1,
-            title: e.name,
-            gatheringType: e.type || 'townhall',
-            eventDate: e.date,
-            startTime: e.time,
-            venueName: e.location,
-            description: e.description,
-            meetUrl: e.rsvpLink,
-            coverUrl: idx % 2 === 0 ? '/images/gatherings/townhall.jpg' : '/images/gatherings/book_banter.jpg',
-            status: 'published',
-            rsvpCount: 0,
-            hasRsvped: false
-          })));
-        }
       }
     } catch (err) {
       console.error("Failed to fetch gatherings:", err);

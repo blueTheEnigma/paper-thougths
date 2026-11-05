@@ -1,28 +1,31 @@
 import { NextResponse } from 'next/server';
+import { Database } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   try {
-    const gasUrl = process.env.GAS_WEBAPP_URL;
-    if (!gasUrl) {
-      return NextResponse.json({ success: false, error: 'Server configuration error' }, { status: 500 });
+    const body = await req.json().catch(() => ({}));
+    const { orderId } = body;
+
+    if (!orderId) {
+      return NextResponse.json({ success: false, error: 'Order ID is required' }, { status: 400 });
     }
 
-    const data = await req.json();
-    
-    const payload = {
-      action: 'finalizeOrder',
-      orderId: data.orderId
-    };
+    const updated = await Database.queryOne(`
+      UPDATE orders 
+      SET status = 'Paid' 
+      WHERE order_id = $1 OR id::text = $1
+      RETURNING *
+    `, [String(orderId)]);
 
-    const response = await fetch(gasUrl, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' },
-    });
+    if (!updated) {
+      return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
+    }
 
-    const result = await response.json();
-    return NextResponse.json(result);
+    return NextResponse.json({ success: true, message: 'Order marked as Paid successfully.' });
   } catch (error) {
+    console.error('Failed to finalize order in PostgreSQL:', error);
     return NextResponse.json({ success: false, error: error.message || 'Failed to finalize order' }, { status: 500 });
   }
 }

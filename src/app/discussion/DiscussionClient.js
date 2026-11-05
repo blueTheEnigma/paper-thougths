@@ -12,16 +12,8 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
-  // Fallback for unified BOTM book if DB is empty
-  const fallbackBook = {
-    id: 17,
-    title: 'Red Rising',
-    author: 'Pierce Brown',
-    imageUrl: '/images/red_rising.jpg',
-    teaser: `“I would have lived in peace, but my enemies brought me war.”\n\nDarrow is a Red, a member of the lowest caste in the color-coded society of the future. Like his fellow Reds, he works all day beneath the surface of Mars, believing that his labor will one day make the planet livable for future generations.\n\nYet he spends his life willingly, knowing that his sacrifice will buy a better world for his children. But Darrow has been betrayed. Soon he discovers that humanity reached the surface generations ago—where vast cities and sprawling parks flourish under the rule of the decadent Gold caste.\n\nFueled by grief and a burning desire for justice, Darrow sacrifices everything to infiltrate the legendary Institute, a brutal proving ground where the dominant caste’s best and brightest vie for power. He will be forced to compete for his life and the very future of civilization among the best of his enemies… and he will stop at nothing to bring down his oppressors from within.`
-  };
-
-  const activeBook = propActiveBook || generalBotm || fallbackBook;
+  // Resolve active Book of the Month directly from PostgreSQL
+  const activeBook = propActiveBook || generalBotm || null;
 
   // Review states
   const [reviews, setReviews] = useState([]);
@@ -366,7 +358,7 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
                   </span>
                   <h2 className="text-2xl sm:text-3xl font-display font-bold text-ink leading-tight">{activeBook.title}</h2>
                   <p className="text-xs sm:text-sm text-burgundy font-sans italic">— by {activeBook.author}</p>
-                  <p className="text-[10px] text-ink/50 font-mono tracking-wide">Red Rising Saga • Book 1</p>
+                  
                 </div>
               </div>
 
@@ -405,7 +397,13 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
 
             {/* Submission form Card */}
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-sage/20 shadow-sm space-y-4">
-              {!profile ? (
+              {!activeBook ? (
+                <div className="bg-cream/40 p-6 rounded-2xl text-center border border-sage/15 space-y-2">
+                  <p className="text-xs sm:text-sm text-ink/70 font-serif">
+                    Review submission is paused until the next collective Book of the Month is crowned.
+                  </p>
+                </div>
+              ) : !profile ? (
                 <div className="bg-cream/40 p-6 rounded-2xl text-center border border-sage/15 space-y-3">
                   <p className="text-xs sm:text-sm text-ink/70 font-serif">
                     You must be signed in to submit a Book of the Month review and earn rewards.

@@ -69,11 +69,24 @@ export default function PodcastsGrid() {
     }
   };
 
-  const handleFormSubmit = async (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate lightweight async dispatch
-    await new Promise(res => setTimeout(res, 900));
+    
+    // Dispatch pitch directly to show host and editorial desk
+    const subject = encodeURIComponent(`[Spoken Lore Pitch] ${formData.podcastName} by ${formData.creatorName}`);
+    const body = encodeURIComponent(
+      `Creator Name: ${formData.creatorName}\n` +
+      `Contact Email: ${formData.email}\n` +
+      `Podcast / Show Title: ${formData.podcastName}\n` +
+      `Spotify Link: ${formData.spotifyLink}\n\n` +
+      `Synopsis & Literary Theme:\n${formData.synopsis}\n`
+    );
+
+    if (typeof window !== 'undefined') {
+      window.location.href = `mailto:ajomdebbie@gmail.com?cc=paperthoughts01@gmail.com&subject=${subject}&body=${body}`;
+    }
+
     setIsSubmitting(false);
     setSubmissionSuccess(true);
   };

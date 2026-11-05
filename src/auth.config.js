@@ -22,7 +22,6 @@ export default {
                                   !nextUrl.pathname.startsWith('/api/orders/payment-verify') &&
                                   !nextUrl.pathname.startsWith('/api/newsletter/subscribe') &&
                                   !nextUrl.pathname.startsWith('/api/crossing') &&
-                                  !nextUrl.pathname.startsWith('/api/events') &&
                                   !nextUrl.pathname.startsWith('/api/lookup') &&
                                   !nextUrl.pathname.startsWith('/api/anthology') &&
                                   !nextUrl.pathname.startsWith('/api/submissions/gallery') &&

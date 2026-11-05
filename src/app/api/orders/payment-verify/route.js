@@ -88,53 +88,9 @@ export async function POST(req) {
     }
 
     const netAmount = finalTotal - transactionFees;
-
-    const gasUrl = process.env.GAS_WEBAPP_URL;
-    if (!gasUrl) {
-      return NextResponse.json({ success: false, error: 'Google Sheets configuration missing.' }, { status: 500 });
-    }
-
     const salesRep = isLeafOnly ? 'Leaves' : (leaves > 0 ? 'Paystack + Leaves' : 'Paystack');
+    const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
 
-    // 3. Log the order to Google Sheets (createOrder)
-    let orderId = 'ORD-' + Math.floor(Math.random() * 1000000);
-    try {
-      const createRes = await fetch(gasUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'createOrder',
-          lkid: lkid || 'Guest',
-          name: name || 'Guest Reader',
-          items: items.map(i => ({ title: i.title, price: i.price })),
-          subtotal,
-          discount: parseFloat(discount || 0) + (leaves * 10), // Total discount includes applied leaves value
-          total: finalTotal,
-          salesRep
-        })
-      });
-      const createData = await createRes.json();
-      if (createData.success && createData.orderId) {
-        orderId = createData.orderId;
-      }
-    } catch (e) {
-      console.error('Failed to log order to Google Sheets:', e);
-    }
- 
-    // 4. Finalize the order to 'Paid' in Google Sheets (marks books Sold Out in sheet)
-    try {
-      await fetch(gasUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'finalizeOrder',
-          orderId
-        })
-      });
-    } catch (e) {
-      console.error('Failed to finalize order in Google Sheets:', e);
-    }
- 
     // 5. Write the order and update leaves in local PostgreSQL database (transaction)
     const itemsText = items.map(i => i.title).join(', ');
     try {
