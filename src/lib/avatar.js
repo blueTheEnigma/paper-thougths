@@ -1,4 +1,4 @@
-export const PANGUIN_STAGES = [
+const PANGUIN_STAGES = [
   {
     name: "Seedling",
     minLeaves: 0,
@@ -82,8 +82,4 @@ export function getAvatarStage(lifetimeLeaves) {
     description: PANGUIN_STAGES[0].description,
     stageIndex: 0
   };
-}
-
-export function getAvatarImagePath(lifetimeLeaves) {
-  return getAvatarStage(lifetimeLeaves).image;
 }

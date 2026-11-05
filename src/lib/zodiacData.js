@@ -106,7 +106,7 @@ export const SIGNS = {
   }
 };
 
-export const MATRIX = {
+const MATRIX = {
   Element: {
     Imagination: { Titan: 1, Haven: 0, Matrix: 0, Oracle: 2, Scribe: 3, Votive: 2, Sage: 1 },
     Knowledge:   { Titan: 0, Haven: 0, Matrix: 3, Oracle: 1, Scribe: 1, Votive: 0, Sage: 2 },

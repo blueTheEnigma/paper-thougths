@@ -1,16 +1,5 @@
 import { Database } from './db';
-import { isCrewMember } from './permissions';
-import { redirect } from 'next/navigation';
 import { sendEmail } from './email';
-
-export const DEPARTMENTS = [
-  { name: 'Marketing', color: '#F59E0B', icon: 'megaphone' },
-  { name: 'Design', color: '#8B5CF6', icon: 'palette' },
-  { name: 'Content & Editorial', color: '#3B82F6', icon: 'pen-tool' },
-  { name: 'Events & Community', color: '#10B981', icon: 'calendar-heart' },
-  { name: 'Bookstore & Sales', color: '#EF4444', icon: 'shopping-bag' },
-  { name: 'Operations', color: '#6B7280', icon: 'settings' }
-];
 
 function resolveUserIdFilter(identifier) {
   const parsed = parseInt(identifier, 10);
@@ -81,14 +70,6 @@ export async function getCrewMember(userIdentifier) {
     console.error("Error in getCrewMember:", error);
     return null;
   }
-}
-
-export async function requireCrewAccess(userIdentifier) {
-  const isMember = await isCrewMember(userIdentifier);
-  if (!isMember) {
-    redirect('/dashboard');
-  }
-  return isMember;
 }
 
 export async function logActivity(actorId, action, entityType, entityId, metadata = {}) {

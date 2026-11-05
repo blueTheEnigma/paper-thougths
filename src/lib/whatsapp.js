@@ -7,7 +7,7 @@
  * "09012345678" -> "2349012345678"
  * "+2348031234567" -> "2348031234567"
  */
-export function formatNigerianPhone(phone) {
+function formatNigerianPhone(phone) {
   if (!phone) return null;
   const digitsOnly = phone.toString().replace(/\D/g, '');
   if (!digitsOnly) return null;
