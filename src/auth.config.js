@@ -20,7 +20,6 @@ export default {
                                   !nextUrl.pathname.startsWith('/api/auth') && 
                                   !nextUrl.pathname.startsWith('/api/cron') &&
                                   !nextUrl.pathname.startsWith('/api/orders/payment-verify') &&
-                                  !nextUrl.pathname.startsWith('/api/register') &&
                                   !nextUrl.pathname.startsWith('/api/newsletter/subscribe') &&
                                   !nextUrl.pathname.startsWith('/api/crossing') &&
                                   !nextUrl.pathname.startsWith('/api/events') &&

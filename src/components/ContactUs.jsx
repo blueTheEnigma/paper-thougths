@@ -1,7 +1,6 @@
 "use client";
-import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Mail, Send, Loader2, CheckCircle2, BookOpen, Sparkles } from 'lucide-react';
+import { Mail, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import Logo from './Logo';
 import { FaInstagram, FaWhatsapp, FaXTwitter, FaTiktok, FaYoutube, FaLinkedin, FaDiscord } from "react-icons/fa6";
@@ -10,52 +9,6 @@ import { CROSSING_CONFIG } from '@/lib/crossingConfig';
 
 export default function ContactUs() {
   const { isSignedIn, isLoaded } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState("");
-  const [referredBy, setReferredBy] = useState("");
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const ref = params.get('ref');
-      if (ref) setReferredBy(ref);
-    }
-  }, []);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError("");
-
-    const formData = new FormData(e.target);
-    const data = {
-      name: formData.get('name'),
-      email: formData.get('email'),
-      chapter: formData.get('chapter'),
-      last_book: formData.get('last_book'),
-      referredBy: referredBy,
-    };
-
-    try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        setIsSuccess(true);
-      } else {
-        setError(result.error || "Submission failed. Please try again.");
-      }
-    } catch (err) {
-      setError("Connection error. Please try again later.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <section id="contact" className="py-24 px-6 bg-cream border-t border-sage/20">
