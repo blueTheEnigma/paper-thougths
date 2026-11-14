@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -16,43 +16,6 @@ export default function AnthologyClient() {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [activeCategory, setActiveCategory] = useState('story'); // 'story' | 'poem'
   const [readingPiece, setReadingPiece] = useState(null);
-  const [activeCardIndex, setActiveCardIndex] = useState(0);
-
-  const carouselRef = useRef(null);
-  const cardRefs = useRef([]);
-
-  const scrollToCard = (index) => {
-    setActiveCardIndex(index);
-    if (cardRefs.current[index]) {
-      cardRefs.current[index].scrollIntoView({
-        behavior: 'smooth',
-        inline: 'center',
-        block: 'nearest'
-      });
-    }
-  };
-
-  const handleCarouselScroll = () => {
-    if (!carouselRef.current) return;
-    const scrollLeft = carouselRef.current.scrollLeft;
-    const cardWidth = carouselRef.current.offsetWidth * 0.85;
-    if (cardWidth > 0) {
-      const newIndex = Math.min(
-        currentWorks.length - 1,
-        Math.max(0, Math.round(scrollLeft / cardWidth))
-      );
-      if (newIndex !== activeCardIndex) {
-        setActiveCardIndex(newIndex);
-      }
-    }
-  };
-
-  useEffect(() => {
-    setActiveCardIndex(0);
-    if (carouselRef.current) {
-      carouselRef.current.scrollLeft = 0;
-    }
-  }, [activeCategory]);
 
   const fetchAnthology = async (month = null) => {
     setLoading(true);
@@ -226,84 +189,33 @@ export default function AnthologyClient() {
           </div>
         )}
 
-        {/* Mobile Horizontal Rank Switcher Tabs */}
+        {/* Works Grid: 3D Laureate Card + Literary Showcase */}
         {!loading && currentWorks.length > 0 && (
-          <div className="flex md:hidden items-center justify-center gap-2 pb-1">
-            {currentWorks.map((work, idx) => (
-              <button
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+            {currentWorks.map((work) => (
+              <motion.div
                 key={work.id}
-                onClick={() => scrollToCard(idx)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
-                  activeCardIndex === idx
-                    ? 'bg-[#20070e] text-[#F2A98A] shadow-md border border-[#c96a42]/40 scale-105'
-                    : 'bg-white/80 text-[#20070e]/60 border border-[#20070e]/10'
-                }`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col space-y-4"
               >
-                <span>{work.rank === 1 ? '👑 1st' : work.rank === 2 ? '🥈 2nd' : '🥉 3rd'}</span>
-                <span className="text-[10px] opacity-75">{work.category === 'poem' ? 'Poem' : 'Prose'}</span>
-              </button>
+                {/* 3D Laureate Flip Card */}
+                <ShareableLaureateCard
+                  category={work.category}
+                  rank={work.rank}
+                  title={work.title}
+                  authorName={work.penName || work.authorName}
+                  authorArchetype={work.authorArchetype}
+                  chapterName={work.chapterName}
+                  monthYear={issue?.monthYear}
+                  editorCitation={work.editorCitation}
+                  averageRating={work.averageRating}
+                  ratingsCount={work.ratingsCount}
+                  isEditor={false}
+                  onReadPiece={() => setReadingPiece(work)}
+                />
+              </motion.div>
             ))}
-          </div>
-        )}
-
-        {/* Works Showcase: Horizontal on Mobile, 3-Column on Desktop */}
-        {!loading && currentWorks.length > 0 && (
-          <div className="space-y-3">
-            <div 
-              ref={carouselRef}
-              onScroll={handleCarouselScroll}
-              className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-4 pt-1 px-4 -mx-4 md:px-0 md:mx-0 items-start"
-            >
-              {currentWorks.map((work, idx) => (
-                <motion.div
-                  key={work.id}
-                  ref={(el) => { cardRefs.current[idx] = el; }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="w-[85vw] max-w-[340px] shrink-0 snap-center md:w-auto md:max-w-none md:shrink flex flex-col space-y-4"
-                >
-                  {/* 3D Laureate Flip Card */}
-                  <ShareableLaureateCard
-                    category={work.category}
-                    rank={work.rank}
-                    title={work.title}
-                    authorName={work.penName || work.authorName}
-                    authorArchetype={work.authorArchetype}
-                    chapterName={work.chapterName}
-                    monthYear={issue?.monthYear}
-                    editorCitation={work.editorCitation}
-                    averageRating={work.averageRating}
-                    ratingsCount={work.ratingsCount}
-                    isEditor={false}
-                    onReadPiece={() => setReadingPiece(work)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Mobile Pagination Dot Indicators & Swipe Cue */}
-            <div className="flex md:hidden items-center justify-between px-2 pt-1 text-[11px] font-mono text-[#20070e]/50">
-              <span className="flex items-center gap-1 font-sans">
-                ← Swipe laureates →
-              </span>
-              <div className="flex items-center gap-1.5">
-                {currentWorks.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => scrollToCard(idx)}
-                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                      activeCardIndex === idx 
-                        ? 'bg-[#c96a42] w-5' 
-                        : 'bg-[#20070e]/20 w-1.5'
-                    }`}
-                    aria-label={`Go to laureate ${idx + 1}`}
-                  />
-                ))}
-              </div>
-              <span className="font-bold text-[#c96a42]">
-                {activeCardIndex + 1} / {currentWorks.length}
-              </span>
-            </div>
           </div>
         )}
 

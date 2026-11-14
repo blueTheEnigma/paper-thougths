@@ -1876,9 +1876,9 @@ export default function DashboardClient({
                     
 
                     {/* User Stats Grid (Membership, Milestone Tokens, Spendable Leaves, Streak if active) */}
-                    <div className={`flex sm:grid sm:grid-cols-2 ${profile.streak > 0 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4 sm:gap-6 overflow-x-auto sm:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-2 -mx-4 px-4 sm:mx-0 sm:px-0`}>
+                    <div className={`grid grid-cols-1 sm:grid-cols-2 ${profile.streak > 0 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4 sm:gap-6`}>
                       {/* Membership Status Card */}
-                      <div className="w-[84vw] max-w-[340px] shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink parchment-card p-5 sm:p-8 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+                      <div className="parchment-card p-5 sm:p-8 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
                         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                           <Award size={120} />
                         </div>
@@ -1918,7 +1918,7 @@ export default function DashboardClient({
                       </div>
 
                       {/* Milestone Tokens Circle Progress Card */}
-                      <div className="w-[84vw] max-w-[340px] shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink parchment-card p-5 sm:p-8 flex items-center justify-between relative group min-h-[220px]">
+                      <div className="parchment-card p-5 sm:p-8 flex items-center justify-between relative group min-h-[220px]">
                         <div className="space-y-3">
                           <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Milestone Tokens</span>
                           <div className="flex items-baseline gap-1.5">
@@ -1958,7 +1958,7 @@ export default function DashboardClient({
                       </div>
 
                       {/* Spendable Leaves Card */}
-                      <div className="w-[84vw] max-w-[340px] shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink parchment-card p-5 sm:p-8 relative overflow-hidden flex flex-col justify-between group min-h-[220px]">
+                      <div className="parchment-card p-5 sm:p-8 relative overflow-hidden flex flex-col justify-between group min-h-[220px]">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform pointer-events-none">
                           <Coins size={60} className="text-burgundy" />
                         </div>
@@ -1998,7 +1998,7 @@ export default function DashboardClient({
 
                       {/* Streak Card */}
                       {profile.streak > 0 && (
-                        <div className="w-[84vw] max-w-[340px] shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink parchment-card p-5 sm:p-8 flex flex-col justify-between min-h-[220px] relative overflow-hidden group">
+                        <div className="parchment-card p-5 sm:p-8 flex flex-col justify-between min-h-[220px] relative overflow-hidden group">
                           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform pointer-events-none">
                             <Flame size={80} className="text-burgundy" />
                           </div>
@@ -2022,38 +2022,38 @@ export default function DashboardClient({
                     </div>
 
                     {/* Progress Trackers */}
-                    <div className="grid grid-cols-2 gap-3 sm:gap-6">
-                      <div className="parchment-card p-4 sm:p-8">
-                        <div className="flex justify-between items-start mb-4 sm:mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="parchment-card p-5 sm:p-8">
+                        <div className="flex justify-between items-start mb-6">
                           <div>
-                            <h3 className="font-bold text-ink flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm"><Ticket size={16} className="text-sage flex-shrink-0"/> Event Points</h3>
-                            <p className="text-[8px] sm:text-[9px] text-ink/50 mt-1 uppercase tracking-wider font-bold">Physical: 2 • Virtual: 1</p>
+                            <h3 className="font-bold text-ink flex items-center gap-2 text-sm"><Ticket size={16} className="text-sage"/> Event Points</h3>
+                            <p className="text-[9px] text-ink/50 mt-1 uppercase tracking-wider font-bold">Physical: 2 • Virtual: 1</p>
                           </div>
-                          <span className="font-display font-extrabold text-2xl sm:text-3xl text-burgundy font-serif">{profile.events}</span>
+                          <span className="font-display font-extrabold text-3xl text-burgundy font-serif">{profile.events}</span>
                         </div>
                         
-                        <div className="w-full bg-sage/10 rounded-full h-2 mb-2 sm:mb-3 overflow-hidden border border-sage/5">
+                        <div className="w-full bg-sage/10 rounded-full h-2 mb-3 overflow-hidden border border-sage/5">
                           <div className="bg-sage h-2 rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${eventsProgress}%` }}></div>
                         </div>
-                        <div className="flex justify-between items-center text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40">
+                        <div className="flex justify-between items-center text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40">
                           <span>{eventsProgress.toFixed(0)}% Complete</span>
                           <span>{profile.events}/{eventsNeeded}</span>
                         </div>
                       </div>
 
-                      <div className="parchment-card p-4 sm:p-8">
-                        <div className="flex justify-between items-start mb-4 sm:mb-6">
+                      <div className="parchment-card p-5 sm:p-8">
+                        <div className="flex justify-between items-start mb-6">
                           <div>
-                            <h3 className="font-bold text-ink flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm"><Users size={16} className="text-accent flex-shrink-0"/> Referrals</h3>
-                            <p className="text-[8px] sm:text-[9px] text-ink/50 mt-1 uppercase tracking-wider font-bold">Invite collective</p>
+                            <h3 className="font-bold text-ink flex items-center gap-2 text-sm"><Users size={16} className="text-accent"/> Referrals</h3>
+                            <p className="text-[9px] text-ink/50 mt-1 uppercase tracking-wider font-bold">Invite the collective</p>
                           </div>
-                          <span className="font-display font-extrabold text-2xl sm:text-3xl text-burgundy font-serif">{profile.referrals}</span>
+                          <span className="font-display font-extrabold text-3xl text-burgundy font-serif">{profile.referrals}</span>
                         </div>
                         
-                        <div className="w-full bg-primary/10 rounded-full h-2 mb-2 sm:mb-3 overflow-hidden border border-primary/5">
+                        <div className="w-full bg-primary/10 rounded-full h-2 mb-3 overflow-hidden border border-primary/5">
                           <div className="bg-accent h-2 rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${referralsProgress}%` }}></div>
                         </div>
-                        <div className="flex justify-between items-center text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40">
+                        <div className="flex justify-between items-center text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40">
                           <span>{referralsProgress.toFixed(0)}% Complete</span>
                           <span>{profile.referrals}/{referralsNeeded}</span>
                         </div>
@@ -2095,11 +2095,11 @@ export default function DashboardClient({
                           </Link>
                         </div>
                       ) : (
-                        <div className="flex sm:grid sm:grid-cols-2 gap-3 sm:gap-4 overflow-x-auto sm:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-2 -mx-2 px-2 sm:mx-0 sm:px-0">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           {tbrList.map((item) => (
                             <div 
                               key={item.pledgeId}
-                              className="w-[78vw] max-w-[300px] shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink bg-white border border-sage/15 p-3.5 sm:p-4 rounded-2xl shadow-sm space-y-2.5 flex flex-col justify-between"
+                              className="bg-white border border-sage/15 p-3.5 sm:p-4 rounded-2xl shadow-sm space-y-2.5 flex flex-col justify-between"
                             >
                               <div className="space-y-1">
                                 <div className="flex justify-between items-start gap-1">
@@ -2827,7 +2827,7 @@ export default function DashboardClient({
                 </div>
 
                 {librarySubmissions && librarySubmissions.length > 0 ? (
-                  <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {librarySubmissions.map((sub) => {
                       let statusText = "Draft";
                       let statusClass = "bg-ink/5 text-ink/60 border border-ink/10";
@@ -2843,7 +2843,7 @@ export default function DashboardClient({
                       }
 
                       return (
-                        <div key={sub.id} className="w-[84vw] max-w-[340px] shrink-0 snap-center md:w-auto md:max-w-none md:shrink bg-white border border-sage/15 p-5 sm:p-6 rounded-[28px] shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div key={sub.id} className="bg-white border border-sage/15 p-5 sm:p-6 rounded-[28px] shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow relative overflow-hidden">
                           <div className="space-y-3">
                             <div className="flex justify-between items-center gap-2">
                               <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${statusClass}`}>

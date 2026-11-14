@@ -105,7 +105,6 @@ export default function WriteClient({ weeklyPrompt, weeklyPromptId, storyPrompt,
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isPendingSync, setIsPendingSync] = useState(false);
   const [showOfflineBadge, setShowOfflineBadge] = useState(false);
-  const [mobileTab, setMobileTab] = useState('editor'); // 'editor' | 'details'
 
   const saveTimeoutRef = useRef(null);
 
@@ -372,39 +371,11 @@ export default function WriteClient({ weeklyPrompt, weeklyPromptId, storyPrompt,
           </div>
         )}
 
-        {/* Mobile View Switcher (Editor vs Prompt & Details) */}
-        <div className="lg:hidden flex items-center bg-white/80 p-1 rounded-2xl border border-sage/20 shadow-xs mb-4">
-          <button
-            type="button"
-            onClick={() => setMobileTab('editor')}
-            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-sans font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-              mobileTab === 'editor'
-                ? 'bg-burgundy text-cream shadow-sm'
-                : 'text-ink/60 hover:text-ink'
-            }`}
-          >
-            <Feather size={13} />
-            <span>Manuscript Editor</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileTab('details')}
-            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-sans font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-              mobileTab === 'details'
-                ? 'bg-burgundy text-cream shadow-sm'
-                : 'text-ink/60 hover:text-ink'
-            }`}
-          >
-            <BookOpen size={13} />
-            <span>Prompt &amp; Details</span>
-          </button>
-        </div>
-
         {/* Master Editor Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* LEFT COLUMN: Prompt & Story Details */}
-          <div className={`lg:col-span-1 space-y-6 ${mobileTab === 'details' ? 'block' : 'hidden lg:block'}`}>
+          <div className="lg:col-span-1 space-y-6">
             
             {/* Weekly Prompt Card */}
             <div className="bg-white p-6 rounded-[32px] border border-sage/20 shadow-md relative overflow-hidden">
@@ -510,7 +481,7 @@ export default function WriteClient({ weeklyPrompt, weeklyPromptId, storyPrompt,
           </div>
 
           {/* RIGHT COLUMN: Manuscript Editor */}
-          <div className={`lg:col-span-2 space-y-4 ${mobileTab === 'editor' ? 'block' : 'hidden lg:block'}`}>
+          <div className="lg:col-span-2 space-y-4">
             
             {/* Editor Body Box */}
             <div className="bg-[#FAF7F0] border-2 border-[#EADFC9] rounded-[36px] shadow-2xl p-6 sm:p-8 relative min-h-[500px] flex flex-col justify-between">

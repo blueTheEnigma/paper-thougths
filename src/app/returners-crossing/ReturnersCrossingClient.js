@@ -243,14 +243,14 @@ export default function ReturnersCrossingClient({ initialProgress, userName = 'C
         </div>
 
         {/* The 3 Gates Cards */}
-        <div className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-4 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
           {/* GATE 1: The Scribe's Penance */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className={`w-[85vw] max-w-[340px] shrink-0 snap-center md:w-auto md:max-w-none md:shrink p-6 rounded-[28px] border flex flex-col justify-between transition-all ${
+            className={`p-6 rounded-[28px] border flex flex-col justify-between transition-all ${
               progress?.gate1?.passed
                 ? 'bg-[#1b0610]/90 border-green-500/40 shadow-green-950/20 shadow-lg'
                 : 'bg-[#16040a]/90 border-[#c96a42]/30 shadow-xl'
@@ -314,7 +314,7 @@ export default function ReturnersCrossingClient({ initialProgress, userName = 'C
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className={`w-[85vw] max-w-[340px] shrink-0 snap-center md:w-auto md:max-w-none md:shrink p-6 rounded-[28px] border flex flex-col justify-between transition-all ${
+            className={`p-6 rounded-[28px] border flex flex-col justify-between transition-all ${
               progress?.gate2?.passed
                 ? 'bg-[#1b0610]/90 border-green-500/40 shadow-green-950/20 shadow-lg'
                 : 'bg-[#16040a]/90 border-[#c96a42]/30 shadow-xl'
@@ -398,7 +398,7 @@ export default function ReturnersCrossingClient({ initialProgress, userName = 'C
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className={`w-[85vw] max-w-[340px] shrink-0 snap-center md:w-auto md:max-w-none md:shrink p-6 rounded-[28px] border flex flex-col justify-between transition-all ${
+            className={`p-6 rounded-[28px] border flex flex-col justify-between transition-all ${
               progress?.gate3?.passed
                 ? 'bg-[#1b0610]/90 border-green-500/40 shadow-green-950/20 shadow-lg'
                 : 'bg-[#16040a]/90 border-[#c96a42]/30 shadow-xl'
@@ -458,10 +458,7 @@ export default function ReturnersCrossingClient({ initialProgress, userName = 'C
 
         </div>
 
-        {/* Mobile Swipe Hint */}
-        <div className="md:hidden flex items-center justify-center gap-1.5 text-xs text-[#F2A98A]/70 font-mono tracking-wider -mt-2 mb-2">
-          <span>← Swipe gates I, II, III →</span>
-        </div>
+        {/* PETITION FORM SECTION */}
         <div id="petition-section" className="bg-[#16040a]/90 border border-[#c96a42]/30 rounded-[32px] p-6 sm:p-8 space-y-6 shadow-2xl">
           <div className="border-b border-sage/10 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>

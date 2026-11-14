@@ -21,14 +21,14 @@ export default function SoundscapesGrid() {
         </p>
       </div>
 
-      {/* 3x3 ATMOSPHERIC GRID / HORIZONTAL SNAP ON MOBILE */}
-      <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-4 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
+      {/* 3x3 ATMOSPHERIC GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {SOUNDSCAPES.map((soundscape) => {
           return (
             <div
               key={soundscape.id}
               id={soundscape.id}
-              className="w-[85vw] max-w-[340px] shrink-0 snap-center md:w-auto md:max-w-none md:shrink bg-[#120308]/90 backdrop-blur-xl rounded-3xl p-6 sm:p-7 border border-[#F2A98A]/20 hover:border-[#F2A98A]/50 shadow-2xl space-y-6 flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden"
+              className="bg-[#120308]/90 backdrop-blur-xl rounded-3xl p-7 border border-[#F2A98A]/20 hover:border-[#F2A98A]/50 shadow-2xl space-y-6 flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden"
             >
               {/* Subtle card glow on hover */}
               <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#c96a42]/10 rounded-full blur-2xl group-hover:bg-[#c96a42]/20 transition-all pointer-events-none" />
@@ -66,11 +66,6 @@ export default function SoundscapesGrid() {
             </div>
           );
         })}
-      </div>
-
-      {/* Mobile Swipe Hint */}
-      <div className="md:hidden flex items-center justify-center gap-1.5 text-xs text-[#F2A98A]/70 font-mono tracking-wider -mt-6">
-        <span>← Swipe soundscapes →</span>
       </div>
 
     </div>

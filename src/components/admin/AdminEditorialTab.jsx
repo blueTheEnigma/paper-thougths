@@ -1152,13 +1152,13 @@ export default function AdminEditorialTab({ isSuperadmin }) {
                   </button>
                 </div>
 
-                <div className={cardViewMode === 'side-by-side' ? "space-y-10 pt-2" : "flex lg:grid lg:grid-cols-3 gap-6 lg:gap-8 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-4 pt-2 -mx-4 px-4 lg:mx-0 lg:px-0"}>
+                <div className={cardViewMode === 'side-by-side' ? "space-y-10 pt-2" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-2"}>
                   {[1, 2, 3].map(rank => {
                     const data = getLaureateData('story', rank);
                     if (!data) return null;
 
                     return (
-                      <div key={`story-${rank}`} className="space-y-2 w-[85vw] max-w-[340px] shrink-0 snap-center lg:w-auto lg:max-w-none lg:shrink">
+                      <div key={`story-${rank}`} className="space-y-2">
                         <ShareableLaureateCard
                           category="Short Story"
                           rank={rank}
@@ -1207,13 +1207,13 @@ export default function AdminEditorialTab({ isSuperadmin }) {
                   </button>
                 </div>
 
-                <div className={cardViewMode === 'side-by-side' ? "space-y-10 pt-2" : "flex lg:grid lg:grid-cols-3 gap-6 lg:gap-8 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-4 pt-2 -mx-4 px-4 lg:mx-0 lg:px-0"}>
+                <div className={cardViewMode === 'side-by-side' ? "space-y-10 pt-2" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-2"}>
                   {[1, 2, 3].map(rank => {
                     const data = getLaureateData('poem', rank);
                     if (!data) return null;
 
                     return (
-                      <div key={`poem-${rank}`} className="space-y-2 w-[85vw] max-w-[340px] shrink-0 snap-center lg:w-auto lg:max-w-none lg:shrink">
+                      <div key={`poem-${rank}`} className="space-y-2">
                         <ShareableLaureateCard
                           category="Poetry"
                           rank={rank}

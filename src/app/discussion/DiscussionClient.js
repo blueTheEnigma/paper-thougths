@@ -41,7 +41,6 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
   const [hasReviewedPastBotm, setHasReviewedPastBotm] = useState(false);
   const [qualifyingBotm, setQualifyingBotm] = useState(null);
   const [botmTab, setBotmTab] = useState('ballot'); // 'ballot' | 'suggest'
-  const [mobileTab, setMobileTab] = useState('reviews'); // 'reviews' | 'book'
 
   // Comments / Replies states (nested under reviews)
   const [expandedComments, setExpandedComments] = useState({}); // reviewId -> boolean
@@ -330,40 +329,11 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
           </div>
         </div>
 
-        {/* Mobile View Switcher (Reviews Feed vs Book & Ballot) */}
-        <div className="lg:hidden flex items-center bg-white/80 p-1 rounded-2xl border border-sage/20 shadow-xs mb-2">
-          <button
-            type="button"
-            onClick={() => setMobileTab('reviews')}
-            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-sans font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-              mobileTab === 'reviews'
-                ? 'bg-[#20070e] text-[#FBF7EE] shadow-sm'
-                : 'text-ink/60 hover:text-ink'
-            }`}
-          >
-            <span>💬 Reviews &amp; Critique</span>
-            <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${mobileTab === 'reviews' ? 'bg-[#c96a42] text-white' : 'bg-black/5 text-ink/60'}`}>
-              {reviews.length}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileTab('book')}
-            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-sans font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-              mobileTab === 'book'
-                ? 'bg-[#20070e] text-[#FBF7EE] shadow-sm'
-                : 'text-ink/60 hover:text-ink'
-            }`}
-          >
-            <span>📖 Book &amp; Ballot</span>
-          </button>
-        </div>
-
         {/* Main Columns Container */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column: Book details, Bookie badge, submission form (5 columns) */}
-          <div className={`lg:col-span-5 space-y-6 ${mobileTab === 'book' ? 'block' : 'hidden lg:block'}`}>
+          <div className="lg:col-span-5 space-y-6">
             
             {/* Book Detail Card */}
             <div className="bg-[#FAF6F0] rounded-3xl p-5 sm:p-8 border border-sage/20 shadow-sm space-y-6">
@@ -617,7 +587,6 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
                       <button
                         type="button"
                         onClick={() => {
-                          setMobileTab('book');
                           window.scrollTo({ top: 350, behavior: 'smooth' });
                         }}
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#c96a42] hover:bg-[#b05832] text-cream text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm"
@@ -733,7 +702,6 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
                       <button
                         type="button"
                         onClick={() => {
-                          setMobileTab('book');
                           window.scrollTo({ top: 350, behavior: 'smooth' });
                         }}
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#c96a42] hover:bg-[#b05832] text-cream text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm"
@@ -845,7 +813,7 @@ export default function DiscussionClient({ activeBook: propActiveBook, generalBo
           </div>
 
           {/* Right Column: Reviews & Nested Comments Feed (7 columns) */}
-          <div className={`lg:col-span-7 space-y-6 ${mobileTab === 'reviews' ? 'block' : 'hidden lg:block'}`}>
+          <div className="lg:col-span-7 space-y-6">
             <h3 className="text-xl font-display font-bold text-burgundy border-b border-sage/10 pb-2">
               Reviews & Critique Feed ({reviews.length})
             </h3>

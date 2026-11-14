@@ -426,43 +426,44 @@ export default function GalleryClient({ currentUser }) {
         </div>
 
         {/* Decluttered Editorial Toolbar: Format Pills, Cycle Picker & Search */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pt-1">
-          {/* Format Selection & Month: Horizontal Scroll Row on Mobile */}
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-            <div className="flex items-center bg-white/70 p-1 rounded-xl border border-[#20070e]/10 text-xs font-bold shrink-0">
-              <button
-                onClick={() => setActiveCategory('all')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  activeCategory === 'all'
-                    ? 'bg-[#20070e] text-[#FBF7EE] shadow-xs'
-                    : 'text-[#20070e]/60 hover:text-[#20070e]'
-                }`}
-              >
-                All Works ({submissions.length})
-              </button>
-              <button
-                onClick={() => setActiveCategory('stories')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  activeCategory === 'stories'
-                    ? 'bg-[#20070e] text-[#FBF7EE] shadow-xs'
-                    : 'text-[#20070e]/60 hover:text-[#20070e]'
-                }`}
-              >
-                Stories ({storiesCount})
-              </button>
-              <button
-                onClick={() => setActiveCategory('poetry')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  activeCategory === 'poetry'
-                    ? 'bg-[#20070e] text-[#FBF7EE] shadow-xs'
-                    : 'text-[#20070e]/60 hover:text-[#20070e]'
-                }`}
-              >
-                Poetry ({poetryCount})
-              </button>
-            </div>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+          {/* Format Selection: All / Stories / Poetry */}
+          <div className="flex items-center bg-white/70 p-1 rounded-xl border border-[#20070e]/10 text-xs font-bold">
+            <button
+              onClick={() => setActiveCategory('all')}
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                activeCategory === 'all'
+                  ? 'bg-[#20070e] text-[#FBF7EE] shadow-xs'
+                  : 'text-[#20070e]/60 hover:text-[#20070e]'
+              }`}
+            >
+              All Works ({submissions.length})
+            </button>
+            <button
+              onClick={() => setActiveCategory('stories')}
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                activeCategory === 'stories'
+                  ? 'bg-[#20070e] text-[#FBF7EE] shadow-xs'
+                  : 'text-[#20070e]/60 hover:text-[#20070e]'
+              }`}
+            >
+              Stories ({storiesCount})
+            </button>
+            <button
+              onClick={() => setActiveCategory('poetry')}
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                activeCategory === 'poetry'
+                  ? 'bg-[#20070e] text-[#FBF7EE] shadow-xs'
+                  : 'text-[#20070e]/60 hover:text-[#20070e]'
+              }`}
+            >
+              Poetry ({poetryCount})
+            </button>
+          </div>
 
-            <div className="flex items-center gap-1.5 bg-white border border-[#20070e]/10 rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#20070e] shadow-2xs shrink-0">
+          {/* Cycle Archive Selector & Search Bar */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-white border border-[#20070e]/10 rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#20070e] shadow-2xs">
               <span className="text-[10px] uppercase font-mono tracking-wider text-[#20070e]/40">Month:</span>
               <select
                 value={selectedCycleMonth}
@@ -476,26 +477,25 @@ export default function GalleryClient({ currentUser }) {
                 ))}
               </select>
             </div>
-          </div>
 
-          {/* Search Bar */}
-          <div className="relative w-full lg:w-72">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#20070e]/40" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search manuscripts..."
-              className="w-full bg-white border border-[#20070e]/10 rounded-xl py-1.5 pl-8 pr-7 text-xs font-medium text-[#20070e] placeholder-[#20070e]/35 focus:outline-none focus:border-[#c96a42] shadow-2xs"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#20070e]/40 hover:text-[#20070e]"
-              >
-                <X size={12} />
-              </button>
-            )}
+            <div className="relative min-w-[200px] sm:min-w-[240px]">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#20070e]/40" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search manuscripts..."
+                className="w-full bg-white border border-[#20070e]/10 rounded-xl py-1.5 pl-8 pr-7 text-xs font-medium text-[#20070e] placeholder-[#20070e]/35 focus:outline-none focus:border-[#c96a42] shadow-2xs"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#20070e]/40 hover:text-[#20070e]"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

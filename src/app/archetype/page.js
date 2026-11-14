@@ -141,8 +141,8 @@ export default function ArchetypesPage() {
           </button>
         </div>
 
-        {/* GRID OF 21 ARCHETYPES (3D Tarot Flip Cards / Horizontal Snap on Mobile) */}
-        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 overflow-x-auto sm:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-6 pt-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+        {/* GRID OF 21 ARCHETYPES (3D Tarot Flip Cards) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredArchetypes.map((archetype) => {
             const isFlipped = !!flippedCards[archetype.id];
 
@@ -150,7 +150,7 @@ export default function ArchetypesPage() {
               <div
                 key={archetype.id}
                 id={archetype.id}
-                className="w-[85vw] max-w-[340px] shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink group h-[580px]"
+                className="group w-full h-[580px]"
                 style={{ perspective: '1200px', WebkitPerspective: '1200px' }}
               >
                 {/* 3D FLIP CONTAINER */}
@@ -340,10 +340,7 @@ export default function ArchetypesPage() {
           })}
         </div>
 
-        {/* Mobile Swipe Hint */}
-        <div className="sm:hidden flex items-center justify-center gap-1.5 text-xs text-[#F2A98A]/70 font-mono tracking-wider -mt-2 mb-4">
-          <span>← Swipe tarot archetypes →</span>
-        </div>
+        {/* BOTTOM CTA: Take the Book Zodiac */}
         <div className="text-center py-14 px-6 bg-gradient-to-r from-[#5c1a2e]/30 via-[#0d0205] to-[#c96a42]/20 rounded-3xl border border-[#F2A98A]/30 space-y-4 shadow-2xl relative overflow-hidden">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F2A98A]/10 text-[#F2A98A] text-xs font-mono font-bold uppercase">
             ✦ Find Your Celestial Identity
