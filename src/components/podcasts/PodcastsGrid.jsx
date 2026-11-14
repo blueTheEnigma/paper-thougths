@@ -395,13 +395,14 @@ export default function PodcastsGrid() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEpisodes.map((episode) => {
+          <>
+            <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-4 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
+              {filteredEpisodes.map((episode) => {
               const isCurrent = activeEpisode.id === episode.id;
               return (
                 <div
                   key={episode.id}
-                  className={`rounded-3xl p-6 border flex flex-col justify-between transition-all duration-300 group relative overflow-hidden ${
+                  className={`w-[85vw] max-w-[340px] shrink-0 snap-center md:w-auto md:max-w-none md:shrink rounded-3xl p-6 border flex flex-col justify-between transition-all duration-300 group relative overflow-hidden ${
                     isCurrent 
                       ? 'bg-[#1a050c] border-[#F2A98A]/60 shadow-[0_10px_30px_rgba(201,106,66,0.2)] ring-1 ring-[#F2A98A]/40' 
                       : 'bg-[#120308]/85 hover:bg-[#120308] border-[#F2A98A]/15 hover:border-[#F2A98A]/40 shadow-xl hover:-translate-y-1'
@@ -492,7 +493,13 @@ export default function PodcastsGrid() {
               );
             })}
           </div>
-        )}
+
+          {/* Mobile Swipe Hint */}
+          <div className="md:hidden flex items-center justify-center gap-1.5 text-xs text-[#F2A98A]/70 font-mono tracking-wider -mt-2 mb-2">
+            <span>← Swipe episodes →</span>
+          </div>
+        </>
+      )}
       </div>
 
       {/* 5. CREATOR SPOTLIGHT: DEBBIE DOOWUESE AJOM */}

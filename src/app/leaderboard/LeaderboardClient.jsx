@@ -271,18 +271,18 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
+                <div className="flex sm:grid sm:grid-cols-3 gap-3 sm:gap-4 overflow-x-auto sm:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-2 -mx-2 px-2 sm:mx-0 sm:px-0">
+                  <div className="w-[78vw] max-w-[280px] shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-[#F2A98A] font-bold block">🥇 1st Place Laureates (Prose & Poetry)</span>
                     <p className="text-sm font-display font-bold text-white">+100 Leaves • +1.5 Tokens</p>
                     <p className="text-[11px] text-white/60 font-serif leading-relaxed">Living Anthology induction, official social media laureate card, and permanent year-end compendium print inclusion.</p>
                   </div>
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
+                  <div className="w-[78vw] max-w-[280px] shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-white/60 font-bold block">🥈 2nd Place Laureates</span>
                     <p className="text-sm font-display font-bold text-white">+60 Leaves • +1.0 Tokens</p>
                     <p className="text-[11px] text-white/60 font-serif leading-relaxed">Living Anthology induction, editorial citation, and official social media feature card.</p>
                   </div>
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
+                  <div className="w-[78vw] max-w-[280px] shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-white/60 font-bold block">🥉 3rd Place Laureates</span>
                     <p className="text-sm font-display font-bold text-white">+40 Leaves • +0.5 Tokens</p>
                     <p className="text-[11px] text-white/60 font-serif leading-relaxed">Living Anthology induction and official editorial commendation.</p>
@@ -300,7 +300,7 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
                     </h3>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
                     {(editorialHonors.bookie || editorialHonors.generalBookie) && (
                       <EditorialCard 
                         title="Sanctuary Bookie of the Month"
@@ -701,7 +701,7 @@ function PodiumSection({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+        <div className="flex md:grid md:grid-cols-3 gap-3 md:gap-4 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-3 pt-2 -mx-2 px-2 md:mx-0 md:px-0">
         {podiumOrder.map((scribe) => {
           const isFirst = scribe.podiumSlot === 'first';
           const isSecond = scribe.podiumSlot === 'second';
@@ -711,12 +711,12 @@ function PodiumSection({
           return (
             <div 
               key={scribe.id}
-              className={`relative rounded-2xl p-5 flex flex-col justify-between transition-all ${
+              className={`w-[80vw] max-w-[320px] shrink-0 snap-center md:w-auto md:max-w-none md:shrink relative rounded-2xl p-5 flex flex-col justify-between transition-all ${
                 isFirst 
-                  ? 'bg-gradient-to-b from-amber-500/15 via-white to-amber-500/5 border-2 border-amber-500/40 shadow-md md:-translate-y-2' 
+                  ? 'order-1 md:order-2 bg-gradient-to-b from-amber-500/15 via-white to-amber-500/5 border-2 border-amber-500/40 shadow-md md:-translate-y-2' 
                   : isSecond
-                  ? 'bg-white/80 border border-[#c96a42]/30 shadow-xs'
-                  : 'bg-white/80 border border-[#20070e]/15 shadow-xs'
+                  ? 'order-2 md:order-1 bg-white/80 border border-[#c96a42]/30 shadow-xs'
+                  : 'order-3 md:order-3 bg-white/80 border border-[#20070e]/15 shadow-xs'
               } ${isUser ? 'ring-2 ring-[#c96a42]' : ''}`}
             >
               {/* Laurel Prize Header Badge */}
@@ -798,7 +798,7 @@ function PodiumSection({
           <div className="text-[11px] font-mono text-[#120308]/50 uppercase tracking-wider mb-2 font-bold">
             Chasing the Laurels (#4 – #{3 + runnersUp.length}):
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
             {runnersUp.map((runner) => (
               <div 
                 key={runner.id} 
@@ -829,7 +829,7 @@ function PodiumSection({
 // -------------------------------------------------------------
 function EditorialCard({ title, name, blurb, badge }) {
   return (
-    <div className="bg-white/80 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-[#20070e]/15 shadow-xs flex flex-col justify-between space-y-3">
+    <div className="w-[80vw] max-w-[320px] shrink-0 snap-center md:w-auto md:max-w-none md:shrink bg-white/80 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-[#20070e]/15 shadow-xs flex flex-col justify-between space-y-3">
       <div className="space-y-1">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-mono uppercase font-bold text-[#c96a42]">

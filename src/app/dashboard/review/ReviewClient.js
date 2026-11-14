@@ -768,12 +768,12 @@ export default function ReviewClient() {
             </div>
 
             {/* 3 Blind Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-4 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
               {queue.map((card, idx) => (
                 <motion.div 
                   key={card.id}
                   whileHover={{ y: -4 }}
-                  className="bg-white rounded-[32px] border border-sage/20 shadow-md p-8 flex flex-col justify-between h-[360px] relative overflow-hidden group hover:border-burgundy/40 transition-all duration-300"
+                  className="w-[85vw] max-w-[340px] shrink-0 snap-center md:w-auto md:max-w-none md:shrink bg-white rounded-[32px] border border-sage/20 shadow-md p-6 sm:p-8 flex flex-col justify-between h-[360px] relative overflow-hidden group hover:border-burgundy/40 transition-all duration-300"
                 >
                   <div className="absolute top-0 right-0 p-6 font-mono text-6xl text-ink/5 font-bold group-hover:text-burgundy/5 transition-colors">
                     0{idx + 1}
@@ -793,12 +793,17 @@ export default function ReviewClient() {
 
                   <button 
                     onClick={() => handleCardSelectionInitiated(card)}
-                    className="w-full bg-cream/50 hover:bg-burgundy text-ink/75 hover:text-cream border border-sage/20 hover:border-burgundy py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5"
+                    className="w-full bg-cream/50 hover:bg-burgundy text-ink/75 hover:text-cream border border-sage/20 hover:border-burgundy py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     Analyze & Critique
                   </button>
                 </motion.div>
               ))}
+            </div>
+
+            {/* Mobile Swipe Hint */}
+            <div className="md:hidden flex items-center justify-center gap-1.5 text-xs text-burgundy/60 font-mono tracking-wider -mt-4">
+              <span>← Swipe manuscript queue 01, 02, 03 →</span>
             </div>
           </div>
         )}

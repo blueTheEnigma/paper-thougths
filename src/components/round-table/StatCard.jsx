@@ -25,7 +25,7 @@ export default function StatCard({
   };
 
   return (
-    <div className={`parchment-card p-6 flex flex-col justify-between ${getGlowClass()}`}>
+    <div className={`w-[75vw] max-w-[280px] shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink parchment-card p-6 flex flex-col justify-between ${getGlowClass()}`}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-[10px] font-sans font-bold uppercase tracking-widest text-ink/50">{label}</p>
