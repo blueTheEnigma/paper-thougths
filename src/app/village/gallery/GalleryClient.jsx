@@ -499,11 +499,11 @@ export default function GalleryClient({ currentUser }) {
           </div>
         </div>
 
-        {/* Gallery Feed: Pure Literary Dust-Jackets on Warm Parchment */}
+        {/* Gallery Feed: Pure Literary Dust-Jackets in 3-Column Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-5">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white/50 border border-[#20070e]/10 rounded-2xl p-5 h-52 animate-pulse" />
+              <div key={i} className="bg-white/50 border border-[#20070e]/10 rounded-xl sm:rounded-2xl p-3 sm:p-5 h-28 sm:h-52 animate-pulse" />
             ))}
           </div>
         ) : filteredSubmissions.length === 0 ? (
@@ -555,7 +555,7 @@ export default function GalleryClient({ currentUser }) {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-5">
             {filteredSubmissions.map((sub) => {
               const isLiked = likeOverrides[sub.id]?.userLiked !== undefined 
                 ? likeOverrides[sub.id].userLiked 
@@ -574,13 +574,13 @@ export default function GalleryClient({ currentUser }) {
                   animate={{ opacity: 1, y: 0 }}
                   whileHover={{ y: -4 }}
                   onClick={() => setSelectedPiece(sub)}
-                  className="rounded-2xl bg-[#FBF7EE] border border-[#20070e]/12 hover:border-[#c96a42]/40 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer group p-5 sm:p-6 space-y-3.5 relative"
+                  className="rounded-xl sm:rounded-2xl bg-[#FBF7EE] border border-[#20070e]/12 hover:border-[#c96a42]/40 shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer group p-2 sm:p-5 space-y-2 sm:space-y-3.5 relative"
                 >
-                  <div className="space-y-2.5">
+                  <div className="space-y-1 sm:space-y-2.5">
                     {/* Header: Format Tag & Laurel */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full uppercase tracking-widest flex items-center gap-1 border ${
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1">
+                        <span className={`text-[7px] sm:text-[9px] font-mono font-bold px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-full uppercase tracking-wider flex items-center gap-0.5 border ${
                           isPoem 
                             ? 'bg-[#c96a42]/10 text-[#c96a42] border-[#c96a42]/20' 
                             : 'bg-[#20070e]/5 text-[#20070e]/80 border-[#20070e]/10'
@@ -590,40 +590,40 @@ export default function GalleryClient({ currentUser }) {
                         </span>
 
                         {sub.hasLaurel && (
-                          <span className="text-amber-800 text-[9px] font-bold flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-300">
-                            <Award size={10} className="text-amber-600" /> Laureate
+                          <span className="text-amber-800 text-[7px] sm:text-[9px] font-bold flex items-center gap-0.5 bg-amber-50 px-1 py-0.2 sm:px-2 sm:py-0.5 rounded-full border border-amber-300 shrink-0">
+                            <Award size={8} className="text-amber-600 sm:w-2.5 sm:h-2.5" /> <span className="hidden sm:inline">Laureate</span>
                           </span>
                         )}
                       </div>
 
-                      <span className="text-[10px] font-mono text-[#20070e]/40">
+                      <span className="text-[7px] sm:text-[10px] font-mono text-[#20070e]/40 shrink-0">
                         {formatCycleTag(sub.cycleMonth)}
                       </span>
                     </div>
 
                     {/* Book Dust-Jacket Typography: Title & Author */}
                     <div>
-                      <h3 className="font-serif font-bold text-lg sm:text-xl text-[#20070e] group-hover:text-[#c96a42] transition-colors leading-snug line-clamp-2">
+                      <h3 className="font-serif font-bold text-[11px] sm:text-xl text-[#20070e] group-hover:text-[#c96a42] transition-colors leading-tight line-clamp-2">
                         "{sub.title}"
                       </h3>
-                      <p className="text-xs text-[#c96a42] font-serif italic mt-0.5">
+                      <p className="text-[8px] sm:text-xs text-[#c96a42] font-serif italic mt-0.5 truncate">
                         by <span className="font-bold text-[#20070e] not-italic">{sub.displayName || sub.penName || 'Sanctuary Writer'}</span>
                       </p>
                     </div>
 
-                    {/* Clean 2-Line Excerpt Directly on Card */}
-                    <p className="font-serif italic text-xs text-[#20070e]/75 line-clamp-2 leading-relaxed pt-1">
+                    {/* Excerpt (Desktop Only to keep mobile ultra-dense & clean) */}
+                    <p className="hidden sm:block font-serif italic text-xs text-[#20070e]/75 line-clamp-2 leading-relaxed pt-1">
                       &ldquo;{sub.logline || sub.excerpt || 'Read the full manuscript in the open salon...'}&rdquo;
                     </p>
                   </div>
 
                   {/* Quiet Editorial Footer */}
-                  <div className="border-t border-[#20070e]/10 pt-3 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
+                  <div className="border-t border-[#20070e]/10 pt-1.5 sm:pt-3 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5 sm:gap-3">
                       {/* Leaf a Like Button */}
                       <button
                         onClick={(e) => handleToggleLike(sub, e)}
-                        className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg transition-all cursor-pointer ${
+                        className={`inline-flex items-center gap-0.5 text-[8px] sm:text-[11px] font-bold px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded transition-all cursor-pointer ${
                           isLiked
                             ? 'bg-[#c96a42] text-white shadow-xs'
                             : 'bg-[#20070e]/5 hover:bg-[#c96a42]/15 text-[#20070e]/70 hover:text-[#c96a42]'
@@ -635,14 +635,14 @@ export default function GalleryClient({ currentUser }) {
                       </button>
 
                       {/* Comment Count */}
-                      <div className="inline-flex items-center gap-1 text-[11px] font-mono text-[#20070e]/50">
+                      <div className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono text-[#20070e]/50">
                         <MessageSquare size={11} />
                         <span>{sub.commentCount || 0}</span>
                       </div>
 
                       {/* Literary Rating Badge */}
                       {(sub.averageRating > 0 || sub.ratingCount > 0) && (
-                        <div className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-[#c96a42]">
+                        <div className="inline-flex items-center gap-0.5 text-[8px] sm:text-[11px] font-mono font-bold text-[#c96a42]">
                           <span>★</span>
                           <span>{Number(sub.averageRating || 0).toFixed(1)}</span>
                         </div>
@@ -650,9 +650,9 @@ export default function GalleryClient({ currentUser }) {
                     </div>
 
                     {/* Subtle Read Prompt */}
-                    <span className="text-[11px] font-bold text-[#20070e]/50 group-hover:text-[#c96a42] transition-colors flex items-center gap-0.5">
+                    <span className="text-[8px] sm:text-[11px] font-bold text-[#20070e]/50 group-hover:text-[#c96a42] transition-colors flex items-center gap-0.5">
                       <span>Read</span>
-                      <ChevronRight size={13} />
+                      <ChevronRight size={10} className="sm:w-3 sm:h-3" />
                     </span>
                   </div>
                 </motion.div>

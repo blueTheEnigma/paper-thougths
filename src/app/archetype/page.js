@@ -141,8 +141,8 @@ export default function ArchetypesPage() {
           </button>
         </div>
 
-        {/* GRID OF 21 ARCHETYPES (3D Tarot Flip Cards) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* GRID OF 21 ARCHETYPES (3-Column High-Density Tarot Deck on Mobile) */}
+        <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-8">
           {filteredArchetypes.map((archetype) => {
             const isFlipped = !!flippedCards[archetype.id];
 
@@ -150,12 +150,12 @@ export default function ArchetypesPage() {
               <div
                 key={archetype.id}
                 id={archetype.id}
-                className="group w-full h-[580px]"
+                className="group w-full h-[260px] sm:h-[580px]"
                 style={{ perspective: '1200px', WebkitPerspective: '1200px' }}
               >
                 {/* 3D FLIP CONTAINER */}
                 <div
-                  className="relative w-full h-full transition-transform duration-700 cursor-pointer rounded-3xl"
+                  className="relative w-full h-full transition-transform duration-700 cursor-pointer rounded-2xl sm:rounded-3xl"
                   style={{
                     transformStyle: 'preserve-3d',
                     WebkitTransformStyle: 'preserve-3d',
@@ -166,49 +166,47 @@ export default function ArchetypesPage() {
 
                   {/* FRONT FACE OF CARD */}
                   <div
-                    className="absolute inset-0 w-full h-full rounded-3xl bg-[#120308]/95 border-2 border-[#F2A98A]/25 hover:border-[#F2A98A]/60 shadow-2xl p-5 flex flex-col justify-between overflow-hidden transition-all group-hover:shadow-[0_0_30px_rgba(242,169,138,0.15)]"
+                    className="absolute inset-0 w-full h-full rounded-2xl sm:rounded-3xl bg-[#120308]/95 border border-[#F2A98A]/25 sm:border-2 hover:border-[#F2A98A]/60 shadow-md sm:shadow-2xl p-2 sm:p-5 flex flex-col justify-between overflow-hidden transition-all group-hover:shadow-[0_0_30px_rgba(242,169,138,0.15)]"
                     style={{
                       backfaceVisibility: 'hidden',
                       WebkitBackfaceVisibility: 'hidden'
                     }}
                   >
                     {/* Top Art Poster Area */}
-                    <div className="w-full aspect-[4/5] rounded-2xl overflow-hidden bg-black border border-white/10 shadow-lg relative shrink-0">
+                    <div className="w-full aspect-[4/5] rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-white/10 shadow-md relative shrink-0">
                       <img
                         src={archetype.image}
                         alt={archetype.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
-                      <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md text-xs font-mono text-[#F2A98A] border border-white/15 shadow-md">
+                      <div className="absolute top-1 sm:top-3 right-1 sm:right-3 px-1.5 py-0.2 sm:px-3 sm:py-1 rounded-full bg-black/75 backdrop-blur-md text-[9px] sm:text-xs font-mono text-[#F2A98A] border border-white/15 shadow-sm">
                         {archetype.emoji}
                       </div>
                     </div>
 
                     {/* Meta info */}
-                    <div className="space-y-1.5 pt-2 flex-grow">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-serif font-bold text-cream group-hover:text-[#F2A98A] transition-colors leading-tight">
-                          {archetype.name}
-                        </h3>
-                      </div>
+                    <div className="space-y-0.5 sm:space-y-1.5 pt-1 sm:pt-2 flex-grow">
+                      <h3 className="text-[10px] sm:text-xl font-serif font-bold text-cream group-hover:text-[#F2A98A] transition-colors leading-tight line-clamp-1">
+                        {archetype.name}
+                      </h3>
 
-                      <p className="text-xs italic text-[#F2A98A]/80 font-serif line-clamp-1">
+                      <p className="text-[8px] sm:text-xs italic text-[#F2A98A]/80 font-serif line-clamp-1">
                         "{archetype.tagline}"
                       </p>
 
-                      <p className="text-xs text-cream/70 font-serif line-clamp-2 italic">
+                      <p className="hidden sm:block text-xs text-cream/70 font-serif line-clamp-2 italic">
                         ⚡ {archetype.superpower}
                       </p>
                     </div>
 
                     {/* Bottom Action Bar */}
-                    <div className="pt-3 border-t border-white/10 flex items-center gap-2 shrink-0">
+                    <div className="pt-1.5 sm:pt-3 border-t border-white/10 flex items-center gap-1 sm:gap-2 shrink-0">
                       <button
                         type="button"
                         onClick={(e) => toggleFlip(archetype.id, e)}
-                        className="flex-1 py-2 px-3 rounded-xl bg-slate-900/90 hover:bg-[#5C1A2E] text-[#F2A98A] hover:text-cream text-xs font-bold border border-[#F2A98A]/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="flex-1 py-1 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl bg-slate-900/90 hover:bg-[#5C1A2E] text-[#F2A98A] hover:text-cream text-[8px] sm:text-xs font-bold border border-[#F2A98A]/20 transition-all flex items-center justify-center gap-1 cursor-pointer"
                       >
-                        <span>Flip Lore</span>
+                        <span>Flip</span>
                         <span>🔄</span>
                       </button>
 
@@ -218,10 +216,9 @@ export default function ArchetypesPage() {
                           e.stopPropagation();
                           setSelectedArchetype(archetype);
                         }}
-                        className="py-2 px-3 rounded-xl bg-white/5 hover:bg-white/15 text-cream text-xs font-semibold border border-white/10 transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        className="py-1 sm:py-2 px-1.5 sm:px-3 rounded-lg sm:rounded-xl bg-white/5 hover:bg-white/15 text-cream text-[8px] sm:text-xs font-semibold border border-white/10 transition-all flex items-center justify-center gap-0.5 cursor-pointer"
                         title="View high-res poster"
                       >
-                        <span>Poster</span>
                         <span>🔍</span>
                       </button>
                     </div>
@@ -230,64 +227,64 @@ export default function ArchetypesPage() {
 
                   {/* BACK FACE OF CARD (LORE & TRAITS) */}
                   <div
-                    className="absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-b from-[#1c060e] via-[#120308] to-[#080103] border-2 border-[#F2A98A]/40 shadow-2xl p-5 flex flex-col justify-between overflow-y-auto"
+                    className="absolute inset-0 w-full h-full rounded-2xl sm:rounded-3xl bg-gradient-to-b from-[#1c060e] via-[#120308] to-[#080103] border border-[#F2A98A]/40 sm:border-2 shadow-md sm:shadow-2xl p-2 sm:p-5 flex flex-col justify-between overflow-y-auto"
                     style={{
                       backfaceVisibility: 'hidden',
                       WebkitBackfaceVisibility: 'hidden',
                       transform: 'rotateY(180deg)'
                     }}
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-1.5 sm:space-y-3">
                       
                       {/* Back Header */}
-                      <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{archetype.emoji}</span>
-                          <div>
-                            <h4 className="text-base font-serif font-bold text-cream">
+                      <div className="flex items-center justify-between border-b border-white/10 pb-1 sm:pb-2">
+                        <div className="flex items-center gap-1 sm:gap-2 truncate">
+                          <span className="text-sm sm:text-2xl">{archetype.emoji}</span>
+                          <div className="min-w-0">
+                            <h4 className="text-[10px] sm:text-base font-serif font-bold text-cream truncate">
                               {archetype.name}
                             </h4>
-                            <span className="text-[10px] font-mono text-[#F2A98A] uppercase tracking-wider">
-                              Category: {archetype.category?.replace('_', ' ')}
+                            <span className="text-[7px] sm:text-[10px] font-mono text-[#F2A98A] uppercase tracking-wider block truncate">
+                              {archetype.category?.replace('_', ' ')}
                             </span>
                           </div>
                         </div>
                         <button
                           type="button"
                           onClick={(e) => toggleFlip(archetype.id, e)}
-                          className="text-xs text-cream/50 hover:text-cream font-mono"
+                          className="text-[8px] sm:text-xs text-cream/50 hover:text-cream font-mono shrink-0 ml-1"
                         >
-                          Front ↺
+                          ↺
                         </button>
                       </div>
 
                       {/* Traits */}
-                      <div className="space-y-1 bg-black/40 p-3 rounded-xl border border-white/5">
-                        <span className="text-[10px] font-mono font-bold text-[#F2A98A] uppercase tracking-wider block">
-                          ✦ Core Traits
+                      <div className="space-y-0.5 sm:space-y-1 bg-black/40 p-1.5 sm:p-3 rounded-lg sm:rounded-xl border border-white/5">
+                        <span className="text-[7px] sm:text-[10px] font-mono font-bold text-[#F2A98A] uppercase tracking-wider block">
+                          ✦ Traits
                         </span>
-                        <ul className="space-y-1 text-xs text-cream/80 font-serif">
-                          {archetype.traits.map((t, idx) => (
-                            <li key={idx} className="flex items-start gap-1.5">
+                        <ul className="space-y-0.5 text-[8px] sm:text-xs text-cream/80 font-serif">
+                          {archetype.traits.slice(0, 3).map((t, idx) => (
+                            <li key={idx} className="flex items-start gap-1">
                               <span className="text-[#F2A98A]">•</span>
-                              <span className="leading-snug">{t}</span>
+                              <span className="leading-tight line-clamp-1">{t}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
 
                       {/* Superpower & Kryptonite */}
-                      <div className="space-y-2 text-xs">
-                        <div className="p-2.5 rounded-lg bg-[#FFF5EC] text-[#2C1A0E] shadow-sm">
-                          <span className="font-bold text-[#5C1A2E] text-[11px] block font-mono uppercase">
+                      <div className="space-y-1 sm:space-y-2 text-xs">
+                        <div className="p-1.5 sm:p-2.5 rounded-lg bg-[#FFF5EC] text-[#2C1A0E] shadow-sm">
+                          <span className="font-bold text-[#5C1A2E] text-[8px] sm:text-[11px] block font-mono uppercase">
                             ⚡ Superpower
                           </span>
-                          <p className="font-serif text-[11px] leading-snug italic text-[#2C1A0E]/90 mt-0.5">
+                          <p className="font-serif text-[8px] sm:text-[11px] leading-tight italic text-[#2C1A0E]/90 mt-0.5 line-clamp-2">
                             "{archetype.superpower}"
                           </p>
                         </div>
 
-                        <div className="p-2.5 rounded-lg bg-[#FFF5EC] text-[#2C1A0E] shadow-sm">
+                        <div className="hidden sm:block p-2.5 rounded-lg bg-[#FFF5EC] text-[#2C1A0E] shadow-sm">
                           <span className="font-bold text-rose-700 text-[11px] block font-mono uppercase">
                             🥀 Kryptonite
                           </span>
@@ -297,10 +294,10 @@ export default function ArchetypesPage() {
                         </div>
                       </div>
 
-                      {/* Soulmates & Authors teaser */}
+                      {/* Soulmates */}
                       {archetype.literarySoulmates && (
-                        <div className="text-[11px] text-cream/70 font-serif">
-                          <span className="font-mono text-[#F2A98A] font-bold text-[10px] uppercase block">
+                        <div className="text-[7px] sm:text-[11px] text-cream/70 font-serif">
+                          <span className="font-mono text-[#F2A98A] font-bold text-[7px] sm:text-[10px] uppercase block">
                             Soulmates:
                           </span>
                           <p className="line-clamp-1">{archetype.literarySoulmates.join(', ')}</p>
@@ -310,23 +307,23 @@ export default function ArchetypesPage() {
                     </div>
 
                     {/* Back Bottom Actions */}
-                    <div className="pt-3 border-t border-white/10 flex items-center gap-2 shrink-0">
+                    <div className="pt-1.5 sm:pt-3 border-t border-white/10 flex items-center gap-1 sm:gap-2 shrink-0">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedArchetype(archetype);
                         }}
-                        className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-[#5c1a2e] to-[#c96a42] text-cream text-xs font-bold shadow-md transition-all hover:scale-102 flex items-center justify-center gap-1 cursor-pointer"
+                        className="flex-1 py-1 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-[#5c1a2e] to-[#c96a42] text-cream text-[8px] sm:text-xs font-bold shadow-md transition-all hover:scale-102 flex items-center justify-center gap-0.5 cursor-pointer"
                       >
-                        <span>Full Poster & Share</span>
+                        <span>Poster</span>
                         <span>✨</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={(e) => toggleFlip(archetype.id, e)}
-                        className="py-2 px-3 rounded-xl bg-white/5 hover:bg-white/15 text-cream text-xs font-semibold border border-white/10 transition-all cursor-pointer"
+                        className="py-1 sm:py-2 px-1.5 sm:px-3 rounded-lg sm:rounded-xl bg-white/5 hover:bg-white/15 text-cream text-[8px] sm:text-xs font-semibold border border-white/10 transition-all cursor-pointer"
                       >
                         ↺
                       </button>

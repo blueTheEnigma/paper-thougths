@@ -767,35 +767,35 @@ export default function ReviewClient() {
               <strong>🔒 Double-Blind Protocols Active:</strong> Author identities are completely stripped. Submissions are sorted dynamically by lowest review counts to ensure all writing receives equal attention.
             </div>
 
-            {/* 3 Blind Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* 3 Blind Cards Grid (3-Across In-Frame on Mobile) */}
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-6">
               {queue.map((card, idx) => (
                 <motion.div 
                   key={card.id}
                   whileHover={{ y: -4 }}
-                  className="bg-white rounded-[32px] border border-sage/20 shadow-md p-8 flex flex-col justify-between h-[360px] relative overflow-hidden group hover:border-burgundy/40 transition-all duration-300"
+                  className="bg-white rounded-2xl sm:rounded-[32px] border border-sage/20 shadow-md p-2.5 sm:p-8 flex flex-col justify-between min-h-[190px] sm:h-[360px] relative overflow-hidden group hover:border-burgundy/40 transition-all duration-300"
                 >
-                  <div className="absolute top-0 right-0 p-6 font-mono text-6xl text-ink/5 font-bold group-hover:text-burgundy/5 transition-colors">
+                  <div className="absolute top-0 right-0 p-2 sm:p-6 font-mono text-2xl sm:text-6xl text-ink/10 font-bold group-hover:text-burgundy/5 transition-colors">
                     0{idx + 1}
                   </div>
 
-                  <div className="space-y-4">
-                    <span className="bg-sage/10 text-sage text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-sage/15">
+                  <div className="space-y-1.5 sm:space-y-4 relative z-10">
+                    <span className="bg-sage/10 text-sage text-[7px] sm:text-[9px] font-bold px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full uppercase tracking-wider border border-sage/15 inline-block">
                       {card.genre}
                     </span>
-                    <h3 className="text-xl font-display text-burgundy group-hover:text-accent transition-colors line-clamp-2">
+                    <h3 className="text-xs sm:text-xl font-display font-bold text-burgundy group-hover:text-accent transition-colors line-clamp-2 leading-tight">
                       {card.title}
                     </h3>
-                    <p className="text-xs text-ink/60 leading-relaxed italic line-clamp-4">
+                    <p className="text-[8px] sm:text-xs text-ink/60 leading-snug sm:leading-relaxed italic line-clamp-2 sm:line-clamp-4">
                       &quot;{card.logline}&quot;
                     </p>
                   </div>
 
                   <button 
                     onClick={() => handleCardSelectionInitiated(card)}
-                    className="w-full bg-cream/50 hover:bg-burgundy text-ink/75 hover:text-cream border border-sage/20 hover:border-burgundy py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1.5"
+                    className="w-full bg-cream/50 hover:bg-burgundy text-ink/75 hover:text-cream border border-sage/20 hover:border-burgundy py-1.5 sm:py-3 px-1 sm:px-4 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer relative z-10 mt-2"
                   >
-                    Analyze & Critique
+                    <span>Critique</span>
                   </button>
                 </motion.div>
               ))}

@@ -189,9 +189,9 @@ export default function AnthologyClient() {
           </div>
         )}
 
-        {/* Works Grid: 3D Laureate Card + Literary Showcase */}
+        {/* Works Grid: 3D Laureate Card + Literary Showcase (3-Across In-Frame on Mobile) */}
         {!loading && currentWorks.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-6 lg:gap-8 items-start">
             {currentWorks.map((work) => (
               <motion.div
                 key={work.id}

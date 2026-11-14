@@ -481,7 +481,7 @@ export default function ShareableLaureateCard({
   // Render Card Front Face Component
   const renderFrontFace = (standalone = false) => (
     <div 
-      className={`w-full aspect-[4/5] bg-[#FBF7EE] text-[#20070e] border border-[#c96a42]/30 rounded-3xl p-7 sm:p-9 flex flex-col justify-between shadow-xl overflow-hidden ${
+      className={`w-full aspect-[4/5] bg-[#FBF7EE] text-[#20070e] border border-[#c96a42]/30 rounded-2xl sm:rounded-3xl p-2.5 sm:p-7 md:p-9 flex flex-col justify-between shadow-md sm:shadow-xl overflow-hidden ${
         standalone ? 'relative' : 'absolute inset-0'
       }`}
       style={standalone ? {} : { backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
@@ -490,40 +490,40 @@ export default function ShareableLaureateCard({
       <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-[#c96a42]/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Bar */}
-      <div className="relative z-10 flex items-center justify-between border-b border-[#20070e]/10 pb-3">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[#c96a42] text-sm">✦</span>
-          <span className="font-serif text-[11px] tracking-[0.2em] uppercase font-bold text-[#20070e]">Paper Thoughts</span>
+      <div className="relative z-10 flex items-center justify-between border-b border-[#20070e]/10 pb-1.5 sm:pb-3">
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          <span className="text-[#c96a42] text-[9px] sm:text-sm">✦</span>
+          <span className="font-serif text-[8px] sm:text-[11px] tracking-wider uppercase font-bold text-[#20070e] truncate">Paper Thoughts</span>
         </div>
-        <span className="text-[10px] font-mono tracking-widest uppercase text-[#c96a42] font-semibold bg-[#c96a42]/10 px-2 py-0.5 rounded-full">
+        <span className="text-[7px] sm:text-[10px] font-mono tracking-wider uppercase text-[#c96a42] font-semibold bg-[#c96a42]/10 px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-full shrink-0">
           {monthDisplay}
         </span>
       </div>
 
       {/* Center Area */}
-      <div className="relative z-10 my-auto text-center space-y-3 px-2">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#c96a42]/30 bg-[#c96a42]/5 text-[#c96a42] text-xs font-semibold uppercase tracking-wider">
+      <div className="relative z-10 my-auto text-center space-y-1 sm:space-y-3 px-0.5 sm:px-2">
+        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-[#c96a42]/30 bg-[#c96a42]/5 text-[#c96a42] text-[8px] sm:text-xs font-semibold uppercase tracking-wider">
           <span>🌿</span> {ordinalRank} · {categoryLabel}
         </div>
 
-        <h3 className="font-serif text-2xl sm:text-3xl font-normal leading-snug tracking-tight text-[#20070e]">
+        <h3 className="font-serif text-xs sm:text-2xl sm:sm:text-3xl font-bold leading-tight tracking-tight text-[#20070e] line-clamp-2">
           "{title}"
         </h3>
 
-        <div className="pt-2 flex flex-col items-center">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-[#20070e]/50 font-medium">By</p>
-          <p className="font-serif text-base sm:text-lg font-bold text-[#20070e] tracking-wide">
+        <div className="pt-0.5 sm:pt-2 flex flex-col items-center">
+          <p className="text-[7px] sm:text-[10px] uppercase tracking-wider text-[#20070e]/50 font-medium">By</p>
+          <p className="font-serif text-[10px] sm:text-lg font-bold text-[#20070e] tracking-wide line-clamp-1">
             {authorName}
           </p>
-          <p className="text-[11px] text-[#c96a42] italic">
+          <p className="text-[8px] sm:text-[11px] text-[#c96a42] italic line-clamp-1">
             {chapterByline}
           </p>
           {averageRating > 0 && (
-            <div className="pt-1.5 flex items-center justify-center gap-1.5">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#c96a42]/10 border border-[#c96a42]/20 text-[#c96a42] text-[10px] font-mono font-bold">
+            <div className="pt-0.5 sm:pt-1.5 flex items-center justify-center gap-1">
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 sm:px-2.5 sm:py-0.5 rounded-full bg-[#c96a42]/10 border border-[#c96a42]/20 text-[#c96a42] text-[8px] sm:text-[10px] font-mono font-bold">
                 <span>★</span>
                 <span>{Number(averageRating).toFixed(1)}</span>
-                <span className="text-[9px] text-[#20070e]/50 font-normal">({ratingsCount})</span>
+                <span className="text-[7px] sm:text-[9px] text-[#20070e]/50 font-normal">({ratingsCount})</span>
               </span>
             </div>
           )}
@@ -531,13 +531,13 @@ export default function ShareableLaureateCard({
       </div>
 
       {/* Bottom Bar */}
-      <div className="relative z-10 pt-3 border-t border-[#20070e]/10 flex items-center justify-between text-xs text-[#20070e]/50">
-        <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#c96a42]"></span>
-          <span className="text-[10px] tracking-wide uppercase font-semibold">Living Anthology</span>
+      <div className="relative z-10 pt-1.5 sm:pt-3 border-t border-[#20070e]/10 flex items-center justify-between text-[7px] sm:text-xs text-[#20070e]/50">
+        <div className="flex items-center gap-1">
+          <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#c96a42]"></span>
+          <span className="text-[7px] sm:text-[10px] tracking-wide uppercase font-semibold">Living Anthology</span>
         </div>
-        <span className="text-[10px] italic text-[#c96a42] flex items-center gap-1">
-          {standalone ? '1080×1350 Winner Card' : <>Tap to view Citation <RotateCw size={10} /></>}
+        <span className="text-[7px] sm:text-[10px] italic text-[#c96a42] flex items-center gap-0.5">
+          {standalone ? '1080×1350' : <>Flip <RotateCw size={8} className="sm:w-2.5 sm:h-2.5" /></>}
         </span>
       </div>
     </div>
@@ -546,7 +546,7 @@ export default function ShareableLaureateCard({
   // Render Card Back Face Component: Warm Parchment with Pure Literary Citation
   const renderBackFace = (standalone = false) => (
     <div 
-      className={`w-full aspect-[4/5] bg-[#FBF7EE] text-[#20070e] border border-[#c96a42]/30 rounded-3xl p-7 sm:p-9 flex flex-col justify-between shadow-xl overflow-hidden ${
+      className={`w-full aspect-[4/5] bg-[#FBF7EE] text-[#20070e] border border-[#c96a42]/30 rounded-2xl sm:rounded-3xl p-2.5 sm:p-7 md:p-9 flex flex-col justify-between shadow-md sm:shadow-xl overflow-hidden ${
         standalone ? 'relative' : 'absolute inset-0'
       }`}
       style={standalone ? {} : { 
@@ -560,39 +560,39 @@ export default function ShareableLaureateCard({
       <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-[#c96a42]/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Bar */}
-      <div className="relative z-10 flex items-center justify-between border-b border-[#20070e]/10 pb-3">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[#c96a42] text-xs">❦</span>
-          <span className="font-serif text-[11px] tracking-[0.2em] uppercase font-bold text-[#c96a42]">
-            Editor&rsquo;s Citation
+      <div className="relative z-10 flex items-center justify-between border-b border-[#20070e]/10 pb-1.5 sm:pb-3">
+        <div className="flex items-center gap-1">
+          <span className="text-[#c96a42] text-[9px] sm:text-xs">❦</span>
+          <span className="font-serif text-[8px] sm:text-[11px] tracking-wider uppercase font-bold text-[#c96a42]">
+            Citation
           </span>
         </div>
-        <span className="text-[10px] font-mono tracking-widest uppercase text-[#c96a42] font-semibold bg-[#c96a42]/10 px-2 py-0.5 rounded-full">
+        <span className="text-[7px] sm:text-[10px] font-mono tracking-wider uppercase text-[#c96a42] font-semibold bg-[#c96a42]/10 px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-full">
           {ordinalRank}
         </span>
       </div>
 
       {/* Center Area: Pure, Beautifully Rendered Literary Quote */}
-      <div className="relative z-10 my-auto text-center px-2 sm:px-4 space-y-3">
-        <span className="text-4xl sm:text-5xl font-serif text-[#c96a42]/30 leading-none select-none block -mb-2">
+      <div className="relative z-10 my-auto text-center px-1 sm:px-4 space-y-1 sm:space-y-3">
+        <span className="text-xl sm:text-5xl font-serif text-[#c96a42]/30 leading-none select-none block -mb-1 sm:-mb-2">
           &ldquo;
         </span>
 
-        <p className="font-serif italic text-sm sm:text-base lg:text-lg text-[#20070e] leading-relaxed line-clamp-6 font-medium">
+        <p className="font-serif italic text-[8px] sm:text-base lg:text-lg text-[#20070e] leading-snug sm:leading-relaxed line-clamp-5 sm:line-clamp-6 font-medium">
           {editorCitation}
         </p>
 
-        <div className="w-10 h-0.5 bg-[#c96a42]/30 mx-auto rounded-full mt-2" />
+        <div className="w-6 sm:w-10 h-0.5 bg-[#c96a42]/30 mx-auto rounded-full mt-1 sm:mt-2" />
       </div>
 
       {/* Bottom Bar */}
-      <div className="relative z-10 pt-3 border-t border-[#20070e]/10 flex items-center justify-between text-xs text-[#20070e]/50">
-        <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#c96a42]"></span>
-          <span className="text-[10px] tracking-wide uppercase font-semibold">Living Anthology</span>
+      <div className="relative z-10 pt-1.5 sm:pt-3 border-t border-[#20070e]/10 flex items-center justify-between text-[7px] sm:text-xs text-[#20070e]/50">
+        <div className="flex items-center gap-1">
+          <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#c96a42]"></span>
+          <span className="text-[7px] sm:text-[10px] tracking-wide uppercase font-semibold">Living Anthology</span>
         </div>
-        <span className="text-[10px] italic text-[#c96a42] flex items-center gap-1">
-          {standalone ? '1080×1350 Editor Remark' : <>Tap to flip <RotateCw size={10} /></>}
+        <span className="text-[7px] sm:text-[10px] italic text-[#c96a42] flex items-center gap-0.5">
+          {standalone ? 'Citation' : <>Flip <RotateCw size={8} className="sm:w-2.5 sm:h-2.5" /></>}
         </span>
       </div>
     </div>
@@ -663,26 +663,26 @@ export default function ShareableLaureateCard({
 
       {/* Action Controls */}
       {showControls && (
-        <div className="w-full mt-3.5 space-y-2.5 max-w-sm sm:max-w-md">
+        <div className="w-full mt-2 sm:mt-3.5 space-y-2 max-w-sm sm:max-w-md">
           
           {/* Public Audience Facing: ONLY Flip & Read */}
           {!isEditor ? (
-            <div className="flex items-center gap-2.5 w-full">
-              {viewMode !== 'side-by-side' && (
-                <button
-                  onClick={() => setIsFlipped(!isFlipped)}
-                  className="flex-1 bg-white hover:bg-[#FBF7EE] text-[#20070e] border border-[#20070e]/20 font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs shadow-2xs cursor-pointer active:scale-[0.98]"
-                >
-                  <RotateCw size={13} /> {isFlipped ? 'View Laureate' : 'Flip Citation'}
-                </button>
-              )}
-
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1 sm:gap-2.5 w-full">
               {onReadPiece && (
                 <button
                   onClick={onReadPiece}
-                  className="flex-1 bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs shadow-sm cursor-pointer active:scale-[0.98]"
+                  className="w-full sm:flex-1 bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] font-bold py-1.5 sm:py-2.5 px-2 sm:px-4 rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1 text-[9px] sm:text-xs shadow-sm cursor-pointer active:scale-[0.98]"
                 >
-                  <BookOpen size={13} /> Read Manuscript
+                  <BookOpen size={11} className="sm:w-3.5 sm:h-3.5" /> <span>Read Piece</span>
+                </button>
+              )}
+
+              {viewMode !== 'side-by-side' && (
+                <button
+                  onClick={() => setIsFlipped(!isFlipped)}
+                  className="w-full sm:flex-1 bg-white hover:bg-[#FBF7EE] text-[#20070e] border border-[#20070e]/20 font-bold py-1 sm:py-2.5 px-1.5 sm:px-4 rounded-lg sm:rounded-xl transition-all flex items-center justify-center gap-1 text-[8px] sm:text-xs shadow-2xs cursor-pointer active:scale-[0.98]"
+                >
+                  <RotateCw size={10} className="sm:w-3 sm:h-3" /> <span>{isFlipped ? 'Laureate' : 'Citation'}</span>
                 </button>
               )}
             </div>
