@@ -2621,7 +2621,15 @@ export default function DashboardClient({
                 </div>
 
                 {librarySubmissions && librarySubmissions.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className={
+                    librarySubmissions.length === 1
+                      ? "grid grid-cols-1 max-w-xl mx-auto gap-4 sm:gap-6"
+                      : librarySubmissions.length === 2
+                      ? "grid grid-cols-2 gap-2.5 sm:gap-6"
+                      : librarySubmissions.length === 3
+                      ? "grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-6"
+                      : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-5"
+                  }>
                     {librarySubmissions.map((sub) => {
                       let statusText = "Draft";
                       let statusClass = "bg-ink/5 text-ink/60 border border-ink/10";
@@ -2637,48 +2645,48 @@ export default function DashboardClient({
                       }
 
                       return (
-                        <div key={sub.id} className="bg-white border border-sage/15 p-5 sm:p-6 rounded-[28px] shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow relative overflow-hidden">
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center gap-2">
-                              <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${statusClass}`}>
+                        <div key={sub.id} className="bg-white border border-sage/15 p-3.5 sm:p-6 rounded-2xl sm:rounded-[28px] shadow-sm flex flex-col justify-between space-y-3 sm:space-y-4 hover:shadow-md transition-shadow relative overflow-hidden">
+                          <div className="space-y-2 sm:space-y-3">
+                            <div className="flex justify-between items-center gap-1.5">
+                              <span className={`text-[7px] sm:text-[8px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full uppercase tracking-wider ${statusClass}`}>
                                 {statusText}
                               </span>
-                              <span className="text-[10px] text-ink/30 font-mono">
+                              <span className="text-[9px] sm:text-[10px] text-ink/30 font-mono">
                                 {sub.createdAt ? new Date(sub.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}
                               </span>
                             </div>
                             
-                            <h4 className="text-base font-display font-bold text-burgundy line-clamp-1">{sub.title}</h4>
-                            <p className="text-[11px] text-ink/50 font-serif uppercase tracking-wider font-semibold">{sub.genre}</p>
-                            <p className="text-xs text-ink/70 font-serif leading-relaxed line-clamp-3 italic">"{sub.logline}"</p>
+                            <h4 className="text-sm sm:text-base font-display font-bold text-burgundy line-clamp-1">{sub.title}</h4>
+                            <p className="text-[9px] sm:text-[11px] text-ink/50 font-serif uppercase tracking-wider font-semibold">{sub.genre}</p>
+                            <p className="text-[10px] sm:text-xs text-ink/70 font-serif leading-relaxed line-clamp-2 sm:line-clamp-3 italic">&ldquo;{sub.logline}&rdquo;</p>
                           </div>
 
-                          <div className="border-t border-sage/10 pt-4 space-y-2.5">
-                            <div className="flex justify-between items-center text-[10px] font-sans">
+                          <div className="border-t border-sage/10 pt-2.5 sm:pt-4 space-y-2 sm:space-y-2.5">
+                            <div className="flex justify-between items-center text-[9px] sm:text-[10px] font-sans">
                               {sub.reviewCount > 0 || sub.hasReport ? (
                                 <button
                                   onClick={() => setSelectedReportId(sub.id)}
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-burgundy/10 hover:bg-burgundy text-burgundy hover:text-cream font-bold transition-all cursor-pointer border border-burgundy/15"
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg bg-burgundy/10 hover:bg-burgundy text-burgundy hover:text-cream font-bold transition-all cursor-pointer border border-burgundy/15 text-[8px] sm:text-[10px]"
                                   title="Read all critiques and reflections received for this manuscript"
                                 >
-                                  <MessageSquare size={12} />
+                                  <MessageSquare size={10} className="sm:w-3 sm:h-3" />
                                   <span>Read Critiques ({sub.reviewCount || 1})</span>
-                                  <span className="text-[9px]">→</span>
+                                  <span className="text-[8px] sm:text-[9px]">→</span>
                                 </button>
                               ) : (
-                                <span className="text-ink/40 font-bold flex items-center gap-1">
-                                  <MessageSquare size={12} /> Critiques Received: 0
+                                <span className="text-ink/40 font-bold flex items-center gap-1 text-[8px] sm:text-[10px]">
+                                  <MessageSquare size={10} className="sm:w-3 sm:h-3" /> 0 Critiques
                                 </span>
                               )}
                               {sub.isRevised && (
-                                <span className="text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-bold">Revised 📝</span>
+                                <span className="text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold">Revised 📝</span>
                               )}
                             </div>
 
-                            <div className="flex gap-2 pt-1.5">
+                            <div className="flex items-center gap-1 sm:gap-2 pt-1 sm:pt-1.5">
                               <button
                                 onClick={() => setSelectedSubForRead(sub)}
-                                className="flex-1 bg-sage/5 hover:bg-sage/15 text-ink/70 border border-sage/20 rounded-xl py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                                className="flex-1 bg-sage/5 hover:bg-sage/15 text-ink/70 border border-sage/20 rounded-lg sm:rounded-xl py-1.5 sm:py-2 text-center text-[9px] sm:text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
                               >
                                 Read
                               </button>
@@ -2696,14 +2704,14 @@ export default function DashboardClient({
                                     setLibraryError(null);
                                     setLibrarySuccess(null);
                                   }}
-                                  className="flex-1 bg-burgundy/5 hover:bg-burgundy text-burgundy hover:text-cream border border-burgundy/10 rounded-xl py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                                  className="flex-1 bg-burgundy/5 hover:bg-burgundy text-burgundy hover:text-cream border border-burgundy/10 rounded-lg sm:rounded-xl py-1.5 sm:py-2 text-center text-[9px] sm:text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
                                 >
                                   Edit
                                 </button>
                               ) : (
                                 <button
                                   disabled
-                                  className="flex-1 bg-sage/5 text-ink/20 border border-sage/10 rounded-xl py-2 text-center text-[10px] font-bold uppercase tracking-wider cursor-not-allowed"
+                                  className="flex-1 bg-sage/5 text-ink/20 border border-sage/10 rounded-lg sm:rounded-xl py-1.5 sm:py-2 text-center text-[9px] sm:text-[10px] font-bold uppercase tracking-wider cursor-not-allowed"
                                   title="Cannot edit while active in the critique batch."
                                 >
                                   Locked
@@ -2712,33 +2720,23 @@ export default function DashboardClient({
 
                               <button
                                 onClick={() => handleCopySubmissionQuote(sub)}
-                                className={`border rounded-xl p-2 flex items-center justify-center transition-all cursor-pointer ${
+                                className={`border rounded-lg sm:rounded-xl p-1.5 sm:p-2 flex items-center justify-center transition-all cursor-pointer ${
                                   copiedSubId === sub.id
                                     ? 'bg-green-500/20 text-green-700 border-green-500/30'
                                     : 'bg-accent/10 hover:bg-accent hover:text-cream text-accent border border-accent/20'
                                 }`}
                                 title="Copy Quote / Logline"
                               >
-                                {copiedSubId === sub.id ? <Check size={13} /> : <Quote size={13} />}
+                                {copiedSubId === sub.id ? <Check size={11} className="sm:w-3.5 sm:h-3.5" /> : <Quote size={11} className="sm:w-3.5 sm:h-3.5" />}
                               </button>
 
                               <button
                                 onClick={() => handleDownload(sub)}
-                                className="bg-sage/5 hover:bg-burgundy hover:text-cream text-ink/75 border border-sage/20 rounded-xl p-2 flex items-center justify-center transition-all cursor-pointer"
+                                className="bg-sage/5 hover:bg-burgundy hover:text-cream text-ink/75 border border-sage/20 rounded-lg sm:rounded-xl p-1.5 sm:p-2 flex items-center justify-center transition-all cursor-pointer"
                                 title={(sub.genre || '').toLowerCase() === 'poetry' ? "Download designed poem (JPEG)" : "Download story (PDF)"}
                               >
-                                <Download size={13} />
+                                <Download size={11} className="sm:w-3.5 sm:h-3.5" />
                               </button>
-
-                              {(sub.reviewCount > 0 || sub.hasReport) && (
-                                <button
-                                  onClick={() => setSelectedReportId(sub.id)}
-                                  className="bg-burgundy/10 hover:bg-burgundy text-burgundy hover:text-cream border border-burgundy/20 rounded-xl p-2 flex items-center justify-center transition-all cursor-pointer shadow-sm"
-                                  title="Read Critiques & Synthesis"
-                                >
-                                  <MessageSquare size={13} />
-                                </button>
-                              )}
                             </div>
                           </div>
                         </div>
