@@ -1,275 +1,14 @@
 "use client";
-import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
-  BookOpen, PenTool, Feather, Award, ArrowRight,
-  Sparkles, Clock, Compass, DoorOpen, Flame
+  BookOpen, PenTool, Award, ArrowRight,
+  Sparkles, Clock, Compass, Flame
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import PanguinAvatar from '@/components/PanguinAvatar';
-
-// ─── Cinematic Entrance Portal ──────────────────────────────────────────────
-
-function EntrancePortal({ onEnter, userName, isSignedIn, redirectUrl }) {
-  const [stage, setStage] = useState(0);
-
-  // Sequence: 0 = fade-in logo  →  1 = quote line  →  2 = CTA revealed
-  useEffect(() => {
-    const t1 = setTimeout(() => setStage(1), 900);
-    const t2 = setTimeout(() => setStage(2), 2100);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
-
-  return (
-    <motion.div
-      key="portal-overlay"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.04 }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: 'radial-gradient(ellipse at 50% 60%, #1a0610 0%, #0d0406 60%, #060103 100%)' }}
-    >
-      {/* Ambient glow layers */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 55%, rgba(92,26,46,0.35) 0%, transparent 70%)',
-        }}
-      />
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 40% 30% at 50% 50%, rgba(194,106,66,0.12) 0%, transparent 70%)',
-        }}
-      />
-
-      {/* Floating speck particles */}
-      {[...Array(18)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            width: `${1 + (i % 3)}px`,
-            height: `${1 + (i % 3)}px`,
-            left: `${5 + (i * 5.3) % 90}%`,
-            top: `${10 + (i * 7.1) % 80}%`,
-            background: i % 4 === 0
-              ? 'rgba(242,169,138,0.6)'
-              : 'rgba(201,106,66,0.4)',
-          }}
-          animate={{
-            y: [0, -18, 0],
-            opacity: [0.2, 0.7, 0.2],
-          }}
-          transition={{
-            duration: 3 + (i % 3) * 1.2,
-            repeat: Infinity,
-            delay: (i * 0.25) % 3,
-            ease: 'easeInOut',
-          }}
-        />
-      ))}
-
-      {/* Central content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-lg w-full">
-
-        {/* Gate icon */}
-        <motion.div
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.15, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-8"
-        >
-          <div
-            className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full flex items-center justify-center animate-pulse-subtle"
-            style={{
-              background: 'radial-gradient(circle, rgba(92,26,46,0.5) 0%, rgba(92,26,46,0.1) 100%)',
-              border: '1px solid rgba(242,169,138,0.25)',
-              boxShadow: '0 0 40px rgba(92,26,46,0.6), 0 0 80px rgba(92,26,46,0.2)',
-            }}
-          >
-            <DoorOpen
-              size={36}
-              className="animate-float"
-              style={{ color: '#F2A98A' }}
-            />
-          </div>
-        </motion.div>
-
-        {/* Label */}
-        <motion.span
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.6 }}
-          className="block text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-[0.35em] mb-4"
-          style={{ color: '#C96A42' }}
-        >
-          Writers&rsquo; Village
-        </motion.span>
-
-        {/* Main headline */}
-        <motion.h1
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="font-display font-extrabold leading-tight mb-5"
-          style={{
-            fontSize: 'clamp(2rem, 6vw, 3.5rem)',
-            color: '#FAF7F2',
-          }}
-        >
-          {!isSignedIn ? (
-            <>
-              To travel beyond,
-              <br />
-              <span style={{ color: '#F2A98A' }}>one must belong.</span>
-            </>
-          ) : (
-            <>
-              Are you ready to step
-              <br />
-              <span style={{ color: '#F2A98A' }}>into the world of lore?</span>
-            </>
-          )}
-        </motion.h1>
-
-        {/* Lore quote — fades in at stage 1 */}
-        <AnimatePresence>
-          {stage >= 1 && (
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.75, ease: 'easeOut' }}
-              className="font-quote italic leading-relaxed mb-8 text-sm sm:text-base px-2"
-              style={{ color: 'rgba(250,247,242,0.55)' }}
-            >
-              {!isSignedIn ? (
-                `“A village of ink and parchment, where Zaria, Kaduna, and Abuja voices converge — and only the bold dare to write.”`
-              ) : (
-                `“Welcome back to the creative heart of the clubhouse, ${userName?.split(' ')[0] || 'Writer'}. Your manuscripts, critiques, and leaves are waiting.”`
-              )}
-            </motion.p>
-          )}
-        </AnimatePresence>
-
-        {/* Divider */}
-        <AnimatePresence>
-          {stage >= 1 && (
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="w-16 h-px mb-8 origin-center"
-              style={{ background: 'rgba(242,169,138,0.3)' }}
-            />
-          )}
-        </AnimatePresence>
-
-        {/* CTA block — fades in at stage 2 */}
-        <AnimatePresence>
-          {stage >= 2 && (
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full space-y-4"
-            >
-              {/* Fun sub-prompt */}
-              <p
-                className="text-xs sm:text-sm font-sans font-semibold"
-                style={{ color: 'rgba(250,247,242,0.5)' }}
-              >
-                {!isSignedIn ? (
-                  <>
-                    Join the gang.{' '}
-                    <span style={{ color: 'rgba(250,247,242,0.35)' }}>
-                      Claim your LK-ID first.
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    Ready, {userName?.split(' ')[0] || 'Writer'}?{' '}
-                    <span style={{ color: 'rgba(250,247,242,0.35)' }}>
-                      Step into the world of lore.
-                    </span>
-                  </>
-                )}
-              </p>
-
-              {/* Primary CTA */}
-              {!isSignedIn ? (
-                <Link
-                  href="/sign-up?callbackUrl=/village"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-sans font-bold uppercase tracking-widest text-xs sm:text-sm cursor-pointer transition-all px-10 py-4 rounded-2xl"
-                  style={{
-                    background: 'linear-gradient(135deg, #5C1A2E 0%, #7A2040 100%)',
-                    color: '#FAF7F2',
-                    boxShadow: '0 0 30px rgba(92,26,46,0.5), 0 4px 20px rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(242,169,138,0.2)',
-                  }}
-                >
-                  <Sparkles size={16} style={{ color: '#F2A98A' }} />
-                  Join the Collective
-                  <ArrowRight size={14} />
-                </Link>
-              ) : (
-                <motion.button
-                  onClick={onEnter}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-sans font-bold uppercase tracking-widest text-xs sm:text-sm cursor-pointer transition-all px-10 py-4 rounded-2xl"
-                  style={{
-                    background: 'linear-gradient(135deg, #5C1A2E 0%, #7A2040 100%)',
-                    color: '#FAF7F2',
-                    boxShadow: '0 0 30px rgba(92,26,46,0.5), 0 4px 20px rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(242,169,138,0.2)',
-                  }}
-                >
-                  <DoorOpen size={16} style={{ color: '#F2A98A' }} />
-                  Pass Through the Portal
-                  <ArrowRight size={14} />
-                </motion.button>
-              )}
-
-              {/* Ghost secondary */}
-              <div>
-                {!isSignedIn ? (
-                  <Link
-                    href={redirectUrl ? `/sign-in?redirect_url=${encodeURIComponent(`/village?redirect=${encodeURIComponent(redirectUrl)}`)}` : "/sign-in?redirect_url=/village"}
-                    className="text-[11px] font-sans font-medium transition-colors hover:text-white"
-                    style={{ color: 'rgba(250,247,242,0.35)' }}
-                  >
-                    Already a member? Sign in
-                  </Link>
-                ) : (
-                  <Link
-                    href="/dashboard"
-                    className="text-[11px] font-sans font-medium transition-colors hover:text-white"
-                    style={{ color: 'rgba(250,247,242,0.35)' }}
-                  >
-                    Return to dashboard
-                  </Link>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Bottom grain texture bar */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to top, rgba(6,1,3,0.9) 0%, transparent 100%)',
-        }}
-      />
-    </motion.div>
-  );
-}
 
 // ─── Animation Variants for main workspace ───────────────────────────────────
 
@@ -293,8 +32,6 @@ const itemVariants = {
 // ─── Main VillageClient ───────────────────────────────────────────────────────
 
 export default function VillageClient({ weeklyPrompt, storyPrompt, poemPrompt, userStats, recentSalonWorks = [], isSignedIn: serverIsSignedIn, isRegistered: serverIsRegistered }) {
-  const [showEntrance, setShowEntrance] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const redirectUrl = searchParams ? searchParams.get('redirect') : null;
@@ -306,43 +43,16 @@ export default function VillageClient({ weeklyPrompt, storyPrompt, poemPrompt, u
   const isSignedIn = authLoaded ? clientIsSignedIn : serverIsSignedIn;
   const userName = clientUser ? (clientUser.firstName || clientUser.fullName || userStats?.name || 'Writer') : (userStats?.name || 'Writer');
 
+  // Immediate redirect handling if redirectUrl is passed in query
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMounted(true);
-      if (typeof window !== 'undefined') {
-        const seen = sessionStorage.getItem('seen_village_portal') === 'true';
-        setShowEntrance(!seen);
-      }
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleEnter = () => {
-    sessionStorage.setItem('seen_village_portal', 'true');
-    setShowEntrance(false);
     if (redirectUrl) {
       router.push(redirectUrl);
     }
-  };
+  }, [redirectUrl, router]);
 
   return (
     <>
-      {/* Cinematic entrance portal — rendered in document.body via React Portal */}
-      {mounted && createPortal(
-        <AnimatePresence mode="wait">
-          {showEntrance && (
-            <EntrancePortal
-              onEnter={handleEnter}
-              userName={userName}
-              isSignedIn={isSignedIn}
-              redirectUrl={redirectUrl}
-            />
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
-
-      {/* ── Main Workspace (visible after portal dismissed) ── */}
+      {/* ── Main Workspace (frictionless entry with zero delays) ── */}
       <main className="min-h-screen bg-cream pb-20 px-4 md:px-8 relative overflow-hidden">
         {/* Ambient background blobs */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-burgundy/5 rounded-full blur-[100px] -z-10" />
@@ -352,7 +62,7 @@ export default function VillageClient({ weeklyPrompt, storyPrompt, poemPrompt, u
           className="max-w-7xl mx-auto space-y-10 sm:space-y-12"
           variants={containerVariants}
           initial="hidden"
-          animate={!showEntrance ? 'visible' : 'hidden'}
+          animate="visible"
         >
           {/* Header */}
           <motion.div variants={itemVariants} className="text-center space-y-3 max-w-3xl mx-auto pt-2">

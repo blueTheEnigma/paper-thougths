@@ -7,7 +7,7 @@ import {
   Award, Ticket, Users, Copy, CheckCircle2, ShieldCheck, MapPin, 
   ExternalLink, ShoppingBag, ArrowRight, Clock, Flame, Sparkles, 
   BookOpen, MessageSquare, Gift, Coins, Settings, X, Check, Book,
-  Download, Lock, Quote, Bookmark, Compass, ShieldAlert, GraduationCap, AlertCircle, Calendar, Trophy, Bell
+  Download, Lock, Quote, Bookmark, Compass, ShieldAlert, GraduationCap, AlertCircle, Calendar, Trophy, Bell, ScrollText
 } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
@@ -20,6 +20,7 @@ import { getAvatarStage } from '@/lib/avatar';
 import LiteraryReaderModal from '@/components/common/LiteraryReaderModal';
 import PushNotificationBell from '@/components/notifications/PushNotificationBell';
 import InstallAppButton from '@/components/InstallAppButton';
+import ClubhouseCharterModal from '@/components/modals/ClubhouseCharterModal';
 
 const GENRES = [
   'Fiction',
@@ -33,217 +34,6 @@ const GENRES = [
   'Other'
 ];
 
-
-// ─── Cinematic Archive Entrance Portal ────────────────────────────────────────
-
-function ArchivePortal({ onEnter, userName, profile, discountPercent }) {
-  const [stage, setStage] = useState(0);
-
-  useEffect(() => {
-    const t1 = setTimeout(() => setStage(1), 900);
-    const t2 = setTimeout(() => setStage(2), 2100);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
-
-  return (
-    <motion.div
-      key="archive-portal"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.04 }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-0 left-0 w-screen h-screen z-[9999] flex flex-col items-center overflow-y-auto bg-ink p-4 sm:p-6"
-      style={{ background: 'radial-gradient(ellipse at 50% 60%, #1a0610 0%, #0d0406 60%, #060103 100%)' }}
-    >
-      {/* Ambient glow layers */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 55%, rgba(92,26,46,0.35) 0%, transparent 70%)',
-        }}
-      />
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 40% 30% at 50% 50%, rgba(194,106,66,0.12) 0%, transparent 70%)',
-        }}
-      />
-
-      {/* Floating speck particles */}
-      {[...Array(18)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            width: `${1 + (i % 3)}px`,
-            height: `${1 + (i % 3)}px`,
-            left: `${5 + (i * 5.3) % 90}%`,
-            top: `${10 + (i * 7.1) % 80}%`,
-            background: i % 4 === 0 ? 'rgba(242,169,138,0.6)' : 'rgba(201,106,66,0.4)',
-          }}
-          animate={{
-            y: [0, -18, 0],
-            opacity: [0.2, 0.7, 0.2],
-          }}
-          transition={{
-            duration: 3 + (i % 3) * 1.2,
-            repeat: Infinity,
-            delay: (i * 0.25) % 3,
-            ease: 'easeInOut',
-          }}
-        />
-      ))}
-
-      {/* Central content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-2xl w-full my-auto py-8">
-        {/* Sailor's Wheel icon */}
-        <motion.div
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.15, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-6"
-        >
-          <div
-            className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full flex items-center justify-center animate-pulse-subtle"
-            style={{
-              background: 'radial-gradient(circle, rgba(92,26,46,0.5) 0%, rgba(92,26,46,0.1) 100%)',
-              border: '1px solid rgba(242,169,138,0.25)',
-              boxShadow: '0 0 40px rgba(92,26,46,0.6), 0 0 80px rgba(92,26,46,0.2)',
-            }}
-          >
-            <svg 
-              className="w-10 h-10 animate-spin relative z-10 overflow-visible" 
-              viewBox="0 0 100 100" 
-              fill="none" 
-              stroke="#F2A98A" 
-              strokeWidth="4" 
-              strokeLinecap="round"
-              style={{ animationDuration: '8s' }}
-            >
-              <circle cx="50" cy="50" r="10" />
-              <circle cx="50" cy="50" r="4" fill="#F2A98A" />
-              <circle cx="50" cy="50" r="30" strokeWidth="3" />
-              <circle cx="50" cy="50" r="20" strokeWidth="1.5" strokeDasharray="4 2" />
-              <line x1="50" y1="10" x2="50" y2="90" />
-              <line x1="10" y1="50" x2="90" y2="50" />
-              <line x1="22" y1="22" x2="78" y2="78" />
-              <line x1="22" y1="78" x2="78" y2="22" />
-              <line x1="50" y1="20" x2="50" y2="2" strokeWidth="6" />
-              <line x1="50" y1="80" x2="50" y2="98" strokeWidth="6" />
-              <line x1="20" y1="50" x2="2" y2="50" strokeWidth="6" />
-              <line x1="80" y1="50" x2="98" y2="50" strokeWidth="6" />
-              <line x1="29" y1="29" x2="16" y2="16" strokeWidth="6" />
-              <line x1="71" y1="71" x2="84" y2="84" strokeWidth="6" />
-              <line x1="29" y1="71" x2="16" y2="84" strokeWidth="6" />
-              <line x1="71" y1="29" x2="84" y2="16" strokeWidth="6" />
-            </svg>
-          </div>
-        </motion.div>
-
-        {/* Label */}
-        <motion.span
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.6 }}
-          className="block text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-[0.35em] mb-3"
-          style={{ color: '#C96A42' }}
-        >
-          THE ARCHIVE LEDGER
-        </motion.span>
-
-        {/* Main headline */}
-        <motion.h1
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="font-display font-extrabold leading-tight mb-4 text-3xl sm:text-4xl text-cream"
-        >
-          Welcome, <span style={{ color: '#F2A98A' }}>{userName.split(' ')[0]}</span>
-        </motion.h1>
-
-        {/* Rules container */}
-        <AnimatePresence>
-          {stage >= 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="w-full bg-[#1b0610]/80 border border-sage/20 rounded-[28px] p-5 sm:p-7 text-left space-y-5 mb-8 shadow-xl max-w-2xl animate-pulse-subtle"
-            >
-              <h3 className="text-xs font-bold uppercase tracking-widest text-[#F2A98A] border-b border-sage/10 pb-2 text-center sm:text-left font-sans">
-                ARCHIVE RULES & ECONOMY
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-cream/90">
-                {/* Milestone Tokens Column */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wide text-primary flex items-center gap-1.5 font-sans">
-                    <Award size={14} /> Milestone Tokens
-                  </h4>
-                  <p className="text-[11px] sm:text-xs text-cream/90 font-serif leading-relaxed">
-                    Power your journey to unlock the <strong>Keeper</strong> tier ({discountPercent} discount on all books for 90 days). Earn tokens by completing activities:
-                  </p>
-                  <ul className="text-[10px] sm:text-[11px] text-cream/85 font-serif list-disc pl-4 space-y-1.5">
-                    <li><strong>Peer Critique</strong>: Submit detailed reviews (<strong>+1.0 Token</strong>, or <strong>+1.5 Tokens</strong> for early-birds).</li>
-                    <li><strong>Weekly Submission</strong>: Write weekly prompt responses (<strong>+1.0 Token</strong>).</li>
-                    <li><strong>Invite Readers</strong>: Refer friends (<strong>+1.2 Tokens</strong> per referral, up to your first 5).</li>
-                  </ul>
-                </div>
-
-                {/* Spendable Leaves Column */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wide text-[#FF8D5C] flex items-center gap-1.5 font-sans">
-                    <Coins size={14} /> Paper Leaves (Save to Buy)
-                  </h4>
-                  <p className="text-[11px] sm:text-xs text-cream/90 font-serif leading-relaxed font-semibold" style={{ color: '#F2A98A' }}>
-                    1 Leaf = ₦10 at checkout. Spend leaves to buy physical books!
-                  </p>
-                  <p className="text-[11px] sm:text-xs text-cream/80 font-serif leading-relaxed">
-                    Accumulate leaves to discount or fully buy books. Grow your balance by:
-                  </p>
-                  <ul className="text-[10px] sm:text-[11px] text-cream/85 font-serif list-disc pl-4 space-y-1.5">
-                    <li><strong>Peer Critique</strong>: Earn leaves per critique (<strong>+10 Leaves</strong>, or <strong>+15 Leaves</strong> for early-birds, capped at 3 reviews/week).</li>
-                    <li><strong>Weekly Submission</strong>: Respond to weekly writing prompts (<strong>+5 Leaves</strong> for your first submission of the week).</li>
-                    <li><strong>Buy Bundles</strong>: Purchase bundles of leaves (e.g. 50, 100, 200, or 500 leaves) directly from your dashboard using Paystack.</li>
-                    <li><strong>Chapter Pool</strong>: Share the love by donating to your chapter's book pool to fund vouchers for your community.</li>
-                  </ul>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Action Button */}
-        <AnimatePresence>
-          {stage >= 2 && (
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full space-y-4"
-            >
-              <motion.button
-                onClick={onEnter}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-sans font-bold uppercase tracking-widest text-xs sm:text-sm cursor-pointer transition-all px-10 py-4 rounded-2xl"
-                style={{
-                  background: 'linear-gradient(135deg, #5C1A2E 0%, #7A2040 100%)',
-                  color: '#FAF7F2',
-                  boxShadow: '0 0 30px rgba(92,26,46,0.5), 0 4px 20px rgba(0,0,0,0.4)',
-                  border: '1px solid rgba(242,169,138,0.2)',
-                }}
-              >
-                <span>Pass into the Archive</span>
-                <ArrowRight size={14} />
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
-  );
-}
 
 export default function DashboardClient({ 
   profile: rawProfile, 
@@ -986,7 +776,7 @@ export default function DashboardClient({
 
   // Birthday banner dismissal
   const [bdayDismissed, setBdayDismissed] = useState(true);
-  const [showPortal, setShowPortal] = useState(false);
+  const [showCharterModal, setShowCharterModal] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -1018,14 +808,10 @@ export default function DashboardClient({
     if (typeof window !== 'undefined') {
       const dismissed = sessionStorage.getItem('dismissed_birthday') === 'true';
       setBdayDismissed(dismissed);
-      const seen = sessionStorage.getItem('seen_dashboard_portal') === 'true';
       
       // Onboarding logic:
       if (profile && profile.onboarded === false) {
         setShowOnboarding(true);
-        setShowPortal(false); // Hide standard portal until onboarding finishes
-      } else {
-        setShowPortal(!seen);
       }
 
       if (!document.getElementById('paystack-inline-js')) {
@@ -1121,23 +907,12 @@ export default function DashboardClient({
 
   const handleCompleteOnboarding = async () => {
     setShowOnboarding(false);
-    
-    // Once onboarding finishes, they should see the rules portal if they haven't seen it in this session
-    const seen = sessionStorage.getItem('seen_dashboard_portal') === 'true';
-    if (!seen) {
-      setShowPortal(true);
-    }
 
     try {
       await fetch('/api/me/onboard', { method: 'POST' });
     } catch (e) {
       console.error("Failed to save onboarding state", e);
     }
-  };
-
-  const handleEnterPortal = () => {
-    sessionStorage.setItem('seen_dashboard_portal', 'true');
-    setShowPortal(false);
   };
 
   // Check if today is birthday
@@ -3349,15 +3124,10 @@ export default function DashboardClient({
               onComplete={handleCompleteOnboarding} 
             />
           )}
-          {!showOnboarding && showPortal && (
-            <ArchivePortal
-              key="archive-portal"
-              onEnter={handleEnterPortal}
-              userName={profile.name}
-              profile={profile}
-              discountPercent={discountPercent}
-            />
-          )}
+          <ClubhouseCharterModal
+            isOpen={showCharterModal}
+            onClose={() => setShowCharterModal(false)}
+          />
         </AnimatePresence>,
         document.body
       )}
