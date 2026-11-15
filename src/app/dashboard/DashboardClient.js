@@ -1875,20 +1875,20 @@ export default function DashboardClient({
                   <div className="lg:col-span-2 space-y-6 sm:space-y-8">
                     
 
-                    {/* User Stats Grid (Membership, Milestone Tokens, Spendable Leaves, Streak if active) */}
-                    <div className={`grid grid-cols-1 sm:grid-cols-2 ${profile.streak > 0 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4 sm:gap-6`}>
-                      {/* Membership Status Card */}
-                      <div className="parchment-card p-5 sm:p-8 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                          <Award size={120} />
+                    {/* User Stats Bento Grid (Balanced 2x2 on Mobile, 4-Across on Desktop) */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-6">
+                      {/* 1. Membership Status Card */}
+                      <div className="parchment-card p-3.5 sm:p-7 relative overflow-hidden flex flex-col justify-between min-h-[145px] sm:min-h-[220px]">
+                        <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-5 pointer-events-none">
+                          <Award size={90} className="sm:w-[120px] sm:h-[120px]" />
                         </div>
-                        <div className="relative z-10 space-y-4">
+                        <div className="relative z-10 space-y-2 sm:space-y-4">
                           <div>
-                            <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Membership Status</h3>
-                            <div className="flex flex-wrap items-baseline gap-2 mt-1">
-                              <h2 className="text-4xl font-display font-extrabold text-burgundy leading-none tracking-tight">{profile.tier}</h2>
+                            <h3 className="text-[9px] sm:text-[10px] font-sans font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-ink/40">Membership</h3>
+                            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+                              <h2 className="text-2xl sm:text-4xl font-display font-extrabold text-burgundy leading-none tracking-tight">{profile.tier}</h2>
                               {isKeeper && (
-                                <span className="bg-sage/10 text-sage font-bold text-[8px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-sage/20">
+                                <span className="bg-sage/10 text-sage font-bold text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-sage/20">
                                   Unlocked
                                 </span>
                               )}
@@ -1896,42 +1896,45 @@ export default function DashboardClient({
                           </div>
 
                           {isKeeper ? (
-                            <div className="bg-primary/5 border border-primary/15 rounded-xl p-3.5 space-y-2.5">
-                               <h4 className="font-bold text-burgundy flex items-center gap-1.5 text-xs font-sans"><Ticket size={14}/> {discountPercent} Discount</h4>
+                            <div className="bg-primary/5 border border-primary/15 rounded-lg sm:rounded-xl p-2 sm:p-3.5 space-y-1.5 sm:space-y-2.5">
+                               <h4 className="font-bold text-burgundy flex items-center gap-1 text-[10px] sm:text-xs font-sans"><Ticket size={12} className="sm:w-3.5 sm:h-3.5"/> {discountPercent} Discount</h4>
                                
-                               <div className="flex items-center gap-2 bg-white/70 p-1.5 pl-3 rounded-lg border border-sage/15">
-                                  <span className="font-mono text-sm font-bold text-ink tracking-wider flex-1">{profile.lkid}</span>
-                                  <button onClick={copyDiscountCode} className="bg-sage/10 hover:bg-sage/25 text-ink px-3 py-1.5 rounded text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer">
-                                     {copiedCode ? <CheckCircle2 size={12} className="text-sage"/> : <Copy size={12}/>}
-                                     {copiedCode ? "Copied" : "Copy"}
+                               <div className="flex items-center gap-1.5 bg-white/70 p-1 sm:p-1.5 pl-2 sm:pl-3 rounded-md sm:rounded-lg border border-sage/15">
+                                  <span className="font-mono text-xs sm:text-sm font-bold text-ink tracking-wider flex-1 truncate">{profile.lkid}</span>
+                                  <button onClick={copyDiscountCode} className="bg-sage/10 hover:bg-sage/25 text-ink px-2 sm:px-3 py-1 sm:py-1.5 rounded text-[8px] sm:text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer">
+                                     {copiedCode ? <CheckCircle2 size={10} className="text-sage"/> : <Copy size={10}/>}
+                                     <span>{copiedCode ? "Copied" : "Copy"}</span>
                                   </button>
                                </div>
                             </div>
                           ) : (
-                            <div className="bg-ink/5 rounded-xl p-4 border border-sage/10">
-                              <p className="text-xs sm:text-sm text-ink/85 leading-relaxed font-serif">
-                                Upgrade to <strong>Keeper</strong> to unlock your {discountPercent} discount on all books for 90 days and exclusive Archive access.
+                            <div className="bg-ink/5 rounded-lg sm:rounded-xl p-2 sm:p-4 border border-sage/10">
+                              <p className="text-[10px] sm:text-sm text-ink/85 leading-tight sm:leading-relaxed font-serif line-clamp-2 sm:line-clamp-none">
+                                Upgrade to <strong>Keeper</strong> for {discountPercent} off &amp; Archive access.
                               </p>
                             </div>
                           )}
                         </div>
                       </div>
 
-                      {/* Milestone Tokens Circle Progress Card */}
-                      <div className="parchment-card p-5 sm:p-8 flex items-center justify-between relative group min-h-[220px]">
-                        <div className="space-y-3">
-                          <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Milestone Tokens</span>
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="text-5xl font-display text-burgundy font-extrabold font-serif">{milestoneTokens.toFixed(1)}</span>
-                            <span className="text-sm font-bold text-ink/40">/ {tokenGoal}</span>
+                      {/* 2. Milestone Tokens Circle Progress Card */}
+                      <div className="parchment-card p-3.5 sm:p-7 flex items-center justify-between relative group min-h-[145px] sm:min-h-[220px]">
+                        <div className="space-y-1.5 sm:space-y-3">
+                          <span className="text-[9px] sm:text-[10px] font-sans font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-ink/40">Tokens</span>
+                          <div className="flex items-baseline gap-1 sm:gap-1.5">
+                            <span className="text-2xl sm:text-5xl font-display text-burgundy font-extrabold font-serif leading-none">{milestoneTokens.toFixed(1)}</span>
+                            <span className="text-xs sm:text-sm font-bold text-ink/40">/ {tokenGoal}</span>
                           </div>
-                          <p className="text-xs text-ink/60 leading-relaxed max-w-[160px] font-serif font-medium">
+                          <p className="text-[9px] sm:text-xs text-ink/60 leading-tight sm:leading-relaxed max-w-[160px] font-serif font-medium hidden sm:block">
                             Earned via reviews, submissions, and referrals. 10.0 unlocks Keeper.
+                          </p>
+                          <p className="text-[8px] text-ink/50 font-serif sm:hidden leading-none pt-0.5">
+                            10.0 unlocks Keeper
                           </p>
                         </div>
                         
-                        <div className="relative w-20 h-20 flex items-center justify-center flex-shrink-0">
-                          <svg className="w-full h-full transform -rotate-90">
+                        <div className="relative w-12 h-12 sm:w-20 sm:h-20 flex items-center justify-center shrink-0">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 80 80">
                             <circle 
                               cx="40" 
                               cy="40" 
@@ -1953,108 +1956,124 @@ export default function DashboardClient({
                               transition={{ duration: 1.2, ease: "easeOut" }}
                             />
                           </svg>
-                          <div className="absolute text-xs font-sans font-extrabold text-burgundy">{tokenPercent.toFixed(0)}%</div>
+                          <div className="absolute text-[9px] sm:text-xs font-sans font-extrabold text-burgundy">{tokenPercent.toFixed(0)}%</div>
                         </div>
                       </div>
 
-                      {/* Spendable Leaves Card */}
-                      <div className="parchment-card p-5 sm:p-8 relative overflow-hidden flex flex-col justify-between group min-h-[220px]">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:rotate-12 transition-transform pointer-events-none">
-                          <Coins size={60} className="text-burgundy" />
+                      {/* 3. Spendable Leaves Card */}
+                      <div className="parchment-card p-3.5 sm:p-7 relative overflow-hidden flex flex-col justify-between group min-h-[145px] sm:min-h-[220px]">
+                        <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-5 group-hover:rotate-12 transition-transform pointer-events-none">
+                          <Coins size={48} className="sm:w-16 sm:h-16 text-burgundy" />
                         </div>
-                        <div className="relative z-10 space-y-4">
-                          <div className="flex justify-between items-start">
+                        <div className="relative z-10 space-y-2 sm:space-y-4">
+                          <div className="flex justify-between items-start gap-1">
                             <div>
-                              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Spendable Leaves</span>
-                              <div className="text-4xl font-display text-burgundy font-extrabold mt-1">{spendableLeaves} <span className="text-2xl">🍃</span></div>
+                              <span className="text-[9px] sm:text-[10px] font-sans font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-ink/40">Leaves</span>
+                              <div className="text-2xl sm:text-4xl font-display text-burgundy font-extrabold mt-0.5 leading-none">
+                                {spendableLeaves} <span className="text-base sm:text-2xl">🍃</span>
+                              </div>
                             </div>
                             <button
                               onClick={() => setShowBuyLeavesModal(true)}
-                              className="bg-burgundy text-cream text-[10px] font-sans font-bold px-3 py-1.5 rounded-lg hover:bg-ink transition-colors uppercase tracking-wider mt-1.5 cursor-pointer shadow-sm active:scale-95"
+                              className="bg-burgundy text-cream text-[8px] sm:text-[10px] font-sans font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg hover:bg-ink transition-colors uppercase tracking-wider cursor-pointer shadow-xs active:scale-95"
                             >
-                              Buy Leaves
+                              Buy
                             </button>
                           </div>
                           
                           {/* Lifetime Leaves / Mystery Package Progression */}
-                          <div className="border-t border-sage/10 pt-3.5">
-                            <div className="flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/50 mb-1.5">
-                              <span className="flex items-center gap-1"><Gift size={11} className="text-accent" /> Next Mystery Gift</span>
-                              <span>{lifetimeLeaves % 500} / 500 🍃</span>
+                          <div className="border-t border-sage/10 pt-2 sm:pt-3.5">
+                            <div className="flex justify-between items-center text-[8px] sm:text-[10px] font-sans font-bold uppercase tracking-wider text-ink/50 mb-1">
+                              <span className="flex items-center gap-1 truncate"><Gift size={10} className="text-accent shrink-0" /> Gift</span>
+                              <span className="shrink-0">{lifetimeLeaves % 500}/500</span>
                             </div>
-                            <div className="w-full bg-[#E8DFC9] rounded-full h-2 relative overflow-hidden border border-sage/5">
+                            <div className="w-full bg-[#E8DFC9] rounded-full h-1.5 sm:h-2 relative overflow-hidden border border-sage/5">
                               <div 
-                                className="bg-accent h-2 rounded-full transition-all duration-1000 shadow-sm" 
+                                className="bg-accent h-1.5 sm:h-2 rounded-full transition-all duration-1000 shadow-xs" 
                                 style={{ width: `${((lifetimeLeaves % 500) / 500) * 100}%` }}
                               ></div>
                             </div>
-                            <div className="flex justify-between items-center text-[9px] text-ink/45 mt-1 font-serif">
-                              <span>Lifetime: {lifetimeLeaves} leaves</span>
-                              <span className="font-bold text-accent italic">🎁 Secret reward at 500</span>
+                            <div className="flex justify-between items-center text-[7px] sm:text-[9px] text-ink/45 mt-1 font-serif">
+                              <span className="truncate">Total: {lifetimeLeaves} 🍃</span>
+                              <span className="font-bold text-accent italic hidden sm:inline">🎁 Reward at 500</span>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Streak Card */}
-                      {profile.streak > 0 && (
-                        <div className="parchment-card p-5 sm:p-8 flex flex-col justify-between min-h-[220px] relative overflow-hidden group">
-                          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform pointer-events-none">
-                            <Flame size={80} className="text-burgundy" />
-                          </div>
-                          <div className="relative z-10 space-y-4">
-                            <span className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-ink/40">Writing Streak</span>
-                            <div className="flex items-baseline gap-2 mt-1">
-                              <h2 className="text-4xl font-display font-extrabold text-burgundy leading-none tracking-tight">
-                                {profile.streak} <span className="text-2xl">🔥</span>
-                              </h2>
-                            </div>
-                            <p className="text-xs text-ink/60 leading-relaxed font-serif font-medium">
-                              Amazing! You've kept your streak active for {profile.streak} consecutive week{profile.streak > 1 ? 's' : ''}.
-                            </p>
-                          </div>
-                          <div className="relative z-10 border-t border-sage/10 pt-3 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/40">
-                            <span>Status: Active</span>
-                            <span className="text-sage">Keep it up!</span>
-                          </div>
+                      {/* 4. Writing Streak Card */}
+                      <div className="parchment-card p-3.5 sm:p-7 flex flex-col justify-between min-h-[145px] sm:min-h-[220px] relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-5 group-hover:scale-110 transition-transform pointer-events-none">
+                          <Flame size={54} className="sm:w-20 sm:h-20 text-burgundy" />
                         </div>
-                      )}
+                        <div className="relative z-10 space-y-1 sm:space-y-3">
+                          <span className="text-[9px] sm:text-[10px] font-sans font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-ink/40">Writing Streak</span>
+                          <div className="flex items-baseline gap-1.5 mt-0.5 sm:mt-1">
+                            <h2 className="text-2xl sm:text-4xl font-display font-extrabold text-burgundy leading-none tracking-tight">
+                              {profile.streak} <span className="text-base sm:text-2xl">🔥</span>
+                            </h2>
+                          </div>
+                          <p className="text-[9px] sm:text-xs text-ink/60 leading-tight sm:leading-relaxed font-serif font-medium line-clamp-2 sm:line-clamp-none">
+                            {profile.streak > 0 
+                              ? `${profile.streak} consecutive week${profile.streak > 1 ? 's' : ''} active.`
+                              : 'Submit weekly to ignite your flame.'}
+                          </p>
+                        </div>
+                        <div className="relative z-10 border-t border-sage/10 pt-1.5 sm:pt-3 flex justify-between items-center text-[8px] sm:text-[10px] font-sans font-bold uppercase tracking-wider text-ink/40">
+                          <span>Status: {profile.streak > 0 ? 'Active' : 'Dormant'}</span>
+                          <span className={profile.streak > 0 ? 'text-sage' : 'text-accent'}>
+                            {profile.streak > 0 ? 'Keep it up!' : 'Forge awaits'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Progress Trackers */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                      <div className="parchment-card p-5 sm:p-8">
-                        <div className="flex justify-between items-start mb-6">
-                          <div>
-                            <h3 className="font-bold text-ink flex items-center gap-2 text-sm"><Ticket size={16} className="text-sage"/> Event Points</h3>
-                            <p className="text-[9px] text-ink/50 mt-1 uppercase tracking-wider font-bold">Physical: 2 • Virtual: 1</p>
+                    {/* Progress Trackers (Side-by-Side 2-Across Grid) */}
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-6">
+                      <div className="parchment-card p-3.5 sm:p-8 flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start mb-3 sm:mb-6">
+                            <div>
+                              <h3 className="font-bold text-ink flex items-center gap-1.5 text-xs sm:text-sm">
+                                <Ticket size={14} className="text-sage sm:w-4 sm:h-4 shrink-0"/>
+                                <span className="truncate">Event Points</span>
+                              </h3>
+                              <p className="text-[8px] sm:text-[9px] text-ink/50 mt-0.5 uppercase tracking-wider font-bold">Physical: 2 • Virt: 1</p>
+                            </div>
+                            <span className="font-display font-extrabold text-xl sm:text-3xl text-burgundy font-serif leading-none">{profile.events}</span>
                           </div>
-                          <span className="font-display font-extrabold text-3xl text-burgundy font-serif">{profile.events}</span>
+                          
+                          <div className="w-full bg-sage/10 rounded-full h-1.5 sm:h-2 mb-2 sm:mb-3 overflow-hidden border border-sage/5">
+                            <div className="bg-sage h-1.5 sm:h-2 rounded-full transition-all duration-1000 shadow-xs" style={{ width: `${eventsProgress}%` }}></div>
+                          </div>
                         </div>
-                        
-                        <div className="w-full bg-sage/10 rounded-full h-2 mb-3 overflow-hidden border border-sage/5">
-                          <div className="bg-sage h-2 rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${eventsProgress}%` }}></div>
-                        </div>
-                        <div className="flex justify-between items-center text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40">
-                          <span>{eventsProgress.toFixed(0)}% Complete</span>
+
+                        <div className="flex justify-between items-center text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40 pt-1">
+                          <span>{eventsProgress.toFixed(0)}%</span>
                           <span>{profile.events}/{eventsNeeded}</span>
                         </div>
                       </div>
 
-                      <div className="parchment-card p-5 sm:p-8">
-                        <div className="flex justify-between items-start mb-6">
-                          <div>
-                            <h3 className="font-bold text-ink flex items-center gap-2 text-sm"><Users size={16} className="text-accent"/> Referrals</h3>
-                            <p className="text-[9px] text-ink/50 mt-1 uppercase tracking-wider font-bold">Invite the collective</p>
+                      <div className="parchment-card p-3.5 sm:p-8 flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start mb-3 sm:mb-6">
+                            <div>
+                              <h3 className="font-bold text-ink flex items-center gap-1.5 text-xs sm:text-sm">
+                                <Users size={14} className="text-accent sm:w-4 sm:h-4 shrink-0"/>
+                                <span className="truncate">Referrals</span>
+                              </h3>
+                              <p className="text-[8px] sm:text-[9px] text-ink/50 mt-0.5 uppercase tracking-wider font-bold truncate">Invite collective</p>
+                            </div>
+                            <span className="font-display font-extrabold text-xl sm:text-3xl text-burgundy font-serif leading-none">{profile.referrals}</span>
                           </div>
-                          <span className="font-display font-extrabold text-3xl text-burgundy font-serif">{profile.referrals}</span>
+                          
+                          <div className="w-full bg-primary/10 rounded-full h-1.5 sm:h-2 mb-2 sm:mb-3 overflow-hidden border border-primary/5">
+                            <div className="bg-accent h-1.5 sm:h-2 rounded-full transition-all duration-1000 shadow-xs" style={{ width: `${referralsProgress}%` }}></div>
+                          </div>
                         </div>
-                        
-                        <div className="w-full bg-primary/10 rounded-full h-2 mb-3 overflow-hidden border border-primary/5">
-                          <div className="bg-accent h-2 rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${referralsProgress}%` }}></div>
-                        </div>
-                        <div className="flex justify-between items-center text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40">
-                          <span>{referralsProgress.toFixed(0)}% Complete</span>
+
+                        <div className="flex justify-between items-center text-[8px] sm:text-[9px] font-sans font-bold uppercase tracking-widest text-ink/40 pt-1">
+                          <span>{referralsProgress.toFixed(0)}%</span>
                           <span>{profile.referrals}/{referralsNeeded}</span>
                         </div>
                       </div>

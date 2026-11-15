@@ -292,7 +292,7 @@ const itemVariants = {
 
 // ─── Main VillageClient ───────────────────────────────────────────────────────
 
-export default function VillageClient({ weeklyPrompt, storyPrompt, poemPrompt, userStats, isSignedIn: serverIsSignedIn, isRegistered: serverIsRegistered }) {
+export default function VillageClient({ weeklyPrompt, storyPrompt, poemPrompt, userStats, recentSalonWorks = [], isSignedIn: serverIsSignedIn, isRegistered: serverIsRegistered }) {
   const [showEntrance, setShowEntrance] = useState(false);
   const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
@@ -532,6 +532,119 @@ export default function VillageClient({ weeklyPrompt, storyPrompt, poemPrompt, u
             </motion.div>
 
           </div>
+
+          {/* Living Village Showcase (Active Weekly Prompt & Recent Salon Manuscripts) */}
+          <motion.div variants={itemVariants} className="space-y-4 sm:space-y-6 pt-1 max-w-7xl mx-auto">
+            
+            {/* 1. Active Weekly Prompt Feature Card */}
+            <div 
+              className="parchment-card p-3.5 sm:p-6 border border-accent/25 relative overflow-hidden group shadow-xs"
+              style={{ background: 'radial-gradient(ellipse at 10% 20%, rgba(242,169,138,0.15) 0%, rgba(250,247,242,0.98) 75%)' }}
+            >
+              <div className="absolute top-0 right-0 w-48 h-48 bg-accent/10 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+              
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+                <div className="space-y-1.5 sm:space-y-2 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/15 text-accent text-[8px] sm:text-[10px] font-sans font-bold uppercase tracking-wider border border-accent/20">
+                      <Clock size={10} className="sm:w-3 sm:h-3 animate-spin-slow" />
+                      Active Weekly Prompt
+                    </span>
+                    <span className="text-[8px] sm:text-[9px] font-sans font-medium text-ink/40 uppercase tracking-widest hidden sm:inline">
+                      Saturday Batch Drop
+                    </span>
+                  </div>
+                  
+                  <blockquote className="text-xs sm:text-base font-serif italic text-burgundy font-medium leading-relaxed pl-2.5 sm:pl-3 border-l-2 border-accent/40 my-0.5 sm:my-1 line-clamp-3 sm:line-clamp-none">
+                    &ldquo;{weeklyPrompt || storyPrompt || poemPrompt}&rdquo;
+                  </blockquote>
+                  
+                  <p className="text-[9px] sm:text-xs text-ink/60 font-serif leading-tight">
+                    Pen your story or verse in the Forge. First submission of the week earns <strong className="text-burgundy">+1.0 Milestone Token &amp; +5 Leaves</strong>.
+                  </p>
+                </div>
+
+                <div className="shrink-0 flex items-center pt-1 md:pt-0">
+                  <Link
+                    href="/dashboard/write"
+                    className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-burgundy hover:bg-ink text-cream font-sans font-bold text-[10px] sm:text-xs py-2 sm:py-2.5 px-4 sm:px-5 rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95 cursor-pointer"
+                  >
+                    <PenTool size={12} className="sm:w-3.5 sm:h-3.5" />
+                    <span>Craft Manuscript</span>
+                    <ArrowRight size={12} className="sm:w-3.5 sm:h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. From The Living Salon (Graduated Works) */}
+            {recentSalonWorks && recentSalonWorks.length > 0 && (
+              <div className="space-y-2.5 sm:space-y-3">
+                <div className="flex items-center justify-between px-0.5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={13} className="text-accent sm:w-4 sm:h-4" />
+                    <h3 className="font-display font-extrabold text-xs sm:text-base text-burgundy">
+                      From The Living Salon
+                    </h3>
+                    <span className="text-[8px] sm:text-[9px] font-sans font-semibold text-ink/40 uppercase tracking-wider hidden sm:inline">
+                      • Reviewed Manuscripts
+                    </span>
+                  </div>
+                  <Link
+                    href="/village/gallery"
+                    className="text-[9px] sm:text-xs font-sans font-bold text-accent hover:text-burgundy flex items-center gap-1 uppercase tracking-wider transition-colors"
+                  >
+                    <span>Browse All</span>
+                    <ArrowRight size={11} className="sm:w-3 sm:h-3" />
+                  </Link>
+                </div>
+
+                {/* 3-Across High-Density Preview Grid */}
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-4">
+                  {recentSalonWorks.map((work) => (
+                    <Link
+                      key={work.id}
+                      href={`/village/gallery?pieceId=${work.id}`}
+                      className="parchment-card p-2 sm:p-4 flex flex-col justify-between group hover:-translate-y-0.5 transition-all border border-sage/15 hover:border-accent/40 shadow-2xs hover:shadow-sm"
+                    >
+                      <div className="space-y-1 sm:space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[7px] sm:text-[9px] font-sans font-bold uppercase tracking-wider px-1 sm:px-1.5 py-0.5 rounded bg-cream border border-sage/20 text-burgundy/80 truncate max-w-[65px] sm:max-w-[80px]">
+                            {work.genre || 'Prose'}
+                          </span>
+                          {work.averageRating > 0 && (
+                            <span className="text-[7px] sm:text-[10px] font-sans font-bold text-amber-600 flex items-center gap-0.5">
+                              ★ {work.averageRating.toFixed(1)}
+                            </span>
+                          )}
+                        </div>
+
+                        <h4 className="font-display font-bold text-[10px] sm:text-sm text-burgundy group-hover:text-accent transition-colors line-clamp-1 leading-snug">
+                          {work.title}
+                        </h4>
+
+                        <p className="text-[7px] sm:text-[10px] text-ink/50 font-serif italic truncate">
+                          by {work.displayName || 'Anonymous'}
+                        </p>
+
+                        {work.logline && (
+                          <p className="text-[8px] sm:text-[11px] text-ink/75 font-serif line-clamp-2 leading-relaxed hidden sm:block">
+                            {work.logline}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-1.5 sm:pt-2 border-t border-sage/10 flex items-center justify-between text-[7px] sm:text-[10px] text-ink/50 font-sans">
+                        <span className="font-bold text-accent/80">Read</span>
+                        <ArrowRight size={9} className="sm:w-2.5 sm:h-2.5 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </motion.div>
         </motion.div>
       </main>
     </>

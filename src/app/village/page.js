@@ -76,12 +76,35 @@ export default async function VillagePage() {
     };
   }
 
+  // Fetch recent qualifying manuscripts from The Living Salon
+  const recentSalonWorks = await Database.query(`
+    SELECT 
+      s.id,
+      s.title,
+      s.genre,
+      s.logline,
+      COALESCE(s.pen_name, u.full_name, 'Anonymous Writer') as "displayName",
+      (SELECT COUNT(*) FROM submission_likes l WHERE l.submission_id = s.id)::int as "likeCount",
+      (SELECT COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0.0) FROM submission_ratings r WHERE r.submission_id = s.id)::float as "averageRating"
+    FROM submissions s
+    JOIN users u ON u.id = s.author_id
+    WHERE s.batch_status IN ('active_batch', 'archived')
+      AND (
+        s.batch_status = 'archived'
+        OR EXISTS (SELECT 1 FROM peer_reviews pr WHERE pr.submission_id = s.id)
+        OR s.created_at <= NOW() - INTERVAL '7 days'
+      )
+    ORDER BY s.created_at DESC
+    LIMIT 3
+  `);
+
   return (
     <VillageClient
       weeklyPrompt={weeklyPrompt}
       storyPrompt={weeklyPrompt}
       poemPrompt={weeklyPrompt}
       userStats={userStats}
+      recentSalonWorks={recentSalonWorks || []}
       isSignedIn={!!user}
       isRegistered={!!(dbUser && dbUser.whatsapp)}
     />

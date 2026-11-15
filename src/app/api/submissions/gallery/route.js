@@ -30,11 +30,16 @@ export async function GET(request) {
     const currentMonthNum = now.getMonth() + 1;
     const currentCycleMonth = `${currentYear}-${String(currentMonthNum).padStart(2, '0')}`;
 
-    // Fetch available distinct cycle months for the archive selector
+    // Fetch available distinct cycle months for the archive selector (only graduated/qualifying works)
     const monthsRes = await Database.query(`
-      SELECT DISTINCT cycle_month 
+      SELECT DISTINCT COALESCE(cycle_month, to_char(created_at, 'YYYY-MM')) as cycle_month 
       FROM submissions 
-      WHERE cycle_month IS NOT NULL AND batch_status IN ('active_batch', 'archived')
+      WHERE batch_status IN ('active_batch', 'archived')
+        AND (
+          batch_status = 'archived'
+          OR EXISTS (SELECT 1 FROM peer_reviews pr WHERE pr.submission_id = submissions.id)
+          OR created_at <= NOW() - INTERVAL '7 days'
+        )
       ORDER BY cycle_month DESC
     `);
     const availableMonths = monthsRes.map(m => m.cycle_month).filter(Boolean);
@@ -88,10 +93,14 @@ export async function GET(request) {
     });
 
     // Determine active filter:
-    // Defaults strictly to CURRENT MONTH if not specified or empty!
+    // Default to currentCycleMonth, or latest available month if current has 0 pieces, or 'all'
+    const defaultCycle = availableMonths.includes(currentCycleMonth)
+      ? currentCycleMonth
+      : (availableMonths[0] || currentCycleMonth);
+
     const activeCycle = monthYear === 'all'
       ? 'all'
-      : (monthYear || currentCycleMonth);
+      : (monthYear || defaultCycle);
 
     let queryText = `
       SELECT 
@@ -104,7 +113,7 @@ export async function GET(request) {
         s.batch_status as "batchStatus",
         s.has_laurel as "hasLaurel",
         s.anthology_inducted as "anthologyInducted",
-        s.cycle_month as "cycleMonth",
+        COALESCE(s.cycle_month, to_char(s.created_at, 'YYYY-MM')) as "cycleMonth",
         s.created_at as "createdAt",
         u.full_name as "authorFullName",
         u.avatar_url as "authorAvatarUrl",
@@ -120,6 +129,11 @@ export async function GET(request) {
       JOIN users u ON u.id = s.author_id
       WHERE (
         s.batch_status IN ('active_batch', 'archived')
+        AND (
+          s.batch_status = 'archived'
+          OR EXISTS (SELECT 1 FROM peer_reviews pr WHERE pr.submission_id = s.id)
+          OR s.created_at <= NOW() - INTERVAL '7 days'
+        )
       )
     `;
 
@@ -129,11 +143,11 @@ export async function GET(request) {
       if (/^\d{4}$/.test(activeCycle)) {
         // Grouped year filter, e.g. "2026"
         queryParams.push(`${activeCycle}-%`);
-        queryText += ` AND s.cycle_month LIKE $${queryParams.length}`;
+        queryText += ` AND COALESCE(s.cycle_month, to_char(s.created_at, 'YYYY-MM')) LIKE $${queryParams.length}`;
       } else {
         // Specific month filter, e.g. "2026-11" or "2026-10"
         queryParams.push(activeCycle);
-        queryText += ` AND s.cycle_month = $${queryParams.length}`;
+        queryText += ` AND COALESCE(s.cycle_month, to_char(s.created_at, 'YYYY-MM')) = $${queryParams.length}`;
       }
     }
 
