@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser } from '@/lib/permissions';
+import { sendHeraldGroupBroadcast } from '@/lib/herald';
+import { getSubmissionSpotlight } from '@/lib/heraldLore';
 
 // Saturday 12:00 AM batch cycle start calculator (UTC aligned)
 function getLastSaturdayStart() {
@@ -140,6 +142,20 @@ export async function POST(request) {
         milestoneTriggered
       };
     });
+
+    // Zero-bias manuscript spotlight dispatch to WhatsApp Community Group
+    if (result.newSubmission) {
+      sendHeraldGroupBroadcast({
+        text: getSubmissionSpotlight({
+          title: result.newSubmission.title,
+          genre: result.newSubmission.genre,
+          logline,
+          submissionId: result.newSubmission.id
+        }),
+        idempotencyKey: `submission_spotlight_${result.newSubmission.id}`,
+        ritualType: 'submission_spotlight'
+      }).catch(err => console.error('[Herald] Failed to spotlight manuscript:', err));
+    }
 
     return NextResponse.json({ 
       success: true, 

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser, getUserPermissions, hasGatheringAdminAccess } from '@/lib/permissions';
+import { sendHeraldGroupBroadcast } from '@/lib/herald';
+import { getNewEventProclamation, getGatheringLiveAlert } from '@/lib/heraldLore';
 
 export const dynamic = 'force-dynamic';
 
@@ -270,6 +272,40 @@ export async function PATCH(request, { params }) {
       WHERE id = $${idx} 
       RETURNING *
     `, values);
+
+    // If gathering is published, broadcast proclamation (protected by idempotency key)
+    if (updated && updated.status === 'published') {
+      sendHeraldGroupBroadcast({
+        text: getNewEventProclamation({
+          title: updated.title,
+          gatheringType: updated.gathering_type,
+          eventDate: updated.event_date,
+          startTime: updated.start_time,
+          meetUrl: updated.meet_url,
+          venueName: updated.venue_name,
+          gatheringId: updated.id,
+          description: updated.description
+        }),
+        mentionsEveryOne: true,
+        idempotencyKey: `gathering_proclamation_${updated.id}`,
+        ritualType: 'gathering_proclamation'
+      }).catch(err => console.error('[Herald] Failed to proclaim gathering:', err));
+    }
+
+    // If gathering went live (meeting is being hosted), broadcast live alert to group!
+    if (updated && updated.status === 'live') {
+      sendHeraldGroupBroadcast({
+        text: getGatheringLiveAlert({
+          title: updated.title,
+          gatheringType: updated.gathering_type,
+          meetUrl: updated.meet_url,
+          venueName: updated.venue_name
+        }),
+        mentionsEveryOne: true,
+        idempotencyKey: `gathering_live_${updated.id}`,
+        ritualType: 'gathering_live'
+      }).catch(err => console.error('[Herald] Failed to broadcast live gathering:', err));
+    }
 
     return NextResponse.json({
       success: true,

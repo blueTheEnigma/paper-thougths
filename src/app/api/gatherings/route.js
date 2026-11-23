@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { Database } from '@/lib/db';
 import { syncOrCreateUser, getUserPermissions, hasGatheringAdminAccess } from '@/lib/permissions';
+import { sendHeraldGroupBroadcast } from '@/lib/herald';
+import { getNewEventProclamation, getGatheringLiveAlert } from '@/lib/heraldLore';
 
 export const dynamic = 'force-dynamic';
 
@@ -188,6 +190,40 @@ export async function POST(request) {
       JSON.stringify(coHosts || []),
       dbUser.id
     ]);
+
+    // Proclaim new gathering to WhatsApp Town Hall group with mentionsEveryOne
+    if (newGathering && newGathering.status === 'published') {
+      sendHeraldGroupBroadcast({
+        text: getNewEventProclamation({
+          title: newGathering.title,
+          gatheringType: newGathering.gathering_type,
+          eventDate: newGathering.event_date,
+          startTime: newGathering.start_time,
+          meetUrl: newGathering.meet_url,
+          venueName: newGathering.venue_name,
+          gatheringId: newGathering.id,
+          description: newGathering.description
+        }),
+        mentionsEveryOne: true,
+        idempotencyKey: `gathering_proclamation_${newGathering.id}`,
+        ritualType: 'gathering_proclamation'
+      }).catch(err => console.error('[Herald] Failed to proclaim gathering:', err));
+    }
+
+    // If new gathering is directly launched as live, broadcast live alert!
+    if (newGathering && newGathering.status === 'live') {
+      sendHeraldGroupBroadcast({
+        text: getGatheringLiveAlert({
+          title: newGathering.title,
+          gatheringType: newGathering.gathering_type,
+          meetUrl: newGathering.meet_url,
+          venueName: newGathering.venue_name
+        }),
+        mentionsEveryOne: true,
+        idempotencyKey: `gathering_live_${newGathering.id}`,
+        ritualType: 'gathering_live'
+      }).catch(err => console.error('[Herald] Failed to broadcast live gathering:', err));
+    }
 
     return NextResponse.json({
       success: true,

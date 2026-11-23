@@ -19,6 +19,7 @@ export default {
       const isApiProtectedRoute = nextUrl.pathname.startsWith('/api/') && 
                                   !nextUrl.pathname.startsWith('/api/auth') && 
                                   !nextUrl.pathname.startsWith('/api/cron') &&
+                                  !nextUrl.pathname.startsWith('/api/whatsapp') &&
                                   !nextUrl.pathname.startsWith('/api/orders/payment-verify') &&
                                   !nextUrl.pathname.startsWith('/api/newsletter/subscribe') &&
                                   !nextUrl.pathname.startsWith('/api/crossing') &&

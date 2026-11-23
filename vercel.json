@@ -43,6 +43,10 @@
     {
       "path": "/api/cron/monthly-honors",
       "schedule": "5 0 4 * *"
+    },
+    {
+      "path": "/api/cron/herald",
+      "schedule": "0 * * * *"
     }
   ]
 }
