@@ -47,7 +47,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const authHeader = request.headers.get('apikey') || request.headers.get('authorization');
-    const secret = process.env.HERALD_API_KEY;
+    const secret = process.env.HERALD_API_KEY || 'pt_herald_516c41028a10df20546b9082726c9814';
 
     if (secret && authHeader && !authHeader.includes(secret)) {
       return NextResponse.json({ success: false, error: 'Unauthorized webhook' }, { status: 401 });

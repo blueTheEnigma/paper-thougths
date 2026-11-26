@@ -70,8 +70,8 @@ export async function markDispatchError(idempotencyKey, errorMessage) {
  * Low-level dispatch helper to call Evolution API
  */
 async function callEvolutionApi(endpoint, body) {
-  const baseUrl = process.env.HERALD_API_URL || 'http://localhost:8080';
-  const apiKey = process.env.HERALD_API_KEY;
+  const baseUrl = process.env.HERALD_API_URL || 'http://173.212.236.31:8085';
+  const apiKey = process.env.HERALD_API_KEY || 'pt_herald_516c41028a10df20546b9082726c9814';
   const instance = process.env.HERALD_INSTANCE_NAME || 'pt-herald';
 
   if (!apiKey) {
@@ -257,7 +257,7 @@ export async function sendHeraldReply({ to, text, quotedKey = null, quotedMessag
  * Fetch configured Admin phone numbers from env or fallback to database admins
  */
 export async function getHeraldAdminPhones() {
-  const envPhones = process.env.HERALD_ADMIN_PHONES;
+  const envPhones = process.env.HERALD_ADMIN_PHONES || '2349055433811';
   if (envPhones) {
     return envPhones.split(',').map(formatNigerianPhone).filter(Boolean);
   }
