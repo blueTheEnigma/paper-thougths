@@ -70,9 +70,15 @@ export async function POST(request) {
       const participants = rawData.participants || [];
       const remoteJid = rawData.id || rawData.remoteJid || rawData.groupJid || body.remoteJid || '';
 
-      // Guard: Only process participant joins for configured HERALD_GROUP_JID
-      const expectedGroupJid = process.env.HERALD_GROUP_JID || '120363430362177971@g.us';
-      if (expectedGroupJid && remoteJid && remoteJid !== expectedGroupJid) {
+      // Guard: Allow primary Town Hall + any configured test group JIDs
+      const primaryGroupJid = process.env.HERALD_GROUP_JID || '120363430362177971@g.us';
+      const testGroupJids = (process.env.HERALD_TEST_GROUP_JIDS || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+      const allowedGroupJids = [primaryGroupJid, ...testGroupJids];
+
+      if (remoteJid && !allowedGroupJids.includes(remoteJid)) {
         console.log(`[Herald Webhook] Ignoring participant join for non-herald group: ${remoteJid}`);
         return NextResponse.json({ success: true, processed: false, reason: 'group_jid_mismatch' });
       }
@@ -81,7 +87,7 @@ export async function POST(request) {
         for (const rawParticipant of participants) {
           const participantStr = typeof rawParticipant === 'string'
             ? rawParticipant
-            : (rawParticipant?.id || rawParticipant?.phoneNumber || '');
+            : (rawParticipant?.phoneNumber || rawParticipant?.id || '');
           const rawPhone = participantStr.replace(/@.*$/, '');
           const cleanPhone = formatNigerianPhone(rawPhone);
 
@@ -93,14 +99,15 @@ export async function POST(request) {
               ON CONFLICT (phone) DO UPDATE SET welcome_sent_at = NOW()
             `, [cleanPhone]).catch(e => console.error('[Herald Webhook] Error tracking newcomer:', e));
 
-            const idempotencyKey = `welcome_entrant_${cleanPhone}_${new Date().toISOString().slice(0, 10)}`;
+            const idempotencyKey = `welcome_entrant_${cleanPhone}_${remoteJid}_${new Date().toISOString().slice(0, 10)}`;
             const greetingText = getNewMemberGreeting({ phone: cleanPhone });
 
             await sendHeraldGroupBroadcast({
               text: greetingText,
               mentions: [cleanPhone],
               idempotencyKey,
-              ritualType: 'new_member_welcome'
+              ritualType: 'new_member_welcome',
+              targetGroupJid: remoteJid || primaryGroupJid
             });
 
             console.log(`[Herald] Successfully dispatched welcome ritual for entrant: ${cleanPhone}`);
@@ -125,18 +132,28 @@ export async function POST(request) {
 
         const remoteJid = msgKey.remoteJid || '';
         const isGroup = remoteJid.endsWith('@g.us');
-        const isDM = remoteJid.endsWith('@s.whatsapp.net');
-
-        // Guard: Incoming group messages must match configured HERALD_GROUP_JID
-        const expectedGroupJid = process.env.HERALD_GROUP_JID || '120363430362177971@g.us';
-        if (isGroup && expectedGroupJid && remoteJid !== expectedGroupJid) {
-          continue;
-        }
+        const isDM = remoteJid.endsWith('@s.whatsapp.net') || remoteJid.endsWith('@lid');
 
         const messageId = msgKey.id;
-        const participantJid = msgKey.participant || remoteJid;
+        // Prefer participantAlt / remoteJidAlt when WhatsApp sends @lid addressingMode
+        const participantJid = isGroup
+          ? (msgKey.participantAlt || msgKey.participant || remoteJid)
+          : (msgKey.remoteJidAlt || remoteJid);
         const rawPhone = participantJid.replace(/@.*$/, '');
         const senderPhone = formatNigerianPhone(rawPhone);
+
+        // Guard: Incoming group messages must match primary Town Hall, test groups, OR an explicit Admin testing in another group
+        const primaryGroupJid = process.env.HERALD_GROUP_JID || '120363430362177971@g.us';
+        const testGroupJids = (process.env.HERALD_TEST_GROUP_JIDS || '')
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean);
+        const allowedGroupJids = [primaryGroupJid, ...testGroupJids];
+        const isSenderAdmin = Boolean(senderPhone && adminPhones.includes(senderPhone));
+
+        if (isGroup && !allowedGroupJids.includes(remoteJid) && !isSenderAdmin) {
+          continue;
+        }
         const pushName = msg.pushName || '';
         const text = extractMessageText(msg);
 
@@ -365,7 +382,7 @@ export async function POST(request) {
           // 1. In herald_newcomers with introduced_at IS NULL, OR
           // 2. Message answers the icebreaker / introduction cues (contains "nightstand", "my name", "reading", "call me", "book", "1.", "2.", "3.")
           const introCues = /(nightstand|my name is|call me|pen name|i am reading|reading currently|pleased to meet|happy to join|1\.|2\.|3\.)/i;
-          const isCommandLike = text.startsWith('/') || text.startsWith('!');
+          const isCommandLike = /^(@\S+\s+)*[\/!]/.test(text.trim());
           const isIntroMessage = !isCommandLike && (pendingNewcomer || (quotedStanzaId && text.length > 20 && introCues.test(text)));
 
           if (isIntroMessage && text.length >= 10) {
@@ -400,19 +417,33 @@ export async function POST(request) {
             continue;
           }
 
-          const lowerText = text.trim().toLowerCase();
-          const isSlashBoost = lowerText === '/boost' || lowerText === '!boost' || lowerText.startsWith('/boost ') || lowerText.startsWith('!boost ');
-          const isSlashGoal = lowerText === '/goal' || lowerText === '!goal' || lowerText.startsWith('/goal ') || lowerText.startsWith('!goal ');
-          const isSlashPrompt = lowerText === '/prompt' || lowerText === '!prompt';
-
           const botPhone = process.env.HERALD_BOT_PHONE || '2347046043294';
           const botLid = process.env.HERALD_BOT_LID || '274715419664399';
-          const isMentioned = mentionedJids.some(jid => jid.includes(botPhone) || jid.includes(botLid) || jid.includes('herald'));
+          const isMentioned =
+            mentionedJids.some(jid => jid.includes(botPhone) || jid.includes(botLid) || jid.includes('herald')) ||
+            text.includes(`@${botPhone}`) ||
+            text.includes(`@${botLid}`);
           const textMentionsHerald = /@?herald\b/i.test(text);
           const isHeraldTargeted = isMentioned || textMentionsHerald;
 
+          // Strip @bot mentions so "@274715419664399 /prompt" still parses as "/prompt"
+          const cleanText = text
+            .replace(/@?herald\b/gi, '')
+            .replace(new RegExp(`@${botPhone}\\b`, 'g'), '')
+            .replace(new RegExp(`@${botLid}\\b`, 'g'), '')
+            .trim();
+          const lowerText = text.trim().toLowerCase();
+          const cleanLower = cleanText.toLowerCase();
+
+          const isSlashBoost = cleanLower === '/boost' || cleanLower === '!boost' || cleanLower.startsWith('/boost ') || cleanLower.startsWith('!boost ');
+          const isSlashGoal = cleanLower === '/goal' || cleanLower === '!goal' || cleanLower.startsWith('/goal ') || cleanLower.startsWith('!goal ');
+          const isSlashPrompt = cleanLower === '/prompt' || cleanLower === '!prompt' || cleanLower === '/promtp' || cleanLower === '!promtp';
+
+          // Helper for clean query matching
+          const queryLower = cleanLower || lowerText;
+
           // Case 1: Creative Writing & Reading Boost (/boost)
-          if (isSlashBoost || (isHeraldTargeted && /(boost|motivat|inspire|fire|stuck|write|cheer)/i.test(lowerText))) {
+          if (isSlashBoost || (isHeraldTargeted && /(boost|motivat|inspire|fire|stuck|write|cheer)/i.test(queryLower))) {
             await sendHeraldReaction({ remoteJid, messageId, reaction: '⚡' });
             const boostText = await getLiteraryBoost({ senderName: pushName || `@${senderPhone}` });
             await sendHeraldReply({
@@ -425,7 +456,7 @@ export async function POST(request) {
           }
 
           // Case 2: Community Reading & Writing Goal Commitment (/goal)
-          if (isSlashGoal || (isHeraldTargeted && /(goal|pledge|target|accountab|streak)/i.test(lowerText))) {
+          if (isSlashGoal || (isHeraldTargeted && /(goal|pledge|target|accountab|streak)/i.test(queryLower))) {
             await sendHeraldReaction({ remoteJid, messageId, reaction: '🎯' });
             const goalText = await getGoalPrompt({ senderName: pushName || `@${senderPhone}` });
             await sendHeraldReply({
@@ -438,7 +469,7 @@ export async function POST(request) {
           }
 
           // Case 3: Writing Prompt Query (/prompt)
-          if (isSlashPrompt || (isHeraldTargeted && /(prompt|spark|topic|assignment)/i.test(lowerText))) {
+          if (isSlashPrompt || (isHeraldTargeted && /(prompt|promtp|spark|topic|assignment)/i.test(queryLower))) {
             await sendHeraldReaction({ remoteJid, messageId, reaction: '🖋️' });
 
             const activePrompt = await Database.queryOne(`
