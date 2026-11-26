@@ -36,6 +36,14 @@ function extractMessageText(msg) {
  * Invariant: Handles group-participant additions (welcomes), introductions,
  * townhall oracle queries, and secret Admin DM commands.
  */
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    status: 'healthy',
+    herald: 'The Paper Thoughts Herald Webhook is active and vigilant 🕯️'
+  });
+}
+
 export async function POST(request) {
   try {
     const authHeader = request.headers.get('apikey') || request.headers.get('authorization');

@@ -1,4 +1,4 @@
-import Database from './db.js';
+import { Database } from '@/lib/db';
 
 /**
  * Format Nigerian mobile numbers to international 234 standard.
