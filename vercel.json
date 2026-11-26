@@ -46,7 +46,7 @@
     },
     {
       "path": "/api/cron/herald",
-      "schedule": "0 * * * *"
+      "schedule": "0 8 * * *"
     }
   ]
 }
