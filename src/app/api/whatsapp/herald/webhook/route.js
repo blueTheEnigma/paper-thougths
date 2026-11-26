@@ -60,13 +60,18 @@ export async function POST(request) {
     // ──────────────────────────────────────────────────────────────────────────
     // 1. Group Participant Join Event (action: 'add')
     // ──────────────────────────────────────────────────────────────────────────
-    if (event === 'group-participants.update' || event.includes('group-participants')) {
+    if (
+      event === 'group-participants.update' ||
+      event === 'group.participants.update' ||
+      event.includes('group-participants') ||
+      event.includes('group.participants')
+    ) {
       const action = rawData.action;
       const participants = rawData.participants || [];
       const remoteJid = rawData.id || rawData.remoteJid || rawData.groupJid || body.remoteJid || '';
 
       // Guard: Only process participant joins for configured HERALD_GROUP_JID
-      const expectedGroupJid = process.env.HERALD_GROUP_JID;
+      const expectedGroupJid = process.env.HERALD_GROUP_JID || '120363430362177971@g.us';
       if (expectedGroupJid && remoteJid && remoteJid !== expectedGroupJid) {
         console.log(`[Herald Webhook] Ignoring participant join for non-herald group: ${remoteJid}`);
         return NextResponse.json({ success: true, processed: false, reason: 'group_jid_mismatch' });
@@ -86,7 +91,7 @@ export async function POST(request) {
               INSERT INTO herald_newcomers (phone, welcome_sent_at)
               VALUES ($1, NOW())
               ON CONFLICT (phone) DO UPDATE SET welcome_sent_at = NOW()
-            `).catch(e => console.error('[Herald Webhook] Error tracking newcomer:', e));
+            `, [cleanPhone]).catch(e => console.error('[Herald Webhook] Error tracking newcomer:', e));
 
             const idempotencyKey = `welcome_entrant_${cleanPhone}_${new Date().toISOString().slice(0, 10)}`;
             const greetingText = getNewMemberGreeting({ phone: cleanPhone });
@@ -109,7 +114,9 @@ export async function POST(request) {
     // 2. Incoming Messages Event (MESSAGES_UPSERT)
     // ──────────────────────────────────────────────────────────────────────────
     if (event === 'messages.upsert' || event.includes('messages.upsert')) {
-      const messages = Array.isArray(rawData) ? rawData : [rawData];
+      const messages = Array.isArray(rawData)
+        ? rawData
+        : (Array.isArray(rawData?.messages) ? rawData.messages : [rawData]);
       const adminPhones = await getHeraldAdminPhones();
 
       for (const msg of messages) {
@@ -121,7 +128,7 @@ export async function POST(request) {
         const isDM = remoteJid.endsWith('@s.whatsapp.net');
 
         // Guard: Incoming group messages must match configured HERALD_GROUP_JID
-        const expectedGroupJid = process.env.HERALD_GROUP_JID;
+        const expectedGroupJid = process.env.HERALD_GROUP_JID || '120363430362177971@g.us';
         if (isGroup && expectedGroupJid && remoteJid !== expectedGroupJid) {
           continue;
         }
@@ -253,7 +260,7 @@ export async function POST(request) {
                 ORDER BY event_date ASC
                 LIMIT 1
               )
-            `).catch(e => console.error('Error updating meet_url:', e));
+            `, [newUrl]).catch(e => console.error('Error updating meet_url:', e));
 
             await sendHeraldReply({
               to: remoteJid,
@@ -274,7 +281,7 @@ export async function POST(request) {
             await Database.query(`
               INSERT INTO prompts (prompt_text, prompt_type, active_date)
               VALUES ($1, 'story', CURRENT_DATE)
-            `).catch(e => console.error('Error inserting prompt:', e));
+            `, [promptContent]).catch(e => console.error('Error inserting prompt:', e));
 
             await sendHeraldReply({
               to: remoteJid,
@@ -358,7 +365,8 @@ export async function POST(request) {
           // 1. In herald_newcomers with introduced_at IS NULL, OR
           // 2. Message answers the icebreaker / introduction cues (contains "nightstand", "my name", "reading", "call me", "book", "1.", "2.", "3.")
           const introCues = /(nightstand|my name is|call me|pen name|i am reading|reading currently|pleased to meet|happy to join|1\.|2\.|3\.)/i;
-          const isIntroMessage = pendingNewcomer || (quotedStanzaId && text.length > 20 && introCues.test(text));
+          const isCommandLike = text.startsWith('/') || text.startsWith('!');
+          const isIntroMessage = !isCommandLike && (pendingNewcomer || (quotedStanzaId && text.length > 20 && introCues.test(text)));
 
           if (isIntroMessage && text.length >= 10) {
             // 1. Auto-react with candle
@@ -398,7 +406,8 @@ export async function POST(request) {
           const isSlashPrompt = lowerText === '/prompt' || lowerText === '!prompt';
 
           const botPhone = process.env.HERALD_BOT_PHONE || '2347046043294';
-          const isMentioned = mentionedJids.some(jid => jid.includes(botPhone) || jid.includes('herald'));
+          const botLid = process.env.HERALD_BOT_LID || '274715419664399';
+          const isMentioned = mentionedJids.some(jid => jid.includes(botPhone) || jid.includes(botLid) || jid.includes('herald'));
           const textMentionsHerald = /@?herald\b/i.test(text);
           const isHeraldTargeted = isMentioned || textMentionsHerald;
 
@@ -491,7 +500,11 @@ export async function POST(request) {
           if (isHeraldTargeted) {
             await sendHeraldReaction({ remoteJid, messageId, reaction: '✨' });
 
-            const cleanQuery = text.replace(/@?herald\b/gi, '').trim();
+            const cleanQuery = text
+              .replace(/@?herald\b/gi, '')
+              .replace(new RegExp(`@${botPhone}\\b`, 'g'), '')
+              .replace(new RegExp(`@${botLid}\\b`, 'g'), '')
+              .trim();
             const oracleAnswer = await getHeraldOracleAnswer(cleanQuery, pushName || 'Kindred Pilgrim');
             await sendHeraldReply({
               to: remoteJid,

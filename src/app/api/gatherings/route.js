@@ -193,7 +193,7 @@ export async function POST(request) {
 
     // Proclaim new gathering to WhatsApp Town Hall group with mentionsEveryOne
     if (newGathering && newGathering.status === 'published') {
-      sendHeraldGroupBroadcast({
+      await sendHeraldGroupBroadcast({
         text: getNewEventProclamation({
           title: newGathering.title,
           gatheringType: newGathering.gathering_type,
@@ -212,7 +212,7 @@ export async function POST(request) {
 
     // If new gathering is directly launched as live, broadcast live alert!
     if (newGathering && newGathering.status === 'live') {
-      sendHeraldGroupBroadcast({
+      await sendHeraldGroupBroadcast({
         text: getGatheringLiveAlert({
           title: newGathering.title,
           gatheringType: newGathering.gathering_type,

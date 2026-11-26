@@ -145,7 +145,7 @@ export async function POST(request) {
 
     // Zero-bias manuscript spotlight dispatch to WhatsApp Community Group
     if (result.newSubmission) {
-      sendHeraldGroupBroadcast({
+      await sendHeraldGroupBroadcast({
         text: getSubmissionSpotlight({
           title: result.newSubmission.title,
           genre: result.newSubmission.genre,

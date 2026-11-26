@@ -275,7 +275,7 @@ export async function PATCH(request, { params }) {
 
     // If gathering is published, broadcast proclamation (protected by idempotency key)
     if (updated && updated.status === 'published') {
-      sendHeraldGroupBroadcast({
+      await sendHeraldGroupBroadcast({
         text: getNewEventProclamation({
           title: updated.title,
           gatheringType: updated.gathering_type,
@@ -294,7 +294,7 @@ export async function PATCH(request, { params }) {
 
     // If gathering went live (meeting is being hosted), broadcast live alert to group!
     if (updated && updated.status === 'live') {
-      sendHeraldGroupBroadcast({
+      await sendHeraldGroupBroadcast({
         text: getGatheringLiveAlert({
           title: updated.title,
           gatheringType: updated.gathering_type,
