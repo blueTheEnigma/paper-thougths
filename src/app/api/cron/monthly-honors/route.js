@@ -182,7 +182,8 @@ export async function POST(request) {
               contents: [{ role: "user", parts: [{ text: promptContent }] }],
               generationConfig: {
                 responseMimeType: "application/json",
-                temperature: 0.2
+                temperature: 0.2,
+                thinkingConfig: { thinkingBudget: 0 }
               }
             })
           });

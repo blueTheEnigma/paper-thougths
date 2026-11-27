@@ -157,7 +157,7 @@ export async function POST(request) {
     const rawData = body.data || body;
 
     const primaryGroupJid = process.env.HERALD_GROUP_JID || '120363430362177971@g.us';
-    const testGroupJids = (process.env.HERALD_TEST_GROUP_JIDS || '')
+    const testGroupJids = (process.env.HERALD_TEST_GROUP_JIDS || '120363428935640738@g.us')
       .split(',')
       .map(s => s.trim())
       .filter(Boolean);
