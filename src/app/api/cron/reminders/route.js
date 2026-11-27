@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
-import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { sendPushNotification } from '@/lib/pushNotifications';
-import { 
-  getMondayPromptReleaseEmail, 
-  getWednesdayDraftNudgeEmail, 
-  getFridayDeadlineReminderEmail, 
-  getSaturdayBotmEmail 
+import { isCronAuthorized, getLastSaturdayStart } from '@/lib/cronAuth';
+import {
+  getMondayPromptReleaseEmail,
+  getWednesdayDraftNudgeEmail,
+  getFridayDeadlineReminderEmail,
+  getSaturdayBotmEmail
 } from '@/lib/emailTemplates';
 
 export const dynamic = 'force-dynamic';
@@ -20,182 +20,162 @@ export async function POST(request) {
   return handleReminderCron(request);
 }
 
+const CHUNK_SIZE = 15;
+
 async function handleReminderCron(request) {
   try {
-    const isDev = process.env.NODE_ENV === 'development';
-    const { searchParams } = new URL(request.url);
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET || 'dev_secret';
-    const secretQuery = searchParams.get('secret');
-    
-    // Authorization check
-    if (!isDev && authHeader !== `Bearer ${cronSecret}` && secretQuery !== cronSecret) {
+    if (!isCronAuthorized(request)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Determine type: from query param or auto-deduce from current day of week
+    const { searchParams } = new URL(request.url);
     let type = searchParams.get('type');
     if (!type) {
-      const currentDay = new Date().getUTCDay(); // 0 = Sun, 1 = Mon, 3 = Wed, 5 = Fri, 6 = Sat
+      const currentDay = new Date().getUTCDay();
       if (currentDay === 1) type = 'monday';
       else if (currentDay === 3) type = 'wednesday';
       else if (currentDay === 5) type = 'friday';
       else if (currentDay === 6) type = 'saturday';
-      else type = 'monday'; // fallback default
+      else type = 'monday';
     }
 
-    console.log(`Executing Multi-Channel Automated Reminder Sequence for type: [${type}]`);
+    const normalizedType = type.toLowerCase();
+    const lastSaturday = getLastSaturdayStart();
 
-    // 1. Fetch all distinct member accounts with id, email, name, and whatsapp
-    const userRows = await Database.query(`
-      SELECT DISTINCT id, email, full_name as name, whatsapp 
-      FROM users 
-      WHERE email IS NOT NULL AND email != ''
-        AND COALESCE(unsubscribed_from_reminders, false) = false
-    `);
+    // 1. Fetch eligible recipients
+    // On Friday: Smart Pending Filter — skip members who already submitted or reviewed this week!
+    const recipientsRows = normalizedType === 'friday'
+      ? await Database.query(`
+          SELECT DISTINCT u.id, u.email, u.full_name as name
+          FROM users u
+          WHERE u.email IS NOT NULL AND u.email != ''
+            AND COALESCE(u.unsubscribed_from_reminders, false) = false
+            AND COALESCE(u.membership_status, 'active') = 'active'
+            AND (u.sabbatical_until IS NULL OR u.sabbatical_until < CURRENT_DATE)
+            AND NOT EXISTS (
+              SELECT 1 FROM submissions s
+              WHERE s.author_id = u.id AND s.created_at >= $1
+            )
+            AND NOT EXISTS (
+              SELECT 1 FROM peer_reviews pr
+              WHERE pr.reviewer_id = u.id AND pr.created_at >= $1
+            )
+        `, [lastSaturday])
+      : await Database.query(`
+          SELECT DISTINCT id, email, full_name as name
+          FROM users
+          WHERE email IS NOT NULL AND email != ''
+            AND COALESCE(unsubscribed_from_reminders, false) = false
+            AND COALESCE(membership_status, 'active') != 'evicted'
+        `);
 
-    let subscriberRows = [];
-    try {
-      subscriberRows = await Database.query(`
-        SELECT DISTINCT email 
-        FROM newsletter_subscribers 
-        WHERE email IS NOT NULL AND email != ''
-      `);
-    } catch (e) {
-      // ignore if table doesn't exist
-    }
-
-    // Deduplicate emails map
+    // Deduplicate cleanly by normalized email
     const recipientsMap = new Map();
-    userRows.forEach(u => {
-      if (u.email) {
-        recipientsMap.set(u.email.toLowerCase().trim(), {
+    for (const u of recipientsRows) {
+      const cleanEmail = u.email?.toLowerCase().trim();
+      if (cleanEmail && !recipientsMap.has(cleanEmail)) {
+        recipientsMap.set(cleanEmail, {
           id: u.id,
           name: u.name || '',
-          email: u.email.toLowerCase().trim(),
-          whatsapp: u.whatsapp
+          email: cleanEmail
         });
       }
-    });
-
-    subscriberRows.forEach(s => {
-      if (s.email && !recipientsMap.has(s.email.toLowerCase().trim())) {
-        recipientsMap.set(s.email.toLowerCase().trim(), {
-          id: null,
-          name: '',
-          email: s.email.toLowerCase().trim(),
-          whatsapp: null
-        });
-      }
-    });
+    }
 
     const recipientsList = Array.from(recipientsMap.values());
-
     if (recipientsList.length === 0) {
-      console.log('No recipients found for email/notification reminders.');
-      return NextResponse.json({ success: true, message: 'No recipients found', sentCount: 0 });
+      return NextResponse.json({ success: true, type: normalizedType, message: 'No eligible recipients', sentCount: 0 });
     }
 
     // 2. Fetch dynamic context (active prompt & BOTM)
-    const activePromptObj = await Database.queryOne(`
-      SELECT prompt_text as "promptText" FROM prompts WHERE active_date IS NOT NULL ORDER BY active_date DESC, created_at DESC LIMIT 1
-    `) || await Database.queryOne(`
-      SELECT prompt_text as "promptText" FROM prompts ORDER BY created_at DESC LIMIT 1
-    `);
-    const weeklyPrompt = activePromptObj ? activePromptObj.promptText : '';
-    const storyPrompt = weeklyPrompt;
-    const poemPrompt = weeklyPrompt;
-    const botmObj = await Database.queryOne(`
-      SELECT title, author, teaser FROM book_of_the_month WHERE active = TRUE ORDER BY created_at DESC LIMIT 1
-    `);
+    const [activePromptObj, botmObj] = await Promise.all([
+      Database.queryOne(`
+        SELECT prompt_text as "promptText" FROM prompts
+        WHERE active_date <= CURRENT_DATE
+        ORDER BY active_date DESC, created_at DESC LIMIT 1
+      `).then(r => r || Database.queryOne(`SELECT prompt_text as "promptText" FROM prompts ORDER BY created_at DESC LIMIT 1`)),
+      Database.queryOne(`
+        SELECT title, author, teaser FROM book_of_the_month WHERE active = TRUE ORDER BY created_at DESC LIMIT 1
+      `)
+    ]);
 
-    const botmTitle = botmObj ? botmObj.title : '';
-    const botmAuthor = botmObj ? botmObj.author : '';
-    const botmTeaser = botmObj ? botmObj.teaser : '';
+    const weeklyPrompt = activePromptObj?.promptText || '';
+    const botmTitle = botmObj?.title || '';
+    const botmAuthor = botmObj?.author || '';
+    const botmTeaser = botmObj?.teaser || '';
 
-    // 3. Batch dispatch Email, In-App Notifications, and WhatsApp DMs
+    // 3. Batch dispatch Email, In-App Notifications, and Web Push in parallel chunks
     let sentCount = 0;
     const errors = [];
 
-    for (const recipient of recipientsList) {
-      let emailPayload = null;
+    for (let i = 0; i < recipientsList.length; i += CHUNK_SIZE) {
+      const chunk = recipientsList.slice(i, i + CHUNK_SIZE);
 
-      switch (type.toLowerCase()) {
-        case 'monday':
-          emailPayload = getMondayPromptReleaseEmail({ userName: recipient.name, storyPrompt, poemPrompt });
-          break;
-        case 'wednesday':
-          emailPayload = getWednesdayDraftNudgeEmail({ userName: recipient.name, storyPrompt, poemPrompt });
-          break;
-        case 'friday':
-          emailPayload = getFridayDeadlineReminderEmail({ userName: recipient.name });
-          break;
-        case 'saturday':
-          emailPayload = getSaturdayBotmEmail({ userName: recipient.name, botmTitle, botmAuthor, botmTeaser });
-          break;
-        default:
-          emailPayload = getMondayPromptReleaseEmail({ userName: recipient.name, storyPrompt, poemPrompt });
-          break;
-      }
+      await Promise.allSettled(
+        chunk.map(async (recipient) => {
+          let emailPayload = null;
+          switch (normalizedType) {
+            case 'monday':
+              emailPayload = getMondayPromptReleaseEmail({ userName: recipient.name, storyPrompt: weeklyPrompt, poemPrompt: weeklyPrompt });
+              break;
+            case 'wednesday':
+              emailPayload = getWednesdayDraftNudgeEmail({ userName: recipient.name, storyPrompt: weeklyPrompt, poemPrompt: weeklyPrompt });
+              break;
+            case 'friday':
+              emailPayload = getFridayDeadlineReminderEmail({ userName: recipient.name });
+              break;
+            case 'saturday':
+              emailPayload = getSaturdayBotmEmail({ userName: recipient.name, botmTitle, botmAuthor, botmTeaser });
+              break;
+            default:
+              emailPayload = getMondayPromptReleaseEmail({ userName: recipient.name, storyPrompt: weeklyPrompt, poemPrompt: weeklyPrompt });
+              break;
+          }
 
-      if (emailPayload) {
-        // Channel A: Email Dispatch
-        const result = await sendEmail({
-          to: recipient.email,
-          subject: emailPayload.subject,
-          html: emailPayload.html,
-        });
+          if (!emailPayload) return;
 
-        if (result) {
-          sentCount++;
-        } else {
-          errors.push(recipient.email);
-        }
+          const [emailRes] = await Promise.allSettled([
+            sendEmail({ to: recipient.email, subject: emailPayload.subject, html: emailPayload.html }),
+            recipient.id
+              ? Database.query(`
+                  INSERT INTO user_notifications (user_id, type, title, body, link)
+                  VALUES ($1, $2, $3, $4, $5)
+                `, [
+                  recipient.id,
+                  'reminder',
+                  emailPayload.subject,
+                  `Weekly ${normalizedType} drop update in Paper Thoughts.`,
+                  normalizedType === 'saturday' ? '/discussion' : '/village'
+                ])
+              : Promise.resolve(),
+            recipient.id
+              ? sendPushNotification(recipient.id, {
+                  title: emailPayload.subject.replace(/^[^\w\s]+\s*/, ''),
+                  body: `Weekly ${normalizedType} sanctuary drop. Tap to open.`,
+                  link: normalizedType === 'saturday' ? '/discussion' : '/village'
+                })
+              : Promise.resolve()
+          ]);
 
-        // Channel B: In-App Notification insertion
-        if (recipient.id) {
-          await Database.query(`
-            INSERT INTO user_notifications (user_id, type, title, body, link)
-            VALUES ($1, $2, $3, $4, $5)
-          `, [
-            recipient.id,
-            'reminder',
-            emailPayload.subject,
-            `Weekly ${type} drop update in Paper Thoughts.`,
-            type === 'saturday' ? '/discussion' : '/village'
-          ]).catch(err => console.error('Failed to insert in-app notification:', err));
-        }
-
-        // Channel C: WhatsApp Direct DM (if phone number is on record)
-        if (recipient.whatsapp) {
-          const targetUrl = type === 'saturday' ? 'https://www.paperthoughts.org/discussion' : 'https://www.paperthoughts.org/village';
-          const waText = `✨ *Paper Thoughts Update*\n\n${emailPayload.subject}\n\nJoin the discussion & draft here: ${targetUrl}`;
-          sendWhatsAppMessage({ to: recipient.whatsapp, text: waText })
-            .catch(err => console.error('WhatsApp send error:', err));
-        }
-
-        // Channel D: Web Push Notification (PWA lock-screen)
-        if (recipient.id) {
-          sendPushNotification(recipient.id, {
-            title: emailPayload.subject.replace(/^[^\w\s]+\s*/, ''),
-            body: `Weekly ${type} sanctuary drop. Tap to read & draft.`,
-            link: type === 'saturday' ? '/discussion' : '/village'
-          }).catch(err => console.error('Push notification send error:', err));
-        }
-      }
+          if (emailRes.status === 'fulfilled' && emailRes.value) {
+            sentCount++;
+          } else {
+            errors.push(recipient.email);
+          }
+        })
+      );
     }
 
-    console.log(`Multi-Channel Automated Reminder Sequence [${type}] finished. Sent ${sentCount}/${recipientsList.length} emails.`);
+    console.log(`Reminder sequence [${normalizedType}] finished: ${sentCount}/${recipientsList.length} sent.`);
 
     return NextResponse.json({
       success: true,
-      type,
+      type: normalizedType,
       totalRecipients: recipientsList.length,
       sentCount,
       errorsCount: errors.length,
       timestamp: new Date().toISOString()
     });
-
   } catch (error) {
     console.error('Automated Reminder Sequence failed:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

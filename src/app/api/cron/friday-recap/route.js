@@ -1,239 +1,219 @@
 import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
+import { isCronAuthorized, getLastSaturdayStart } from '@/lib/cronAuth';
+import { callGeminiProse, getWeeklyLaurelBroadcast } from '@/lib/heraldLore';
+import { sendHeraldGroupBroadcast } from '@/lib/herald';
 
-// Clean text for exact quote comparison
+export const dynamic = 'force-dynamic';
+
 function cleanText(text) {
   if (!text) return '';
   return text.toLowerCase()
-    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, "")
-    .replace(/\s+/g, " ")
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
-// Check quote density using Option A (Exact Substring Match)
 function calculateQuoteDensity(reviews, bodyText) {
   const cleanedBody = cleanText(bodyText);
   if (!cleanedBody) return 0;
-  
-  let validQuoteCount = 0;
 
+  let validQuoteCount = 0;
   for (const r of reviews) {
     const quote = r.highwater_response ? r.highwater_response.trim() : '';
-    if (!quote || quote.length < 12) continue; // Skip empty or extremely short inputs
-
+    if (!quote || quote.length < 12) continue;
     const cleanedQuote = cleanText(quote);
     if (cleanedQuote && cleanedBody.includes(cleanedQuote)) {
       validQuoteCount++;
     } else {
-      // If the entire response didn't match, check if at least one substantial sentence in it matches
-      const sentences = quote.split(/[.!?\n]+/)
-        .map(s => cleanText(s))
-        .filter(s => s.length > 15); // Require a sentence length of >15 characters to prevent false matching
-        
-      const hasMatch = sentences.some(s => cleanedBody.includes(s));
-      if (hasMatch) {
-        validQuoteCount++;
-      }
+      const sentences = quote.split(/[.!?\n]+/).map(s => cleanText(s)).filter(s => s.length > 15);
+      if (sentences.some(s => cleanedBody.includes(s))) validQuoteCount++;
     }
   }
   return validQuoteCount;
 }
 
-// Saturday 12:00 AM batch cycle start calculator (UTC aligned)
-function getLastSaturdayStart() {
-  const now = new Date();
-  const currentDay = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  let daysSinceSaturday = currentDay - 6;
-  if (daysSinceSaturday < 0) {
-    daysSinceSaturday += 7;
-  }
-  const lastSaturday = new Date(now);
-  lastSaturday.setUTCDate(now.getUTCDate() - daysSinceSaturday);
-  lastSaturday.setUTCHours(0, 0, 0, 0);
-  return lastSaturday;
-}
-
-// Friday of current batch cycle start calculator (UTC aligned)
 function getFridayOfCurrentCycle() {
   const now = new Date();
-  const day = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  const diff = day >= 5 ? day - 5 : day + 2; // distance to the most recent Friday
+  const day = now.getUTCDay();
+  const diff = day >= 5 ? day - 5 : day + 2;
   const friday = new Date(now);
   friday.setUTCDate(now.getUTCDate() - diff);
   friday.setUTCHours(0, 0, 0, 0);
   return friday;
 }
 
+export async function GET(request) {
+  return POST(request);
+}
+
 export async function POST(request) {
   try {
-    const isDev = process.env.NODE_ENV === 'development';
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET || 'dev_secret';
-    
-    // Authorization check
-    if (!isDev && authHeader !== `Bearer ${cronSecret}`) {
+    if (!isCronAuthorized(request)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Running Friday Recap cron (Laurel, Streaks)...');
+    console.log('Running Friday Recap cron (Hybrid Weekly Laurel & Vectorized Streak Audit)...');
 
-    // Self-healing guard: Archive any active_batch submissions that should have been archived (created_at before last Saturday)
     const lastSaturday = getLastSaturdayStart();
-    const selfHealRes = await Database.query(`
-      UPDATE submissions
-      SET batch_status = 'archived'
-      WHERE batch_status = 'active_batch'
-        AND created_at < $1
-      RETURNING id
-    `, [lastSaturday]);
-
-    if (selfHealRes.length > 0) {
-      console.log(`Self-healing: Archived ${selfHealRes.length} submissions from the previous cycle inline:`, selfHealRes.map(r => r.id));
-    }
-
-    // Calculate current batch cycle range (submissions active this week were created after lastSaturday - 7 days)
     const cycleThreshold = new Date(lastSaturday.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 7);
+    const currentCycleFriday = getFridayOfCurrentCycle().toISOString().split('T')[0];
 
-    // 1. Fetch newly archived submissions (transitioned by batch-transition or self-healing)
-    const activeSubmissions = await Database.query(`
-      SELECT id, title, genre, logline, body_text 
-      FROM submissions 
-      WHERE batch_status = 'archived' AND created_at >= $1
+    // 1. Fetch eligible Laurel candidates from recent submissions that haven't already won Laurel
+    const candidates = await Database.query(`
+      SELECT s.id, s.title, s.genre, s.logline, s.body_text,
+             COALESCE(s.pen_name, u.full_name, 'Anonymous Scribe') as pen_name,
+             (SELECT COUNT(*)::int FROM submission_likes sl WHERE sl.submission_id = s.id) as likes_count,
+             (SELECT COUNT(*)::int FROM submission_ratings sr WHERE sr.submission_id = s.id) as rating_count,
+             (SELECT COALESCE(AVG(sr.rating), 0)::float FROM submission_ratings sr WHERE sr.submission_id = s.id) as avg_rating
+      FROM submissions s
+      JOIN users u ON u.id = s.author_id
+      WHERE COALESCE(s.has_laurel, FALSE) = FALSE
+        AND s.batch_status IN ('active_batch', 'archived')
+        AND s.created_at >= $1
+      ORDER BY s.created_at DESC
+      LIMIT 30
     `, [cycleThreshold]);
 
-    console.log(`Found ${activeSubmissions.length} newly archived submissions to process for Laurel.`);
-
-    const laurelCandidates = [];
-
-    // 2. Compute quote density for Laurel
-    for (const sub of activeSubmissions) {
-      try {
-        // Fetch human reviews for quote density calculation
-        const reviews = await Database.query(`
-          SELECT highwater_response FROM peer_reviews WHERE submission_id = $1
-        `, [sub.id]);
-
-        const quoteCount = calculateQuoteDensity(reviews, sub.body_text);
-        laurelCandidates.push({ id: sub.id, quoteCount });
-      } catch (err) {
-        console.error(`Error in Laurel computation for submission ${sub.id}:`, err);
-      }
-    }
-
-    // 3. Crown the Weekly Laurel (highest quote density)
     let crownedLaurelId = null;
-    if (laurelCandidates.length > 0) {
-      // Sort by quote count descending
-      laurelCandidates.sort((a, b) => b.quoteCount - a.quoteCount);
-      const topCandidate = laurelCandidates[0];
-      
-      // Only crown if they have at least 1 valid quote density
-      if (topCandidate.quoteCount > 0) {
-        crownedLaurelId = topCandidate.id;
-        await Database.query(`
-          UPDATE submissions 
-          SET has_laurel = true 
-          WHERE id = $1
-        `, [crownedLaurelId]);
-        console.log(`Crowned Weekly Laurel for submission ID: ${crownedLaurelId} with ${topCandidate.quoteCount} valid quotes.`);
-      }
-    }
+    let crownedReason = '';
+    let crownedMeta = null;
 
-    // 4. Audit Streaks
-    console.log('Auditing member active streaks with idempotency check...');
-    const currentCycleFriday = getFridayOfCurrentCycle().toISOString().split('T')[0];
-    
-    const allUsers = await Database.query(`SELECT id, writing_streak, streak_audited_week FROM users`);
-    const streakUpdates = [];
+    if (candidates.length > 0) {
+      const candidateIds = candidates.map(c => c.id);
+      const allReviews = await Database.query(`
+        SELECT submission_id, highwater_response, pacing_score, technical_score
+        FROM peer_reviews
+        WHERE submission_id = ANY($1)
+      `, [candidateIds]);
 
-    for (const u of allUsers) {
-      // Idempotency check: skip if already audited this cycle week
-      const lastAuditedWeek = u.streak_audited_week ? new Date(u.streak_audited_week).toISOString().split('T')[0] : null;
-      if (lastAuditedWeek === currentCycleFriday) {
-        console.log(`User ${u.id} already audited for week ${currentCycleFriday}. Skipping.`);
-        continue;
-      }
+      const scored = candidates.map(sub => {
+        const subReviews = allReviews.filter(r => r.submission_id === sub.id);
+        const quoteCount = calculateQuoteDensity(subReviews, sub.body_text);
+        const avgCraft = subReviews.length > 0
+          ? subReviews.reduce((acc, r) => acc + ((r.pacing_score || 3) + (r.technical_score || 3)) / 2, 0) / subReviews.length
+          : 0;
 
-      // Check if user submitted writing in the past week
-      const subCheck = await Database.queryOne(`
-        SELECT 1 FROM submissions 
-        WHERE author_id = $1 AND created_at >= $2
-        LIMIT 1
-      `, [u.id, sevenDaysAgo]);
+        // Hybrid Weighted Score: quotes + peer review depth + Salon star ratings + likes
+        const signalScore =
+          (quoteCount * 4) +
+          (subReviews.length * 2) +
+          avgCraft +
+          (parseFloat(sub.avg_rating || 0) * 1.5) +
+          (parseInt(sub.rating_count || 0, 10) * 0.8) +
+          (parseInt(sub.likes_count || 0, 10) * 1.0);
 
-      // Check if user submitted a peer review in the past week
-      const revCheck = await Database.queryOne(`
-        SELECT 1 FROM peer_reviews 
-        WHERE reviewer_id = $1 AND created_at >= $2
-        LIMIT 1
-      `, [u.id, sevenDaysAgo]);
+        return {
+          ...sub,
+          quoteCount,
+          reviewCount: subReviews.length,
+          signalScore
+        };
+      }).sort((a, b) => b.signalScore - a.signalScore);
 
-      const isSubmittingMember = !!subCheck;
-      const isReviewingMember = !!revCheck;
-      const activeThisWeek = isSubmittingMember || isReviewingMember;
+      // Use Gemini Literary Jury tiebreaker among Top 4 candidates when signals are close or peer quotes are scarce
+      let winner = scored[0];
+      const topShortlist = scored.slice(0, Math.min(4, scored.length));
 
-      let newStreak = 0;
-      let streakBonusAwarded = false;
+      if (topShortlist.length > 1 && (winner.quoteCount === 0 || (topShortlist[0].signalScore - topShortlist[1].signalScore) < 3)) {
+        const juryInput = topShortlist.map(c => ({
+          id: c.id,
+          title: c.title,
+          genre: c.genre,
+          logline: c.logline,
+          excerpt: (c.body_text || '').slice(0, 700),
+          metrics: { reviews: c.reviewCount, quotes: c.quoteCount, likes: c.likes_count, rating: c.avg_rating }
+        }));
 
-      if (activeThisWeek) {
-        newStreak = parseInt(u.writing_streak || 0) + 1;
-        
-        // Award on 4th consecutive week milestone
-        if (newStreak > 0 && newStreak % 4 === 0) {
-          streakBonusAwarded = true;
-          // 2.5 Milestone Tokens (no Leaves)
-          await Database.query(`
-            UPDATE users 
-            SET milestone_tokens = milestone_tokens + 2.5,
-                writing_streak = $1,
-                streak_audited_week = $2
-            WHERE id = $3
-          `, [newStreak, currentCycleFriday, u.id]);
-        } else {
-          await Database.query(`
-            UPDATE users 
-            SET writing_streak = $1,
-                streak_audited_week = $2
-            WHERE id = $3
-          `, [newStreak, currentCycleFriday, u.id]);
+        const juryRaw = await callGeminiProse(
+          `You are the Senior Literary Judge of Paper Thoughts. Select the 1 most accomplished work from these weekly finalists based on craft, vivid imagery, voice, and engagement. Respond ONLY with raw JSON: { "winnerId": <number>, "citation": "<1 crisp celebratory sentence>" }`,
+          JSON.stringify(juryInput),
+          { temperature: 0.2, maxOutputTokens: 250, timeoutMs: 7000 }
+        );
+
+        if (juryRaw) {
+          try {
+            const parsed = JSON.parse(juryRaw.replace(/^```json\s*/i, '').replace(/```$/i, '').trim());
+            const matched = topShortlist.find(c => c.id === parsed.winnerId);
+            if (matched) {
+              winner = matched;
+              crownedReason = parsed.citation || '';
+            }
+          } catch {
+            // Keep quantitative top winner cleanly
+          }
         }
-      } else {
-        // Reset streak if inactive
-        await Database.query(`
-          UPDATE users 
-          SET writing_streak = 0,
-              streak_audited_week = $1
-          WHERE id = $2
-        `, [currentCycleFriday, u.id]);
       }
 
-      streakUpdates.push({
-        userId: u.id,
-        activeThisWeek,
-        newStreak,
-        streakBonusAwarded
-      });
+      if (winner && (winner.signalScore > 0 || scored.length > 0)) {
+        crownedLaurelId = winner.id;
+        crownedMeta = winner;
+        if (!crownedReason) {
+          crownedReason = winner.quoteCount > 0
+            ? `Praised by readers with ${winner.quoteCount} standout line citation(s) and ${winner.reviewCount} peer critique(s).`
+            : `Led this cycle's community & craft shortlist (${winner.reviewCount} reviews, ${winner.likes_count} Salon likes).`;
+        }
+
+        await Database.query(`
+          UPDATE submissions SET has_laurel = true WHERE id = $1
+        `, [crownedLaurelId]);
+
+        await sendHeraldGroupBroadcast({
+          text: getWeeklyLaurelBroadcast({
+            title: winner.title,
+            genre: winner.genre,
+            penName: winner.pen_name,
+            reason: crownedReason
+          }),
+          idempotencyKey: `weekly_laurel_${currentCycleFriday}`,
+          ritualType: 'weekly_laurel'
+        }).catch(err => console.error('[Friday Recap] Herald broadcast error:', err.message));
+      }
     }
+
+    // 2. Bulk Vectorized Weekly Streak Audit (fast single-pass SQL instead of 164-user N+1 loop!)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const streakAuditResult = await Database.transaction(async (client) => {
+      // Increment streak for users active via submission or review in the past 7 days
+      const activeRes = await client.query(`
+        UPDATE users u
+        SET writing_streak = COALESCE(u.writing_streak, 0) + 1,
+            milestone_tokens = CASE
+              WHEN (COALESCE(u.writing_streak, 0) + 1) % 4 = 0 THEN COALESCE(u.milestone_tokens, 0) + 2.5
+              ELSE COALESCE(u.milestone_tokens, 0)
+            END,
+            streak_audited_week = $1
+        WHERE (u.streak_audited_week IS NULL OR u.streak_audited_week::date != $1::date)
+          AND (
+            EXISTS (SELECT 1 FROM submissions s WHERE s.author_id = u.id AND s.created_at >= $2)
+            OR EXISTS (SELECT 1 FROM peer_reviews pr WHERE pr.reviewer_id = u.id AND pr.created_at >= $2)
+          )
+        RETURNING id
+      `, [currentCycleFriday, sevenDaysAgo]);
+
+      // Reset streak to 0 for inactive users
+      const resetRes = await client.query(`
+        UPDATE users u
+        SET writing_streak = 0,
+            streak_audited_week = $1
+        WHERE (u.streak_audited_week IS NULL OR u.streak_audited_week::date != $1::date)
+          AND NOT EXISTS (SELECT 1 FROM submissions s WHERE s.author_id = u.id AND s.created_at >= $2)
+          AND NOT EXISTS (SELECT 1 FROM peer_reviews pr WHERE pr.reviewer_id = u.id AND pr.created_at >= $2)
+        RETURNING id
+      `, [currentCycleFriday, sevenDaysAgo]);
+
+      return { incremented: activeRes.rows.length, reset: resetRes.rows.length };
+    });
 
     return NextResponse.json({
       success: true,
       crownedLaurelId,
-      streakUpdatesCount: streakUpdates.length,
-      streakUpdates
+      crownedTitle: crownedMeta?.title || null,
+      crownedReason: crownedReason || null,
+      streakAudit: streakAuditResult
     });
   } catch (error) {
     console.error('Friday Recap failed:', error);
     return NextResponse.json({ success: false, error: error.message || 'Recap failed' }, { status: 500 });
   }
-}
-
-// Support GET requests in development for manual testing
-export async function GET(request) {
-  const isDev = process.env.NODE_ENV === 'development';
-  if (!isDev) {
-    return NextResponse.json({ success: false, error: 'Method Not Allowed' }, { status: 405 });
-  }
-  return POST(request);
 }

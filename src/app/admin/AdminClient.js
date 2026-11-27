@@ -1469,10 +1469,10 @@ export default function AdminClient({
                           />
                         </div>
 
-                        {/* Nominee 3: Most Improved Author */}
+                        {/* Nominee 3: Most Consistent Author */}
                         <div className="bg-white/40 p-4 rounded-2xl border border-sage/10 space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-accent">Most Improved Author</span>
+                            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-accent">Most Consistent Author</span>
                             <select
                               value={leaderboardData.improvedWinnerUserId || ''}
                               onChange={(e) => {
@@ -1580,10 +1580,10 @@ export default function AdminClient({
                               </div>
                             )}
 
-                            {/* Most Improved Author */}
+                            {/* Most Consistent Author */}
                             {leaderboardData.improvedWinnerName && (
                               <div className="bg-white/40 p-3 rounded-xl border border-sage/5 space-y-1">
-                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-accent block">📈 Most Improved</span>
+                                <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-accent block">🔥 Most Consistent</span>
                                 <span className="font-sans font-bold text-xs text-ink block">{leaderboardData.improvedWinnerName}</span>
                                 <p className="text-[11px] text-ink/75 font-serif leading-normal italic">
                                   "{leaderboardData.improvedWinnerText || 'Reasoning text will appear here...'}"

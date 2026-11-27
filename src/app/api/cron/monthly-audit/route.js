@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { runMonthlyGovernanceAudit } from '@/lib/crucible';
+import { isCronAuthorized } from '@/lib/cronAuth';
 
 export async function GET(request) {
   return handleAudit(request);
@@ -11,11 +12,7 @@ export async function POST(request) {
 
 async function handleAudit(request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-
-    // Verify bearer token if configured
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!isCronAuthorized(request)) {
       return NextResponse.json({ success: false, error: 'Unauthorized cron invocation' }, { status: 401 });
     }
 

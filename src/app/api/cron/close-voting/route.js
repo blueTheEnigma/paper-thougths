@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
 
+import { isCronAuthorized } from '@/lib/cronAuth';
+
 function getVotingMonthYear() {
   const now = new Date();
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -9,12 +11,7 @@ function getVotingMonthYear() {
 
 export async function POST(request) {
   try {
-    const isDev = process.env.NODE_ENV === 'development';
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET || 'dev_secret';
-    
-    // Authorization check
-    if (!isDev && authHeader !== `Bearer ${cronSecret}`) {
+    if (!isCronAuthorized(request)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -34,11 +31,6 @@ export async function POST(request) {
   }
 }
 
-// Support GET requests in development for manual testing
 export async function GET(request) {
-  const isDev = process.env.NODE_ENV === 'development';
-  if (!isDev) {
-    return NextResponse.json({ success: false, error: 'Method Not Allowed' }, { status: 405 });
-  }
   return POST(request);
 }

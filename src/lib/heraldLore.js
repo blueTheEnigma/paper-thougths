@@ -41,7 +41,7 @@ export function isPlaceholderMeetUrl(url) {
 /**
  * Low-level Gemini Flash Caller
  */
-async function callGeminiProse(systemPrompt, userPrompt) {
+export async function callGeminiProse(systemPrompt, userPrompt, { temperature = 0.7, maxOutputTokens = 800, timeoutMs = 7000 } = {}) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === 'MISSING') return null;
 
@@ -49,7 +49,7 @@ async function callGeminiProse(systemPrompt, userPrompt) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 7000); // 7s timeout
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const res = await fetch(endpoint, {
@@ -64,8 +64,8 @@ async function callGeminiProse(systemPrompt, userPrompt) {
           }
         ],
         generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 800,
+          temperature,
+          maxOutputTokens,
           thinkingConfig: { thinkingBudget: 0 }
         }
       })
@@ -205,17 +205,187 @@ export function getNewMemberIntroReply({ senderName, phone }) {
 /**
  * 7. Answer community queries via Gemini Flash
  */
-export async function getHeraldOracleAnswer(userQuestion, senderName = 'Pilgrim') {
-  const systemPrompt = `You are The Herald, the witty, warm, and highly erudite literary town crier and salon master for Paper Thoughts book club.
-Respond to the member in 2-3 concise, charming sentences.
-Ground your response in literary wisdom, warmth, and fellowship.
-Format using WhatsApp bolding (*word*). Include 1-2 tasteful literary emojis (📖, 🕯️, ☕, ✨).`;
+export async function getHeraldOracleAnswer(userQuestion, senderName = 'Pilgrim', clubContext = null) {
+  const systemPrompt = `You are The Herald, the witty, warm, and highly erudite literary town crier for Paper Thoughts book club.
+Answer the member's question in 2-4 concise sentences grounded strictly in the live Paper Thoughts context JSON when relevant (never invent events, prices, or club facts not present in the context).
+If the question is a general book recommendation or craft question, give thoughtful literary insight.
+Tell members they can also use */commands* for quick lookups (*/prompt*, */reviews*, */botm*, */store*, */events*, */me*).
+Format using WhatsApp bolding (*word*). Include 1-2 tasteful emojis (📖, 🕯️, ☕, ✨).`;
 
-  const aiAnswer = await callGeminiProse(systemPrompt, `Member (${senderName}) asks: "${userQuestion}"`);
+  const userMsg = clubContext
+    ? `Member (${senderName}) asks: "${userQuestion}"\n\nLive Paper Thoughts Context:\n${JSON.stringify(clubContext)}`
+    : `Member (${senderName}) asks: "${userQuestion}"`;
+
+  const aiAnswer = await callGeminiProse(systemPrompt, userMsg);
   if (aiAnswer) return aiAnswer;
 
+  // Deterministic grounded fallback if Gemini is unavailable
+  if (clubContext?.bookstoreMatches?.length > 0) {
+    return `📚 *From the Paper Thoughts Bookstore*:\n${clubContext.bookstoreMatches.slice(0, 3).map(m => `• ${m}`).join('\n')}\n\nBrowse & order with cash or Paper Leaves: https://paperthoughts.org/bookstore 📖`;
+  }
   const q = getRandomQuote();
-  return `Kindred mind, as ${q.author} once wrote: _"${q.quote}"_\nKeep your pages open and your pen sharp! 🕯️📖`;
+  return `Kindred mind, as ${q.author} once wrote: _"${q.quote}"_\nTry */commands* for quick shortcuts (*/prompt*, */reviews*, */botm*, */store*, */events*, */me*)! 🕯️📖`;
+}
+
+/**
+ * Utility Formatters for Town Hall Slash Commands
+ */
+export function formatBotmReply({ activeBook, votingOpen, monthYear, topNominees = [] }) {
+  if (!activeBook && !votingOpen) {
+    return `📚 *Book of the Month*\n\nNo Book of the Month is currently active. Check Nominations or Discussion at:\n👉 https://paperthoughts.org/discussion`;
+  }
+
+  let msg = `📚 *Paper Thoughts Book of the Month* 📚\n\n`;
+  if (activeBook) {
+    msg += `*${activeBook.title}*\n_by ${activeBook.author || 'Community Pick'}_\n`;
+    if (activeBook.teaser) {
+      msg += `\n_"${activeBook.teaser.slice(0, 220)}${activeBook.teaser.length > 220 ? '...' : ''}"_\n`;
+    }
+  }
+
+  if (votingOpen && topNominees.length > 0) {
+    msg += `\n🗳️ *${monthYear} Voting is LIVE!* Top contenders:\n`;
+    msg += topNominees.map((n, i) => `${i + 1}. *${n.title}* (${n.votesCount} votes)`).join('\n') + `\n`;
+  }
+
+  msg += `\n👉 Read reviews & join discussion:\nhttps://paperthoughts.org/discussion 🕯️`;
+  return msg;
+}
+
+export function formatStoreReply({ query, matches = [], featured = [], error = false }) {
+  if (error) {
+    return `⚠️ Could not reach the Bookstore catalog right now. Browse directly at:\n👉 https://paperthoughts.org/bookstore`;
+  }
+
+  const formatLine = (b) => {
+    const priceNum = parseInt(String(b.price || '0').replace(/\D/g, ''), 10) || 0;
+    const leavesCost = priceNum > 0 ? Math.ceil(priceNum / 10) : 0;
+    const critiquesHint = leavesCost > 0 ? ` _(~${Math.ceil(leavesCost / 15)} helpful critiques)_` : '';
+    const stockEmoji = /(sold out|out of stock|unavailable)/i.test(b.status || '') ? '❌' : '✅';
+    return `• *${b.title}*${b.author ? ` — ${b.author}` : ''}\n  ${stockEmoji} ${b.status || 'In Stock'} | *₦${priceNum.toLocaleString()}* (${leavesCost} 🍃${critiquesHint})`;
+  };
+
+  if (query) {
+    if (matches.length === 0) {
+      return `🔎 No matches for *"${query}"* in the Bookstore.\nTry a shorter title or author keyword (e.g. */store achebe*), or browse the full shelf:\n👉 https://paperthoughts.org/bookstore 📖`;
+    }
+    return `🛍️ *Bookstore Results for "${query}"*:\n\n${matches.map(formatLine).join('\n\n')}\n\n💡 _1 Paper Leaf = ₦10 discount at checkout!_\n👉 Order here: https://paperthoughts.org/bookstore`;
+  }
+
+  const picksText = featured.length > 0
+    ? featured.map(formatLine).join('\n\n')
+    : 'Visit the Bookstore to explore all available hardcopies.';
+
+  return `🛍️ *Paper Thoughts Hardcopy Bookstore* 🛍️\n\n${picksText}\n\n🔎 Search any title with */store <title or author>*\n👉 Full shelf: https://paperthoughts.org/bookstore 📚`;
+}
+
+export function formatEventsReply({ gatherings = [] }) {
+  if (!gatherings || gatherings.length === 0) {
+    return `🏛️ *Upcoming Paper Thoughts Gatherings*\n\nNo upcoming scheduled events right now — Thursday Townhall details drop soon!\n👉 https://paperthoughts.org/events 🕯️`;
+  }
+
+  const lines = gatherings.map((g, idx) => {
+    const dateStr = g.eventDate ? new Date(g.eventDate).toLocaleDateString('en-GB', {
+      timeZone: 'Africa/Lagos',
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short'
+    }) : 'Upcoming';
+    const timeStr = g.startTime ? `${g.startTime.slice(0, 5)} WAT` : '8:15 PM WAT';
+    const typeLabel = (g.gatheringType || 'Townhall').replace(/_/g, ' ').toUpperCase();
+    const isPh = isPlaceholderMeetUrl(g.meetUrl);
+    const chamber = !isPh
+      ? g.meetUrl.trim()
+      : (g.gatheringType === 'book_banter' || /spaces/i.test(g.venueName || '') ? 'X Spaces' : (g.venueName || 'Google Meet'));
+    const liveTag = g.status === 'live' ? ' 🔴 LIVE' : '';
+    return `${idx + 1}. *"${g.title}"* (${typeLabel})${liveTag}\n   📅 ${dateStr} • ⏰ ${timeStr}\n   📍 ${chamber} • 🎟️ ${g.rsvpCount || 0} RSVPs`;
+  }).join('\n\n');
+
+  return `🏛️ *Upcoming Sanctuary Gatherings* 🏛️\n\n${lines}\n\n👉 RSVP & check in to earn Leaves:\nhttps://paperthoughts.org/events 🕯️✨`;
+}
+
+export function formatReviewsReply({ picks = [], totalNeedingReviews = 0 }) {
+  if (!picks || picks.length === 0) {
+    return `✨ *The Critique Corner is Caught Up!*\nEvery active manuscript currently has 3+ reviews. Draft your own piece or visit:\n👉 https://paperthoughts.org/dashboard/review`;
+  }
+
+  const blindMatch = picks[0];
+  const others = picks.slice(1, 3);
+
+  let msg = `📝 *Blind Critique Match & Review Queue* (${totalNeedingReviews} open)\n\n`;
+  msg += `🎯 *Your Blind Pick* (*${blindMatch.reviewCount}/3 reviews*):\n` +
+    `*"${blindMatch.title}"* (${blindMatch.genre})\n` +
+    (blindMatch.logline ? `_${blindMatch.logline.slice(0, 120)}${blindMatch.logline.length > 120 ? '...' : ''}_\n` : '') +
+    `👉 Review now (+5 🍃, +10 🍃 if helpful): https://paperthoughts.org/dashboard/review?submissionId=${blindMatch.id}\n`;
+
+  if (others.length > 0) {
+    msg += `\n📌 *Also awaiting eyes:*\n` + others.map(w => `• *"${w.title}"* (${w.genre}, ${w.reviewCount}/3) 👉 https://paperthoughts.org/dashboard/review?submissionId=${w.id}`).join('\n');
+  }
+
+  return msg;
+}
+
+export function formatPassportDM({ user, weeklySubmitted, weeklyReviews }) {
+  if (!user) {
+    return `🕯️ *Paper Thoughts Sanctuary Passport*\n\nWe couldn't find your WhatsApp number linked to an Archive profile yet!\nAdd your WhatsApp number inside your Dashboard profile settings to unlock private stats:\n👉 https://paperthoughts.org/dashboard 📖`;
+  }
+
+  const leaves = parseInt(user.spendableLeaves || 0, 10);
+  const nairaVal = leaves * 10;
+  const streak = parseInt(user.writingStreak || 0, 10);
+  const tokens = parseFloat(user.milestoneTokens || 0);
+  const stage = parseInt(user.panguinStage || 1, 10);
+  const archetype = user.readerArchetype || 'Wandering Scribe';
+
+  return `🪪 *Sanctuary Passport: ${user.alias ? `@${user.alias}` : user.fullName}* 🕯️\n\n` +
+    `✦ *Identity:* ${archetype} (🐧 Stage ${stage})\n` +
+    `✦ *Paper Leaves:* *${leaves} 🍃* _(Worth ₦${nairaVal.toLocaleString()} in the Bookstore)_\n` +
+    `✦ *Writing Streak:* *${streak} week${streak === 1 ? '' : 's'}* 🔥\n` +
+    `✦ *Milestone Tokens:* *${tokens.toFixed(1)} / 10.0*\n\n` +
+    `📅 *This Week's Progress:*\n` +
+    `• Weekly Prompt Submission: ${weeklySubmitted ? '✅ Submitted!' : '⏳ Pending (locks Fri 11:59 PM)'}\n` +
+    `• Peer Critiques Completed: *${weeklyReviews}* ${weeklyReviews > 0 ? '✨' : '_(Try /reviews to earn 🍃!)_'}\n\n` +
+    `👉 Dashboard: https://paperthoughts.org/dashboard`;
+}
+
+export function formatCommandsDirectory() {
+  return `📜 *The Herald's Town Hall Commands* 📜\n\n` +
+    `Use any command directly (or tag *@Herald* with a question):\n\n` +
+    `• */prompt* — This week's writing prompt & deadline\n` +
+    `• */reviews* — Blind Critique Match & manuscripts needing eyes\n` +
+    `• */botm* — Book of the Month & voting status\n` +
+    `• */store <title>* — Check Bookstore stock & price in ₦ / 🍃\n` +
+    `• */events* — Upcoming Townhalls & gatherings\n` +
+    `• */me* — Private DM of your Leaves, streak & weekly progress\n` +
+    `• *@Herald <question>* — Ask about club rules or book recs!\n\n` +
+    `_May your pages stay full._ 🕯️📖`;
+}
+
+export function getWednesdayNudge({ promptText }) {
+  const promptSnippet = promptText
+    ? `\n\n🖋️ *This Week's Spark:*\n_"${promptText.slice(0, 180)}${promptText.length > 180 ? '...' : ''}"_\n`
+    : '';
+  return `✍️ *Mid-Week Ink Check in the Village!* ✍️\n\n` +
+    `We are halfway to Friday's midnight cutoff! Even 10 rough minutes of drafting counts — polish later, ink today.` +
+    `${promptSnippet}\n👉 Open your draft desk: https://paperthoughts.org/dashboard/write 🕯️`;
+}
+
+export function getSaturdayBotmNudge({ bookTitle, bookAuthor, teaser }) {
+  return `📚 *Weekend Reading Lounge is Open!* ☕\n\n` +
+    (bookTitle
+      ? `Settle in with this month's fellowship read:\n✦ *${bookTitle}*${bookAuthor ? ` by ${bookAuthor}` : ''}\n${teaser ? `_"${teaser.slice(0, 180)}${teaser.length > 180 ? '...' : ''}"_\n\n` : '\n'}`
+      : '') +
+    `Also: Early-Bird Critique Window is open in the Workshop (earn *1.5 Milestone Tokens* + Leaves today!).\n` +
+    `👉 BOTM Lounge: https://paperthoughts.org/discussion\n👉 Review Queue: https://paperthoughts.org/dashboard/review 📖✨`;
+}
+
+export function getWeeklyLaurelBroadcast({ title, genre, penName, reason }) {
+  return `🏆 *The Weekly Sanctuary Laurel is Crowned!* 🏆\n\n` +
+    `Join us in celebrating this week's standout manuscript from the Writers' Village:\n\n` +
+    `✦ *Title:* *"${title}"* (${genre})\n` +
+    `✦ *Author:* *${penName || 'Anonymous Scribe'}*\n` +
+    (reason ? `✦ *Editorial Citation:* _${reason}_\n\n` : '\n') +
+    `👉 Read & tip Leaves in the Living Salon:\nhttps://paperthoughts.org/village/gallery 🕯️📖✨`;
 }
 
 /**
@@ -260,47 +430,7 @@ export function getNewEventProclamation({ title, gatheringType, eventDate, start
 }
 
 /**
- * 9. Creative Writing & Reading Boost (/boost)
- */
-export async function getLiteraryBoost({ senderName = 'Kindred Pilgrim' }) {
-  const systemPrompt = `You are The Herald, the impassioned, poetic literary town crier and salon master of Paper Thoughts book club.
-Deliver an electrifying, poetic 2-3 sentence creative boost to inspire a fellow scribe or reader to conquer the page or finish their chapter today.
-Use rich evocative imagery (ink, embers, midnight candle, untamed courage). Include 1-2 emojis (⚡, 🕯️, 🖋️, 📖). Format using WhatsApp bolding (*word*).`;
-
-  const aiProse = await callGeminiProse(systemPrompt, `Pilgrim name: ${senderName}`);
-  if (aiProse) return aiProse;
-
-  // Local Fallback
-  const q = getRandomQuote();
-  return `⚡ *The Herald's Spark of Fire* ⚡\n\n` +
-    `*${senderName}*, the blank page is not an abyss—it is an unmapped continent waiting for your footprints. ` +
-    `Pick up your pen or open your book tonight. Ten minutes of fierce devotion will outshine hours of hesitation.\n\n` +
-    `_"${q.quote}"_ — ${q.author}\n\n` +
-    `Go make the ink bleed! 🖋️🔥`;
-}
-
-/**
- * 10. Community Reading & Writing Goal Commitment (/goal)
- */
-export async function getGoalPrompt({ senderName = 'Kindred Pilgrim' }) {
-  const systemPrompt = `You are The Herald, guardian of Paper Thoughts sanctuary rituals.
-Give a sharp, encouraging 2-sentence accountability prompt challenging a member to set and declare their reading or writing goal for today.
-Mention protecting their streak before Friday. Include 1-2 emojis (🎯, 📜, ⏳). Format using WhatsApp bolding (*word*).`;
-
-  const aiProse = await callGeminiProse(systemPrompt, `Pilgrim name: ${senderName}`);
-  if (aiProse) return aiProse;
-
-  // Local Fallback
-  return `🎯 *The Sanctuary Accountability Ledger* 🎯\n\n` +
-    `*${senderName}*, words spoken into the void vanish, but commitments forged in fellowship endure. What is your pledge today?\n\n` +
-    `• *Reading*: 1 chapter / 30 pages\n` +
-    `• *Writing*: 300 words / 1 polished scene\n` +
-    `• *Critique*: Reviewing 1 manuscript in the queue\n\n` +
-    `Declare your target below and hold yourself to the altar! Submit before Friday midnight to protect your writing streak: https://paperthoughts.org/dashboard ⏳🕯️`;
-}
-
-/**
- * 11. Live Gathering Alert (When meeting goes live / doors open)
+ * 9. Live Gathering Alert (When meeting goes live / doors open)
  */
 export function getGatheringLiveAlert({ title, gatheringType, meetUrl, venueName }) {
   const isPlaceholder = isPlaceholderMeetUrl(meetUrl);

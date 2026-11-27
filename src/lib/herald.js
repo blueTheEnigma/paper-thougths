@@ -198,6 +198,27 @@ export async function sendHeraldAdminAlert({ to, text, idempotencyKey = null, ri
   }
 }
 
+export async function sendHeraldPrivateReply({ phone, text }) {
+  const formattedPhone = formatNigerianPhone(phone);
+  if (!formattedPhone) {
+    console.warn(`[Herald] Cannot send private reply: invalid phone [${phone}]`);
+    return null;
+  }
+
+  try {
+    return await callEvolutionApi('sendText', {
+      number: `${formattedPhone}@s.whatsapp.net`,
+      text,
+      delay: 1000,
+      presence: 'composing',
+      linkPreview: true
+    });
+  } catch (err) {
+    console.error(`[Herald Private Reply] Failed for [${formattedPhone}]:`, err.message);
+    return null;
+  }
+}
+
 /**
  * Send an emoji reaction to a specific message
  */

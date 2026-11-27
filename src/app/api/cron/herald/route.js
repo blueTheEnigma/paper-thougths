@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
+import { isCronAuthorized } from '@/lib/cronAuth';
 import { 
   sendHeraldGroupBroadcast, 
   sendHeraldAdminAlert, 
@@ -10,7 +11,9 @@ import {
   getBirthdayToast, 
   getTownhallAlert, 
   getPromptDrop, 
-  getFridayCritiqueAlert 
+  getFridayCritiqueAlert,
+  getWednesdayNudge,
+  getSaturdayBotmNudge
 } from '@/lib/heraldLore';
 
 export const dynamic = 'force-dynamic';
@@ -28,18 +31,11 @@ export async function POST(request) {
 }
 
 async function handleCron(request) {
-  const isDev = process.env.NODE_ENV === 'development';
-  const { searchParams } = new URL(request.url);
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET || 'dev_secret';
-  const querySecret = searchParams.get('secret') || searchParams.get('key');
-
-  // Authorization Guard (supports Authorization header or ?secret= / ?key= query params)
-  const isAuthorized = isDev || authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret;
-  if (!isAuthorized) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
+  const { searchParams } = new URL(request.url);
   const isDryRun = searchParams.get('dryRun') === 'true';
 
   const now = new Date();
@@ -184,6 +180,50 @@ async function handleCron(request) {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
+    // 4b. Wednesday 10:00 AM Mid-Week Draft Nudge (WAT 10:00 - 14:00)
+    // ──────────────────────────────────────────────────────────────────────────
+    if (currentDay === 3 && watHour >= 10 && watHour < 14) {
+      const activePrompt = await Database.queryOne(`
+        SELECT prompt_text as "promptText"
+        FROM prompts
+        WHERE active_date <= $1
+        ORDER BY active_date DESC, id DESC
+        LIMIT 1
+      `, [todayStr]);
+
+      const wedKey = `wednesday_draft_nudge_${todayStr}`;
+      const wedText = getWednesdayNudge({ promptText: activePrompt?.promptText });
+      if (!isDryRun) {
+        await sendHeraldGroupBroadcast({ text: wedText, idempotencyKey: wedKey, ritualType: 'wednesday_nudge' });
+      }
+      dispatchesExecuted.push({ ritual: 'wednesday_nudge', wedKey });
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 4c. Saturday 10:00 AM BOTM & Early-Bird Critique Lounge (WAT 10:00 - 14:00)
+    // ──────────────────────────────────────────────────────────────────────────
+    if (currentDay === 6 && watHour >= 10 && watHour < 14) {
+      const activeBotm = await Database.queryOne(`
+        SELECT title, author, teaser
+        FROM book_of_the_month
+        WHERE active = TRUE
+        ORDER BY created_at DESC, id DESC
+        LIMIT 1
+      `);
+
+      const satKey = `saturday_botm_lounge_${todayStr}`;
+      const satText = getSaturdayBotmNudge({
+        bookTitle: activeBotm?.title,
+        bookAuthor: activeBotm?.author,
+        teaser: activeBotm?.teaser
+      });
+      if (!isDryRun) {
+        await sendHeraldGroupBroadcast({ text: satText, idempotencyKey: satKey, ritualType: 'saturday_botm_lounge' });
+      }
+      dispatchesExecuted.push({ ritual: 'saturday_botm_lounge', satKey });
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
     // 5. Thursday Townhall Gathering Alerts (10:00 AM Teaser & 7:45 PM Final Call)
     // ──────────────────────────────────────────────────────────────────────────
     if (currentDay === 4) {
@@ -251,7 +291,7 @@ async function handleCron(request) {
         LEFT JOIN peer_reviews pr ON pr.submission_id = s.id
         WHERE s.batch_status = 'active_batch'
         GROUP BY s.id, s.title, s.genre
-        HAVING COUNT(pr.id) < 2
+        HAVING COUNT(pr.id) < 3
         ORDER BY review_count ASC, s.id ASC
         LIMIT 5
       `);

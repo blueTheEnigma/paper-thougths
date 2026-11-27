@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
+import { isCronAuthorized } from '@/lib/cronAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,46 +15,34 @@ const SYSTEM_PROMPT = `You are a master literary editor. Combine the attached ra
 }
 Do not wrap the JSON output in markdown formatting code blocks (such as \`\`\`json) or include any conversational intro/outro text. Return only the raw stringified JSON.`;
 
-// Saturday 12:00 AM batch cycle start calculator (UTC aligned)
-function getLastSaturdayStart() {
-  const now = new Date();
-  const currentDay = now.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  let daysSinceSaturday = currentDay - 6;
-  if (daysSinceSaturday < 0) {
-    daysSinceSaturday += 7;
-  }
-  const lastSaturday = new Date(now);
-  lastSaturday.setUTCDate(now.getUTCDate() - daysSinceSaturday);
-  lastSaturday.setUTCHours(0, 0, 0, 0);
-  return lastSaturday;
+export async function GET(request) {
+  return POST(request);
 }
 
 // Map-Reduce AI Synthesis Cron
 export async function POST(request) {
   try {
-    const isDev = process.env.NODE_ENV === 'development';
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET || 'dev_secret';
-    
-    // Authorization Check
-    if (!isDev && authHeader !== `Bearer ${cronSecret}`) {
+    if (!isCronAuthorized(request)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     console.log('Running Friday AI Review Synthesis batch cycle...');
 
-    // Self-healing guard: Archive any active_batch submissions that should have been archived (created_at before last Saturday)
-    const lastSaturday = getLastSaturdayStart();
+    // Graduate ONLY submissions from ended prior months or with >= 3 reviews (never nuke mid-month < 3 works!)
+    const currentCycleMonth = new Date().toISOString().slice(0, 7);
     const selfHealRes = await Database.query(`
       UPDATE submissions
       SET batch_status = 'archived'
       WHERE batch_status = 'active_batch'
-        AND created_at < $1
+        AND (
+          id IN (SELECT submission_id FROM peer_reviews GROUP BY submission_id HAVING COUNT(*) >= 3)
+          OR COALESCE(cycle_month, to_char(created_at, 'YYYY-MM')) < $1
+        )
       RETURNING id
-    `, [lastSaturday]);
+    `, [currentCycleMonth]);
 
     if (selfHealRes.length > 0) {
-      console.log(`Self-healing: Archived ${selfHealRes.length} submissions from the previous cycle inline:`, selfHealRes.map(r => r.id));
+      console.log(`Archived ${selfHealRes.length} completed/prior-month submissions:`, selfHealRes.map(r => r.id));
     }
 
     // 1. Fetch archived submissions that have at least one peer review but no AI report yet (joined with user for emails)
@@ -76,7 +65,7 @@ export async function POST(request) {
     }
 
     const geminiKey = process.env.GEMINI_API_KEY;
-    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const results = [];
 
     for (const submission of activeSubmissions) {
@@ -264,13 +253,4 @@ function generateLocalSynthesisFallback(submission, reviews, tw, trw, lw, pacing
       ? `Revision plan: 1. Address narrative pacing. 2. Tighten character arcs. 3. Adjust the transition timing around the climax: "${pivots[0].substring(0, 100)}".`
       : "Revision plan: 1. Balance the pacing of the introduction. 2. Build stronger tension in scene transitions. 3. Clear up character dialogue beats."
   };
-}
-
-// Support GET requests in development for testing
-export async function GET(request) {
-  const isDev = process.env.NODE_ENV === 'development';
-  if (!isDev) {
-    return NextResponse.json({ success: false, error: 'Method Not Allowed' }, { status: 405 });
-  }
-  return POST(request);
 }

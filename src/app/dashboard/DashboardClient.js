@@ -2578,13 +2578,13 @@ export default function DashboardClient({
                       </div>
                     )}
 
-                    {/* Most Improved Author card */}
+                    {/* Most Consistent Author card */}
                     {activeLeaderboard.improvedWinnerName && (
                       <div className="bg-white border border-sage/15 p-5 sm:p-8 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6 relative overflow-hidden">
                         <div className="absolute -top-10 -right-10 w-32 h-32 bg-sage/5 rounded-full blur-2xl"></div>
                         <div className="space-y-4 relative z-10">
                           <span className="bg-sage/10 text-sage text-[9px] font-bold px-3 py-1 rounded-full border border-sage/20 uppercase tracking-widest inline-block">
-                            📈 Most Improved Author
+                            🔥 Most Consistent Author
                           </span>
                           <h3 className="text-2xl font-display font-bold text-burgundy">{activeLeaderboard.improvedWinnerName}</h3>
                           <p className="text-xs sm:text-sm text-ink/80 font-serif leading-relaxed italic font-medium">
@@ -2592,8 +2592,8 @@ export default function DashboardClient({
                           </p>
                         </div>
                         <div className="border-t border-sage/10 pt-4 flex justify-between items-center text-[10px] font-sans font-bold uppercase tracking-wider text-ink/40">
-                          <span>Highest Growth</span>
-                          <span className="text-sage">Rising Star</span>
+                          <span>Unbroken Rhythm</span>
+                          <span className="text-sage">Steadfast Scribe</span>
                         </div>
                       </div>
                     )}

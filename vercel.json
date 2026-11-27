@@ -5,16 +5,16 @@
       "schedule": "0 8 * * 1"
     },
     {
-      "path": "/api/cron/reminders?type=wednesday",
-      "schedule": "0 8 * * 3"
-    },
-    {
       "path": "/api/cron/reminders?type=friday",
       "schedule": "0 8 * * 5"
     },
     {
-      "path": "/api/cron/reminders?type=saturday",
-      "schedule": "0 10 * * 6"
+      "path": "/api/cron/auto-approve-reviews",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-audit",
+      "schedule": "10 0 1 * *"
     },
     {
       "path": "/api/cron/batch-transition",

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
 import { sendPushNotification } from '@/lib/pushNotifications';
+import { isCronAuthorized } from '@/lib/cronAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request) {
   try {
+    if (!isCronAuthorized(request)) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     const expiredReviews = await Database.query(`
       SELECT pr.id, pr.reviewer_id, pr.submission_id, s.title as "submissionTitle"
       FROM peer_reviews pr

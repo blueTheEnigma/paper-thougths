@@ -2,15 +2,15 @@ import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
 import { getAnthologyLaureateAnnouncementEmail } from '@/lib/emailTemplates';
+import { isCronAuthorized } from '@/lib/cronAuth';
+
+export async function GET(request) {
+  return POST(request);
+}
 
 export async function POST(request) {
   try {
-    const isDev = process.env.NODE_ENV === 'development';
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET || 'dev_secret';
-    
-    // Authorization check
-    if (!isDev && authHeader !== `Bearer ${cronSecret}`) {
+    if (!isCronAuthorized(request)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 

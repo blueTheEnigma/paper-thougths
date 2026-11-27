@@ -335,10 +335,10 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
                     )}
                     {editorialHonors.mostImprovedAuthor && (
                       <EditorialCard 
-                        title="Most Improved Author"
+                        title="Most Consistent Author"
                         name={editorialHonors.mostImprovedAuthor.name}
                         blurb={editorialHonors.mostImprovedAuthor.text}
-                        badge="Ascending Scribe"
+                        badge="Steadfast Scribe"
                       />
                     )}
                   </div>

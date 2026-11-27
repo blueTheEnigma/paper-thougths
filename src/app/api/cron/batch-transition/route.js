@@ -1,62 +1,59 @@
 import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
+import { isCronAuthorized } from '@/lib/cronAuth';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(request) {
+  return POST(request);
+}
 
 export async function POST(request) {
   try {
-    const isDev = process.env.NODE_ENV === 'development';
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET || 'dev_secret';
-    
-    // Authorization check
-    if (!isDev && authHeader !== `Bearer ${cronSecret}`) {
+    if (!isCronAuthorized(request)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Running Saturday Batch Drop lifecycle transitions...');
+    console.log('Running Batch Drop lifecycle transitions...');
 
-    // Count the queued submissions
-    const queuedCountRes = await Database.queryOne(`
-      SELECT COUNT(*) as count 
-      FROM submissions 
-      WHERE batch_status = 'queued'
-    `);
-    const queuedCount = parseInt(queuedCountRes?.count || 0, 10);
+    const currentCycleMonth = new Date().toISOString().slice(0, 7);
 
     const result = await Database.transaction(async (client) => {
-      // 1. Archive active submissions that have reached the threshold of >= 3 critiques
+      // 1. Archive active submissions ONLY if:
+      //    a) They have reached >= 3 peer critiques, OR
+      //    b) Their cycle month has ended (older than current YYYY-MM calendar month)
+      // Works with < 3 reviews remain in active_batch throughout the current month!
       const archiveRes = await client.query(`
-        UPDATE submissions 
-        SET batch_status = 'archived' 
+        UPDATE submissions
+        SET batch_status = 'archived'
         WHERE batch_status = 'active_batch'
-          AND id IN (
-            SELECT submission_id 
-            FROM peer_reviews 
-            GROUP BY submission_id 
-            HAVING COUNT(*) >= 3
+          AND (
+            id IN (
+              SELECT submission_id
+              FROM peer_reviews
+              GROUP BY submission_id
+              HAVING COUNT(*) >= 3
+            )
+            OR COALESCE(cycle_month, to_char(created_at, 'YYYY-MM')) < $1
           )
         RETURNING id
-      `);
+      `, [currentCycleMonth]);
       const archivedIds = archiveRes.rows.map(r => r.id);
 
-      // 2. Identify remaining active submissions that are rolling over (excluding completed ones)
+      // 2. Remaining active_batch manuscripts roll over seamlessly in Critique Corner
       const rolloverRes = await client.query(`
-        SELECT id 
-        FROM submissions 
-        WHERE batch_status = 'active_batch'
+        SELECT id FROM submissions WHERE batch_status = 'active_batch'
       `);
       const rolloverIds = rolloverRes.rows.map(r => r.id);
 
-      // 3. Activate the queued submissions for the new week (if any are queued)
-      let activatedIds = [];
-      if (queuedCount > 0) {
-        const activateRes = await client.query(`
-          UPDATE submissions 
-          SET batch_status = 'active_batch' 
-          WHERE batch_status = 'queued'
-          RETURNING id
-        `);
-        activatedIds = activateRes.rows.map(r => r.id);
-      }
+      // 3. Activate any queued submissions for the new week
+      const activateRes = await client.query(`
+        UPDATE submissions
+        SET batch_status = 'active_batch'
+        WHERE batch_status = 'queued'
+        RETURNING id
+      `);
+      const activatedIds = activateRes.rows.map(r => r.id);
 
       return {
         archivedCount: archivedIds.length,
@@ -68,24 +65,13 @@ export async function POST(request) {
       };
     });
 
-    console.log('Batch drop transition complete:', result);
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Saturday Batch Drop transition executed successfully.',
+    return NextResponse.json({
+      success: true,
+      message: 'Batch Drop transition executed successfully (kept < 3 review pieces active for current month).',
       data: result
     });
   } catch (error) {
-    console.error('Saturday Batch Drop transition failed:', error);
+    console.error('Batch Drop transition failed:', error);
     return NextResponse.json({ success: false, error: error.message || 'Batch Drop failed' }, { status: 500 });
   }
-}
-
-// Support GET requests in development for manual testing
-export async function GET(request) {
-  const isDev = process.env.NODE_ENV === 'development';
-  if (!isDev) {
-    return NextResponse.json({ success: false, error: 'Method Not Allowed' }, { status: 405 });
-  }
-  return POST(request);
 }

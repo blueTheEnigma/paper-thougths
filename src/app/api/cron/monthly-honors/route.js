@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 import { Database } from '@/lib/db';
 import { sendEmail } from '@/lib/email';
+import { isCronAuthorized } from '@/lib/cronAuth';
 
 const SYSTEM_PROMPT = `
 You are the Chief AI Editorial Assistant for "Paper Thoughts".
 Your task is to analyze the community's literary activity from the past 30 days and nominate winners for five monthly awards:
 1. "Review of the Month" (most committed reviewer with the most detailed and constructive critiquing)
-2. "Author of the Month" (the person who wrote genuinely loved prose pieces this month, wrote consistently, and is highly regarded based on the quality of peer reviews they received)
-3. "Most Improved Author" (an author showing noticeable growth in narrative robustness, depth, and engagement)
-4. "Poet of the Month" (the person who wrote outstanding poetry this month, demonstrating masterful poetic metrics and landing deeply with the community)
-5. "Most Improved Poet" (a poet showing clear progression in poetic depth, structure, or critiquing quality)
+2. "Author of the Month" (the person who wrote genuinely loved prose pieces this month and is highly regarded)
+3. "Most Consistent Author" (an author showing steady weekly discipline across active weeks, writing streak, and prose presence)
+4. "Poet of the Month" (the person who wrote outstanding poetry this month, landing deeply with the community)
+5. "Most Consistent Poet" (a poet showing steady weekly discipline across active weeks, streak, and poetry participation)
 
 CRITICAL RULES:
 1. Select the winners ONLY from the provided candidate list.
@@ -37,14 +38,13 @@ function getVotingMonthYear() {
   return `${months[now.getMonth()]} ${now.getFullYear()}`;
 }
 
+export async function GET(request) {
+  return POST(request);
+}
+
 export async function POST(request) {
   try {
-    const isDev = process.env.NODE_ENV === 'development';
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET || 'dev_secret';
-    
-    // Authorization check
-    if (!isDev && authHeader !== `Bearer ${cronSecret}`) {
+    if (!isCronAuthorized(request)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -116,14 +116,15 @@ export async function POST(request) {
 
     // ─── 2. Fetch candidates & reviews context for LLM honors selection ───
     const activeUsers = await Database.query(`
-      SELECT u.id, u.full_name as "name", u.email,
+      SELECT u.id, u.full_name as "name", u.email, COALESCE(u.writing_streak, 0)::int as "writingStreak",
              (SELECT COUNT(*) FROM submissions s WHERE s.author_id = u.id AND s.genre != 'Poetry' AND s.created_at >= NOW() - INTERVAL '30 days') as "storyCount",
              (SELECT COUNT(*) FROM submissions s WHERE s.author_id = u.id AND s.genre = 'Poetry' AND s.created_at >= NOW() - INTERVAL '30 days') as "poetryCount",
+             (SELECT COUNT(DISTINCT to_char(s.created_at, 'IYYY-IW')) FROM submissions s WHERE s.author_id = u.id AND s.created_at >= NOW() - INTERVAL '30 days') as "activeSubmitWeeks",
              (SELECT COUNT(*) FROM peer_reviews pr WHERE pr.reviewer_id = u.id AND pr.created_at >= NOW() - INTERVAL '30 days') as "peerReviewCount",
              (SELECT COUNT(*) FROM book_of_the_month_reviews bmr WHERE bmr.user_id = u.id AND bmr.created_at >= NOW() - INTERVAL '30 days') as "bookReviewCount"
       FROM users u
       WHERE u.clerk_id IS NOT NULL
-      ORDER BY "peerReviewCount" DESC
+      ORDER BY "writingStreak" DESC, "peerReviewCount" DESC
     `);
 
     // Fetch review text fragments for context
@@ -152,6 +153,8 @@ export async function POST(request) {
       return {
         id: u.id,
         name: u.name,
+        writingStreakWeeks: parseInt(u.writingStreak || 0, 10),
+        activeSubmitWeeksThisMonth: parseInt(u.activeSubmitWeeks || 0, 10),
         storiesSubmitted: parseInt(u.storyCount || 0),
         poemsSubmitted: parseInt(u.poetryCount || 0),
         peerReviews: parseInt(u.peerReviewCount || 0),
@@ -162,7 +165,7 @@ export async function POST(request) {
 
     let aiSelections = null;
     const geminiKey = process.env.GEMINI_API_KEY;
-    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const togetherKey = process.env.SERVERLESS_LLM_API_KEY;
 
     if (activeCandidates.length > 0) {
@@ -233,8 +236,7 @@ export async function POST(request) {
     }
 
     // ─── 3. Save and Publish Leaderboard ───
-    const genBookieName = result.genBookieUserId ? (activeUsers.find(u => u.id === result.genBookieUserId)?.name || '') : '';
-    const abjBookieName = result.abjBookieUserId ? (activeUsers.find(u => u.id === result.abjBookieUserId)?.name || '') : '';
+    const bookieUserId = result.bookieUserId || null;
 
     await Database.query(`
       INSERT INTO monthly_leaderboard (
@@ -267,10 +269,10 @@ export async function POST(request) {
         created_at = NOW()
     `, [
       currentMonthYear,
-      result.genBookieUserId,
-      result.genWinnerRow ? `Crowned General stream book reviewer for outstanding feedback on "${result.genWinnerRow.title}".` : 'No reviews active.',
-      result.abjBookieUserId,
-      result.abjWinnerRow ? `Crowned Abuja stream book reviewer for outstanding feedback on "${result.abjWinnerRow.title}".` : 'No reviews active.',
+      bookieUserId,
+      bookieUserId ? `Crowned Sanctuary Bookie for outstanding Book of the Month reviews.` : 'No reviews active.',
+      null,
+      null,
       aiSelections.review_of_the_month_user_id,
       aiSelections.review_of_the_month_text,
       aiSelections.author_of_the_month_user_id,
@@ -290,8 +292,7 @@ export async function POST(request) {
       aiSelections.most_improved_author_user_id,
       aiSelections.poet_of_the_month_user_id,
       aiSelections.most_improved_poet_user_id,
-      result.genBookieUserId,
-      result.abjBookieUserId
+      bookieUserId
     ].filter(Boolean);
 
     const distinctWinningUserIds = [...new Set(winningUserIds)];
@@ -364,12 +365,19 @@ function generateStatisticalFallback(candidates) {
   const sortedByReviews = [...candidates].sort((a, b) => (b.peerReviews + b.bookReviews) - (a.peerReviews + a.bookReviews));
   const sortedByStories = [...candidates].sort((a, b) => b.storiesSubmitted - a.storiesSubmitted);
   const sortedByPoems = [...candidates].sort((a, b) => b.poemsSubmitted - a.poemsSubmitted);
+  const consistencyScore = (u) => (u.writingStreakWeeks * 3) + (u.activeSubmitWeeksThisMonth * 2) + u.peerReviews;
+  const sortedConsistentAuthors = [...candidates]
+    .filter(c => c.storiesSubmitted > 0 || c.peerReviews > 0)
+    .sort((a, b) => consistencyScore(b) - consistencyScore(a));
+  const sortedConsistentPoets = [...candidates]
+    .filter(c => c.poemsSubmitted > 0)
+    .sort((a, b) => consistencyScore(b) - consistencyScore(a));
 
   const topReviewer = sortedByReviews[0] || null;
   const topAuthor = sortedByStories[0] || null;
-  const runnerUpAuthor = sortedByStories[1] || topAuthor;
+  const consistentAuthor = sortedConsistentAuthors.find(c => c.id !== topAuthor?.id) || sortedConsistentAuthors[0] || topAuthor;
   const topPoet = sortedByPoems[0] || null;
-  const runnerUpPoet = sortedByPoems[1] || topPoet;
+  const consistentPoet = sortedConsistentPoets.find(c => c.id !== topPoet?.id) || sortedConsistentPoets[0] || topPoet;
 
   return {
     review_of_the_month_user_id: topReviewer?.id || null,
@@ -380,26 +388,19 @@ function generateStatisticalFallback(candidates) {
     author_of_the_month_text: topAuthor
       ? `${topAuthor.name} enriched the Clubhouse this month by submitting ${topAuthor.storiesSubmitted} original prose drafts to the Writers' Village.`
       : "No authors were available.",
-    most_improved_author_user_id: runnerUpAuthor?.id || null,
-    most_improved_author_text: runnerUpAuthor
-      ? `${runnerUpAuthor.name} showed stellar growth and support this month, consistently engaging with and refining community drafts.`
-      : "No improved authors were available.",
+    most_improved_author_user_id: consistentAuthor?.id || null,
+    most_improved_author_text: consistentAuthor
+      ? `${consistentAuthor.name} showed remarkable weekly steadiness (${consistentAuthor.activeSubmitWeeksThisMonth} active week(s), ${consistentAuthor.writingStreakWeeks}-week streak, ${consistentAuthor.peerReviews} critiques).`
+      : "No consistent authors were available.",
     poet_of_the_month_user_id: topPoet?.id || null,
     poet_of_the_month_text: topPoet
       ? `${topPoet.name} captured outstanding poetic focus this month, submitting ${topPoet.poemsSubmitted} poetic works.`
       : "No poets were available.",
-    most_improved_poet_user_id: runnerUpPoet?.id || null,
-    most_improved_poet_text: runnerUpPoet
-      ? `${runnerUpPoet.name} showed outstanding growth in their poetic metrics and stanza structures.`
-      : "No improved poets were available."
+    most_improved_poet_user_id: consistentPoet?.id || null,
+    most_improved_poet_text: consistentPoet
+      ? `${consistentPoet.name} kept a steady poetic cadence this month (${consistentPoet.poemsSubmitted} poems across ${consistentPoet.activeSubmitWeeksThisMonth} active week(s), ${consistentPoet.writingStreakWeeks}-week streak).`
+      : "No consistent poets were available."
   };
 }
 
-// Support GET requests in development for manual testing
-export async function GET(request) {
-  const isDev = process.env.NODE_ENV === 'development';
-  if (!isDev) {
-    return NextResponse.json({ success: false, error: 'Method Not Allowed' }, { status: 405 });
-  }
-  return POST(request);
-}
+// GET requests handled cleanly via exported GET handler above

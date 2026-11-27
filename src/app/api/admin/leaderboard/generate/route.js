@@ -10,7 +10,7 @@ You are the Chief AI Editorial Assistant for "Paper Thoughts".
 Your task is to analyze the community's literary activity from the past 30 days and nominate winners for three monthly awards:
 1. "Review of the Month" (most consistent, detailed, and in-depth critiquing)
 2. "Author of the Month" (excellent stories/poems submitted, highly active)
-3. "Most Improved Author" (someone showing noticeable progress in their writing or critique quality)
+3. "Most Consistent Author" (steady weekly presence across active weeks, writing streak, and peer review discipline)
 
 You will be provided with a JSON list of active users, their stats (submissions count, peer review count, book review count), and samples of their reviews and critiques.
 
@@ -77,13 +77,14 @@ export async function POST(request) {
 
     // 3. Fetch User Activity Stats and text samples from the past 30 days
     const activeUsers = await Database.query(`
-      SELECT u.id, u.full_name as "name",
+      SELECT u.id, u.full_name as "name", COALESCE(u.writing_streak, 0)::int as "writingStreak",
              (SELECT COUNT(*) FROM submissions s WHERE s.author_id = u.id AND s.created_at >= NOW() - INTERVAL '30 days') as "submissionCount",
+             (SELECT COUNT(DISTINCT to_char(s.created_at, 'IYYY-IW')) FROM submissions s WHERE s.author_id = u.id AND s.created_at >= NOW() - INTERVAL '30 days') as "activeSubmitWeeks",
              (SELECT COUNT(*) FROM peer_reviews pr WHERE pr.reviewer_id = u.id AND pr.created_at >= NOW() - INTERVAL '30 days') as "peerReviewCount",
              (SELECT COUNT(*) FROM book_of_the_month_reviews bmr WHERE bmr.user_id = u.id AND bmr.created_at >= NOW() - INTERVAL '30 days') as "bookReviewCount"
       FROM users u
       WHERE u.clerk_id IS NOT NULL
-      ORDER BY "peerReviewCount" DESC, "submissionCount" DESC
+      ORDER BY "writingStreak" DESC, "peerReviewCount" DESC, "submissionCount" DESC
     `);
 
     // Fetch review samples for context
@@ -113,6 +114,8 @@ export async function POST(request) {
       return {
         id: u.id,
         name: u.name,
+        writingStreakWeeks: parseInt(u.writingStreak || 0, 10),
+        activeSubmitWeeksThisMonth: parseInt(u.activeSubmitWeeks || 0, 10),
         submissions: parseInt(u.submissionCount || 0),
         peerReviews: parseInt(u.peerReviewCount || 0),
         bookReviews: parseInt(u.bookReviewCount || 0),
@@ -161,8 +164,8 @@ export async function POST(request) {
     return NextResponse.json({
       success: true,
       monthYear,
-      generalBookie: generalBookieUser ? { id: generalBookieUser.id, name: generalBookieUser.name, bookTitle: generalBook.title } : null,
-      abujaBookie: abujaBookieUser ? { id: abujaBookieUser.id, name: abujaBookieUser.name, bookTitle: abujaBook.title } : null,
+      generalBookie: generalBookieUser ? { id: generalBookieUser.id, name: generalBookieUser.name, bookTitle: activeBook?.title } : null,
+      abujaBookie: abujaBookieUser ? { id: abujaBookieUser.id, name: abujaBookieUser.name, bookTitle: activeBook?.title } : null,
       nominations: {
         reviewOfTheMonth: {
           userId: aiSelections.review_of_the_month_user_id,
@@ -207,8 +210,10 @@ function generateLocalLeaderboardFallback(candidates) {
   const topReviewer = [...candidates].sort((a, b) => (b.peerReviews + b.bookReviews) - (a.peerReviews + a.bookReviews))[0];
   // Author of the Month: Person with the most submissions
   const topAuthor = [...candidates].sort((a, b) => b.submissions - a.submissions)[0];
-  // Most Improved: Person with next highest activity or secondary reviewer
-  const runnerUp = [...candidates].sort((a, b) => (b.peerReviews + b.submissions) - (a.peerReviews + a.submissions))[1] || topReviewer;
+  // Most Consistent: Highest weekly steadiness across active weeks + streak + peer reviews
+  const consistencyScore = (u) => (u.writingStreakWeeks * 3) + (u.activeSubmitWeeksThisMonth * 2) + u.peerReviews;
+  const consistent = [...candidates].sort((a, b) => consistencyScore(b) - consistencyScore(a));
+  const mostConsistent = consistent.find(c => c.id !== topAuthor?.id) || consistent[0] || topReviewer;
 
   return {
     review_of_the_month_user_id: topReviewer?.id || null,
@@ -219,9 +224,9 @@ function generateLocalLeaderboardFallback(candidates) {
     author_of_the_month_text: topAuthor
       ? `${topAuthor.name} enriched the Clubhouse this month by submitting ${topAuthor.submissions} original manuscripts to the Writers' Village.`
       : "No authors were available.",
-    most_improved_author_user_id: runnerUp?.id || null,
-    most_improved_author_text: runnerUp
-      ? `${runnerUp.name} showed stellar growth and support this month, consistently engaging with and refining community drafts.`
-      : "No improved authors were available."
+    most_improved_author_user_id: mostConsistent?.id || null,
+    most_improved_author_text: mostConsistent
+      ? `${mostConsistent.name} showed remarkable weekly steadiness this cycle (${mostConsistent.activeSubmitWeeksThisMonth} active week(s), ${mostConsistent.writingStreakWeeks}-week streak, ${mostConsistent.peerReviews} critiques).`
+      : "No consistent authors were available."
   };
 }
