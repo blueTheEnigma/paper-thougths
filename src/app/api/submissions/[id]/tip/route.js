@@ -1,101 +1,156 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { syncOrCreateUser } from '@/lib/permissions';
-import Database from '@/lib/db';
+import { Database } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request, { params }) {
+/**
+ * POST /api/submissions/[id]/tip
+ * Transfer spendable Paper Leaves from the reader to the manuscript's author
+ * inside The Living Salon, logging both leaf_transactions and submission_tips.
+ */
+export async function POST(req, context) {
   try {
-    const clerkUser = await currentUser();
-    if (!clerkUser) {
-      return NextResponse.json({ success: false, error: 'Please sign in to tip the author.' }, { status: 401 });
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Please sign in to tip authors.' }, { status: 401 });
     }
 
-    const dbUser = await syncOrCreateUser(clerkUser);
+    const dbUser = await syncOrCreateUser(user);
     if (!dbUser) {
-      return NextResponse.json({ success: false, error: 'User synchronization failed' }, { status: 500 });
+      return NextResponse.json({ success: false, error: 'Member profile not found.' }, { status: 404 });
     }
 
-    const { id } = await params;
-    const submissionId = parseInt(id, 10);
-    if (isNaN(submissionId)) {
-      return NextResponse.json({ success: false, error: 'Invalid submission ID' }, { status: 400 });
+    const resolvedParams = await context.params;
+    const submissionId = parseInt(resolvedParams?.id, 10);
+    if (!Number.isInteger(submissionId) || submissionId <= 0) {
+      return NextResponse.json({ success: false, error: 'Invalid submission ID.' }, { status: 400 });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const tipAmount = parseInt(body.amount, 10);
-    const patronNote = body.note && typeof body.note === 'string' ? body.note.trim().slice(0, 200) : null;
+    const body = await req.json();
+    const rawAmount = body?.tipAmount ?? body?.amount;
+    const tipAmount = parseInt(rawAmount, 10);
+    const cleanNote = typeof body?.note === 'string' && body.note.trim()
+      ? body.note.trim().slice(0, 280)
+      : null;
 
-    if (isNaN(tipAmount) || tipAmount <= 0) {
-      return NextResponse.json({ success: false, error: 'Tip amount must be at least 1 Leaf' }, { status: 400 });
+    if (!Number.isInteger(tipAmount) || tipAmount < 1) {
+      return NextResponse.json({ success: false, error: 'Tip amount must be a whole number of at least 1 Leaf.' }, { status: 400 });
     }
 
-    const result = await Database.transaction(async (client) => {
-      // 1. Fetch current tipper balance with row lock
-      const userRes = await client.query('SELECT spendable_leaves FROM users WHERE id = $1 FOR UPDATE', [dbUser.id]);
-      const currentSpendable = parseInt(userRes.rows[0]?.spendable_leaves || 0, 10);
-
-      if (currentSpendable < tipAmount) {
-        throw new Error(`Insufficient balance: You have ${currentSpendable} Leaves, but tried to tip ${tipAmount}.`);
+    const txResult = await Database.transaction(async (client) => {
+      const subRes = await client.query(
+        `SELECT id, author_id, title, batch_status
+         FROM submissions
+         WHERE id = $1`,
+        [submissionId]
+      );
+      const submission = subRes.rows[0];
+      if (!submission) {
+        throw new Error('NOT_FOUND:Submission not found.');
       }
 
-      // 2. Fetch submission author
-      const subRes = await client.query('SELECT author_id, title, pen_name FROM submissions WHERE id = $1', [submissionId]);
-      if (subRes.rows.length === 0) {
-        throw new Error('Manuscript not found');
-      }
-      const authorId = subRes.rows[0].author_id;
-      const pieceTitle = subRes.rows[0].title;
-      const authorPenName = subRes.rows[0].pen_name;
-
+      const authorId = submission.author_id;
       if (authorId === dbUser.id) {
-        throw new Error('You cannot tip Leaves to your own manuscript!');
+        throw new Error('SELF_TIP:You cannot tip your own manuscript.');
       }
 
-      if (!authorId) {
-        throw new Error('This manuscript author cannot receive Leaves.');
+      // Lock rows in deterministic user ID order to avoid deadlocks
+      const firstLockId = Math.min(dbUser.id, authorId);
+      const secondLockId = Math.max(dbUser.id, authorId);
+      const lockedUsersRes = await client.query(
+        `SELECT id, full_name, spendable_leaves, lifetime_leaves, book_vouchers_gifted
+         FROM users
+         WHERE id IN ($1, $2)
+         ORDER BY id ASC
+         FOR UPDATE`,
+        [firstLockId, secondLockId]
+      );
+
+      const sender = lockedUsersRes.rows.find((u) => u.id === dbUser.id);
+      const author = lockedUsersRes.rows.find((u) => u.id === authorId);
+      if (!sender || !author) {
+        throw new Error('NOT_FOUND:Author or reader account could not be resolved.');
       }
 
-      // 3. Transfer leaves directly from reader to author
-      await client.query('UPDATE users SET spendable_leaves = spendable_leaves - $1 WHERE id = $2', [tipAmount, dbUser.id]);
-      await client.query('UPDATE users SET spendable_leaves = spendable_leaves + $1, lifetime_leaves = lifetime_leaves + $1 WHERE id = $2', [tipAmount, authorId]);
-
-      // 4. Record transaction in leaf_transactions
-      await client.query(`
-        INSERT INTO leaf_transactions (user_id, amount, transaction_type, reference_type, reference_id, description)
-        VALUES ($1, $2, 'spent', 'submission_tip', $3, $4)
-      `, [dbUser.id, -tipAmount, submissionId, `Tipped ${tipAmount} Leaves for "${pieceTitle}"`]);
-
-      await client.query(`
-        INSERT INTO leaf_transactions (user_id, amount, transaction_type, reference_type, reference_id, description)
-        VALUES ($1, $2, 'earned', 'submission_tip', $3, $4)
-      `, [authorId, tipAmount, submissionId, `Received ${tipAmount} Leaves tip from ${dbUser.full_name || 'a Reader'} for "${pieceTitle}"`]);
-
-      // 5. If patron note provided, also add as a comment
-      if (patronNote) {
-        await client.query(`
-          INSERT INTO submission_comments (submission_id, user_id, pen_name, content)
-          VALUES ($1, $2, $3, $4)
-        `, [submissionId, dbUser.id, dbUser.full_name, `🍂 Tipped ${tipAmount} Leaves: "${patronNote}"`]);
+      const senderBalance = parseInt(sender.spendable_leaves || 0, 10);
+      if (senderBalance < tipAmount) {
+        throw new Error(`INSUFFICIENT:Insufficient Paper Leaves (you have ${senderBalance} 🍂).`);
       }
+
+      const oldAuthorLifetime = parseInt(author.lifetime_leaves || 0, 10);
+      const newAuthorLifetime = oldAuthorLifetime + tipAmount;
+      const vouchersAwarded = Math.max(
+        0,
+        Math.floor(newAuthorLifetime / 500) - Math.floor(oldAuthorLifetime / 500)
+      );
+
+      await client.query(
+        'UPDATE users SET spendable_leaves = spendable_leaves - $1 WHERE id = $2',
+        [tipAmount, dbUser.id]
+      );
+
+      await client.query(
+        `UPDATE users
+         SET spendable_leaves = spendable_leaves + $1,
+             lifetime_leaves = lifetime_leaves + $1,
+             book_vouchers_gifted = COALESCE(book_vouchers_gifted, 0) + $2
+         WHERE id = $3`,
+        [tipAmount, vouchersAwarded, authorId]
+      );
+
+      const pieceLabel = submission.title || 'Living Salon manuscript';
+      await client.query(
+        `INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
+         VALUES ($1, $2, 'tip_sent', $3)`,
+        [dbUser.id, -tipAmount, `Tipped ${tipAmount} Leaves on "${pieceLabel}" in The Living Salon`]
+      );
+
+      await client.query(
+        `INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
+         VALUES ($1, $2, 'tip_received', $3)`,
+        [authorId, tipAmount, `Received ${tipAmount} Leaves Salon tip on "${pieceLabel}"`]
+      );
+
+      await client.query(
+        `INSERT INTO submission_tips (submission_id, sender_id, recipient_id, amount, source, note)
+         VALUES ($1, $2, $3, $4, 'salon', $5)`,
+        [submissionId, dbUser.id, authorId, tipAmount, cleanNote]
+      );
+
+      const sumRes = await client.query(
+        'SELECT COALESCE(SUM(amount), 0)::int AS total FROM submission_tips WHERE submission_id = $1',
+        [submissionId]
+      );
 
       return {
-        tippedAmount: tipAmount,
-        newBalance: currentSpendable - tipAmount,
-        pieceTitle,
-        authorPenName
+        newBalance: senderBalance - tipAmount,
+        totalTips: parseInt(sumRes.rows[0]?.total || tipAmount, 10),
+        vouchersAwarded,
+        authorName: author.full_name || 'the author',
       };
     });
 
     return NextResponse.json({
       success: true,
-      message: `Successfully tipped ${result.tippedAmount} Leaves to the author of "${result.pieceTitle}"!`,
-      ...result
+      tipAmount,
+      newBalance: txResult.newBalance,
+      totalTips: txResult.totalTips,
+      tipsReceived: txResult.totalTips,
+      submissionTotalTips: txResult.totalTips,
+      vouchersAwarded: txResult.vouchersAwarded,
+      message: `Tipped ${tipAmount} 🍂 Leaves to ${txResult.authorName}!`,
     });
   } catch (error) {
-    console.error('Failed to process tip:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Tipping failed.' }, { status: 400 });
+    const rawMsg = error.message || 'Failed to process tip.';
+    if (rawMsg.startsWith('NOT_FOUND:')) {
+      return NextResponse.json({ success: false, error: rawMsg.replace('NOT_FOUND:', '') }, { status: 404 });
+    }
+    if (rawMsg.startsWith('SELF_TIP:') || rawMsg.startsWith('INSUFFICIENT:')) {
+      return NextResponse.json({ success: false, error: rawMsg.split(':').slice(1).join(':') }, { status: 400 });
+    }
+    console.error('Error tipping submission in Salon:', error);
+    return NextResponse.json({ success: false, error: 'Failed to transfer tip.' }, { status: 500 });
   }
 }
-

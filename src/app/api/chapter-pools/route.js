@@ -46,11 +46,12 @@ export async function POST(request) {
       `, [dbUser.id, -donationAmount, `Donated ${donationAmount} leaves to chapter pool`]);
 
       // 2. Fetch current chapter pool details
-      const pool = await client.queryOne(`
+      const poolRes = await client.query(`
         SELECT id, current_leaves_balance, target_leaves_limit 
         FROM chapter_pools 
         WHERE chapter_id = $1
       `, [dbUser.chapter_id]);
+      const pool = poolRes.rows[0];
 
       if (!pool) {
         throw new Error('Chapter pool not initialized.');

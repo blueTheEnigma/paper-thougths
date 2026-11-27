@@ -497,6 +497,11 @@ export default function Landing({
                   <span>Enter Writers' Village</span>
                   <ArrowRight size={14} />
                 </Link>
+                <div className="mt-3 text-center">
+                  <Link href="/patron" className="text-[11px] font-serif italic text-[#F2A98A]/80 hover:text-[#F2A98A] underline underline-offset-4 transition-colors">
+                    Support emerging voices via the Literary Fund →
+                  </Link>
+                </div>
               </div>
             </motion.div>
 

@@ -26,6 +26,7 @@ export default {
                                   !nextUrl.pathname.startsWith('/api/lookup') &&
                                   !nextUrl.pathname.startsWith('/api/anthology') &&
                                   !nextUrl.pathname.startsWith('/api/submissions/gallery') &&
+                                  !nextUrl.pathname.startsWith('/api/patron') &&
                                   !nextUrl.pathname.startsWith('/api/image');
       
       if (isProtectedRoute && !isLoggedIn) {

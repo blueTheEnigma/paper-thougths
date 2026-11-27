@@ -57,9 +57,6 @@ export async function POST(request) {
     if (parsedTipAmount < 0) {
       return NextResponse.json({ success: false, error: 'Tip amount cannot be negative.' }, { status: 400 });
     }
-    if (parsedTipAmount % 5 !== 0) {
-      return NextResponse.json({ success: false, error: 'Tip amount must be a multiple of 5.' }, { status: 400 });
-    }
 
     // Verify reviewer has enough spendable leaves if tipping
     if (parsedTipAmount > 0) {
@@ -134,6 +131,12 @@ export async function POST(request) {
           INSERT INTO leaf_transactions (user_id, amount, transaction_type, description)
           VALUES ($1, $2, 'tip_received', $3)
         `, [submission.author_id, parsedTipAmount, `Received tip of ${parsedTipAmount} leaves from a reviewer for submission #${submissionId}`]);
+
+        // D2: Log critique tip into unified submission_tips table
+        await client.query(`
+          INSERT INTO submission_tips (submission_id, sender_id, recipient_id, amount, source)
+          VALUES ($1, $2, $3, $4, 'critique')
+        `, [submissionId, dbUser.id, submission.author_id, parsedTipAmount]);
 
         // E: Verify if author hit milestone rewards (lifetime leaves / 500)
         const authorStatsRes = await client.query(`

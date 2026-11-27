@@ -1363,6 +1363,14 @@ export default function DashboardClient({
                     ⚠️ {profile.probationStrikes}/3 Strikes
                   </span>
                 ) : null}
+                {profile.isPatron && (
+                  <Link
+                    href="/patron"
+                    className="bg-amber-400/15 border border-amber-500/35 text-amber-900 hover:bg-amber-400/25 font-sans font-bold px-2.5 py-1 rounded shadow-xs uppercase tracking-wider text-[9px] sm:text-[10px] flex items-center gap-1 transition-colors"
+                  >
+                    <span>🌿</span> Literary Patron
+                  </Link>
+                )}
                 {profile.anchoredEvents > 0 && (
                   <span className="bg-[#20070e]/10 border border-[#c96a42]/30 text-[#20070e] font-sans font-bold px-2.5 py-1 rounded shadow-xs uppercase tracking-wider text-[9px] sm:text-[10px] flex items-center gap-1">
                     <span className="text-[#c96a42]">🎙️</span> {profile.anchoredEvents} {profile.anchoredEvents === 1 ? 'Ritual' : 'Rituals'} Anchored
@@ -2466,6 +2474,12 @@ export default function DashboardClient({
                         </p>
                       </div>
                     </div>
+                  </div>
+                  <div className="mt-4 text-right">
+                    <Link href="/patron" className="inline-flex items-center gap-1.5 text-xs font-serif italic text-burgundy/75 hover:text-accent transition-colors">
+                      <span>Also sponsor the central Paper Thoughts Literary Fund or buy &amp; gift Leaves</span>
+                      <ArrowRight size={12} />
+                    </Link>
                   </div>
                 </div>
               </motion.div>

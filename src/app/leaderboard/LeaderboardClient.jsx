@@ -290,6 +290,60 @@ export default function LeaderboardClient({ initialData, currentUserId }) {
                 </div>
               </div>
 
+              {/* SECTION 2.5: Top Tipped Voices (Patronage & Craft) */}
+              {monthly.topTippedAuthors?.length > 0 && (
+                <div className="bg-white/85 backdrop-blur-md p-6 sm:p-7 rounded-3xl border border-[#c96a42]/20 shadow-sm space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#20070e]/10 pb-3.5">
+                    <div>
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-[#c96a42] font-bold block">
+                        🍂 Community Appreciation • Patronage &amp; Craft
+                      </span>
+                      <h3 className="font-display font-bold text-xl text-[#20070e]">
+                        Most Tipped Laureates This Month
+                      </h3>
+                    </div>
+                    <Link
+                      href="/village/gallery?sort=most_tipped"
+                      className="text-xs font-bold text-[#c96a42] hover:text-[#20070e] transition-colors flex items-center gap-1"
+                    >
+                      <span>Tip in The Living Salon</span>
+                      <ChevronRight size={13} />
+                    </Link>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {monthly.topTippedAuthors.map((scribe) => (
+                      <div
+                        key={scribe.id}
+                        className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#FAF7F0] border border-[#20070e]/10"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="font-mono font-bold text-sm text-[#c96a42] shrink-0">
+                            {scribe.rank === 1 ? '🥇' : scribe.rank === 2 ? '🥈' : scribe.rank === 3 ? '🥉' : `#${scribe.rank}`}
+                          </span>
+                          <PanguinAvatar
+                            lifetimeLeaves={0}
+                            avatarUrl={scribe.avatarUrl}
+                            variant="icon"
+                            archetype={scribe.archetype}
+                            foundingBadge={scribe.foundingBadge}
+                          />
+                          <div className="min-w-0">
+                            <div className="font-bold text-sm text-[#20070e] truncate">{scribe.name}</div>
+                            <div className="text-[10px] text-[#120308]/55 truncate">
+                              {scribe.tipCount} {scribe.tipCount === 1 ? 'tip' : 'tips'} received
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0 font-mono font-bold text-sm text-[#c96a42]">
+                          {scribe.totalTips} 🍂
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Published Editorial Honors (If Available) */}
               {editorialHonors && (
                 <div className="space-y-4 pt-6 border-t border-[#20070e]/15">

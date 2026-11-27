@@ -129,6 +129,7 @@ export default function Footer() {
             <li><Link href="/bookstore" className="hover:text-primary transition-colors">Hardcopy Bookstore</Link></li>
             <li><Link href="/village" className="hover:text-primary transition-colors">Writers' Village</Link></li>
             <li><Link href="/events" className="hover:text-primary transition-colors">Assembly Events</Link></li>
+            <li><Link href="/patron" className="hover:text-primary transition-colors">Literary Patronage</Link></li>
             <li><Link href="/discussion" className="hover:text-primary transition-colors">Sanctuary Reading</Link></li>
             <li><Link href="/crossing" className="hover:text-primary transition-colors">The Crossing (Passage)</Link></li>
             <li><Link href="/zodiac" className="hover:text-primary transition-colors">The Book Zodiac</Link></li>

@@ -59,7 +59,11 @@ export async function GET(request) {
         u.reader_archetype as author_archetype,
         u.whatsapp as author_whatsapp,
         c.name as chapter_name,
-        (SELECT COUNT(*) FROM submission_likes sl WHERE sl.submission_id = s.id)::int as likes_count
+        (SELECT COUNT(*) FROM submission_likes sl WHERE sl.submission_id = s.id)::int as likes_count,
+        COALESCE((SELECT COUNT(*)::int FROM submission_ratings sr WHERE sr.submission_id = s.id), 0) as rating_count,
+        COALESCE((SELECT ROUND(AVG(sr.rating)::numeric, 1) FROM submission_ratings sr WHERE sr.submission_id = s.id), 0)::float as average_rating,
+        COALESCE((SELECT SUM(st.amount)::int FROM submission_tips st WHERE st.submission_id = s.id), 0) as tips_amount,
+        COALESCE((SELECT COUNT(*)::int FROM submission_tips st WHERE st.submission_id = s.id), 0) as tips_count
       FROM submissions s
       JOIN users u ON u.id = s.author_id
       LEFT JOIN chapters c ON c.id = u.chapter_id
@@ -134,29 +138,53 @@ export async function GET(request) {
       });
     }
 
-    const candidateSubmissions = submissionsRaw.map(s => ({
-      id: s.id,
-      title: s.title,
-      genre: s.genre,
-      isPoem: (s.genre || '').toLowerCase() === 'poetry',
-      logline: s.logline,
-      bodyText: s.body_text,
-      penName: s.pen_name || s.author_name || 'Anonymous',
-      authorId: s.author_id,
-      authorName: s.author_name,
-      authorAvatar: s.author_avatar,
-      authorArchetype: s.author_archetype,
-      authorWhatsapp: s.author_whatsapp,
-      chapterName: s.chapter_name || 'General',
-      batchStatus: s.batch_status,
-      hasLaurel: !!s.has_laurel,
-      anthologyInducted: !!s.anthology_inducted,
-      cycleMonth: s.cycle_month,
-      createdAt: s.created_at,
-      likesCount: s.likes_count || 0,
-      comments: commentsBySubId[s.id] || [],
-      reviews: reviewsBySubId[s.id] || []
-    }));
+    const candidateSubmissions = submissionsRaw.map(s => {
+      const reviews = reviewsBySubId[s.id] || [];
+      const helpfulReviews = reviews.filter(r => r.isHelpful).length;
+      const likesCount = s.likes_count || 0;
+      const ratingCount = s.rating_count || 0;
+      const averageRating = parseFloat(s.average_rating || 0);
+      const tipsAmount = s.tips_amount || 0;
+      const tipsCount = s.tips_count || 0;
+      const communityScore = Number(
+        (
+          helpfulReviews * 5 +
+          reviews.length * 1.5 +
+          averageRating * ratingCount * 2 +
+          likesCount * 2 +
+          tipsAmount * 0.4
+        ).toFixed(1)
+      );
+
+      return {
+        id: s.id,
+        title: s.title,
+        genre: s.genre,
+        isPoem: (s.genre || '').toLowerCase() === 'poetry',
+        logline: s.logline,
+        bodyText: s.body_text,
+        penName: s.pen_name || s.author_name || 'Anonymous',
+        authorId: s.author_id,
+        authorName: s.author_name,
+        authorAvatar: s.author_avatar,
+        authorArchetype: s.author_archetype,
+        authorWhatsapp: s.author_whatsapp,
+        chapterName: s.chapter_name || 'General',
+        batchStatus: s.batch_status,
+        hasLaurel: !!s.has_laurel,
+        anthologyInducted: !!s.anthology_inducted,
+        cycleMonth: s.cycle_month,
+        createdAt: s.created_at,
+        likesCount,
+        ratingCount,
+        averageRating,
+        tipsAmount,
+        tipsCount,
+        communityScore,
+        comments: commentsBySubId[s.id] || [],
+        reviews
+      };
+    }).sort((a, b) => b.communityScore - a.communityScore);
 
     // 2. Fetch Reviewers Analytics (90% Completion Rule)
     const totalEligibleSubmissions = candidateSubmissions.length;

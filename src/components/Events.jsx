@@ -599,6 +599,15 @@ export default function Events({ initialEvents = [] }) {
           )}
         </AnimatePresence>
 
+        <div className="mt-10 pt-6 border-t border-black/8 w-full text-center">
+          <a
+            href="/patron"
+            className="inline-flex items-center gap-1.5 text-xs font-serif italic text-[#20070e]/70 hover:text-[#c96a42] transition-colors"
+          >
+            Want to sponsor upcoming readings or the community book fund? <span className="underline underline-offset-4 font-semibold">Visit Literary Patronage →</span>
+          </a>
+        </div>
+
       </div>
     </section>
   );

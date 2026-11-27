@@ -103,6 +103,13 @@ export default function VillageClient({ weeklyPrompt, storyPrompt, poemPrompt, u
             </div>
           </motion.div>
 
+          <div className="text-center">
+            <Link href="/patron" className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-serif italic text-ink/60 hover:text-accent transition-colors">
+              <span>Wish to nourish the Literary Fund or sponsor community Leaves?</span>
+              <span className="underline underline-offset-4 font-semibold text-burgundy">Visit Patronage →</span>
+            </Link>
+          </div>
+
           {/* Village Architecture: 1-Hero (Writing Forge) + 2-Column Split (Salon & Critique Queue) on mobile; 3 balanced pillars on desktop */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 max-w-7xl mx-auto items-stretch">
 

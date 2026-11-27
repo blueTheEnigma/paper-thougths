@@ -35,7 +35,9 @@ export default function LiteraryEngagementBar({
   category = 'story', 
   authorName = 'Author',
   currentUser = null,
-  onBalanceUpdate = null 
+  initialTipsReceived = 0,
+  onBalanceUpdate = null,
+  onTipSuccess = null
 }) {
   const isPoem = (category || '').toLowerCase().includes('poem');
   const availableTags = isPoem ? POEM_TAGS : STORY_TAGS;
@@ -50,6 +52,8 @@ export default function LiteraryEngagementBar({
 
   // Tipping state
   const [tipAmount, setTipAmount] = useState(10);
+  const [liveTipsReceived, setLiveTipsReceived] = useState(initialTipsReceived || 0);
+  const [liveBalance, setLiveBalance] = useState(currentUser?.spendableLeaves ?? null);
   const [tipNote, setTipNote] = useState('');
   const [showTipNote, setShowTipNote] = useState(false);
   const [submittingTip, setSubmittingTip] = useState(false);
@@ -164,11 +168,17 @@ export default function LiteraryEngagementBar({
       });
       const data = await res.json();
       if (data.success) {
+        const updatedTotal = data.totalTips ?? (liveTipsReceived + tipAmount);
+        setLiveTipsReceived(updatedTotal);
         setTipMessage(`Tipped ${tipAmount} Leaves to ${authorName}!`);
         setTipNote('');
         setShowTipNote(false);
-        if (onBalanceUpdate && data.newBalance !== undefined) {
-          onBalanceUpdate(data.newBalance);
+        if (data.newBalance !== undefined) {
+          setLiveBalance(data.newBalance);
+          if (onBalanceUpdate) onBalanceUpdate(data.newBalance);
+        }
+        if (onTipSuccess) {
+          onTipSuccess(submissionId, updatedTotal, data.newBalance);
         }
         confetti({ particleCount: 40, spread: 70, origin: { y: 0.8 } });
         
@@ -294,7 +304,17 @@ export default function LiteraryEngagementBar({
             )}
           </div>
 
-          {/* Amount Pills + Send Button */}
+          {/* Amount Pills + Custom Input + Send Button */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-1 text-[11px] text-[#20070e]/60">
+            <span>
+              Total received on piece: <strong className="text-[#c96a42]">{liveTipsReceived} 🍂</strong>
+            </span>
+            {liveBalance !== null && (
+              <span>
+                Your Balance: <strong className="text-[#20070e]">{liveBalance} 🍂</strong>
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             {[5, 10, 25, 50].map((amt) => (
               <button
@@ -311,9 +331,25 @@ export default function LiteraryEngagementBar({
               </button>
             ))}
 
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-bold text-[#20070e]/55">Custom:</span>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={tipAmount}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setTipAmount(Number.isNaN(val) ? '' : Math.max(1, val));
+                }}
+                aria-label="Custom leaves tip amount"
+                className="w-16 bg-white border border-[#20070e]/20 rounded-xl px-2 py-1.5 text-xs font-mono font-bold text-center text-[#20070e] focus:outline-none focus:border-[#c96a42]"
+              />
+            </div>
+
             <button
               type="button"
-              disabled={submittingTip || !tipAmount}
+              disabled={submittingTip || !tipAmount || tipAmount < 1}
               onClick={handleTipSubmit}
               className="bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
@@ -322,7 +358,7 @@ export default function LiteraryEngagementBar({
               ) : (
                 <Gift size={12} />
               )}
-              <span>Tip {tipAmount} Leaves</span>
+              <span>Tip {tipAmount || 0} Leaves</span>
             </button>
 
             <button

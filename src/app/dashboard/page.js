@@ -100,6 +100,7 @@ async function getLocalArchiveData(clerkUser) {
       sabbaticalUntil: profileRow.sabbatical_until ? new Date(profileRow.sabbatical_until).toISOString().split('T')[0] : null,
       sabbaticalType: profileRow.sabbatical_type || null,
       evictedAt: profileRow.evicted_at ? new Date(profileRow.evicted_at).toISOString() : null,
+      isPatron: Boolean(profileRow.is_patron),
       isCrewMember: await isCrewMember(dbUser.id)
     };
 

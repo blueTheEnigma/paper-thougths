@@ -61,6 +61,7 @@ export async function GET() {
       profile.avatarUrl = dbUser.avatar_url || null;
       profile.archetype = dbUser.reader_archetype || null;
       profile.foundingBadge = dbUser.founding_badge || null;
+      profile.isPatron = Boolean(dbUser.is_patron);
       profile.membershipStatus = dbUser.membership_status || 'active';
       profile.probationStrikes = parseInt(dbUser.probation_strikes_this_year || 0, 10);
       profile.consecutiveBotmMisses = parseInt(dbUser.consecutive_botm_misses || 0, 10);

@@ -50,10 +50,55 @@ export default function AdminEditorialTab({ isSuperadmin }) {
   const [reviewOfTheMonthUserId, setReviewOfTheMonthUserId] = useState('');
   const [reviewOfTheMonthText, setReviewOfTheMonthText] = useState('Crafted critiques that gave authors wings instead of wounds.');
 
-  // Feedback notifications
+  // Feedback notifications & AI Jury Shortlist
   const [successMsg, setSuccessMsg] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [copiedType, setCopiedType] = useState(null);
+  const [shortlisting, setShortlisting] = useState(false);
+  const [juryRationale, setJuryRationale] = useState(null);
+
+  const handleAiShortlist = async () => {
+    setShortlisting(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    try {
+      const res = await fetch('/api/admin/anthology/shortlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ monthYear, allEligible }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.storyPlacements) {
+          setStoryPlacements({
+            1: data.storyPlacements[1] || null,
+            2: data.storyPlacements[2] || null,
+            3: data.storyPlacements[3] || null,
+          });
+        }
+        if (data.poemPlacements) {
+          setPoemPlacements({
+            1: data.poemPlacements[1] || null,
+            2: data.poemPlacements[2] || null,
+            3: data.poemPlacements[3] || null,
+          });
+        }
+        if (data.citations) {
+          setCitations((prev) => ({ ...prev, ...data.citations }));
+        }
+        setJuryRationale(data.rationale || null);
+        setSuccessMsg(
+          `Draft shortlist prepared from ${data.evaluatedCount || candidates.length} works (${data.aiPowered ? 'Gemini Jury + Community Signal' : 'Community Signal Ranking'}). Review and tweak before clicking Publish Laurels.`
+        );
+      } else {
+        setErrorMsg(data.error || 'Could not generate AI Jury Shortlist.');
+      }
+    } catch {
+      setErrorMsg('Connection error while generating AI Jury Shortlist.');
+    } finally {
+      setShortlisting(false);
+    }
+  };
 
   // Fetch candidates and current state
   const fetchEditorialData = async () => {
@@ -489,6 +534,17 @@ export default function AdminEditorialTab({ isSuperadmin }) {
           </button>
 
           <button
+            type="button"
+            onClick={handleAiShortlist}
+            disabled={shortlisting || loading}
+            className="bg-[#c96a42]/15 hover:bg-[#c96a42] text-[#c96a42] hover:text-white border border-[#c96a42]/30 font-bold text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            title="Pre-fill editable Top 3 Stories, Top 3 Poems & draft citations using Gemini Jury + Community Signal"
+          >
+            <Sparkles size={14} className={shortlisting ? 'animate-pulse' : ''} />
+            <span>{shortlisting ? 'Deliberating...' : 'AI Jury Shortlist'}</span>
+          </button>
+
+          <button
             onClick={handlePublishAll}
             disabled={saving}
             className="bg-[#20070e] hover:bg-[#c96a42] text-[#FBF7EE] font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-2"
@@ -498,6 +554,15 @@ export default function AdminEditorialTab({ isSuperadmin }) {
           </button>
         </div>
       </div>
+
+      {juryRationale && (
+        <div className="bg-amber-50/90 border border-[#c96a42]/30 text-[#20070e] text-xs p-4 rounded-2xl space-y-1 shadow-xs">
+          <div className="font-bold uppercase tracking-wider text-[10px] text-[#c96a42]">
+            ✦ AI Jury Deliberation Draft (Editable — Not Yet Published)
+          </div>
+          <p className="font-serif italic text-[#20070e]/80 leading-relaxed">{juryRationale}</p>
+        </div>
+      )}
 
       {/* Status Notifications */}
       {successMsg && (
@@ -678,6 +743,9 @@ export default function AdminEditorialTab({ isSuperadmin }) {
                       isSelected ? 'text-[#FBF7EE]/60' : 'text-[#20070e]/40'
                     }`}>
                       <span className="flex items-center gap-1"><Heart size={10} /> {sub.likesCount}</span>
+                      {sub.averageRating > 0 && <span>★ {Number(sub.averageRating).toFixed(1)}</span>}
+                      {sub.tipsAmount > 0 && <span>🍂 {sub.tipsAmount}</span>}
+                      {sub.communityScore > 0 && <span className="text-[#c96a42] font-bold">⚡ {sub.communityScore}</span>}
                       <span className="flex items-center gap-1"><MessageSquare size={10} /> {sub.comments.length} salon</span>
                       <span className="flex items-center gap-1"><ShieldCheck size={10} /> {sub.reviews.length} reviews</span>
                     </div>

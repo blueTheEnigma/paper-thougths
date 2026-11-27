@@ -232,10 +232,6 @@ export default function ReviewClient() {
       setError(`Insufficient leaves: You tried to tip ${tipAmount} leaves, but only have ${profile.spendableLeaves} spendable leaves.`);
       return;
     }
-    if (tipAmount % 5 !== 0) {
-      setError("Tip amount must be a multiple of 5.");
-      return;
-    }
 
     setSubmittingReview(true);
     setError(null);
@@ -570,7 +566,7 @@ export default function ReviewClient() {
                     </div>
 
                     {/* 6. Support the Author with Leaves (Tipping) */}
-                {profile && profile.spendableLeaves > 0 && (
+                {profile && (
                   <div className="bg-[#FAF6F0] border border-sage/20 rounded-2xl p-5 space-y-3">
                     <div className="flex justify-between items-center">
                       <label className="text-xs font-bold text-ink uppercase tracking-wider block">
@@ -584,13 +580,14 @@ export default function ReviewClient() {
                       Author identity is completely anonymous, but you can tip them leaves if you loved their work!
                     </p>
                     
-                    <div className="flex flex-wrap gap-2 pt-1">
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
                       {[0, 5, 10, 20, 50].map((amount) => (
                         <button
                           key={amount}
                           type="button"
+                          disabled={amount > profile.spendableLeaves}
                           onClick={() => setTipAmount(amount)}
-                          className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                          className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer disabled:opacity-40 ${
                             tipAmount === amount
                               ? 'bg-burgundy border-burgundy text-cream shadow-sm'
                               : 'bg-white border-sage/15 text-ink/75 hover:bg-sage/10'
@@ -601,21 +598,28 @@ export default function ReviewClient() {
                       ))}
                       
                       {/* Custom tip input */}
-                      <div className="relative flex items-center max-w-[100px]">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-ink/55">Custom:</span>
                         <input
                           type="number"
                           min="0"
-                          max={profile.spendableLeaves}
+                          max={Math.max(profile.spendableLeaves, 0)}
+                          disabled={profile.spendableLeaves <= 0}
                           value={tipAmount}
                           onChange={(e) => {
                             const val = parseInt(e.target.value, 10) || 0;
                             setTipAmount(Math.min(profile.spendableLeaves, Math.max(0, val)));
                           }}
-                          placeholder="Custom"
-                          className="w-full bg-white border border-sage/15 rounded-xl px-2 py-2 text-xs text-center focus:outline-none focus:border-burgundy font-bold text-ink"
+                          placeholder="0"
+                          className="w-20 bg-white border border-sage/15 rounded-xl px-2 py-2 text-xs text-center focus:outline-none focus:border-burgundy font-bold text-ink disabled:opacity-50"
                         />
                       </div>
                     </div>
+                    {profile.spendableLeaves <= 0 && (
+                      <p className="text-[11px] text-amber-800/90 font-medium pt-1">
+                        You have 0 Leaves right now — submitting this critique earns <strong>+10 🍃</strong> (or you can get bundles on your Dashboard).
+                      </p>
+                    )}
                   </div>
                 )}
 

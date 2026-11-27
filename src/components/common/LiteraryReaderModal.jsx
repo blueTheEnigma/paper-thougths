@@ -22,7 +22,9 @@ export default function LiteraryReaderModal({
   onDownloadCard = null,
   comments = null,
   loadingComments = false,
-  onPostComment = null
+  onPostComment = null,
+  onBalanceUpdate = null,
+  onTipSuccess = null
 }) {
   const [mounted, setMounted] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -217,10 +219,14 @@ export default function LiteraryReaderModal({
             {/* Literary Engagement Bar (5-Quill Literary Ratings, Leaves Tipping Drawer, Reader Notes) */}
             <div className="max-w-xl mx-auto w-full text-left pt-2">
               <LiteraryEngagementBar
+                key={piece.id}
                 submissionId={piece.id}
                 category={piece.genre}
                 authorName={authorDisplayName}
                 currentUser={currentUser}
+                initialTipsReceived={piece.tipsReceived || 0}
+                onBalanceUpdate={onBalanceUpdate}
+                onTipSuccess={onTipSuccess}
               />
             </div>
 

@@ -69,8 +69,11 @@ export default function GalleryClient({ currentUser }) {
   const storiesCount = submissions.filter(s => !((s.genre || '').toLowerCase().includes('poem') || (s.genre || '').toLowerCase() === 'poetry')).length;
   const poetryCount = submissions.filter(s => (s.genre || '').toLowerCase().includes('poem') || (s.genre || '').toLowerCase() === 'poetry').length;
 
-  // Local like state overrides
+  // Local like & tip state overrides
   const [likeOverrides, setLikeOverrides] = useState({});
+  const [sortBy, setSortBy] = useState('newest');
+  const [topTippedAuthors, setTopTippedAuthors] = useState([]);
+  const [userBalance, setUserBalance] = useState(currentUser?.spendableLeaves ?? null);
 
   // Fetch Gallery Submissions
   const fetchGallery = useCallback(async () => {
@@ -80,11 +83,13 @@ export default function GalleryClient({ currentUser }) {
       // selectedGenre removed for decluttered format-first navigation
       if (searchQuery.trim()) params.set('search', searchQuery.trim());
       if (selectedCycleMonth) params.set('monthYear', selectedCycleMonth);
+      if (sortBy && sortBy !== 'newest') params.set('sort', sortBy);
 
       const res = await fetch(`/api/submissions/gallery?${params.toString()}`);
       const data = await res.json();
       if (data.success) {
         setSubmissions(data.submissions || []);
+        setTopTippedAuthors(data.topTippedAuthors || []);
         if (data.filterOptions && data.filterOptions.length > 0) {
           setFilterOptions(data.filterOptions);
         }
@@ -94,7 +99,7 @@ export default function GalleryClient({ currentUser }) {
     } finally {
       setLoading(false);
     }
-  }, [selectedGenre, searchQuery, selectedCycleMonth]);
+  }, [selectedGenre, searchQuery, selectedCycleMonth, sortBy]);
 
   useEffect(() => {
     fetchGallery();
@@ -464,6 +469,20 @@ export default function GalleryClient({ currentUser }) {
           {/* Cycle Archive Selector & Search Bar */}
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 bg-white border border-[#20070e]/10 rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#20070e] shadow-2xs">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-[#20070e]/40">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-transparent focus:outline-none cursor-pointer font-serif font-bold text-[#20070e] pr-1"
+              >
+                <option value="newest" className="font-sans text-neutral-800 font-normal">Newest</option>
+                <option value="most_tipped" className="font-sans text-neutral-800 font-normal">Most Tipped</option>
+                <option value="top_rated" className="font-sans text-neutral-800 font-normal">Top Rated</option>
+                <option value="most_liked" className="font-sans text-neutral-800 font-normal">Most Liked</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-white border border-[#20070e]/10 rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#20070e] shadow-2xs">
               <span className="text-[10px] uppercase font-mono tracking-wider text-[#20070e]/40">Month:</span>
               <select
                 value={selectedCycleMonth}
@@ -641,23 +660,63 @@ export default function GalleryClient({ currentUser }) {
                       </div>
 
                       {/* Literary Rating Badge */}
-                      {(sub.averageRating > 0 || sub.ratingCount > 0) && (
+              {(sub.averageRating > 0 || sub.ratingCount > 0) && (
                         <div className="inline-flex items-center gap-0.5 text-[8px] sm:text-[11px] font-mono font-bold text-[#c96a42]">
                           <span>★</span>
                           <span>{Number(sub.averageRating || 0).toFixed(1)}</span>
                         </div>
                       )}
+
+                      {/* Leaves Tipped Counter */}
+                      {sub.tipsReceived > 0 && (
+                        <div
+                          className="inline-flex items-center gap-0.5 text-[8px] sm:text-[11px] font-mono font-bold bg-amber-500/10 text-amber-900 px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded border border-amber-500/20"
+                          title="Total Paper Leaves tipped by readers"
+                        >
+                          <span>🍂</span>
+                          <span>{sub.tipsReceived}</span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Subtle Read Prompt */}
+                    {/* Subtle Read / Tip Prompt */}
                     <span className="text-[8px] sm:text-[11px] font-bold text-[#20070e]/50 group-hover:text-[#c96a42] transition-colors flex items-center gap-0.5">
-                      <span>Read</span>
+                      <span>{sub.tipsReceived > 0 ? 'Read & Tip' : 'Read'}</span>
                       <ChevronRight size={10} className="sm:w-3 sm:h-3" />
                     </span>
                   </div>
                 </motion.div>
               );
             })}
+          </div>
+        )}
+
+        {/* Most Tipped Voices Ribbon */}
+        {topTippedAuthors.length > 0 && (
+          <div className="bg-white/80 border border-[#c96a42]/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#c96a42]">
+                🍂 Salon Appreciation • Most Tipped Voices
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {topTippedAuthors.map((author, idx) => (
+                  <span
+                    key={author.authorId || idx}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#20070e] bg-[#FAF7F2] border border-[#20070e]/10 px-2.5 py-1 rounded-full"
+                  >
+                    <span className="text-[#c96a42]">#{idx + 1}</span>
+                    <span>{author.displayName}</span>
+                    <span className="font-mono text-[11px] text-[#c96a42]">{author.totalTips} 🍂</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+            <Link
+              href="/patron"
+              className="text-xs font-serif italic text-[#20070e]/75 hover:text-[#c96a42] underline underline-offset-4 shrink-0"
+            >
+              Support the Literary Fund →
+            </Link>
           </div>
         )}
 
@@ -670,7 +729,7 @@ export default function GalleryClient({ currentUser }) {
           isOpen={!!selectedPiece}
           onClose={() => setSelectedPiece(null)}
           piece={selectedPiece}
-          currentUser={currentUser}
+          currentUser={currentUser ? { ...currentUser, spendableLeaves: userBalance ?? currentUser.spendableLeaves } : null}
           isLiked={likeOverrides[selectedPiece.id]?.userLiked ?? selectedPiece.userLiked}
           likeCount={likeOverrides[selectedPiece.id]?.likeCount ?? selectedPiece.likeCount}
           onToggleLike={handleToggleLike}
@@ -678,6 +737,13 @@ export default function GalleryClient({ currentUser }) {
           comments={comments}
           loadingComments={loadingComments}
           onPostComment={handlePostComment}
+          onBalanceUpdate={(bal) => setUserBalance(bal)}
+          onTipSuccess={(subId, newTotalTips) => {
+            setSubmissions((prev) =>
+              prev.map((item) => (item.id === subId ? { ...item, tipsReceived: newTotalTips } : item))
+            );
+            setSelectedPiece((prev) => (prev && prev.id === subId ? { ...prev, tipsReceived: newTotalTips } : prev));
+          }}
         />
       )}
 

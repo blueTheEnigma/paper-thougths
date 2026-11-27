@@ -207,6 +207,40 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
     anthologyInductees = [];
   }
 
+  // Fetch Top Tipped Authors this month across Salon & Critique Corner (preserving double-blind privacy)
+  let topTippedAuthors = [];
+  try {
+    const tippedRows = await Database.query(`
+      SELECT
+        u.id,
+        u.full_name as name,
+        u.avatar_url as "avatarUrl",
+        u.reader_archetype as archetype,
+        u.founding_badge as "foundingBadge",
+        SUM(st.amount)::int as "totalTips",
+        COUNT(st.id)::int as "tipCount"
+      FROM submission_tips st
+      JOIN users u ON u.id = st.recipient_id
+      WHERE st.created_at >= DATE_TRUNC('month', CURRENT_DATE)
+      GROUP BY u.id, u.full_name, u.avatar_url, u.reader_archetype, u.founding_badge
+      ORDER BY "totalTips" DESC, "tipCount" DESC
+      LIMIT 6
+    `);
+    topTippedAuthors = tippedRows.map((r, idx) => ({
+      rank: idx + 1,
+      id: r.id,
+      name: r.name || 'Sanctuary Scribe',
+      avatarUrl: r.avatarUrl,
+      archetype: r.archetype,
+      foundingBadge: r.foundingBadge,
+      totalTips: parseInt(r.totalTips || 0, 10),
+      tipCount: parseInt(r.tipCount || 0, 10),
+    }));
+  } catch (err) {
+    console.error('Failed to fetch top tipped authors for leaderboard:', err);
+    topTippedAuthors = [];
+  }
+
   // Published Editorial Honors from monthly_leaderboard
   const publishedHonors = await Database.queryOne(`
     SELECT 
@@ -412,6 +446,7 @@ export async function getThreeTierLeaderboard(currentUserId = null) {
       prosePodium: prosePodium || [],
       poetryPodium: poetryPodium || [],
       reviewerPodium: reviewerPodium || [],
+      topTippedAuthors: topTippedAuthors || [],
       editorialHonors: publishedHonors ? {
         monthYear: publishedHonors.monthYear,
         bookie: publishedHonors.generalBookieName ? {

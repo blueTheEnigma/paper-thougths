@@ -123,6 +123,8 @@ export async function GET(request) {
         (SELECT COUNT(*) FROM submission_comments c WHERE c.submission_id = s.id)::int as "commentCount",
         (SELECT COUNT(*) FROM submission_ratings r WHERE r.submission_id = s.id)::int as "ratingCount",
         (SELECT COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0.0) FROM submission_ratings r WHERE r.submission_id = s.id)::float as "averageRating",
+        COALESCE((SELECT SUM(st.amount)::int FROM submission_tips st WHERE st.submission_id = s.id), 0) as "tipsReceived",
+        COALESCE((SELECT COUNT(*)::int FROM submission_tips st WHERE st.submission_id = s.id), 0) as "tipsCount",
         (SELECT r.rating FROM submission_ratings r WHERE r.submission_id = s.id AND r.user_id = $1) as "userRating",
         EXISTS(SELECT 1 FROM submission_likes l WHERE l.submission_id = s.id AND l.user_id = $1) as "userLiked"
       FROM submissions s
@@ -161,10 +163,45 @@ export async function GET(request) {
       queryText += ` AND (s.title ILIKE $${queryParams.length} OR s.logline ILIKE $${queryParams.length} OR s.pen_name ILIKE $${queryParams.length})`;
     }
 
-    queryText += ` ORDER BY s.created_at DESC LIMIT $${queryParams.length + 1}`;
+    const sortParam = searchParams?.get('sort') || 'newest';
+    let orderByClause = 's.created_at DESC';
+    if (sortParam === 'most_tipped') {
+      orderByClause = '"tipsReceived" DESC, "averageRating" DESC, s.created_at DESC';
+    } else if (sortParam === 'most_liked') {
+      orderByClause = '"likeCount" DESC, s.created_at DESC';
+    } else if (sortParam === 'top_rated') {
+      orderByClause = '"averageRating" DESC, "ratingCount" DESC, s.created_at DESC';
+    }
+
+    queryText += ` ORDER BY ${orderByClause} LIMIT $${queryParams.length + 1}`;
     queryParams.push(limit);
 
     const submissions = await Database.query(queryText, queryParams);
+
+    // Query Top 5 Tipped Authors across Salon & Critique tips for published manuscripts
+    let topTippedAuthors = [];
+    try {
+      topTippedAuthors = await Database.query(`
+        SELECT
+          u.id AS "authorId",
+          COALESCE(NULLIF(MAX(s.pen_name), ''), u.full_name) AS "displayName",
+          u.avatar_url AS "avatarUrl",
+          u.reader_archetype AS "archetype",
+          SUM(st.amount)::int AS "totalTips",
+          COUNT(st.id)::int AS "tipCount"
+        FROM submission_tips st
+        JOIN submissions s ON s.id = st.submission_id
+        JOIN users u ON u.id = st.recipient_id
+        WHERE s.batch_status IN ('active_batch', 'archived')
+          AND COALESCE(NULLIF(s.pen_name, ''), '') <> ''
+          AND st.source = 'salon'
+        GROUP BY u.id, u.full_name, u.avatar_url, u.reader_archetype
+        ORDER BY "totalTips" DESC, "tipCount" DESC
+        LIMIT 5
+      `);
+    } catch {
+      topTippedAuthors = [];
+    }
 
     return NextResponse.json({
       success: true,
@@ -172,6 +209,7 @@ export async function GET(request) {
       currentCycle: currentCycleMonth,
       filterOptions,
       availableMonths,
+      topTippedAuthors,
       submissions: submissions.map(s => ({
         id: s.id,
         title: s.title,
@@ -190,6 +228,8 @@ export async function GET(request) {
         commentCount: parseInt(s.commentCount || 0, 10),
         ratingCount: parseInt(s.ratingCount || 0, 10),
         averageRating: parseFloat(s.averageRating || 0),
+        tipsReceived: parseInt(s.tipsReceived || 0, 10),
+        tipsCount: parseInt(s.tipsCount || 0, 10),
         userRating: s.userRating ? parseInt(s.userRating, 10) : null,
         userLiked: !!s.userLiked
       }))
