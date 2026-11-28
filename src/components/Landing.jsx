@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, Feather, Sparkles, Send, Loader2, 
-  Calendar, MapPin, Users, BookOpen
+  Calendar, MapPin, Users, BookOpen, HeartHandshake
 } from 'lucide-react';
 
 export default function Landing({ 
@@ -714,7 +714,40 @@ export default function Landing({
             </div>
           )}
 
-          {/* Part B: The Weekly Dispatch (Newsletter Colophon) */}
+          {/* Part B: Literary Patronage Strip (Guest & Member Friendly) */}
+          <div className="bg-gradient-to-r from-[#20070e] via-[#2f0a15] to-[#20070e] text-[#FBF7EE] rounded-3xl p-6 sm:p-9 border border-[#c96a42]/30 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+            <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-[#c96a42]/15 blur-3xl pointer-events-none" />
+            <div className="space-y-2 max-w-2xl relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F2A98A]/10 border border-[#F2A98A]/25 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[#F2A98A]">
+                <HeartHandshake size={12} />
+                <span>The Paper Thoughts Literary Fund</span>
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-display font-bold text-[#FBF7EE] leading-snug">
+                Back Emerging African Writers — No Account Needed
+              </h3>
+              <p className="text-xs sm:text-sm text-[#FBF7EE]/75 font-serif leading-relaxed">
+                Visiting as a friend of the craft? You can gift Naira directly via Paystack or sponsor Paper Leaves bundles toward community prizes, printed anthologies, and book vouchers—anonymously or inscribed on the Wall of Patrons.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row md:flex-col items-stretch sm:items-center md:items-end gap-2.5 shrink-0 relative z-10 w-full md:w-auto">
+              <Link
+                href="/patron"
+                className="bg-[#c96a42] hover:bg-[#e07a5f] text-[#120308] px-7 py-3.5 rounded-xl text-xs font-sans font-bold uppercase tracking-widest transition-all shadow-md inline-flex items-center justify-center gap-2.5 hover:-translate-y-0.5 active:scale-95"
+              >
+                <span>Support as a Patron</span>
+                <ArrowRight size={14} />
+              </Link>
+              <Link
+                href="/village/gallery"
+                className="text-[11px] font-serif italic text-[#F2A98A]/85 hover:text-[#FBF7EE] underline underline-offset-4 text-center transition-colors"
+              >
+                Or read &amp; tip writers in the Living Salon →
+              </Link>
+            </div>
+          </div>
+
+          {/* Part C: The Weekly Dispatch (Newsletter Colophon) */}
           <div className="max-w-2xl mx-auto text-center space-y-6 pt-10 border-t border-[#20070e]/10">
             <div className="space-y-1.5">
               <span className="text-[#c96a42] uppercase tracking-[0.25em] font-mono font-bold text-xs block">
