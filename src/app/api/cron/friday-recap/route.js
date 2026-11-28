@@ -81,11 +81,20 @@ export async function POST(request) {
 
     if (candidates.length > 0) {
       const candidateIds = candidates.map(c => c.id);
-      const allReviews = await Database.query(`
-        SELECT submission_id, highwater_response, pacing_score, technical_score
-        FROM peer_reviews
-        WHERE submission_id = ANY($1)
-      `, [candidateIds]);
+      const [allReviews, tipRows] = await Promise.all([
+        Database.query(`
+          SELECT submission_id, highwater_response, mirror_response, pivot_response, pacing_score, technical_score, is_helpful
+          FROM peer_reviews
+          WHERE submission_id = ANY($1)
+        `, [candidateIds]),
+        Database.query(`
+          SELECT submission_id, COALESCE(SUM(amount), 0)::int AS tips_amount
+          FROM submission_tips
+          WHERE submission_id = ANY($1)
+          GROUP BY submission_id
+        `, [candidateIds]).catch(() => [])
+      ]);
+      const tipsBySub = Object.fromEntries(tipRows.map(t => [t.submission_id, parseInt(t.tips_amount || 0, 10)]));
 
       const scored = candidates.map(sub => {
         const subReviews = allReviews.filter(r => r.submission_id === sub.id);
@@ -93,42 +102,47 @@ export async function POST(request) {
         const avgCraft = subReviews.length > 0
           ? subReviews.reduce((acc, r) => acc + ((r.pacing_score || 3) + (r.technical_score || 3)) / 2, 0) / subReviews.length
           : 0;
+        const tipsAmount = tipsBySub[sub.id] || 0;
 
-        // Hybrid Weighted Score: quotes + peer review depth + Salon star ratings + likes
+        // Hybrid Weighted Score: quotes + peer review depth + Salon star ratings + likes + tips
         const signalScore =
           (quoteCount * 4) +
           (subReviews.length * 2) +
           avgCraft +
           (parseFloat(sub.avg_rating || 0) * 1.5) +
           (parseInt(sub.rating_count || 0, 10) * 0.8) +
-          (parseInt(sub.likes_count || 0, 10) * 1.0);
+          (parseInt(sub.likes_count || 0, 10) * 1.0) +
+          (tipsAmount * 0.3);
 
         return {
           ...sub,
           quoteCount,
+          tipsAmount,
           reviewCount: subReviews.length,
+          reviewsData: subReviews,
           signalScore
         };
       }).sort((a, b) => b.signalScore - a.signalScore);
 
-      // Use Gemini Literary Jury tiebreaker among Top 4 candidates when signals are close or peer quotes are scarce
+      // Evaluate top 6 weekly candidates thoroughly using FULL manuscript text + peer reviews
       let winner = scored[0];
-      const topShortlist = scored.slice(0, Math.min(4, scored.length));
+      const topShortlist = scored.slice(0, Math.min(6, scored.length));
 
-      if (topShortlist.length > 1 && (winner.quoteCount === 0 || (topShortlist[0].signalScore - topShortlist[1].signalScore) < 3)) {
+      if (topShortlist.length > 1) {
         const juryInput = topShortlist.map(c => ({
           id: c.id,
           title: c.title,
           genre: c.genre,
           logline: c.logline,
-          excerpt: (c.body_text || '').slice(0, 700),
-          metrics: { reviews: c.reviewCount, quotes: c.quoteCount, likes: c.likes_count, rating: c.avg_rating }
+          fullManuscript: (c.body_text || c.logline || '').trim(),
+          peerQuotes: (c.reviewsData || []).map(r => r.highwater_response).filter(Boolean).slice(0, 5),
+          metrics: { reviews: c.reviewCount, quotes: c.quoteCount, likes: c.likes_count, rating: c.avg_rating, tips: c.tipsAmount }
         }));
 
         const juryRaw = await callGeminiProse(
-          `You are the Senior Literary Judge of Paper Thoughts. Select the 1 most accomplished work from these weekly finalists based on craft, vivid imagery, voice, and engagement. Respond ONLY with raw JSON: { "winnerId": <number>, "citation": "<1 crisp celebratory sentence>" }`,
+          `You are the Senior Literary Judge of Paper Thoughts. Read each candidate's COMPLETE "fullManuscript" from beginning to end alongside peer reader quotes and engagement metrics. Select the 1 most accomplished work this week based on craft, vivid imagery, voice, ending payoff, and resonance. Respond ONLY with raw JSON: { "winnerId": <number>, "citation": "<1 crisp celebratory sentence>" }`,
           JSON.stringify(juryInput),
-          { temperature: 0.2, maxOutputTokens: 250, timeoutMs: 7000 }
+          { temperature: 0.2, maxOutputTokens: 400, timeoutMs: 18000 }
         );
 
         if (juryRaw) {

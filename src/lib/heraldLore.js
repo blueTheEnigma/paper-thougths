@@ -89,7 +89,7 @@ export async function getBirthdayToast({ fullName, alias, readerArchetype }) {
   const archetype = readerArchetype ? ` (The ${readerArchetype})` : '';
 
   const aiProse = await callGeminiProse(
-    "You are The Herald, the poetic town crier of Paper Thoughts book club. Write a warm, inspiring 3-sentence midnight birthday toast for a community member. Use evocative literary vocabulary (ink, candles, stories, fellowship). Include 2 tasteful emojis. Format using WhatsApp bolding (*word*).",
+    "You are The Panguin 🐧, the witty, warm literary companion of Paper Thoughts book club. Write a warm, inspiring 3-sentence midnight birthday toast for a community member so the whole group feels moved to celebrate them. Use evocative literary vocabulary (ink, candles, stories, fellowship). Include 2 tasteful emojis. Format using WhatsApp bolding (*word*).",
     `Celebrant: ${name}${archetype}`
   );
 
@@ -175,42 +175,37 @@ export function getFridayCritiqueAlert({ unreviewedManuscripts = [] }) {
 }
 
 /**
- * 6. New Member Welcome Greeting
+ * 6. New Member Welcome Greeting (Warm Option A + The Panguin persona)
  */
 export function getNewMemberGreeting({ phone }) {
   const tag = `@${phone}`;
   const onboardUrl = `https://paperthoughts.org/zodiac`;
 
-  return `✨ *Welcome to the Sanctuary, ${tag}!* ✨\n\n` +
-    `We are delighted to welcome you to the Paper Thoughts literary fellowship. Here, stories are cherished, writers are nurtured, and kindred minds meet.\n\n` +
-    `To break the ice, we would love to know:\n` +
-    `1. *Your Name or Pen Name*\n` +
-    `2. *The book currently living on your nightstand*\n` +
-    `3. *What brought you to Paper Thoughts?*\n\n` +
-    `Claim your profile and discover your Literary Zodiac archetype here:\n` +
-    `👉 ${onboardUrl}\n\n` +
-    `📌 *Important First Step*: Please save my contact as *Paper Thoughts Herald* so you never miss a sanctuary bell, weekly prompt, or Thursday Townhall link on your WhatsApp Status and updates!\n\n` +
-    `Make yourself at home! 📖🕯️`;
+  return `Hey ${tag} — pull up a chair and welcome to *Paper Thoughts*! 🐧✨\n\n` +
+    `You've just wandered into a corner of the internet where people still argue passionately about books, trade honest feedback on each other's drafts, and celebrate good writing.\n\n` +
+    `Whenever you're settled, say hi and tell us what name you go by, what you're currently reading (or avoiding on your nightstand!), and what brought you here.\n\n` +
+    `One tiny favor: *save my number as The Panguin* so our prompts, Townhall links, and group updates show up cleanly for you. And whenever you're ready to explore & claim your Literary Zodiac:\n` +
+    `👉 ${onboardUrl} 📖🕯️`;
 }
 
 /**
  * 6b. New Member Introduction Recognition Reply
  */
 export function getNewMemberIntroReply({ senderName, phone }) {
-  const nameDisplay = senderName ? senderName : (phone ? `@${phone}` : 'pilgrim');
-  return `Welcome to the fellowship, ${nameDisplay}! May your time in the sanctuary be legendary. 🕯️📖\n\n` +
-    `📌 _(Please save my contact as *Paper Thoughts Herald* so you receive sanctuary announcements, writing sparks, and Thursday Townhall links on your WhatsApp status and updates!)_`;
+  const nameDisplay = senderName ? senderName : (phone ? `@${phone}` : 'friend');
+  return `So glad you're here, ${nameDisplay}! Pull up a mug and make yourself right at home. 🐧📖🕯️\n\n` +
+    `_(Quick reminder: save my number as *The Panguin* so prompts, feedback bells, and Thursday Townhall updates always reach you cleanly!)_`;
 }
 
 /**
  * 7. Answer community queries via Gemini Flash
  */
 export async function getHeraldOracleAnswer(userQuestion, senderName = 'Pilgrim', clubContext = null) {
-  const systemPrompt = `You are The Herald, the witty, warm, and highly erudite literary town crier for Paper Thoughts book club.
+  const systemPrompt = `You are The Panguin 🐧, the warm, witty, and deeply well-read literary companion of Paper Thoughts book club.
 Answer the member's question in 2-4 concise sentences grounded strictly in the live Paper Thoughts context JSON when relevant (never invent events, prices, or club facts not present in the context).
 If the question is a general book recommendation or craft question, give thoughtful literary insight.
 Tell members they can also use */commands* for quick lookups (*/prompt*, */reviews*, */botm*, */store*, */events*, */me*).
-Format using WhatsApp bolding (*word*). Include 1-2 tasteful emojis (📖, 🕯️, ☕, ✨).`;
+Format using WhatsApp bolding (*word*). Include 1-2 tasteful emojis (🐧, 📖, 🕯️, ☕, ✨).`;
 
   const userMsg = clubContext
     ? `Member (${senderName}) asks: "${userQuestion}"\n\nLive Paper Thoughts Context:\n${JSON.stringify(clubContext)}`
@@ -349,16 +344,16 @@ export function formatPassportDM({ user, weeklySubmitted, weeklyReviews }) {
 }
 
 export function formatCommandsDirectory() {
-  return `📜 *The Herald's Town Hall Commands* 📜\n\n` +
-    `Use any command directly (or tag *@Herald* with a question):\n\n` +
+  return `🐧 *The Panguin's Town Hall Commands* 🐧\n\n` +
+    `Use any command directly (or tag *@Panguin* with a question):\n\n` +
     `• */prompt* — This week's writing prompt & deadline\n` +
     `• */reviews* — Blind Critique Match & manuscripts needing eyes\n` +
     `• */botm* — Book of the Month & voting status\n` +
     `• */store <title>* — Check Bookstore stock & price in ₦ / 🍃\n` +
     `• */events* — Upcoming Townhalls & gatherings\n` +
     `• */me* — Private DM of your Leaves, streak & weekly progress\n` +
-    `• *@Herald <question>* — Ask about club rules or book recs!\n\n` +
-    `_May your pages stay full._ 🕯️📖`;
+    `• *@Panguin <question>* — Ask about club rules or book recs!\n\n` +
+    `_May your pages stay full._ 🐧📖`;
 }
 
 export function getWednesdayNudge({ promptText }) {

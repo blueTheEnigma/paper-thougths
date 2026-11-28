@@ -184,12 +184,12 @@ export async function getMemberWeeklyPassport(rawPhone) {
 }
 
 /**
- * Grounded snapshot fed into Gemini when @Herald answers open natural-language questions
+ * Grounded snapshot fed into Gemini when @Panguin answers open natural-language questions
  */
 export async function buildHeraldOracleContext(question = '') {
   const shouldSearchStore = /(book|store|buy|price|cost|naira|stock|copy|hardcopy|have|sell|read|title|find)/i.test(question);
   const storeQuery = question
-    .replace(/\b(do you have|is there|how much is|in the store|in stock|bookstore|paper thoughts|find me|looking for|can i buy|the book|a book|by|herald|please|for me)\b/gi, ' ')
+    .replace(/\b(do you have|is there|how much is|in the store|in stock|bookstore|paper thoughts|find me|looking for|can i buy|the book|a book|by|panguin|herald|please|for me)\b/gi, ' ')
     .replace(/[?!.,]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

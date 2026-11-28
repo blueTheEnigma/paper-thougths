@@ -109,9 +109,10 @@ async function callEvolutionApi(endpoint, body) {
 
 /**
  * Send a public broadcast to the Paper Thoughts WhatsApp Community Group.
- * Invariant: Simulates human presence delay (1200ms) to respect WhatsApp safety.
+ * Invariant: Tags everyone by default (`mentionsEveryOne = true`) and simulates
+ * human presence delay (1200ms) to respect WhatsApp safety.
  */
-export async function sendHeraldGroupBroadcast({ text, mentions = [], mentionsEveryOne = false, idempotencyKey = null, ritualType = 'general', targetGroupJid = null }) {
+export async function sendHeraldGroupBroadcast({ text, mentions = [], mentionsEveryOne = true, idempotencyKey = null, ritualType = 'general', targetGroupJid = null }) {
   const groupJid = targetGroupJid || process.env.HERALD_GROUP_JID || '120363430362177971@g.us';
   if (!groupJid) {
     console.warn('Skipping Herald group broadcast: HERALD_GROUP_JID is not configured');

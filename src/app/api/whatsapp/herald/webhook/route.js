@@ -139,7 +139,8 @@ export async function GET() {
   return NextResponse.json({
     success: true,
     status: 'healthy',
-    herald: 'The Paper Thoughts Herald Webhook is active and vigilant 🕯️'
+    panguin: 'The Panguin (Paper Thoughts Sanctuary Companion) is active and vigilant 🐧',
+    herald: 'The Panguin (Paper Thoughts Sanctuary Companion) is active and vigilant 🐧'
   });
 }
 
@@ -260,6 +261,7 @@ export async function POST(request) {
         const botPhone = process.env.HERALD_BOT_PHONE || '2347046043294';
         const botLid = process.env.HERALD_BOT_LID || '274715419664399';
         const cleanText = text
+          .replace(/@?panguin\b/gi, '')
           .replace(/@?herald\b/gi, '')
           .replace(new RegExp(`@${botPhone}\\b`, 'g'), '')
           .replace(new RegExp(`@${botLid}\\b`, 'g'), '')
@@ -288,7 +290,7 @@ export async function POST(request) {
 
           // Admin DM Grimoire
           if (lowerText === 'help' || lowerText === 'commands' || lowerText === 'menu') {
-            const helpText = `🗝️ *The Herald's Warden Grimoire* 🗝️\n\n` +
+            const helpText = `🗝️ *The Panguin's Warden Grimoire* 🐧\n\n` +
               `• *status* — Live vitals on members, manuscripts, and gathering\n` +
               `• *townhall <url>* — Update next Thursday Townhall Meet link\n` +
               `• *prompt <text>* — Record and queue a new writing prompt\n` +
@@ -388,18 +390,19 @@ export async function POST(request) {
               continue;
             }
             await sendHeraldGroupBroadcast({
-              text: `📢 *Sanctuary Announcement from the Wardens* 📢\n\n${announcement}\n\n— _The Herald_ 🕯️`,
+              text: `📢 *Sanctuary Announcement from the Wardens* 📢\n\n${announcement}\n\n— _The Panguin_ 🐧`,
+              mentionsEveryOne: true,
               ritualType: 'admin_manual_announcement'
             });
-            await sendHeraldReply({ to: remoteJid, text: `✓ Announcement dispatched to the Town Hall group! 🫯`, quotedKey: msgKey });
+            await sendHeraldReply({ to: remoteJid, text: `✓ Announcement dispatched to the Town Hall group! 🐧`, quotedKey: msgKey });
             continue;
           }
 
           if (lowerText === 'test' || lowerText === 'ping') {
-            await sendHeraldReaction({ remoteJid, messageId, reaction: '🕯️' });
+            await sendHeraldReaction({ remoteJid, messageId, reaction: '🐧' });
             await sendHeraldReply({
               to: remoteJid,
-              text: `✓ *The Herald is Vigilant!*\nSocket connected, DB connected, commands & NLP online. ✨`,
+              text: `✓ *The Panguin is Vigilant!*\nSocket connected, DB connected, commands & NLP online. 🐧✨`,
               quotedKey: msgKey
             });
             continue;
@@ -454,13 +457,13 @@ export async function POST(request) {
             continue;
           }
 
-          // 3. Natural Language @Herald Targeting (tags via JID, raw @lid, @botPhone, or "Herald")
+          // 3. Natural Language @Panguin Targeting (tags via JID, raw @lid, @botPhone, or "Panguin"/"Herald")
           const isMentioned =
-            mentionedJids.some(jid => jid.includes(botPhone) || jid.includes(botLid) || jid.includes('herald')) ||
+            mentionedJids.some(jid => jid.includes(botPhone) || jid.includes(botLid) || jid.includes('panguin') || jid.includes('herald')) ||
             text.includes(`@${botPhone}`) ||
             text.includes(`@${botLid}`);
-          const textMentionsHerald = /@?herald\b/i.test(text);
-          const isHeraldTargeted = isMentioned || textMentionsHerald;
+          const textMentionsBot = /@?(panguin|herald)\b/i.test(text);
+          const isHeraldTargeted = isMentioned || textMentionsBot;
 
           if (isHeraldTargeted) {
             const queryLower = (cleanLower || lowerText);

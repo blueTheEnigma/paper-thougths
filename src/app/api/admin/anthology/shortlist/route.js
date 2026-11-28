@@ -7,6 +7,7 @@ import { callGeminiProse } from '@/lib/heraldLore';
 export const dynamic = 'force-dynamic';
 
 const SUPERADMIN_EMAILS = ['umorgan2001@gmail.com', 'paperthoughts01@gmail.com'];
+const MAX_CATEGORY_JURY_CHARS = 320000;
 
 /**
  * Determine whether a submission belongs to Poetry vs Prose/Short Story.
@@ -47,7 +48,7 @@ function buildFallbackShortlist(stories, poems) {
 
   stories.slice(0, 3).forEach((s, idx) => {
     storyPlacements[idx + 1] = s.id;
-    citations[s.id] = `Selected for compelling narrative craft, strong community resonance (${s.communityScore} signal pts), and emotional clarity.`;
+    citations[s.id] = `Selected for compelling narrative craft, complete thematic arc, and strong community resonance (${s.communityScore} signal pts).`;
   });
 
   poems.slice(0, 3).forEach((p, idx) => {
@@ -59,9 +60,91 @@ function buildFallbackShortlist(stories, poems) {
 }
 
 /**
+ * Assemble candidate payloads with full manuscript body_text and peer review praise/highlights,
+ * stopping cleanly only if combined payload approaches the safe prompt size ceiling.
+ */
+function buildCategoryJuryPayload(items, reviewsBySub, commentsBySub, categoryLabel) {
+  const packet = [];
+  let charBudget = 0;
+
+  for (const item of items) {
+    const fullText = (item.full_text || item.logline || '').trim();
+    const subReviews = (reviewsBySub[item.id] || []).slice(0, 8).map((r) => ({
+      helpful: Boolean(r.is_helpful),
+      pacing: r.pacing_score,
+      technical: r.technical_score,
+      standoutQuote: r.highwater_response || null,
+      mirror: r.mirror_response ? r.mirror_response.slice(0, 260) : null,
+      constructive: r.pivot_response ? r.pivot_response.slice(0, 260) : null,
+    }));
+    const readerComments = (commentsBySub[item.id] || []).slice(0, 6);
+
+    const entry = {
+      id: item.id,
+      category: categoryLabel,
+      title: item.title,
+      genre: item.genre,
+      communityScore: item.communityScore,
+      helpfulReviews: item.helpful_reviews,
+      reviewsCount: item.reviews_count,
+      avgRating: item.avg_rating,
+      ratingCount: item.rating_count,
+      likesCount: item.likes_count,
+      tipsAmount: item.tips_amount,
+      peerReviews: subReviews,
+      salonComments: readerComments,
+      fullManuscript: fullText,
+    };
+
+    const entrySize = JSON.stringify(entry).length;
+    if (packet.length >= 3 && charBudget + entrySize > MAX_CATEGORY_JURY_CHARS) {
+      break;
+    }
+    packet.push(entry);
+    charBudget += entrySize;
+  }
+
+  return packet;
+}
+
+/**
+ * Run a dedicated full-manuscript Gemini evaluation for one category (Stories or Poetry).
+ */
+async function evaluateCategoryWithGemini({ monthYear, categoryLabel, candidates, reviewsBySub, commentsBySub }) {
+  if (!candidates || candidates.length === 0) return null;
+
+  const packet = buildCategoryJuryPayload(candidates, reviewsBySub, commentsBySub, categoryLabel);
+  const categoryTitle = categoryLabel === 'poem' ? 'Poetry & Verses' : 'Short Stories & Prose';
+
+  const systemPrompt = `You are the Senior Literary Jury Advisor for Paper Thoughts ("The Living Anthology", issue ${monthYear}), judging the ${categoryTitle} division.
+You are given the COMPLETE text ("fullManuscript") of every shortlisted candidate—read every piece from opening line to ending—alongside reader peer critiques, standout quotes, ratings, likes, and Leaves tipped.
+Evaluate holistically:
+1. Full narrative/poetic arc, structural resolution & ending impact
+2. Originality of voice, sensory imagery, emotional truth & sentence/stanza craft
+3. Reader consensus (helpful critiques, peer praise quotes, Salon ratings & Leaves tipped)
+
+Do NOT publish automatically — you are preparing an editable Top 3 shortlist draft for the Chief Editor.
+Return STRICT JSON only (no markdown fences) with this exact shape:
+{
+  "placements": { "1": number|null, "2": number|null, "3": number|null },
+  "citations": { "<id>": "1-2 sentence specific literary praise referencing the craft of the piece" },
+  "rationale": "1-2 sentence category jury summary explaining why these finalists stood out"
+}
+Rules: Use only IDs present in the candidate list, do not duplicate any ID, and leave unused slots null if fewer than 3 candidates exist.`;
+
+  const aiRaw = await callGeminiProse(systemPrompt, `Full-Text Candidates (${categoryTitle}):\n${JSON.stringify(packet)}`, {
+    temperature: 0.35,
+    maxOutputTokens: 2200,
+    timeoutMs: 28000,
+  });
+
+  return parseJsonResponse(aiRaw);
+}
+
+/**
  * POST /api/admin/anthology/shortlist
- * Hybrid AI + Community Signal Jury: suggests editable Top 3 Short Stories, Top 3 Poems,
- * and draft Editor Citations without auto-publishing to monthly_anthology_entries.
+ * Hybrid Full-Manuscript AI + Community Signal Jury: suggests editable Top 3 Short Stories,
+ * Top 3 Poems, and draft Editor Citations without auto-publishing to monthly_anthology_entries.
  */
 export async function POST(req) {
   try {
@@ -93,7 +176,7 @@ export async function POST(req) {
          s.genre,
          s.pen_name,
          s.logline,
-         LEFT(COALESCE(s.body_text, ''), 1200) AS excerpt,
+         COALESCE(s.body_text, '') AS full_text,
          s.cycle_month,
          u.full_name AS author_name,
          COALESCE((SELECT COUNT(*)::int FROM submission_likes sl WHERE sl.submission_id = s.id), 0) AS likes_count,
@@ -117,6 +200,36 @@ export async function POST(req) {
         success: false,
         error: `No eligible manuscripts found for cycle ${monthYear}.`,
       }, { status: 400 });
+    }
+
+    const subIds = rows.map((r) => r.id);
+    const [reviewRows, commentRows] = await Promise.all([
+      Database.query(
+        `SELECT submission_id, pacing_score, technical_score, is_helpful, highwater_response, mirror_response, pivot_response
+         FROM peer_reviews
+         WHERE submission_id = ANY($1)
+         ORDER BY is_helpful DESC, created_at DESC`,
+        [subIds]
+      ).catch(() => []),
+      Database.query(
+        `SELECT submission_id, content
+         FROM submission_comments
+         WHERE submission_id = ANY($1)
+         ORDER BY created_at DESC`,
+        [subIds]
+      ).catch(() => []),
+    ]);
+
+    const reviewsBySub = {};
+    for (const r of reviewRows) {
+      if (!reviewsBySub[r.submission_id]) reviewsBySub[r.submission_id] = [];
+      reviewsBySub[r.submission_id].push(r);
+    }
+
+    const commentsBySub = {};
+    for (const c of commentRows) {
+      if (!commentsBySub[c.submission_id]) commentsBySub[c.submission_id] = [];
+      if (c.content) commentsBySub[c.submission_id].push(c.content.slice(0, 220));
     }
 
     const enriched = rows.map((r) => {
@@ -145,97 +258,81 @@ export async function POST(req) {
 
     const fallback = buildFallbackShortlist(stories, poems);
 
-    const topForJury = [
-      ...stories.slice(0, 12).map((s) => ({
-        id: s.id,
-        category: 'story',
-        title: s.title,
-        genre: s.genre,
-        communityScore: s.communityScore,
-        helpfulReviews: s.helpful_reviews,
-        avgRating: s.avg_rating,
-        ratingCount: s.rating_count,
-        likesCount: s.likes_count,
-        tipsAmount: s.tips_amount,
-        excerpt: (s.excerpt || s.logline || '').replace(/\s+/g, ' ').slice(0, 700),
-      })),
-      ...poems.slice(0, 12).map((p) => ({
-        id: p.id,
-        category: 'poem',
-        title: p.title,
-        genre: p.genre,
-        communityScore: p.communityScore,
-        helpfulReviews: p.helpful_reviews,
-        avgRating: p.avg_rating,
-        ratingCount: p.rating_count,
-        likesCount: p.likes_count,
-        tipsAmount: p.tips_amount,
-        excerpt: (p.excerpt || p.logline || '').replace(/\s+/g, ' ').slice(0, 700),
-      })),
-    ];
+    const [storyEval, poemEval] = await Promise.all([
+      evaluateCategoryWithGemini({
+        monthYear,
+        categoryLabel: 'story',
+        candidates: stories.slice(0, 15),
+        reviewsBySub,
+        commentsBySub,
+      }),
+      evaluateCategoryWithGemini({
+        monthYear,
+        categoryLabel: 'poem',
+        candidates: poems.slice(0, 15),
+        reviewsBySub,
+        commentsBySub,
+      }),
+    ]);
 
-    const systemPrompt = `You are the Literary Jury Advisor for Paper Thoughts ("The Living Anthology", issue ${monthYear}).
-Evaluate both writing craft (voice, imagery, narrative tension, originality) from each excerpt AND weighted Community Signal (helpful reviews, star ratings, likes, and Leaves tipped).
-Do NOT publish anything automatically — you are preparing an editable shortlist draft for the Chief Editor.
-Return STRICT JSON only (no markdown fences) with this exact shape:
-{
-  "storyPlacements": { "1": number|null, "2": number|null, "3": number|null },
-  "poemPlacements": { "1": number|null, "2": number|null, "3": number|null },
-  "citations": { "<id>": "1-2 sentence literary praise suitable for the Laureate card" },
-  "rationale": "2-sentence overview for the Chief Editor explaining why these finalists rose to the top"
-}
-Rules: Use only submission IDs present in the candidate list, place story candidates only in storyPlacements and poem candidates only in poemPlacements, and never duplicate an ID.`;
-
-    const userPrompt = `Candidates JSON:\n${JSON.stringify(topForJury)}`;
-    const aiRaw = await callGeminiProse(systemPrompt, userPrompt, {
-      temperature: 0.4,
-      maxOutputTokens: 1600,
-      timeoutMs: 12000,
-    });
-
-    const parsed = parseJsonResponse(aiRaw);
     const storyIds = new Set(stories.map((s) => s.id));
     const poemIds = new Set(poems.map((p) => p.id));
 
     let aiPowered = false;
-    let finalStoryPlacements = { ...fallback.storyPlacements };
-    let finalPoemPlacements = { ...fallback.poemPlacements };
-    let finalCitations = { ...fallback.citations };
-    let rationale = 'Ranked by weighted Community Signal (Helpful Reviews, Salon Ratings, Likes & Leaves Tipped). Adjust any placement or citation before publishing.';
+    const finalStoryPlacements = { ...fallback.storyPlacements };
+    const finalPoemPlacements = { ...fallback.poemPlacements };
+    const finalCitations = { ...fallback.citations };
+    const rationaleParts = [];
 
-    if (parsed && (parsed.storyPlacements || parsed.poemPlacements)) {
+    if (storyEval?.placements) {
       aiPowered = true;
       const usedStoryIds = new Set();
       [1, 2, 3].forEach((rank) => {
-        const candidateId = parseInt(parsed.storyPlacements?.[String(rank)] ?? parsed.storyPlacements?.[rank], 10);
+        const candidateId = parseInt(storyEval.placements?.[String(rank)] ?? storyEval.placements?.[rank], 10);
         if (storyIds.has(candidateId) && !usedStoryIds.has(candidateId)) {
           finalStoryPlacements[rank] = candidateId;
           usedStoryIds.add(candidateId);
         }
       });
+      if (storyEval.citations && typeof storyEval.citations === 'object') {
+        Object.entries(storyEval.citations).forEach(([idKey, cite]) => {
+          const parsedId = parseInt(idKey, 10);
+          if (storyIds.has(parsedId) && typeof cite === 'string' && cite.trim()) {
+            finalCitations[parsedId] = cite.trim().slice(0, 320);
+          }
+        });
+      }
+      if (typeof storyEval.rationale === 'string' && storyEval.rationale.trim()) {
+        rationaleParts.push(`Prose Jury: ${storyEval.rationale.trim()}`);
+      }
+    }
 
+    if (poemEval?.placements) {
+      aiPowered = true;
       const usedPoemIds = new Set();
       [1, 2, 3].forEach((rank) => {
-        const candidateId = parseInt(parsed.poemPlacements?.[String(rank)] ?? parsed.poemPlacements?.[rank], 10);
+        const candidateId = parseInt(poemEval.placements?.[String(rank)] ?? poemEval.placements?.[rank], 10);
         if (poemIds.has(candidateId) && !usedPoemIds.has(candidateId)) {
           finalPoemPlacements[rank] = candidateId;
           usedPoemIds.add(candidateId);
         }
       });
-
-      if (parsed.citations && typeof parsed.citations === 'object') {
-        Object.entries(parsed.citations).forEach(([idKey, cite]) => {
+      if (poemEval.citations && typeof poemEval.citations === 'object') {
+        Object.entries(poemEval.citations).forEach(([idKey, cite]) => {
           const parsedId = parseInt(idKey, 10);
-          if ((storyIds.has(parsedId) || poemIds.has(parsedId)) && typeof cite === 'string' && cite.trim()) {
+          if (poemIds.has(parsedId) && typeof cite === 'string' && cite.trim()) {
             finalCitations[parsedId] = cite.trim().slice(0, 320);
           }
         });
       }
-
-      if (typeof parsed.rationale === 'string' && parsed.rationale.trim()) {
-        rationale = parsed.rationale.trim();
+      if (typeof poemEval.rationale === 'string' && poemEval.rationale.trim()) {
+        rationaleParts.push(`Poetry Jury: ${poemEval.rationale.trim()}`);
       }
     }
+
+    const rationale = rationaleParts.length > 0
+      ? rationaleParts.join(' | ')
+      : 'Ranked by weighted Community Signal (Helpful Reviews, Salon Ratings, Likes & Leaves Tipped). Adjust any placement or citation before publishing.';
 
     return NextResponse.json({
       success: true,
